@@ -10,9 +10,7 @@
 #
 # Takes no arguments. Takes the evil changes from the tree.
 
-# FIXME: Does not revert mode changes!
-
-show-diff | patch -p0 -R
 rm -f .git/add-queue .git/rm-queue
+checkout-cache -f -a
 
 update-cache --refresh
