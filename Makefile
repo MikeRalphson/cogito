@@ -19,7 +19,7 @@ PROG=   update-cache show-diff init-db write-tree read-tree commit-tree \
 SCRIPT=	parent-id tree-id git gitXnormid.sh gitadd.sh gitaddremote.sh \
 	gitcommit.sh gitdiff-do gitdiff.sh gitlog.sh gitls.sh gitlsobj.sh \
 	gitmerge.sh gitpull.sh gitrm.sh gittag.sh gittrack.sh gitexport.sh \
-	gitapply.sh gitcancel.sh gitlntree.sh
+	gitapply.sh gitcancel.sh gitlntree.sh commit-id
 
 GEN_SCRIPT= gitversion.sh
 
