@@ -14,6 +14,8 @@
 #include <openssl/sha.h>
 #include <zlib.h>
 
+#include <netinet/in.h>
+
 /*
  * Basic data structures for the directory cache
  *
@@ -67,7 +69,7 @@ unsigned int active_nr, active_alloc;
 #define DEFAULT_DB_ENVIRONMENT ".git/objects"
 
 #define cache_entry_size(len) ((offsetof(struct cache_entry,name) + (len) + 8) & ~7)
-#define ce_size(ce) cache_entry_size((ce)->namelen)
+#define ce_size(ce) cache_entry_size(ntohs((ce)->namelen))
 
 #define alloc_nr(x) (((x)+16)*3/2)
 

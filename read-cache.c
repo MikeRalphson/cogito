@@ -288,27 +288,27 @@ int cache_match_stat(struct cache_entry *ce, struct stat *st)
 	/* nsec seems unreliable - not all filesystems support it, so
 	 * as long as it is in the inode cache you get right nsec
 	 * but after it gets flushed, you get zero nsec. */
-	if (ce->mtime.sec  != (unsigned int)st->st_mtime
+	if (ntohl(ce->mtime.sec) != (unsigned int)st->st_mtime
 #ifdef NSEC
-	    || ce->mtime.nsec != (unsigned int)st->st_mtim.tv_nsec
+	    || ntohl(ce->mtime.nsec) != (unsigned int)st->st_mtim.tv_nsec
 #endif
 	    )
 		changed |= MTIME_CHANGED;
-	if (ce->ctime.sec  != (unsigned int)st->st_ctime
+	if (ntohl(ce->ctime.sec) != (unsigned int)st->st_ctime
 #ifdef NSEC
-	    || ce->ctime.nsec != (unsigned int)st->st_ctim.tv_nsec
+	    || ntohl(ce->ctime.nsec) != (unsigned int)st->st_ctim.tv_nsec
 #endif
 	    )
 		changed |= CTIME_CHANGED;
-	if (ce->st_uid != (unsigned int)st->st_uid ||
-	    ce->st_gid != (unsigned int)st->st_gid)
+	if (ntohl(ce->st_uid) != (unsigned int)st->st_uid ||
+	    ntohl(ce->st_gid) != (unsigned int)st->st_gid)
 		changed |= OWNER_CHANGED;
-	if (ce->st_mode != (unsigned int)st->st_mode)
+	if (ntohl(ce->st_mode) != (unsigned int)st->st_mode)
 		changed |= MODE_CHANGED;
-	if (ce->st_dev != (unsigned int)st->st_dev ||
-	    ce->st_ino != (unsigned int)st->st_ino)
+	if (ntohl(ce->st_dev) != (unsigned int)st->st_dev ||
+	    ntohl(ce->st_ino) != (unsigned int)st->st_ino)
 		changed |= INODE_CHANGED;
-	if (ce->st_size != (unsigned int)st->st_size)
+	if (ntohl(ce->st_size) != (unsigned int)st->st_size)
 		changed |= DATA_CHANGED;
 	return changed;
 }
@@ -337,7 +337,7 @@ int cache_name_pos(const char *name, int namelen)
 	while (last > first) {
 		int next = (last + first) >> 1;
 		struct cache_entry *ce = active_cache[next];
-		int cmp = cache_name_compare(name, namelen, ce->name, ce->namelen);
+		int cmp = cache_name_compare(name, namelen, ce->name, ntohs(ce->namelen));
 		if (!cmp)
 			return next;
 		if (cmp < 0) {
@@ -364,7 +364,7 @@ int add_cache_entry(struct cache_entry *ce, int ok_to_add)
 {
 	int pos;
 
-	pos = cache_name_pos(ce->name, ce->namelen);
+	pos = cache_name_pos(ce->name, ntohs(ce->namelen));
 
 	/* existing match? Just replace it */
 	if (pos >= 0) {
@@ -395,9 +395,9 @@ static int verify_hdr(struct cache_header *hdr, unsigned long size)
 	SHA_CTX c;
 	unsigned char sha1[20];
 
-	if (hdr->signature != CACHE_SIGNATURE)
+	if (hdr->signature != htonl(CACHE_SIGNATURE))
 		return error("bad signature");
-	if (hdr->version != 1)
+	if (hdr->version != htonl(1))
 		return error("bad version");
 	SHA1_Init(&c);
 	SHA1_Update(&c, hdr, offsetof(struct cache_header, sha1));
@@ -445,12 +445,12 @@ int read_cache(void)
 	if (verify_hdr(hdr, size) < 0)
 		goto unmap;
 
-	active_nr = hdr->entries;
+	active_nr = ntohl(hdr->entries);
 	active_alloc = alloc_nr(active_nr);
 	active_cache = calloc(active_alloc, sizeof(struct cache_entry *));
 
 	offset = sizeof(*hdr);
-	for (i = 0; i < hdr->entries; i++) {
+	for (i = 0; i < ntohl(hdr->entries); i++) {
 		struct cache_entry *ce = map + offset;
 		offset = offset + ce_size(ce);
 		active_cache[i] = ce;
@@ -469,9 +469,9 @@ int write_cache(int newfd, struct cache_entry **cache, int entries)
 	struct cache_header hdr;
 	int i;
 
-	hdr.signature = CACHE_SIGNATURE;
-	hdr.version = 1;
-	hdr.entries = entries;
+	hdr.signature = htonl(CACHE_SIGNATURE);
+	hdr.version = htonl(1);
+	hdr.entries = htonl(entries);
 
 	SHA1_Init(&c);
 	SHA1_Update(&c, &hdr, offsetof(struct cache_header, sha1));
