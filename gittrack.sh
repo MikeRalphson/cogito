@@ -51,6 +51,7 @@ if [ "$name" ]; then
 
 	read-tree $(tree-id "$name")
 	gitdiff.sh local "$name" | gitapply.sh
+	update-cache --refresh
 
 else
 	[ "$tracking" ] || \
@@ -61,6 +62,7 @@ else
 	if [ -s ".git/HEAD.local" ]; then
 		gitdiff.sh "$tracking" local | gitapply.sh
 		read-tree $(tree-id local)
+		update-cache --refresh
 
 		head=$(cat .git/HEAD)
 		branchhead=$(cat .git/heads/$tracking)
