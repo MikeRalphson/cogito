@@ -249,11 +249,15 @@ int write_sha1_buffer(const unsigned char *sha1, void *buf, unsigned int size)
 		if (fd < 0)
 			return -1;
 		map = mmap(NULL, size, PROT_READ, MAP_PRIVATE, fd, 0);
-		if (map == MAP_FAILED)
+		if (map == MAP_FAILED) {
+			close(fd);
 			return -1;
+		}
 		if (memcmp(buf, map, size))
 			return error("SHA1 collision detected!"
 					" This is bad, bad, BAD!\a\n");
+		munmap(map, size);
+		close(fd);
 #endif
 		return 0;
 	}
