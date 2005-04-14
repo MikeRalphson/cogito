@@ -66,7 +66,7 @@ static int write_tree(struct cache_entry **cachep, int maxentries, const char *b
 			nr += subdir_written;
 
 			/* Now we need to write out the directory entry into this tree.. */
-			mode = S_IFDIR;
+			mode |= S_IFDIR;
 			pathlen = dirname - pathname;
 
 			/* ..but the directory entry doesn't count towards the total count */
