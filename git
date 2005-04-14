@@ -26,7 +26,7 @@ Usage: git COMMAND [ARG]...
 
 Available commands:
 	add, addremote, apply, commit, ci, diff, export, help, log, ls, lsobj,
-	merge, pull, rm, tag, track
+	merge, pull, rm, tag, track, version
 __END__
 }
 
@@ -69,5 +69,6 @@ case "$cmd" in
 "rm")         gitrm.sh "$@";;
 "tag")        gittag.sh "$@";;
 "track")      gittrack.sh "$@";;
+"version")    gitversion.sh "$@";;
 *)            error "unknown command"; help;;
 esac
