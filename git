@@ -33,6 +33,7 @@ Available commands:
 	diff		[FROM_ID [TO_ID]]
 	export		DESTDIR
 	help
+	lntree		DESTDIR
 	log
 	ls		[TREE_ID]
 	lsobj		[OBJTYPE]
@@ -86,6 +87,7 @@ case "$cmd" in
 "diff")       gitdiff.sh "$@";;
 "export")     gitexport.sh "$@";;
 "help")       help "$@";;
+"lntree")     gitlntree.sh "$@";;
 "log")        gitlog.sh "$@";;
 "ls")         gitls.sh "$@";;
 "lsobj")      gitlsobj.sh "$@";;
