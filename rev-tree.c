@@ -164,7 +164,10 @@ static int parse_commit(unsigned char *sha1)
 		bufptr += 46; /* "tree " + "hex sha1" + "\n" */
 		while (!memcmp(bufptr, "parent ", 7) && !get_sha1_hex(bufptr+7, parent)) {
 			add_relationship(rev, parent);
-			parse_commit(parent);
+			if (parse_commit(parent) < 0) {
+				free(buffer);
+				return -1;
+			}
 			bufptr += 48;	/* "parent " + "hex sha1" + "\n" */
 		}
 		rev->date = parse_commit_date(bufptr);
@@ -290,7 +293,8 @@ int main(int argc, char **argv)
 		}
 		if (nr >= MAX_COMMITS || get_sha1_hex(arg, sha1[nr]))
 			usage("rev-tree [--edges] [--cache <cache-file>] <commit-id> [<commit-id>]");
-		parse_commit(sha1[nr]);
+		if (parse_commit(sha1[nr]) < 0)
+			die("unable to parse a commit (%s)", arg);
 		nr++;
 	}
 
