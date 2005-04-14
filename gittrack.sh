@@ -30,6 +30,8 @@ die () {
 	exit 1
 }
 
+mkdir -p .git/heads
+
 tracking=""
 [ -s .git/tracking ] && tracking=$(cat .git/tracking)
 
@@ -38,13 +40,13 @@ tracking=""
 if [ "$name" ]; then
 	[ "$tracking" ] && \
 		die "already tracking branch \"$tracking\""
-	[ -s ".git/HEAD.$name" ] || \
+	[ -s ".git/heads/$name" ] || \
 		die "unknown branch \"$name\" (did you git pull first?)"
 	[ -s ".git/HEAD.local" ] && \
 		die "not tracking anything but \"local\" branch exists!"
 
 	mv .git/HEAD .git/HEAD.local
-	cp ".git/HEAD.$name" .git/HEAD
+	cp ".git/heads/$name" .git/HEAD
 	echo $name >.git/tracking
 
 	read-tree $(tree-id "$name")
@@ -53,7 +55,7 @@ if [ "$name" ]; then
 else
 	[ "$tracking" ] || \
 		die "not tracking a branch"
-	[ -s ".git/HEAD.$tracking" ] || \
+	[ -s ".git/heads/$tracking" ] || \
 		die "tracked \"$tracking\" branch missing!"
 
 	if [ -s ".git/HEAD.local" ]; then
@@ -61,7 +63,7 @@ else
 		read-tree $(tree-id local)
 
 		head=$(cat .git/HEAD)
-		branchhead=$(cat .git/HEAD.$tracking)
+		branchhead=$(cat .git/heads/$tracking)
 		if [ "$head" != "$branchhead" ]; then
 			echo "Warning: Overriding \"$tracking\"'s local microbranch:" >&2
 			echo -e "\t$branchhead $head" >&2

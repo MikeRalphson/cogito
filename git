@@ -41,8 +41,15 @@ fi
 
 ### XXX: Compatibility hack.
 # Introduced at 2005-04-12, to be removed few days later.
-
 [ -d .dircache ] && [ ! -e .git ] && mv .dircache .git
+# Introduced at 2005-04-13:
+if [ ! -d .git/heads ]; then
+	mkdir .git/heads || exit 1
+	for h in .git/HEAD.*; do
+		[ "$h" != "local" ] && \
+			mv $h .git/heads/$(echo $h | cut -d . -f 3-)
+	done
+fi
 
 
 case "$cmd" in

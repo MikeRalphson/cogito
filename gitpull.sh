@@ -20,9 +20,11 @@ uri=$(grep $(echo -e "^$name\t") .git/remotes | cut -f 2)
 [ "$uri" ] || die "unknown remote"
 
 orig_head=
-[ -s ".git/HEAD.$name" ] && orig_head=$(cat ".git/HEAD.$name")
+[ -s ".git/heads/$name" ] && orig_head=$(cat ".git/heads/$name")
 
-rsync -r "$uri/HEAD" ".git/HEAD.$name"
+mkdir -p .git/heads
+
+rsync -r "$uri/HEAD" ".git/heads/$name"
 # We already saw the MOTD, thank you very much.
 [ -d .git/objects ] || mkdir -p .git/objects
 rsync --ignore-existing --whole-file \
@@ -30,7 +32,7 @@ rsync --ignore-existing --whole-file \
 # FIXME: Warn about conflicting tag names?
 rsync --ignore-existing -r "$uri/tags" ".git" >/dev/null
 
-new_head=$(cat ".git/HEAD.$name")
+new_head=$(cat ".git/heads/$name")
 
 if [ ! "$orig_head" ]; then
 	echo "New branch: $new_head"

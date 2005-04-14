@@ -5,7 +5,7 @@
 #
 # After you add a remote, you can "./gitpull.sh" it whenever you want
 # and it will keep your dircache in sync with it. Its latest commit
-# is accessible as .git/HEAD.remotename (or - more conveniently -
+# is accessible as .git/heads/remotename (or - more conveniently -
 # as $(commit-id remotename)). For example, to make a diff between
 # Linus (after you added him) and your current tree, do
 #
