@@ -1,0 +1,12 @@
+#!/bin/sh
+#
+# Get ID of parent commit to a given revision or HEAD.
+# Copyright (c) Petr Baudis, 2005
+#
+# Takes ID of the current commit, defaults to HEAD.
+
+PARENT="^parent [A-Za-z0-9]{40}$"
+
+id=$(gitXnormid.sh -c $1) || exit 1
+
+cat-file commit $id | egrep "$PARENT" | cut -d ' ' -f 2

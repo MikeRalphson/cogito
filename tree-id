@@ -1,0 +1,8 @@
+#!/bin/sh
+#
+# Get ID of tree associated with given commit or HEAD.
+# Copyright (c) Petr Baudis, 2005
+#
+# Takes ID of the appropriate commit, defaults to HEAD.
+
+gitXnormid.sh $1

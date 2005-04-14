@@ -1,4 +1,3 @@
-
 	GIT - the stupid content tracker
 
 "git" can mean anything, depending on your mood.
@@ -12,12 +11,126 @@
    works for you. Angels sing, and a light suddenly fills the room. 
  - "goddamn idiotic truckload of sh*t": when it breaks
 
+GIT comes in two layers. The bottom layer is merely an extremely fast and
+flexible filesystem-based database designed to store directory trees with
+regard to their history. The top layer is a SCM-like tool which enables human
+beings to work with the database in a manner to a degree similar to other SCM
+tools (like CVS, BitKeeper or Monotone).
+
+
+
+	The "GIT toolkit"
+	~~~~~~~~~~~~~~~~~
+
+This currently simply describes what should you do when you get a tarball
+of GIT and start to use it and hack upon it. It can give you some guide,
+but the documentation should be certainly consolidated and rewritten.
+
+This mini-HOWTO assumes two facts about the tarball you just got:
+	(i)  It is "tracking" some branch
+	(ii) It is "tracking" branch called "pasky"
+
+Build it by make, make sure the scripts are in $PATH, and update it to the
+latest version by
+
+	git pull pasky
+
+(and repeat that after some time to get the future updates - but see below).
+Then you can finally build it, doing
+
+	make
+
+and...  well, that's it. Play around with it a bit. ;-)
+
+This tree is tracked. That is, you can get my latest changes by doing:
+
+	git pull pasky
+
+If you did some local commits in the meantime, git will attempt to merge them
+with the pasky branch. You then need to check that the merging went correctly
+and without conflicts, possibly do merge-related fixes, and then record the
+merge with git commit.
+
+You may want to untrack my tree (to do independent development or re-track to
+e.g. linus), like
+
+	git track local
+
+(git track without any parameters will do too). The branch is still there,
+though, and you can pull the latest updates again with:
+
+	git pull pasky
+
+You aren't tracking the branch now, though, so the changes won't be applied to
+your local tree automatically anymore. However, if there are any changes, two
+IDs will be printed (I mean the line saying "Tree change"). Pass those as
+parameters to git diff and you will get a diff describing changes from the last
+time you pulled. You can also
+
+	git diff pasky
+
+which will show changes between my and your branch.
+
+Note that you can also access the Linus' official branch, just by specifying
+'linus' instead of 'pasky'. You can of course add more branches by:
+
+	git addbranch name rsyncurl
+
+When you do some local changes, you can do
+
+	git diff
+
+to display them. "ok" means it's identical, while hash printed means that there
+is some difference. This is a little troublesome so far, since it doesn't like
+even things like ctime or inode number (!) changed. Actuall diff is printed out
+when you changed the file contents.
+
+Of course you will want to commit. If you added any new files, do
+
+	git add newfile1 newfile2 ...
+
+first. Then feel free to commit by
+
+	git commit
+
+which expects the commit message on stdin.
+
+It is nice to be able to examine the commit history. We have tool for that too.
+
+	git log pasky
+
+will get you the history of my branch. git log with no arguments will default
+to the history of the current branch.
+
+
+For reference, my branch URL is:
+
+	rsync://pasky.or.cz/git
+
+Note that this all is highly experimental and is likely break frequently. You
+are advised to track LKML and/or the git mailing list.
+
+
+Software requirements:
+
+	C compiler
+	bash
+	basic shell environment (sed, gred, textutils, ...)
+	mktemp 1.5+ (Mandrake users beware!)
+	diff, patch
+
+
+
+	The "core GIT"
+	~~~~~~~~~~~~~~
+
 This is a stupid (but extremely fast) directory content manager.  It
 doesn't do a whole lot, but what it _does_ do is track directory
-contents efficiently. 
+contents efficiently.
 
 There are two object abstractions: the "object database", and the
 "current directory cache".
+
 
 	The Object Database (SHA1_FILE_DIRECTORY)
 
@@ -121,6 +234,7 @@ it's not something "git" does for you.
 
 Another way of saying the same thing: "git" itself only handles content
 integrity, the trust has to come from outside. 
+
 
 	Current Directory Cache (".git/index")
 

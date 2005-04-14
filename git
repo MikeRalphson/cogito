@@ -1,0 +1,66 @@
+#!/bin/sh
+#
+# The GIT scripted toolkit.
+# Copyright (c) Petr Baudis, 2005
+#
+# This is the central command for the GIT toolkit, providing a humanly
+# usable SCM-like interface to GIT.
+#
+# This command mostly only multiplexes to the individual script based
+# on the first argument.
+
+error () {
+	echo git: $@ >&2
+}
+die () {
+	error $@
+	exit 1
+}
+
+
+help () {
+	cat <<__END__
+The GIT scripted toolkit  $(gitversion.sh)
+
+Usage: git COMMAND [ARG]...
+
+Available commands:
+	add, addremote, apply, commit, ci, diff, export, help, log, ls, lsobj,
+	merge, pull, rm, tag, track
+__END__
+}
+
+
+cmd=$1; shift
+if [ ! "$cmd" ]; then
+	error "missing command"
+	help
+	exit 1
+fi
+
+
+### XXX: Compatibility hack.
+# Introduced at 2005-04-12, to be removed few days later.
+
+[ -d .dircache ] && [ ! -e .git ] && mv .dircache .git
+
+
+case "$cmd" in
+"add")        gitadd.sh "$@";;
+"addremote")  gitaddremote.sh "$@";;
+"apply")      gitapply.sh "$@";;
+"commit" | "ci")
+              gitcommit.sh "$@";;
+"diff")       gitdiff.sh "$@";;
+"export")     gitexport.sh "$@";;
+"help")       help "$@";;
+"log")        gitlog.sh "$@";;
+"ls")         gitls.sh "$@";;
+"lsobj")      gitlsobj.sh "$@";;
+"merge")      gitmerge.sh "$@";;
+"pull")       gitpull.sh "$@";;
+"rm")         gitrm.sh "$@";;
+"tag")        gittag.sh "$@";;
+"track")      gittrack.sh "$@";;
+*)            error "unknown command"; help;;
+esac

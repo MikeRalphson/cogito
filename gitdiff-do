@@ -1,0 +1,87 @@
+#!/bin/bash
+#
+# Make a diff between two GIT trees.
+# Copyright (c) Petr Baudis, 2005
+#
+# Takes two parameters identifying the two trees/commits to compare.
+# Empty string will be substitued to HEAD revision.
+#
+# Note that this is probably the most performance critical shell script
+# in the whole GIT suite. That's also why I resorted to bash builtin
+# features and stuff. -- pasky@ucw.cz
+#
+# Outputs a diff converting the first tree to the second one.
+
+
+id1=$1; shift
+id2=$1; shift
+
+# Leaves the result in $label.
+mkbanner () {
+	loc=$1; treeid=$2; fname=$3; mode=$4; sha1=$5;
+
+	cat-file blob $sha1 >$loc
+
+	label="$treeid/$fname";
+
+	labelapp=""
+	[ x"$mode" != x"!" ] && labelapp="$labelapp mode:$mode"
+	[ x"$sha1" != x"!" ] && labelapp="$labelapp sha1:$sha1"
+	labelapp=${labelapp:1}
+
+	[ "$labelapp" ] && label="$label  ($labelapp)"
+}
+
+diffdir=$(mktemp -d -t gitdiff.XXXXXX)
+diffdir1="$diffdir/$id1"
+diffdir2="$diffdir/$id2"
+mkdir "$diffdir1" "$diffdir2"
+
+while [ "$1" ]; do
+	declare -a param
+	param=($1);
+	op=${param[0]:0:1}
+	mode=${param[0]:1}
+	type=${param[1]}
+	sha=${param[2]}
+	name=${param[3]}
+
+	echo -e "Index: $name\n==================================================================="
+
+	if [ "$type" = "tree" ]; then
+		# diff-tree will kindly diff the subdirs for us
+		# XXX: What about modes?
+		shift; continue
+	fi
+
+	loc1="$diffdir1/$name"; dir1="${loc1%/*}"
+	loc2="$diffdir2/$name"; dir2="${loc2%/*}"
+	([ -d "$dir1" ] && [ -d "$dir2" ]) || mkdir -p "$dir1" "$dir2"
+
+	case $op in
+	"+")
+		mkbanner "$loc2" $id2 "$name" $mode $sha
+		diff -L "/dev/null  (tree:$id1)" -L "$label" -u /dev/null "$loc2"
+		;;
+	"-")
+		mkbanner "$loc1" $id1 "$name" $mode $sha
+		diff -L "$label" -L "/dev/null  (tree:$id2)" -u "$loc1" /dev/null
+		;;
+	"*")
+		modes=(${mode/->/ });
+		mode1=${modes[0]}; mode2=${modes[1]}
+		shas=(${sha/->/ });
+		sha1=${shas[0]}; sha2=${shas[1]}
+		mkbanner "$loc1" $id1 "$name" $mode1 $sha1; label1=$label
+		mkbanner "$loc2" $id2 "$name" $mode2 $sha2; label2=$label
+		diff -L "$label1" -L "$label2" -u "$loc1" "$loc2"
+		;;
+	*)
+		echo "Unknown operator $op, ignoring delta: $1";;
+	esac
+
+	rm -f "$loc1" "$loc2"
+	shift
+done
+
+rm -rf "$diffdir"

@@ -16,10 +16,19 @@ PROG=   update-cache show-diff init-db write-tree read-tree commit-tree \
 	cat-file fsck-cache checkout-cache diff-tree rev-tree show-files \
 	check-files ls-tree
 
-all: $(PROG)
+SCRIPT=	parent-id tree-id git gitXnormid.sh gitadd.sh gitaddremote.sh \
+	gitcommit.sh gitdiff-do gitdiff.sh gitlog.sh gitls.sh gitlsobj.sh \
+	gitmerge.sh gitpull.sh gitrm.sh gittag.sh gittrack.sh gitexport.sh \
+	gitapply.sh
 
-install: $(PROG)
-	install $(PROG) $(HOME)/bin/
+GEN_SCRIPT= gitversion.sh
+
+VERSION= VERSION
+
+all: $(PROG) $(GEN_SCRIPT)
+
+install: $(PROG) $(GEN_SCRIPT)
+	install $(PROG) $(SCRIPT) $(GEN_SCRIPT) $(HOME)/bin/
 
 LIBS= -lssl -lz
 
@@ -67,8 +76,15 @@ ls-tree: ls-tree.o read-cache.o
 read-cache.o: cache.h
 show-diff.o: cache.h
 
+gitversion.sh: $(VERSION)
+	@echo Generating gitversion.sh...
+	@rm -f $@
+	@echo "#!/bin/sh" > $@
+	@echo "echo \"$(shell cat $(VERSION))\"" >> $@
+	@chmod +x $@
+
 clean:
-	rm -f *.o $(PROG)
+	rm -f *.o $(PROG) $(GEN_SCRIPT)
 
 backup: clean
 	cd .. ; tar czvf dircache.tar.gz dir-cache
