@@ -16,7 +16,8 @@ die () {
 	exit 1
 }
 
-([ "$name" ] && [ "$id" ]) || die "usage: git tag NAME ID"
+[ "$name" ] || die "usage: git tag TNAME [COMMIT_ID]"
+[ "$id" ] || id=$(commit-id)
 
 (echo $name | egrep -qv '[^a-zA-Z0-9_.@!:-]') || \
 	die "name contains invalid characters"
