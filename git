@@ -28,6 +28,7 @@ Available commands:
 	add		FILE...
 	addremote	RNAME RSYNC_URL
 	apply				< patch on stdin
+	cancel
 	ci, commit	[FILE...]	< log message on stdin
 	diff		[FROM_ID [TO_ID]]
 	export		DESTDIR
@@ -79,6 +80,7 @@ case "$cmd" in
 "add")        gitadd.sh "$@";;
 "addremote")  gitaddremote.sh "$@";;
 "apply")      gitapply.sh "$@";;
+"cancel")     gitcancel.sh "$@";;
 "commit" | "ci")
               gitcommit.sh "$@";;
 "diff")       gitdiff.sh "$@";;
