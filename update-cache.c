@@ -116,10 +116,15 @@ static int add_file_to_cache(char *path)
 	ce->ce_mode = create_ce_mode(st.st_mode);
 	ce->ce_flags = htons(namelen);
 
-	if (index_fd(ce->sha1, fd, &st) < 0)
+	if (index_fd(ce->sha1, fd, &st) < 0) {
+		free(ce);
 		return -1;
-
-	return add_cache_entry(ce, allow_add);
+	}
+	if (add_cache_entry(ce, allow_add)) {
+		free(ce);
+		return -1;
+	}
+	return 0;
 }
 
 static int match_data(int fd, void *buffer, unsigned long size)
