@@ -108,6 +108,7 @@ static void show_diff_empty(struct cache_entry *ce)
 			printf("\n");
 		fflush(stdout);
 	}
+	free(old);
 }
 
 static const char *show_diff_usage = "show-diff [-q] [-s] [-z] [paths...]";
