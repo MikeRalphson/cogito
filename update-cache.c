@@ -23,13 +23,17 @@ static int index_fd(unsigned char *sha1, int fd, struct stat *st)
 	void *metadata = malloc(200);
 	void *in;
 	SHA_CTX c;
+	int ret;
 
 	in = "";
 	if (size)
 		in = mmap(NULL, size, PROT_READ, MAP_PRIVATE, fd, 0);
 	close(fd);
-	if (!out || (int)(long)in == -1)
+	if (!out || (int)(long)in == -1) {
+		free(out);
+		free(metadata);
 		return -1;
+	}
 
 	memset(&stream, 0, sizeof(stream));
 	deflateInit(&stream, Z_BEST_COMPRESSION);
@@ -58,7 +62,10 @@ static int index_fd(unsigned char *sha1, int fd, struct stat *st)
 	SHA1_Update(&c, out, stream.total_out);
 	SHA1_Final(sha1, &c);
 
-	return write_sha1_buffer(sha1, out, stream.total_out);
+	ret = write_sha1_buffer(sha1, out, stream.total_out);
+	free(out);
+	free(metadata);
+	return ret;
 }
 
 /*
