@@ -245,8 +245,10 @@ static inline int collision_check(char *filename, void *buf, unsigned int size)
 	if (fd < 0)
 		return -1;
 
-	if (fstat(fd, &st) < 0 || size != st.st_size)
+	if (fstat(fd, &st) < 0 || size != st.st_size) {
+		close(fd);
 		return -1;
+	}
 
 	map = mmap(NULL, size, PROT_READ, MAP_PRIVATE, fd, 0);
 	close(fd);
