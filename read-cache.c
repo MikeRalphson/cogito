@@ -226,8 +226,12 @@ int write_sha1_file(char *buf, unsigned len, unsigned char *returnsha1)
 	SHA1_Update(&c, compressed, size);
 	SHA1_Final(sha1, &c);
 
-	if (write_sha1_buffer(sha1, compressed, size) < 0)
+	if (write_sha1_buffer(sha1, compressed, size) < 0) {
+		free(compressed);
 		return -1;
+	}
+	free(compressed);
+
 	if (returnsha1)
 		memcpy(returnsha1, sha1, 20);
 	return 0;
