@@ -25,8 +25,31 @@ The GIT scripted toolkit  $(gitversion.sh)
 Usage: git COMMAND [ARG]...
 
 Available commands:
-	add, addremote, apply, commit, ci, diff, export, help, log, ls, lsobj,
-	merge, pull, rm, tag, track, version
+	add		FILE...
+	addremote	RNAME RSYNC_URL
+	apply				< patch on stdin
+	ci, commit	[FILE...]	< log message on stdin
+	diff		[FROM_ID [TO_ID]]
+	export		DESTDIR
+	help
+	log
+	ls		[TREE_ID]
+	lsobj		[OBJTYPE]
+	merge		-b BASE_ID FROM_ID
+	pull		[RNAME]
+	rm		FILE...
+	tag		TNAME [COMMIT_ID]
+	track		[RNAME]
+	version
+
+Note that these expressions can be used interchangably as "ID"s:
+	empty string (current HEAD)
+	local (the local branch if tracking a remote one)
+	remote name (as registered with git addremote)
+	tag name (as registered with git tag)
+	shortcut hash (shorted unambiguous hash lead)
+	commit object hash (as returned by commit-id)
+	tree object hash (accepted only by some commands)
 __END__
 }
 
