@@ -25,25 +25,29 @@ static int read_one_entry(unsigned char *sha1, const char *base, int baselen, co
 
 static int read_tree(unsigned char *sha1, const char *base, int baselen)
 {
-	void *buffer;
+	void *buffer, *bufptr;
 	unsigned long size;
 	char type[20];
 
-	buffer = read_sha1_file(sha1, type, &size);
+	buffer = bufptr = read_sha1_file(sha1, type, &size);
 	if (!buffer)
 		return -1;
-	if (strcmp(type, "tree"))
+	if (strcmp(type, "tree")) {
+		free(buffer);
 		return -1;
+	}
 	while (size) {
-		int len = strlen(buffer)+1;
-		unsigned char *sha1 = buffer + len;
-		char *path = strchr(buffer, ' ')+1;
+		int len = strlen(bufptr)+1;
+		unsigned char *sha1 = bufptr + len;
+		char *path = strchr(bufptr, ' ')+1;
 		unsigned int mode;
 
-		if (size < len + 20 || sscanf(buffer, "%o", &mode) != 1)
+		if (size < len + 20 || sscanf(bufptr, "%o", &mode) != 1) {
+			free(buffer);
 			return -1;
+		}
 
-		buffer = sha1 + 20;
+		bufptr = sha1 + 20;
 		size -= len + 20;
 
 		if (S_ISDIR(mode)) {
@@ -55,13 +59,18 @@ static int read_tree(unsigned char *sha1, const char *base, int baselen)
 			newbase[baselen + pathlen] = '/';
 			retval = read_tree(sha1, newbase, baselen + pathlen + 1);
 			free(newbase);
-			if (retval)
+			if (retval) {
+				free(buffer);
 				return -1;
+			}
 			continue;
 		}
-		if (read_one_entry(sha1, base, baselen, path, mode) < 0)
+		if (read_one_entry(sha1, base, baselen, path, mode) < 0) {
+			free(buffer);
 			return -1;
+		}
 	}
+	free(buffer);
 	return 0;
 }
 
