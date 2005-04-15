@@ -19,7 +19,8 @@ if [ -s ".git/merging-to" ]; then
 	exit
 fi
 
+[ -s ".git/add-queue" ] && rm $(cat .git/add-queue)
+
 rm -f .git/add-queue .git/rm-queue
 checkout-cache -f -a
-
 update-cache --refresh
