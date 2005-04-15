@@ -69,7 +69,8 @@ cat >>$LOGMSG
 
 
 # TODO: Do the proper separation of adds, removed, and changes.
-update-cache --add --remove $commitfiles || die "update-cache failed"
+echo $commitfiles | xargs update-cache --add --remove \
+	|| die "update-cache failed"
 
 
 oldhead=
