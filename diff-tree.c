@@ -199,6 +199,6 @@ int main(int argc, char **argv)
 	}
 
 	if (argc != 3 || get_sha1_hex(argv[1], old) || get_sha1_hex(argv[2], new))
-		usage("diff-tree <tree sha1> <tree sha1>");
+		usage("diff-tree [-r] [-z] <tree sha1> <tree sha1>");
 	return diff_tree_sha1(old, new, "");
 }
