@@ -80,7 +80,7 @@ fi
 
 treeid=$(write-tree)
 [ "$treeid" ] || die "write-tree failed"
-if [ ! "$merging" ] && [ "$treeid" = "$(tree-id)" ]; then
+if [ ! "$merging" ] && [ "$oldhead" ] && [ "$treeid" = "$(tree-id)" ]; then
 	echo "Refusing to make an empty commit - the tree was not modified" >&2
 	echo "since the previous commit. If you really want to make the" >&2
 	echo "commit, do: commit-tree \`tree-id\` -p \`parent-id\`" >&2
