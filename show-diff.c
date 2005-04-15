@@ -62,12 +62,14 @@ int main(int argc, char **argv)
 	int entries = read_cache();
 	int i;
 
-	while (argc-- > 1) {
-		if (!strcmp(argv[1], "-s")) {
+	for (i = 1; i < argc; i++) {
+		char *arg = argv[i];
+
+		if (!strcmp(arg, "-s")) {
 			silent_on_nonexisting_files = silent = 1;
 			continue;
 		}
-		if (!strcmp(argv[1], "-q")) {
+		if (!strcmp(arg, "-q")) {
 			silent_on_nonexisting_files = 1;
 			continue;
 		}
