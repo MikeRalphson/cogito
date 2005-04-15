@@ -288,13 +288,13 @@ int cache_match_stat(struct cache_entry *ce, struct stat *st)
 	/* nsec seems unreliable - not all filesystems support it, so
 	 * as long as it is in the inode cache you get right nsec
 	 * but after it gets flushed, you get zero nsec. */
-	if (ce->mtime.sec  != (unsigned int)st->st_mtim.tv_sec
+	if (ce->mtime.sec  != (unsigned int)st->st_mtime
 #ifdef NSEC
 	    || ce->mtime.nsec != (unsigned int)st->st_mtim.tv_nsec
 #endif
 	    )
 		changed |= MTIME_CHANGED;
-	if (ce->ctime.sec  != (unsigned int)st->st_ctim.tv_sec
+	if (ce->ctime.sec  != (unsigned int)st->st_ctime
 #ifdef NSEC
 	    || ce->ctime.nsec != (unsigned int)st->st_ctim.tv_nsec
 #endif
