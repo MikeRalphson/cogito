@@ -21,7 +21,8 @@ fi
 
 if [ ! "$id1" ] && [ ! "$id2" ]; then
 	# FIXME: We should squeeze gitdiff-do-alike output from this.
-	show-diff
+	# TODO: Show diffs for added/removed files based on the queues.
+	show-diff -q
 	exit
 fi
 

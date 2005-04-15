@@ -55,10 +55,10 @@ if [ "$tracking" = "$name" ]; then
 	head=$(cat .git/HEAD)
 	if [ "$head" != "$orig_head" ]; then
 		# FIXME: What about filenames starting w/ [+-@]...
-		if [ "$(show-diff | grep -v '^[^+-@].*:' | wc -l)" -gt 0 ]; then
+		if [ -s ".git/blocked" ]; then
 			cat >&2 <<__END__
-I wanted to do an automatic merge, however some local uncommitted changes were
-found in your working tree. Please commit them and then merge manually:
+I wanted to do an automatic merge, however a merge is already in progress.
+Please finish it and then execute the merge manually:
 	git merge -b $orig_head $new_head
 __END__
 			exit 2;
@@ -67,10 +67,6 @@ __END__
 		echo "Merging $orig_head -> $new_head" >&2
 		echo -e "\tto $head..." >&2
 		gitmerge.sh -b "$orig_head" "$new_head"
-		cat >&2 <<__END__
-Tree merged, now you can verify it. It will not be recorded until you do
-git commit.
-__END__
 
 	else
 		gitdiff.sh "$orig_head" "$new_head" | gitapply.sh

@@ -13,6 +13,6 @@
 # FIXME: Does not revert mode changes!
 
 show-diff | patch -p0 -R
-rm -f .git/add-queue .git/rm-queue .git/merged
+rm -f .git/add-queue .git/rm-queue
 
 update-cache --refresh

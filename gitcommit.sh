@@ -15,17 +15,13 @@ die () {
 }
 
 
+[ -s .git/blocked ] && die "committing blocked (unfinished merge?)"
+
 if [ "$1" ]; then
 	# FIXME: Update the add/rm queues!
 	commitfiles="$@"
 
-	merged=
-	if [ -s .git/merged ]; then
-		cat >&2 <<__END__
-gitcommit.sh: warning: will NOT record the performed merge(s) when
-gitcommit.sh: warning: a file list was passed in the arguments
-__END__
-	fi
+	[ -s .git/merging ] && die "cannot commit individual files when merging"
 
 else
 	# We bother with added/removed files here instead of updating
@@ -44,9 +40,12 @@ else
 	changedfiles=$(show-diff -s | cut -d : -f 1)
 	commitfiles="$addedfiles $remfiles $changedfiles"
 
-	merged=
-	[ -s .git/merged ] && \
-		merged=$(cat .git/merged | sed 's/^/-p /')
+	merging=
+	dsttree=
+	if [ -s .git/merging ]; then
+		merging=$(cat .git/merging | sed 's/^/-p /')
+		dsttree=$(cat .git/merging-to)/
+	fi
 
 fi
 if [ ! "$commitfiles" ]; then
@@ -61,9 +60,9 @@ for file in $commitfiles; do
 done
 echo "Enter commit message, terminated by ctrl-D on a separate line:"
 LOGMSG=`mktemp -t gitci.XXXXXX`
-if [ "$merged" ]; then
-	cat .git/merged | sed 's/^/Merging: /' >>$LOGMSG
-	cat .git/merged | sed 's/^/Merging: /'
+if [ "$merging" ]; then
+	cat .git/merging | sed 's/^/Merging: /' >>$LOGMSG
+	cat .git/merging | sed 's/^/Merging: /'
 	echo >>$LOGMSG; echo
 fi
 cat >>$LOGMSG
@@ -73,24 +72,38 @@ cat >>$LOGMSG
 update-cache --add --remove $commitfiles || die "update-cache failed"
 
 
-oldhead=$(cat .git/HEAD)
-[ "$oldhead" ] && oldhead="-p $oldhead"
+oldhead=$(cat $dsttree.git/HEAD)
+[ "$oldhead" ] && oldheadstr="-p $oldhead"
 
 treeid=$(write-tree)
 [ "$treeid" ] || die "write-tree failed"
-if [ "$treeid" = "$(tree-id)" ] && [ ! "$merged" ]; then
+if [ ! "$merging" ] && [ "$treeid" = "$(tree-id)" ]; then
 	echo "Refusing to make an empty commit - the tree was not modified" >&2
 	echo "since the previous commit. If you really want to make the" >&2
 	echo "commit, do: commit-tree \`tree-id\` -p \`parent-id\`" >&2
 	exit 2;
 fi
 
-newhead=$(commit-tree $treeid $oldhead $merged <$LOGMSG)
+newhead=$(commit-tree $treeid $oldheadstr $merging <$LOGMSG)
 rm $LOGMSG
-rm -f .git/add-queue .git/rm-queue .git/merged
+rm -f .git/add-queue .git/rm-queue
 
 if [ "$newhead" ]; then
+	echo "Committed as $newhead."
+	if [ "$merging" ]; then
+		echo "passed merge" >.git/blocked
+		mergetree=$(pwd)
+		cd $dsttree
+		mv "$mergetree" "$mergetree~$newhead"
+	fi
 	echo $newhead >.git/HEAD
+	if [ "$merging" ]; then
+		rm .git/blocked
+		# Update the tree with the merged changes
+		read-tree $(tree-id $newhead)
+		git diff "$oldhead" "$newhead" | git apply
+		update-cache --refresh
+	fi
 else
 	die "error during commit (oldhead $oldhead, treeid $treeid)"
 fi
