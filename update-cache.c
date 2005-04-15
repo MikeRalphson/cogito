@@ -203,7 +203,10 @@ static void refresh_cache(void)
 			printf("%s: needs update\n", ce->name);
 			continue;
 		}
-		active_cache[i] = new;
+		if (new != active_cache[i]) {
+			free(active_cache[i]);
+			active_cache[i] = new;
+		}
 	}
 }
 
