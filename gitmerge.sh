@@ -3,7 +3,10 @@
 # Merge a branch to the current tree.
 # Copyright (c) Petr Baudis, 2005
 #
-# Takes a parameter identifying the branch to be merged.
+# Takes a parameter identifying the branch to be merged, and for now
+# compulsory "-b base_commit" parameter specifying the base for the
+# merge. Optionally, "-a" parameter may come first to tell git merge
+# to check out the full tree to the merge tree.
 #
 # It creates a new ,,merge/ directory, which is git-controlled
 # but has only the changed files checked out. You then have to
@@ -19,8 +22,14 @@ die () {
 head=$(commit-id)
 
 
+checkout_all=
+if [ "$1" = "-a" ]; then
+	checkout_all=1
+	shift
+fi
+
 if [ "$1" != "-b" ] || [ ! "$2" ]; then
-	die "usage: git merge -b BASE_ID FROM_ID"
+	die "usage: git merge [-a] -b BASE_ID FROM_ID"
 fi
 shift
 base=$(gitXnormid.sh -c "$1") || exit 1; shift
@@ -41,13 +50,17 @@ read-tree $(tree-id $head)
 echo $head >.git/HEAD
 echo $branch >>.git/merging
 
-echo diff-tree $(tree-id "$base") $(tree-id "$branch")
-diff-tree $(tree-id "$base") $(tree-id "$branch") | xargs -0 sh -c '
-while [ "$1" ]; do
-	checkout-cache $(echo "$1" | cut -f 4)
-	shift
-done
-' padding
+if [ "$checkout_all" ]; then
+	checkout-cache -a
+else
+	diff-tree $(tree-id "$base") $(tree-id "$branch") | xargs -0 sh -c '
+	while [ "$1" ]; do
+		checkout-cache $(echo "$1" | cut -f 4)
+		shift
+	done
+	' padding
+fi
+update-cache --refresh
 
 gitdiff.sh "$base" "$branch" | gitapply.sh
 
