@@ -18,7 +18,7 @@ else
 fi
 
 id=$1
-if [ ! "$id" ]; then
+if [ ! "$id" ] || [ "$id" = "this" ]; then
 	id=$(cat .git/HEAD)
 fi
 if [ "$id" = "local" ]; then
