@@ -72,8 +72,11 @@ cat >>$LOGMSG
 update-cache --add --remove $commitfiles || die "update-cache failed"
 
 
-oldhead=$(cat $dsttree.git/HEAD)
-[ "$oldhead" ] && oldheadstr="-p $oldhead"
+oldhead=
+if [ -s "$dsttree.git/HEAD" ]; then
+	oldhead=$(cat $dsttree.git/HEAD)
+	oldheadstr="-p $oldhead"
+fi
 
 treeid=$(write-tree)
 [ "$treeid" ] || die "write-tree failed"
