@@ -19,15 +19,14 @@ show-files --deleted >$gonefile
 # just handle it all ourselves.
 patch -p1 -N <$patchfifo &
 
-tee $patchfifo | egrep '^[+-]\{3\}' | {
+tee $patchfifo | egrep '^[+-]{3}[ \t]' | {
 	victim=
 	origmode=
 
 	while read sign file attrs; do
-		echo $sign $file $attrs ... >&2
 		case $sign in
 		"---")
-			victim=file
+			victim=$file
 			mode=$(echo $attrs | sed 's/.*mode:[0-7]*\([0-7]\{3\}\).*/\1/')
 			origmode=
 			[ "$mode" != "$attrs" ] && origmode=$mode
@@ -74,4 +73,4 @@ while [ "$1" ]; do
 done
 ' padding
 
-rm $pathfifo $todo $gonefile
+rm $patchfifo $todo $gonefile
