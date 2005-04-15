@@ -39,7 +39,7 @@ if [ ! "$orig_head" ]; then
 
 elif [ "$orig_head" != "$new_head" ]; then
 	echo "Tree change: $orig_head $new_head"
-	diff-tree $(tree-id $orig_head) $(tree-id $new_head) | tr '\0' '\n'
+	diff-tree -r $(tree-id $orig_head) $(tree-id $new_head)
 
 else
 	echo "Up to date."

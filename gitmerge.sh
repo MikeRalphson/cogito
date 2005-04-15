@@ -53,7 +53,7 @@ echo $branch >>.git/merging
 if [ "$checkout_all" ]; then
 	checkout-cache -a
 else
-	diff-tree $(tree-id "$base") $(tree-id "$branch") | xargs -0 sh -c '
+	diff-tree -r -z $(tree-id "$base") $(tree-id "$branch") | xargs -0 sh -c '
 	while [ "$1" ]; do
 		checkout-cache $(echo "$1" | cut -f 4)
 		shift

@@ -34,4 +34,4 @@ if [ "$id1" = "$id2" ]; then
 	exit 1
 fi
 
-diff-tree -r $id1 $id2 | xargs -0 gitdiff-do $id1 $id2
+diff-tree -r -z $id1 $id2 | xargs -0 gitdiff-do $id1 $id2
