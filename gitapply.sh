@@ -72,6 +72,6 @@ while [ "$1" ]; do
 	"cm")  chmod "$1" "$2"; shift; shift;;
 	esac
 done
-'
+' padding
 
 rm $pathfifo $todo $gonefile
