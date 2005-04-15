@@ -68,18 +68,17 @@ static int index_fd(const char *path, int namelen, struct cache_entry *ce, int f
  */
 static void fill_stat_cache_info(struct cache_entry *ce, struct stat *st)
 {
-	ce->ctime.sec = htonl(st->st_ctime);
+	ce->ce_ctime.sec = htonl(st->st_ctime);
+	ce->ce_mtime.sec = htonl(st->st_mtime);
 #ifdef NSEC
-	ce->ctime.nsec = htonl(st->st_ctim.tv_nsec);
+	ce->ce_ctime.nsec = htonl(st->st_ctim.tv_nsec);
+	ce->ce_mtime.nsec = htonl(st->st_mtim.tv_nsec);
 #endif
-	ce->mtime.sec = htonl(st->st_mtime);
-#ifdef NSEC
-	ce->mtime.nsec = htonl(st->st_mtim.tv_nsec);
-#endif
-	ce->st_dev = htonl(st->st_dev);
-	ce->st_ino = htonl(st->st_ino);
-	ce->st_uid = htonl(st->st_uid);
-	ce->st_gid = htonl(st->st_gid);
+	ce->ce_dev = htonl(st->st_dev);
+	ce->ce_ino = htonl(st->st_ino);
+	ce->ce_uid = htonl(st->st_uid);
+	ce->ce_gid = htonl(st->st_gid);
+	ce->ce_size = htonl(st->st_size);
 }
 
 static int add_file_to_cache(char *path)
@@ -107,9 +106,8 @@ static int add_file_to_cache(char *path)
 	memset(ce, 0, size);
 	memcpy(ce->name, path, namelen);
 	fill_stat_cache_info(ce, &st);
-	ce->st_mode = htonl(st.st_mode);
-	ce->st_size = htonl(st.st_size);
-	ce->namelen = htons(namelen);
+	ce->ce_mode = htonl(st.st_mode);
+	ce->ce_namelen = htons(namelen);
 
 	if (index_fd(path, namelen, ce, fd, &st) < 0)
 		return -1;
@@ -190,7 +188,6 @@ static struct cache_entry *refresh_entry(struct cache_entry *ce)
 	updated = malloc(size);
 	memcpy(updated, ce, size);
 	fill_stat_cache_info(updated, &st);
-	updated->st_size = htonl(st.st_size);
 	return updated;
 }
 
@@ -238,6 +235,35 @@ inside:
 	}
 }
 
+static int add_cacheinfo(char *arg1, char *arg2, char *arg3)
+{
+	int size, len;
+	unsigned int mode;
+	unsigned char sha1[20];
+	struct cache_entry *ce;
+
+	if (sscanf(arg1, "%o", &mode) != 1)
+		return -1;
+	printf("got mode %o\n", mode);
+	if (get_sha1_hex(arg2, sha1))
+		return -1;
+	printf("got sha1 %s\n", sha1_to_hex(sha1));
+	if (!verify_path(arg3))
+		return -1;
+	printf("got path %s\n", arg3);
+
+	len = strlen(arg3);
+	size = cache_entry_size(len);
+	ce = malloc(size);
+	memset(ce, 0, size);
+
+	memcpy(ce->sha1, sha1, 20);
+	memcpy(ce->name, arg3, len);
+	ce->ce_namelen = htons(len);
+	ce->ce_mode = htonl(mode);
+	return add_cache_entry(ce, allow_add);
+}
+
 static int remove_lock = 0;
 
 static void remove_lock_file(void)
@@ -280,6 +306,12 @@ int main(int argc, char **argv)
 			}
 			if (!strcmp(path, "--refresh")) {
 				refresh_cache();
+				continue;
+			}
+			if (!strcmp(path, "--cacheinfo")) {
+				if (i+3 >= argc || add_cacheinfo(argv[i+1], argv[i+2], argv[i+3]))
+					die("update-cache: --cacheinfo <mode> <sha1> <path>");
+				i += 3;
 				continue;
 			}
 			die("unknown option %s", path);
