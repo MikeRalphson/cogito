@@ -267,6 +267,8 @@ int write_sha1_buffer(const unsigned char *sha1, void *buf, unsigned int size)
 	char *filename = sha1_file_name(sha1);
 	int fd;
 
+	/* TODO: Write to a temporary fail and then rename() it. */
+
 	fd = open(filename, O_WRONLY | O_CREAT | O_EXCL, 0666);
 	if (fd < 0) {
 		if (errno != EEXIST)
@@ -276,9 +278,13 @@ int write_sha1_buffer(const unsigned char *sha1, void *buf, unsigned int size)
 					" This is bad, bad, BAD!\a\n");
 		return 0;
 	}
-	write(fd, buf, size);
-	close(fd);
-	return 0;
+
+	if (write(fd, buf, size) != size) {
+		close(fd);
+		unlink(filename);
+		return error("Failed to write file %s\n", filename);
+	}
+	return close(fd);
 }
 
 int cache_match_stat(struct cache_entry *ce, struct stat *st)
