@@ -38,7 +38,7 @@ git lntree ,,merge
 echo $(pwd) >,,merge/.git/merging-to
 cd ,,merge
 read-tree $(tree-id $head)
-
+echo $head >.git/HEAD
 echo $branch >>.git/merging
 
 echo diff-tree $(tree-id "$base") $(tree-id "$branch")
