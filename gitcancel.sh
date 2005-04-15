@@ -10,6 +10,15 @@
 #
 # Takes no arguments. Takes the evil changes from the tree.
 
+if [ -s ".git/merging-to" ]; then
+	mergetree=$(pwd)
+	dsttree=$(cat .git/merging-to)
+	cd "$dsttree"
+	mv "$mergetree" "$mergetree~cancelled-"$(date +"%s")
+	rm .git/blocked
+	exit
+fi
+
 rm -f .git/add-queue .git/rm-queue
 checkout-cache -f -a
 
