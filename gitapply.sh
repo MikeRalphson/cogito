@@ -60,7 +60,7 @@ wait
 # This is done on the assumption that we are never going to have
 # too many files deleted in the first place anyway.
 
-touchfiles="$(show-files --deleted | join -a 2 $gonefile -)"
+touchfiles="$(show-files --deleted | join -v 2 $gonefile -)"
 [ "$touchfiles" ] && touch $touchfiles
 
 cat $todo | xargs -0 sh -c '
