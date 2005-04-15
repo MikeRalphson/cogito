@@ -431,7 +431,7 @@ int read_cache(void)
 	if (fd < 0)
 		return (errno == ENOENT) ? 0 : error("open failed");
 
-	size = 0; // avoid gcc warning
+	size = 0; /* avoid gcc warning */
 	map = (void *)-1;
 	if (!fstat(fd, &st)) {
 		size = st.st_size;
