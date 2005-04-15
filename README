@@ -118,6 +118,7 @@ Software requirements:
 	basic shell environment (sed, gred, textutils, ...)
 	mktemp 1.5+ (Mandrake users beware!)
 	diff, patch
+	OpenSSL
 
 
 
