@@ -67,11 +67,11 @@ int main(int argc, char **argv)
 			silent_on_nonexisting_files = silent = 1;
 			continue;
 		}
-		if (!strcmp(argv[1], "-r")) {
+		if (!strcmp(argv[1], "-q")) {
 			silent_on_nonexisting_files = 1;
 			continue;
 		}
-		usage("show-diff [-s] [-r]");
+		usage("show-diff [-s] [-q]");
 	}
 
 	if (entries < 0) {
