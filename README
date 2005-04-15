@@ -4,7 +4,7 @@
 
  - random three-letter combination that is pronounceable, and not
    actually used by any common UNIX command.  The fact that it is a
-   mispronounciation of "get" may or may not be relevant.
+   mispronunciation of "get" may or may not be relevant.
  - stupid. contemptible and despicable. simple. Take your pick from the
    dictionary of slang.
  - "global information tracker": you're in a good mood, and it actually
@@ -82,7 +82,7 @@ When you do some local changes, you can do
 
 to display them. "ok" means it's identical, while hash printed means that there
 is some difference. This is a little troublesome so far, since it doesn't like
-even things like ctime or inode number (!) changed. Actuall diff is printed out
+even things like ctime or inode number (!) changed. Actual diff is printed out
 when you changed the file contents.
 
 Of course you will want to commit. If you added any new files, do
@@ -115,7 +115,7 @@ Software requirements:
 
 	C compiler
 	bash
-	basic shell environment (sed, gred, textutils, ...)
+	basic shell environment (sed, grep, textutils, ...)
 	mktemp 1.5+ (Mandrake users beware!)
 	diff, patch
 	OpenSSL
@@ -158,7 +158,7 @@ refer to anything else.  There is no signature or any other verification
 of the data, so while the object is consistent (it _is_ indexed by its
 sha1 hash, so the data itself is certainly correct), it has absolutely
 no other attributes.  No name associations, no permissions.  It is
-purely a blob of data (ie normally "file contents"). 
+purely a blob of data (i.e. normally "file contents"). 
 
 TREE: The next hierarchical object type is the "tree" object.  A tree
 object is a list of permission/name/blob data, sorted by name.  In other
@@ -181,7 +181,7 @@ where "n" is the size of the difference, rather than the size of the
 tree. 
 
 Side note 2 on trees: since the name of a "blob" depends entirely and
-exclusively on its contents (ie there are no names or permissions
+exclusively on its contents (i.e. there are no names or permissions
 involved), you can see trivial renames or permission changes by noticing
 that the blob stayed the same.  However, renames with data changes need
 a smarter "diff" implementation. 
@@ -201,7 +201,7 @@ parents do not have to actually have any relationship with the result,
 for example.
 
 Note on changesets: unlike real SCM's, changesets do not contain rename
-information or file mode chane information.  All of that is implicit in
+information or file mode change information.  All of that is implicit in
 the trees involved (the result tree, and the result trees of the
 parents), and describing that makes no sense in this idiotic file
 manager.
