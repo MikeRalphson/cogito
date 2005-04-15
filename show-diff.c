@@ -87,8 +87,10 @@ int main(int argc, char **argv)
 		void *new;
 
 		if (stat(ce->name, &st) < 0) {
+			if (errno == ENOENT && silent_on_nonexisting_files)
+				continue;
 			printf("%s: %s\n", ce->name, strerror(errno));
-			if (errno == ENOENT && !silent_on_nonexisting_files)
+			if (errno == ENOENT)
 				show_diff_empty(ce);
 			continue;
 		}
