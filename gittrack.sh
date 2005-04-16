@@ -45,8 +45,8 @@ if [ "$name" ]; then
 	[ -s ".git/HEAD.local" ] && \
 		die "not tracking anything but \"local\" branch exists!"
 
-	mv .git/HEAD .git/HEAD.local
-	cp ".git/heads/$name" .git/HEAD
+	cat .git/HEAD >.git/HEAD.local
+	cat ".git/heads/$name" >.git/HEAD
 	echo $name >.git/tracking
 
 	read-tree $(tree-id "$name")
@@ -72,7 +72,8 @@ else
 			echo -e "Write it down, nothing points at it now!\a" >&2
 		fi
 
-		mv .git/HEAD.local .git/HEAD
+		cat .git/HEAD.local >.git/HEAD
+		rm .git/HEAD.local
 	else
 		echo "First-time untracking (no local branch)." >&2
 	fi
