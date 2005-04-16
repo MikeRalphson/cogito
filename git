@@ -28,6 +28,7 @@ Available commands:
 	add		FILE...
 	addremote	RNAME RSYNC_URL
 	apply				< patch on stdin
+	branch          BNAME [COMMIT_ID]
 	cancel
 	ci, commit	[FILE...]	< log message on stdin
 	clone           RSYNC_URL
@@ -90,6 +91,7 @@ case "$cmd" in
 "add")        gitadd.sh "$@";;
 "addremote")  gitaddremote.sh "$@";;
 "apply")      gitapply.sh "$@";;
+"branch")     gitbranch.sh "$@";;
 "cancel")     gitcancel.sh "$@";;
 "ci" | "commit")
               gitcommit.sh "$@";;
