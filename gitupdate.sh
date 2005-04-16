@@ -24,7 +24,6 @@ die () {
 [ "$dstcommit" ] || die "usage: git update COMMIT_ID"
 
 curcommit=$(commit-id)
-[ "$curcommit" != "$dstcommit" ] || die "nothing to do"
 
 rm .git/HEAD
 if [ -s ".git/heads/$1" ]; then
@@ -33,8 +32,10 @@ else
 	echo $dstcommit >.git/HEAD
 fi
 
-read-tree $(tree-id)
-git diff $curcommit $dstcommit | git apply
-update-cache --refresh
+if [ "$curcommit" != "$dstcommit" ]; then
+	read-tree $(tree-id)
+	git diff $curcommit $dstcommit | git apply
+	update-cache --refresh
+fi
 
 echo "On commit $dstcommit"
