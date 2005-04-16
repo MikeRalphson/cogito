@@ -45,6 +45,7 @@ Available commands:
 	rm		FILE...
 	tag		TNAME [COMMIT_ID]
 	track		[RNAME]
+	update		COMMIT_ID
 	version
 
 Note that these expressions can be used interchangably as "ID"s:
@@ -107,6 +108,8 @@ case "$cmd" in
 "rm")         gitrm.sh "$@";;
 "tag")        gittag.sh "$@";;
 "track")      gittrack.sh "$@";;
+"up" | "update")
+              gitupdate.sh "$@";;
 "version")    gitversion.sh "$@";;
 *)            error "unknown command"; help;;
 esac
