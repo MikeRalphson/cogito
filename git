@@ -33,7 +33,7 @@ Available commands:
 	ci, commit	[FILE...]	< log message on stdin
 	clone           RSYNC_URL
 	diff		[FROM_ID [TO_ID]]
-	export		DESTDIR
+	export		DESTDIR [TREE_ID]
 	fork		BNAME BRANCH_DIR [COMMIT_ID]
 	help
 	init
