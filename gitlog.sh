@@ -12,7 +12,7 @@
 base=$(gitXnormid.sh -c $1) || exit 1
 
 rev-tree $base | sort -rn | while read time commit parents; do
-	echo me ${commit%:*};
+	echo commit ${commit%:*};
 	cat-file commit $commit
 	echo -e "\n--------------------------"
 done
