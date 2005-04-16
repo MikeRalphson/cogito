@@ -71,7 +71,7 @@ fi
 # Introduced at 2005-04-12, to be removed few days later.
 [ -d .dircache ] && [ ! -e .git ] && mv .dircache .git
 # Introduced at 2005-04-13:
-if [ ! -d .git/heads ]; then
+if [ -d .git ] && [ ! -d .git/heads ]; then
 	mkdir .git/heads || exit 1
 	for h in .git/HEAD.*; do
 		[ "$h" != "local" ] && \
@@ -79,7 +79,7 @@ if [ ! -d .git/heads ]; then
 	done
 fi
 # Introduced at 2005-04-16:
-if [ ! -e .git/heads/master ]; then
+if [ -d .git ] && [ ! -e .git/heads/master ]; then
 	mv .git/HEAD .git/heads/master
 	ln -s heads/master .git/HEAD
 fi
