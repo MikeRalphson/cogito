@@ -14,6 +14,8 @@ static int show_deleted = 0;
 static int show_cached = 0;
 static int show_others = 0;
 static int show_ignored = 0;
+static int show_stage = 0;
+static int show_unmerged = 0;
 static int line_terminator = '\n';
 
 static const char **dir;
@@ -108,10 +110,21 @@ static void show_files(void)
 		for (i = 0; i < nr_dir; i++)
 			printf("%s%c", dir[i], line_terminator);
 	}
-	if (show_cached) {
+	if (show_cached | show_stage) {
 		for (i = 0; i < active_nr; i++) {
 			struct cache_entry *ce = active_cache[i];
-			printf("%s%c", ce->name, line_terminator);
+			if (show_unmerged && !ce_stage(ce))
+				continue;
+			if (!show_stage)
+				printf("%s%c", ce->name, line_terminator);
+			else
+				printf(/* "%06o %s %d %10d %s%c", */
+				       "%06o %s %d %s%c",
+				       ntohl(ce->ce_mode),
+				       sha1_to_hex(ce->sha1),
+				       ce_stage(ce),
+				       /* ntohl(ce->ce_size), */
+				       ce->name, line_terminator); 
 		}
 	}
 	if (show_deleted) {
@@ -156,12 +169,22 @@ int main(int argc, char **argv)
 			show_ignored = 1;
 			continue;
 		}
+		if (!strcmp(arg, "--stage")) {
+			show_stage = 1;
+			continue;
+		}
+		if (!strcmp(arg, "--unmerged")) {
+			// There's no point in showing unmerged unless you also show the stage information
+			show_stage = 1;
+			show_unmerged = 1;
+			continue;
+		}
 
-		usage("show-files (--[cached|deleted|others|ignored])*");
+		usage("show-files [-z] (--[cached|deleted|others|ignored|stage])*");
 	}
 
 	/* With no flags, we default to showing the cached files */
-	if (!(show_cached | show_deleted | show_others | show_ignored))
+	if (!(show_stage | show_deleted | show_others | show_ignored | show_unmerged))
 		show_cached = 1;
 
 	read_cache();

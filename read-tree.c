@@ -5,6 +5,8 @@
  */
 #include "cache.h"
 
+static int stage = 0;
+
 static int read_one_entry(unsigned char *sha1, const char *base, int baselen, const char *pathname, unsigned mode)
 {
 	int len = strlen(pathname);
@@ -14,7 +16,7 @@ static int read_one_entry(unsigned char *sha1, const char *base, int baselen, co
 	memset(ce, 0, size);
 
 	ce->ce_mode = htonl(mode);
-	ce->ce_namelen = htons(baselen + len);
+	ce->ce_flags = create_ce_flags(baselen + len, stage);
 	memcpy(ce->name, base, baselen);
 	memcpy(ce->name + baselen, pathname, len+1);
 	memcpy(ce->sha1, sha1, 20);
@@ -71,6 +73,85 @@ static void remove_lock_file(void)
 		unlink(".git/index.lock");
 }
 
+static int same(struct cache_entry *a, struct cache_entry *b)
+{
+	return a->ce_mode == b->ce_mode && 
+		!memcmp(a->sha1, b->sha1, 20);
+}
+
+
+/*
+ * This removes all trivial merges that don't change the tree
+ * and collapses them to state 0.
+ *
+ * _Any_ other merge is left to user policy.  That includes "both
+ * created the same file", and "both removed the same file" - which are
+ * trivial, but the user might still want to _note_ it. 
+ */
+static struct cache_entry *merge_entries(struct cache_entry *a,
+					 struct cache_entry *b,
+					 struct cache_entry *c)
+{
+	int len = ce_namelen(a);
+
+	/*
+	 * Are they all the same filename? We won't do
+	 * any name merging
+	 */
+	if (ce_namelen(b) != len ||
+	    ce_namelen(c) != len ||
+	    memcmp(a->name, b->name, len) ||
+	    memcmp(a->name, c->name, len))
+		return NULL;
+
+	/*
+	 * Ok, all three entries describe the same
+	 * filename, but maybe the contents or file
+	 * mode have changed?
+	 *
+	 * The trivial cases end up being the ones where two
+	 * out of three files are the same:
+	 *  - both destinations the same, trivially take either
+	 *  - one of the destination versions hasn't changed,
+	 *    take the other.
+	 *
+	 * The "all entries exactly the same" case falls out as
+	 * a special case of any of the "two same" cases.
+	 *
+	 * Here "a" is "original", and "b" and "c" are the two
+	 * trees we are merging.
+	 */
+	if (same(b,c))
+		return c;
+	if (same(a,b))
+		return c;
+	if (same(a,c))
+		return b;
+	return NULL;
+}
+
+static void trivially_merge_cache(struct cache_entry **src, int nr)
+{
+	struct cache_entry **dst = src;
+
+	while (nr) {
+		struct cache_entry *ce, *result;
+
+		ce = src[0];
+		if (nr > 2 && (result = merge_entries(ce, src[1], src[2])) != NULL) {
+			ce = result;
+			ce->ce_flags &= ~htons(CE_STAGEMASK);
+			src += 2;
+			nr -= 2;
+			active_nr -= 2;
+		}
+		*dst = ce;
+		src++;
+		dst++;
+		nr--;
+	}
+}
+
 int main(int argc, char **argv)
 {
 	int i, newfd;
@@ -85,19 +166,21 @@ int main(int argc, char **argv)
 	for (i = 1; i < argc; i++) {
 		const char *arg = argv[i];
 
-		/* "-m" stands for "merge" current directory cache */
+		/* "-m" stands for "merge", meaning we start in stage 1 */
 		if (!strcmp(arg, "-m")) {
-			if (active_cache)
-				die("read-tree: cannot merge old cache on top of new");
-			if (read_cache() < 0)
-				die("read-tree: corrupt directory cache");
+			stage = 1;
 			continue;
 		}
 		if (get_sha1_hex(arg, sha1) < 0)
 			usage("read-tree [-m] <sha1>");
+		if (stage > 3)
+			usage("can't merge more than two trees");
 		if (read_tree(sha1, "", 0) < 0)
 			die("failed to unpack tree object %s", arg);
+		stage++;
 	}
+	if (stage == 4)
+		trivially_merge_cache(active_cache, active_nr);
 	if (write_cache(newfd, active_cache, active_nr) ||
 	    rename(".git/index.lock", ".git/index"))
 		die("unable to write new index file");

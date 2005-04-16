@@ -315,8 +315,10 @@ int cache_match_stat(struct cache_entry *ce, struct stat *st)
 	return changed;
 }
 
-int cache_name_compare(const char *name1, int len1, const char *name2, int len2)
+int cache_name_compare(const char *name1, int flags1, const char *name2, int flags2)
 {
+	int len1 = flags1 & CE_NAMEMASK;
+	int len2 = flags2 & CE_NAMEMASK;
 	int len = len1 < len2 ? len1 : len2;
 	int cmp;
 
@@ -326,6 +328,10 @@ int cache_name_compare(const char *name1, int len1, const char *name2, int len2)
 	if (len1 < len2)
 		return -1;
 	if (len1 > len2)
+		return 1;
+	if (flags1 < flags2)
+		return -1;
+	if (flags1 > flags2)
 		return 1;
 	return 0;
 }
@@ -339,7 +345,7 @@ int cache_name_pos(const char *name, int namelen)
 	while (last > first) {
 		int next = (last + first) >> 1;
 		struct cache_entry *ce = active_cache[next];
-		int cmp = cache_name_compare(name, namelen, ce->name, ce_namelen(ce));
+		int cmp = cache_name_compare(name, namelen, ce->name, htons(ce->ce_flags));
 		if (!cmp)
 			return next;
 		if (cmp < 0) {
@@ -351,22 +357,35 @@ int cache_name_pos(const char *name, int namelen)
 	return -first-1;
 }
 
+/* Remove entry, return true if there are more entries to go.. */
+static int remove_entry_at(int pos)
+{
+	active_nr--;
+	if (pos >= active_nr)
+		return 0;
+	memmove(active_cache + pos, active_cache + pos + 1, (active_nr - pos) * sizeof(struct cache_entry *));
+	return 1;
+}
+
 int remove_file_from_cache(char *path)
 {
 	int pos = cache_name_pos(path, strlen(path));
-	if (pos >= 0) {
-		active_nr--;
-		if (pos < active_nr)
-			memmove(active_cache + pos, active_cache + pos + 1, (active_nr - pos) * sizeof(struct cache_entry *));
-	}
+	if (pos >= 0)
+		remove_entry_at(pos);
 	return 0;
+}
+
+static int same_name(struct cache_entry *a, struct cache_entry *b)
+{
+	int len = ce_namelen(a);
+	return ce_namelen(b) == len && !memcmp(a->name, b->name, len);
 }
 
 int add_cache_entry(struct cache_entry *ce, int ok_to_add)
 {
 	int pos;
 
-	pos = cache_name_pos(ce->name, ce_namelen(ce));
+	pos = cache_name_pos(ce->name, htons(ce->ce_flags));
 
 	/* existing match? Just replace it */
 	if (pos >= 0) {
@@ -374,6 +393,19 @@ int add_cache_entry(struct cache_entry *ce, int ok_to_add)
 		return 0;
 	}
 	pos = -pos-1;
+
+	/*
+	 * Inserting a merged entry ("stage 0") into the index
+	 * will always replace all non-merged entries..
+	 */
+	if (pos < active_nr && ce_stage(ce) == 0) {
+		while (same_name(active_cache[pos], ce)) {
+			ok_to_add = 1;
+			active_nr--;
+			if (!remove_entry_at(pos))
+				break;
+		}
+	}
 
 	if (!ok_to_add)
 		return -1;
