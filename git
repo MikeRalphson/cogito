@@ -30,6 +30,7 @@ Available commands:
 	apply				< patch on stdin
 	cancel
 	ci, commit	[FILE...]	< log message on stdin
+	clone           RSYNC_URL
 	diff		[FROM_ID [TO_ID]]
 	export		DESTDIR
 	fork		BNAME BRANCH_DIR
@@ -89,8 +90,9 @@ case "$cmd" in
 "addremote")  gitaddremote.sh "$@";;
 "apply")      gitapply.sh "$@";;
 "cancel")     gitcancel.sh "$@";;
-"commit" | "ci")
+"ci" | "commit")
               gitcommit.sh "$@";;
+"clone")      gitclone.sh "$@";;
 "diff")       gitdiff.sh "$@";;
 "export")     gitexport.sh "$@";;
 "fork")       gitfork.sh "$@";;
