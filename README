@@ -118,7 +118,8 @@ Software requirements:
 	basic shell environment (sed, grep, textutils, ...)
 	mktemp 1.5+ (Mandrake users beware!)
 	diff, patch
-	OpenSSL
+	libssl
+	rsync
 
 
 
