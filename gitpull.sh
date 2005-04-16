@@ -16,7 +16,7 @@ die () {
 
 [ "$name" ] || name=$(cat .git/tracking 2>/dev/null)
 [ "$name" ] || die "where to pull from?"
-uri=$(grep $(echo -e "^$name\t") .git/remotes | cut -f 2)
+uri=$(grep $(echo -e "^$name\t" | sed 's/\./\\./g') .git/remotes | cut -f 2)
 [ "$uri" ] || die "unknown remote"
 
 orig_head=
