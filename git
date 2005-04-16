@@ -33,7 +33,7 @@ Available commands:
 	clone           RSYNC_URL
 	diff		[FROM_ID [TO_ID]]
 	export		DESTDIR
-	fork		BNAME BRANCH_DIR
+	fork		BNAME BRANCH_DIR [COMMIT_ID]
 	help
 	init
 	lntree		DESTDIR

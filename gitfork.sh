@@ -11,10 +11,12 @@
 #
 # The new directory has a fresh checkout of the current tree.
 #
-# Takes the new branch name and its directory name.
+# Takes the new branch name, its directory name, and potentially
+# the head commit ID.
 
 name=$1
 destdir=$2
+head=$3
 
 die () {
 	echo gitfork.sh: $@ >&2
@@ -22,7 +24,7 @@ die () {
 }
 
 
-([ "$name" ] && [ "$destdir" ]) || die "usage: git fork BNAME DESTDIR"
+([ "$name" ] && [ "$destdir" ]) || die "usage: git fork BNAME DESTDIR [COMMIT_ID]"
 
 if [ "$name" = "local" ] || [ "$name" = "this" ]; then
 	die "given branch name is reserved"
@@ -34,8 +36,10 @@ fi
 
 [ -e "$destdir" ] && die "$destdir already exists"
 
+[ "$head" ] || head=$(commit-id)
+
 git lntree "$destdir"
-cat .git/HEAD >.git/heads/$name
+echo $head >.git/heads/$name
 ln -s heads/$name "$destdir/.git/HEAD"
 
 cd "$destdir"
@@ -43,4 +47,4 @@ read-tree $(tree-id)
 checkout-cache -a
 update-cache --refresh
 
-echo "Branch $name ready in $destdir"
+echo "Branch $name ready in $destdir with head $head"
