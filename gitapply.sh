@@ -42,7 +42,8 @@ tee $patchfifo | egrep '^[+-]{3}[ \t]' | {
 			fi
 			mode=$(echo $attrs | sed 's/.*mode:[0-7]*\([0-7]\{3\}\).*/\1/')
 			if [ "$mode" ] && [ "$mode" != "$attrs" ] && [ "$origmode" != "$mode" ]; then
-				echo -ne "cm\0$mode\0$file\0"
+				tocm=$(echo "$file" | sed 's/[^\/]*\///') #-p1
+				echo -ne "cm\0 $mode\0$tocm\0"
 			fi
 			;;
 		*)
