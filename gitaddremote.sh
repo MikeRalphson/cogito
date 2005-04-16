@@ -31,7 +31,8 @@ die () {
 if [ "$name" = "local" ] || [ "$name" = "this" ]; then
 	die "given branch name is reserved"
 fi
-if grep -q $(echo -e "^$name\t" | sed 's/\./\\./g') .git/remotes; then
+if grep -q $(echo -e "^$name\t" | sed 's/\./\\./g') .git/remotes \
+   || [ -s ".git/heads/$name" ]; then
 	die "branch already exists"
 fi
 

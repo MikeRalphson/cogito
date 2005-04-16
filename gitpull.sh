@@ -7,6 +7,8 @@
 #
 # Takes the remote's name.
 
+# FIXME: Multiple local branches tracking the same remote branch.
+
 name=$1
 
 die () {
@@ -24,7 +26,7 @@ orig_head=
 
 mkdir -p .git/heads
 
-rsync -r "$uri/HEAD" ".git/heads/$name"
+rsync -Lr "$uri/HEAD" ".git/heads/$name"
 # We already saw the MOTD, thank you very much.
 [ -d .git/objects ] || mkdir -p .git/objects
 rsync --ignore-existing --whole-file \

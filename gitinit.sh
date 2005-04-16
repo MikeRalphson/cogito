@@ -13,3 +13,5 @@ die () {
 
 init-db
 mkdir .git/heads .git/tags
+touch .git/heads/master
+ln -s heads/master .git/HEAD

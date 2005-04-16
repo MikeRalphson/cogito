@@ -32,6 +32,7 @@ Available commands:
 	ci, commit	[FILE...]	< log message on stdin
 	diff		[FROM_ID [TO_ID]]
 	export		DESTDIR
+	fork		BNAME BRANCH_DIR
 	help
 	init
 	lntree		DESTDIR
@@ -76,6 +77,11 @@ if [ ! -d .git/heads ]; then
 			mv $h .git/heads/$(echo $h | cut -d . -f 3-)
 	done
 fi
+# Introduced at 2005-04-16:
+if [ ! -e .git/heads/master ]; then
+	mv .git/HEAD .git/heads/master
+	ln -s heads/master .git/HEAD
+fi
 
 
 case "$cmd" in
@@ -87,6 +93,7 @@ case "$cmd" in
               gitcommit.sh "$@";;
 "diff")       gitdiff.sh "$@";;
 "export")     gitexport.sh "$@";;
+"fork")       gitfork.sh "$@";;
 "help")       help "$@";;
 "init")       gitinit.sh "$@";;
 "lntree")     gitlntree.sh "$@";;
