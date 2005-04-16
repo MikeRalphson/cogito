@@ -37,7 +37,8 @@ tee $patchfifo | egrep '^[+-]{3}[ \t]' | {
 				echo -ne "rm\0$torm\0"
 				continue
 			elif [ "$victim" = "/dev/null" ]; then
-				echo -ne "add\0$file\0"
+				toadd=$(echo "$file" | sed 's/^[^\/]*\///') #-p1
+				echo -ne "add\0$toadd\0"
 			fi
 			mode=$(echo $attrs | sed 's/.*mode:[0-7]*\([0-7]\{3\}\).*/\1/')
 			if [ "$mode" ] && [ "$mode" != "$attrs" ] && [ "$origmode" != "$mode" ]; then
