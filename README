@@ -74,7 +74,7 @@ which will show changes between my and your branch.
 Note that you can also access the Linus' official branch, just by specifying
 'linus' instead of 'pasky'. You can of course add more branches by:
 
-	git addbranch name rsyncurl
+	git addremote name rsyncurl
 
 When you do some local changes, you can do
 
