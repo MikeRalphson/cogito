@@ -62,8 +62,6 @@ static int create_file(const char *path, unsigned int mode)
 			fd = open(path, O_WRONLY | O_TRUNC | O_CREAT, mode);
 		}
 	}
-	if (fd >= 0)
-		fchmod(fd, mode);
 	return fd;
 }
 
