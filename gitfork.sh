@@ -16,7 +16,7 @@
 
 name=$1
 destdir=$2
-head=$3
+head=$(gitXnormid.sh -c $3)
 
 die () {
 	echo gitfork.sh: $@ >&2
@@ -35,8 +35,6 @@ if grep -q $(echo -e "^$name\t" | sed 's/\./\\./g') .git/remotes \
 fi
 
 [ -e "$destdir" ] && die "$destdir already exists"
-
-[ "$head" ] || head=$(commit-id)
 
 git lntree "$destdir"
 echo $head >.git/heads/$name
