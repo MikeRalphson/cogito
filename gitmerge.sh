@@ -3,9 +3,9 @@
 # Merge a branch to the current tree.
 # Copyright (c) Petr Baudis, 2005
 #
-# Takes a parameter identifying the branch to be merged, and for now
-# compulsory "-b base_commit" parameter specifying the base for the
-# merge. Optionally, "-a" parameter may come first to tell git merge
+# Takes a parameter identifying the branch to be merged.
+# Optional "-b base_commit" parameter specifies the base for the
+# merge. "-a" parameter may come first to tell git merge
 # to check out the full tree to the merge tree.
 #
 # It creates a new ,,merge/ directory, which is git-controlled
@@ -28,14 +28,19 @@ if [ "$1" = "-a" ]; then
 	shift
 fi
 
-if [ "$1" != "-b" ] || [ ! "$2" ]; then
-	die "usage: git merge [-a] -b BASE_ID FROM_ID"
+base=
+if [ "$1" = "-b" ]; then
+	shift
+	[ "$1" ] || die "usage: git merge [-a] [-b BASE_ID] FROM_ID"
+	base=$(gitXnormid.sh -c "$1") || exit 1; shift
+	shift
 fi
-shift
-base=$(gitXnormid.sh -c "$1") || exit 1; shift
 
-[ "$1" ] || die "usage: git merge -b BASE_ID FROM_ID"
+[ "$1" ] || die "usage: git merge [-a] [-b BASE_ID] FROM_ID"
 branch=$(gitXnormid.sh -c "$1") || exit 1
+
+[ "$base" ] || base=$(merge-base "$head" "$branch")
+[ "$base" ] || die "unable to automatically determine merge base"
 
 
 if [ -e .git/blocked ] || [ -e ,,merge ]; then
