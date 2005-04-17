@@ -26,13 +26,13 @@ orig_head=
 
 mkdir -p .git/heads
 
-rsync -Lr "$uri/HEAD" ".git/heads/$name"
+rsync $RSYNC_FLAGS -Lr "$uri/HEAD" ".git/heads/$name"
 # We already saw the MOTD, thank you very much.
 [ -d .git/objects ] || mkdir -p .git/objects
-rsync --ignore-existing --whole-file \
+rsync $RSYNC_FLAGS --ignore-existing --whole-file \
 	-r "$uri/objects/." ".git/objects/." >/dev/null
 # FIXME: Warn about conflicting tag names?
-rsync --ignore-existing -r "$uri/tags" ".git" >/dev/null
+rsync $RSYNC_FLAGS --ignore-existing -r "$uri/tags" ".git" >/dev/null
 
 new_head=$(cat ".git/heads/$name")
 
