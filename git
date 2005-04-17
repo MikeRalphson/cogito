@@ -31,12 +31,11 @@ Available commands:
 	branch          BNAME [COMMIT_ID]
 	cancel
 	ci, commit	[FILE...]	< log message on stdin
-	clone           RSYNC_URL
 	diff		[FROM_ID [TO_ID]]
 	export		DESTDIR [TREE_ID]
 	fork		BNAME BRANCH_DIR [COMMIT_ID]
 	help
-	init
+	init		RSYNC_URL
 	lntree		DESTDIR
 	log
 	ls		[TREE_ID]
@@ -95,7 +94,6 @@ case "$cmd" in
 "cancel")     gitcancel.sh "$@";;
 "ci" | "commit")
               gitcommit.sh "$@";;
-"clone")      gitclone.sh "$@";;
 "diff")       gitdiff.sh "$@";;
 "export")     gitexport.sh "$@";;
 "fork")       gitfork.sh "$@";;
