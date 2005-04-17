@@ -24,6 +24,7 @@ struct revision {
 	unsigned int flags;
 	unsigned char sha1[20];
 	unsigned long date;
+	unsigned char tree[20];
 	struct parent *parent;
 };
 
@@ -109,6 +110,32 @@ static void mark_reachable(struct revision *rev)
 		mark_reachable(p->parent);
 		p = p->next;
 	}
+}
+
+static int parse_commit_object(struct revision *rev)
+{
+	if (!(rev->flags & SEEN)) {
+		void *buffer, *bufptr;
+		unsigned long size;
+		char type[20];
+		unsigned char parent[20];
+
+		rev->flags |= SEEN;
+		buffer = bufptr = read_sha1_file(rev->sha1, type, &size);
+		if (!buffer || strcmp(type, "commit"))
+			return -1;
+		get_sha1_hex(bufptr + 5, rev->tree);
+		bufptr += 46; /* "tree " + "hex sha1" + "\n" */
+		while (!memcmp(bufptr, "parent ", 7) && 
+		       !get_sha1_hex(bufptr+7, parent)) {
+			add_relationship(rev, parent);
+			bufptr += 48;   /* "parent " + "hex sha1" + "\n" */
+		}
+		/* FIXME */
+		/* rev->date = parse_commit_date(bufptr); */
+		free(buffer);
+	}
+	return 0;
 }
 
 #endif /* REVISION_H */
