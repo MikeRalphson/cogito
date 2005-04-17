@@ -46,7 +46,7 @@ gitversion.sh: $(VERSION)
 	@echo Generating gitversion.sh...
 	@rm -f $@
 	@echo "#!/bin/sh" > $@
-	@echo "echo \"$(shell cat $(VERSION))\"" >> $@
+	@echo "echo \"$(shell cat $(VERSION)) ($(shell commit-id))\"" >> $@
 	@chmod +x $@
 
 clean:
