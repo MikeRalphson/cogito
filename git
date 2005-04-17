@@ -40,6 +40,7 @@ Available commands:
 	log
 	ls		[TREE_ID]
 	lsobj		[OBJTYPE]
+	lsremote
 	merge		-b BASE_ID FROM_ID
 	pull		[RNAME]
 	rm		FILE...
@@ -103,6 +104,7 @@ case "$cmd" in
 "log")        gitlog.sh "$@";;
 "ls")         gitls.sh "$@";;
 "lsobj")      gitlsobj.sh "$@";;
+"lsremote")   gitlsremote.sh "$@";;
 "merge")      gitmerge.sh "$@";;
 "pull")       gitpull.sh "$@";;
 "rm")         gitrm.sh "$@";;
