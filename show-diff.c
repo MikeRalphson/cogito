@@ -36,7 +36,7 @@ static char *sq_expand(char *src)
 	if (buf_size < cnt) {
 		free(buf);
 		buf_size = cnt;
-		buf = malloc(cnt);
+		buf = malloc(cnt + 1);
 	}
 
 	cp = buf;
