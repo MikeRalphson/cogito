@@ -203,6 +203,9 @@ static void refresh_cache(void)
 			printf("%s: needs update\n", ce->name);
 			continue;
 		}
+		/* You can NOT just free active_cache[i] here, since it
+		 * might not be necessarily malloc()ed but can also come
+		 * from mmap(). */
 		active_cache[i] = new;
 	}
 }
