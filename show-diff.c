@@ -29,7 +29,7 @@ static char *sq_expand(char *src)
 	char *cp;
 
 	/* count single quote characters */ 
-	for (cnt = 0, cp = src; *cp; cnt++, cp++)
+	for (cnt = 1, cp = src; *cp; cnt++, cp++)
 		if (*cp == '\'')
 			cnt += 3;
 
