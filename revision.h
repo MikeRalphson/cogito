@@ -24,7 +24,6 @@ struct revision {
 	unsigned int flags;
 	unsigned char sha1[20];
 	unsigned long date;
-	unsigned char tree[20];
 	struct parent *parent;
 };
 
@@ -98,22 +97,42 @@ static struct revision *add_relationship(struct revision *rev, unsigned char *ne
 	return parent_rev;
 }
 
-static void mark_reachable(struct revision *rev)
+static void mark_reachable(struct revision *rev, unsigned int mask)
 {
 	struct parent *p = rev->parent;
 
 	/* If we've been here already, don't bother */
-	if (rev->flags & REACHABLE)
+	if (rev->flags & mask)
 		return;
-	rev->flags |= REACHABLE | USED;
+	rev->flags |= mask | USED;
 	while (p) {
-		mark_reachable(p->parent);
+		mark_reachable(p->parent, mask);
 		p = p->next;
 	}
 }
 
-static int parse_commit_object(struct revision *rev)
+static unsigned long parse_commit_date(const char *buf)
 {
+	unsigned long date;
+
+	if (memcmp(buf, "author", 6))
+		return 0;
+	while (*buf++ != '\n')
+		/* nada */;
+	if (memcmp(buf, "committer", 9))
+		return 0;
+	while (*buf++ != '>')
+		/* nada */;
+	date = strtoul(buf, NULL, 10);
+	if (date == ULONG_MAX)
+		date = 0;
+	return date;
+}
+
+static struct revision * parse_commit(unsigned char *sha1)
+{
+	struct revision *rev = lookup_rev(sha1);
+
 	if (!(rev->flags & SEEN)) {
 		void *buffer, *bufptr;
 		unsigned long size;
@@ -121,21 +140,20 @@ static int parse_commit_object(struct revision *rev)
 		unsigned char parent[20];
 
 		rev->flags |= SEEN;
-		buffer = bufptr = read_sha1_file(rev->sha1, type, &size);
+		buffer = bufptr = read_sha1_file(sha1, type, &size);
 		if (!buffer || strcmp(type, "commit"))
-			return -1;
-		get_sha1_hex(bufptr + 5, rev->tree);
+			die("%s is not a commit object", sha1_to_hex(sha1));
 		bufptr += 46; /* "tree " + "hex sha1" + "\n" */
 		while (!memcmp(bufptr, "parent ", 7) && 
 		       !get_sha1_hex(bufptr+7, parent)) {
 			add_relationship(rev, parent);
-			bufptr += 48;   /* "parent " + "hex sha1" + "\n" */
+			parse_commit(parent);
+			bufptr += 48;	/* "parent " + "hex sha1" + "\n" */
 		}
-		/* FIXME */
-		/* rev->date = parse_commit_date(bufptr); */
+		rev->date = parse_commit_date(bufptr);
 		free(buffer);
 	}
-	return 0;
+	return rev;
 }
 
 #endif /* REVISION_H */

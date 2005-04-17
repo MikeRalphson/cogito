@@ -16,88 +16,6 @@
 static int show_edges = 0;
 static int basemask = 0;
 
-static unsigned long parse_time(const char *buf)
-{
-	char c, *p;
-	char buffer[100];
-	struct tm tm;
-	const char *formats[] = {
-		"%s",
-		"%c",
-		"%a %b %d %T %y",
-		NULL
-	};
-	const char **fmt = formats;
-
-	p = buffer;
-	while (isspace(c = *buf))
-		buf++;
-	while ((c = *buf++) != '\n' && c)
-		*p++ = c;
-	*p++ = 0;
-	buf = buffer;
-	memset(&tm, 0, sizeof(tm));
-	do {
-		const char *next = strptime(buf, *fmt, &tm);
-		fmt++;
-		if (next) {
-			if (!*next)
-				return mktime(&tm);
-			buf = next;
-		}
-	} while (*buf && *fmt);
-	return mktime(&tm);
-}
-		
-
-static unsigned long parse_commit_date(const char *buf)
-{
-	unsigned long time;
-
-	if (memcmp(buf, "author", 6))
-		return 0;
-	while (*buf++ != '\n')
-		/* nada */;
-	if (memcmp(buf, "committer", 9))
-		return 0;
-	while (*buf++ != '>')
-		/* nada */;
-
-	time = strtoul(buf, NULL, 10);
-	if (!time)
-		time = parse_time(buf);
-	return time;
-}
-
-static int parse_commit(unsigned char *sha1)
-{
-	struct revision *rev = lookup_rev(sha1);
-
-	if (!(rev->flags & SEEN)) {
-		void *buffer, *bufptr;
-		unsigned long size;
-		char type[20];
-		unsigned char parent[20];
-
-		rev->flags |= SEEN;
-		buffer = bufptr = read_sha1_file(sha1, type, &size);
-		if (!buffer || strcmp(type, "commit"))
-			return -1;
-		bufptr += 46; /* "tree " + "hex sha1" + "\n" */
-		while (!memcmp(bufptr, "parent ", 7) && !get_sha1_hex(bufptr+7, parent)) {
-			add_relationship(rev, parent);
-			if (parse_commit(parent) < 0) {
-				free(buffer);
-				return -1;
-			}
-			bufptr += 48;	/* "parent " + "hex sha1" + "\n" */
-		}
-		rev->date = parse_commit_date(bufptr);
-		free(buffer);
-	}
-	return 0;	
-}
-
 static void read_cache_file(const char *path)
 {
 	FILE *file = fopen(path, "r");
@@ -132,21 +50,6 @@ static void read_cache_file(const char *path)
 		}
 	}
 	fclose(file);
-}
-
-static void mark_sha1_path(struct revision *rev, unsigned int mask)
-{
-	struct parent *p;
-
-	if (rev->flags & mask)
-		return;
-
-	rev->flags |= mask;
-	p = rev->parent;
-	while (p) {
-		mark_sha1_path(p->parent, mask);
-		p = p->next;
-	}
 }
 
 /*
@@ -224,7 +127,7 @@ int main(int argc, char **argv)
 	 * Now we have the maximal tree. Walk the different sha files back to the root.
 	 */
 	for (i = 0; i < nr; i++)
-		mark_sha1_path(lookup_rev(sha1[i]), 1 << i);
+		mark_reachable(lookup_rev(sha1[i]), 1 << i);
 
 	/*
 	 * Now print out the results..
