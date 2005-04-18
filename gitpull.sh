@@ -75,6 +75,7 @@ __END__
 	else
 		gitdiff.sh "$orig_head":"$new_head" | gitapply.sh
 		read-tree $(tree-id $new_head)
+		update-cache --refresh
 
 		echo $new_head >.git/HEAD
 	fi
