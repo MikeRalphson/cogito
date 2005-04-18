@@ -130,6 +130,7 @@ int main(int argc, char **argv)
 	int machine_readable = 0;
 	int reverse = 0;
 	int entries = read_cache();
+	int matched = 0;
 	int i;
 
 	while (1 < argc && argv[1][0] == '-') {
@@ -165,6 +166,7 @@ int main(int argc, char **argv)
 		if (1 < argc &&
 		    ! matches_pathspec(ce, argv+1, argc-1))
 			continue;
+		matched++;
 
 		if (ce_stage(ce)) {
 			if (machine_readable)
@@ -210,5 +212,8 @@ int main(int argc, char **argv)
 					 reverse);
 		free(old);
 	}
+
+	if (1 < argc && !matched)
+		return 1;
 	return 0;
 }
