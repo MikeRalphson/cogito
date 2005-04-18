@@ -69,7 +69,7 @@ while [ "$1" ]; do
 	op="$1"; shift;
 	case "$op" in
 	"add") git add "$1"; shift;;
-	"rm")  rm "$1" && git rm "$1"; shift;;
+	"rm")  rm -- "$1" && git rm "$1"; shift;;
 	"cm")  chmod "$1" "$2"; shift; shift;;
 	esac
 done
