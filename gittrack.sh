@@ -50,7 +50,7 @@ if [ "$name" ]; then
 	echo $name >.git/tracking
 
 	read-tree $(tree-id "$name")
-	gitdiff.sh local "$name" | gitapply.sh
+	gitdiff.sh local:"$name" | gitapply.sh
 	update-cache --refresh
 
 else
@@ -60,7 +60,7 @@ else
 		die "tracked \"$tracking\" branch missing!"
 
 	if [ -s ".git/HEAD.local" ]; then
-		gitdiff.sh "$tracking" local | gitapply.sh
+		gitdiff.sh "$tracking":local | gitapply.sh
 		read-tree $(tree-id local)
 		update-cache --refresh
 

@@ -3,20 +3,43 @@
 # Make a diff between two GIT trees.
 # Copyright (c) Petr Baudis, 2005
 #
-# Takes two parameters identifying the two trees/commits to compare.
-# Empty string will be substitued to HEAD revision.
+# By default compares the current working tree to the state at the
+# last commit. You can specify -r rev1:rev2 or -r rev1 -r rev2 to
+# tell it to make a diff between the specified revisions.
 #
-# -p instead of the first parameter denotes a parent revision
-# to the second id (which must not be a tree, obviously).
+# -p instead of one ID denotes a parent commit to the specified ID
+# (which must not be a tree, obviously).
 #
 # Outputs a diff converting the first tree to the second one.
 
 
-id1=$1
-id2=$2
+id1=
+id2=
+parent=
 
-if [ "$id1" = "-p" ]; then
-	id1=$(parent-id "$id2")
+# FIXME: The commandline parsing is awful.
+
+if [ "$1" = "-p" ]; then
+	shift
+	parent=1
+fi
+
+if [ "$1" = "-r" ]; then
+	shift
+	id1=$(echo "$1": | cut -d : -f 1)
+	id2=$(echo "$1": | cut -d : -f 2)
+	shift
+fi
+
+if [ "$1" = "-r" ]; then
+	shift
+	id2="$1"
+	shift
+fi
+
+if [ "$parent" ]; then
+	id2="$id1"
+	id1=$(parent-id "$id2" | head -n 1)
 fi
 
 if [ ! "$id1" ] && [ ! "$id2" ]; then

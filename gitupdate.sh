@@ -34,7 +34,7 @@ fi
 
 if [ "$curcommit" != "$dstcommit" ]; then
 	read-tree $(tree-id)
-	git diff $curcommit $dstcommit | git apply
+	git diff -r $curcommit:$dstcommit | git apply
 	update-cache --refresh
 fi
 

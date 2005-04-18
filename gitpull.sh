@@ -42,7 +42,7 @@ if [ ! "$orig_head" ]; then
 	echo "New branch: $new_head"
 
 elif [ "$orig_head" != "$new_head" ]; then
-	echo "Tree change: $orig_head $new_head"
+	echo "Tree change: $orig_head:$new_head"
 	diff-tree -r $(tree-id $orig_head) $(tree-id $new_head)
 
 else
@@ -73,7 +73,7 @@ __END__
 		gitmerge.sh -b "$orig_head" "$new_head"
 
 	else
-		gitdiff.sh "$orig_head" "$new_head" | gitapply.sh
+		gitdiff.sh "$orig_head":"$new_head" | gitapply.sh
 		read-tree $(tree-id $new_head)
 
 		echo $new_head >.git/HEAD

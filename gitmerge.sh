@@ -67,7 +67,7 @@ else
 fi
 update-cache --refresh
 
-gitdiff.sh "$base" "$branch" | gitapply.sh
+gitdiff.sh "$base":"$branch" | gitapply.sh
 
 cat >&2 <<__END__
 Please inspect the merge in the ,,merge/ subdirectory. Commit from that

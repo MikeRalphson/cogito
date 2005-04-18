@@ -31,7 +31,7 @@ Available commands:
 	branch          BNAME [COMMIT_ID]
 	cancel
 	ci, commit	[FILE...]	< log message on stdin
-	diff		[FROM_ID [TO_ID]]
+	diff		[-p] [-r FROM_ID[:TO_ID]]
 	export		DESTDIR [TREE_ID]
 	fork		BNAME BRANCH_DIR [COMMIT_ID]
 	help

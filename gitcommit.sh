@@ -105,7 +105,7 @@ if [ "$newhead" ]; then
 		rm .git/blocked
 		# Update the tree with the merged changes
 		read-tree $(tree-id $newhead)
-		git diff "$oldhead" "$newhead" | git apply
+		git diff "$oldhead":"$newhead" | git apply
 		update-cache --refresh
 	fi
 else
