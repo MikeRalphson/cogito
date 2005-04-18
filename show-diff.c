@@ -5,7 +5,25 @@
  */
 #include "cache.h"
 
-static char *diff_cmd = "diff -L '%s' -u -N  - '%s'";
+static char *diff_cmd = "diff -L 'a/%s' -L 'b/%s' ";
+static char *diff_opts = "-p -u";
+static char *diff_arg_forward  = " - '%s'";
+static char *diff_arg_reverse  = " '%s' -";
+
+static void prepare_diff_cmd(void)
+{
+	/*
+	 * Default values above are meant to match the
+	 * Linux kernel development style.  Examples of
+	 * alternative styles you can specify via environment
+	 * variables are:
+	 *
+	 * GIT_DIFF_CMD="diff -L '%s' -L '%s'"
+	 * GIT_DIFF_OPTS="-c";
+	 */
+	diff_cmd = getenv("GIT_DIFF_CMD") ? : diff_cmd;
+	diff_opts = getenv("GIT_DIFF_OPTS") ? : diff_opts;
+}
 
 /* Help to copy the thing properly quoted for the shell safety.
  * any single quote is replaced with '\'', and the caller is
@@ -23,7 +41,6 @@ static char *diff_cmd = "diff -L '%s' -u -N  - '%s'";
 static char *sq_expand(char *src)
 {
 	static char *buf = NULL;
-	static int buf_size = -1;
 	int cnt, c;
 	char *cp;
 
@@ -32,12 +49,8 @@ static char *sq_expand(char *src)
 		if (*cp == '\'')
 			cnt += 3;
 
-	if (buf_size < cnt) {
-		free(buf);
-		buf_size = cnt;
-		buf = malloc(cnt);
-	}
-
+	if (! (buf = malloc(cnt)))
+	    return buf;
 	cp = buf;
 	while ((c = *src++)) {
 		if (c != '\'')
@@ -51,63 +64,45 @@ static char *sq_expand(char *src)
 	return buf;
 }
 
-static void show_differences(char *name, void *old_contents,
-			     unsigned long long old_size)
+static void show_differences(char *name, char *label, void *old_contents,
+			     unsigned long long old_size, int reverse)
 {
 	FILE *f;
-	static char *cmd = NULL;
-	static int cmd_size = -1;
-
 	char *name_sq = sq_expand(name);
-	int cmd_required_length = strlen(name_sq) * 2 + strlen(diff_cmd);
+	char *label_sq = (name != label) ? sq_expand(label) : name_sq;
+	char *diff_arg = reverse ? diff_arg_reverse : diff_arg_forward;
+	int cmd_size = strlen(name_sq) + strlen(label_sq) * 2 +
+		strlen(diff_cmd) + strlen(diff_opts) + strlen(diff_arg);
+	char *cmd = malloc(cmd_size);
+	int next_at;
 
-	if (cmd_size < cmd_required_length) {
-		free(cmd);
-		cmd_size = cmd_required_length;
-		cmd = malloc(cmd_required_length);
-	}
-	snprintf(cmd, cmd_size, diff_cmd, name_sq, name_sq);
+	fflush(stdout);
+	next_at = snprintf(cmd, cmd_size, diff_cmd, label_sq, label_sq);
+	next_at += snprintf(cmd+next_at, cmd_size-next_at, "%s", diff_opts);
+	next_at += snprintf(cmd+next_at, cmd_size-next_at, diff_arg, name_sq);
 	f = popen(cmd, "w");
 	if (old_size)
 		fwrite(old_contents, old_size, 1, f);
 	pclose(f);
+	if (label_sq != name_sq)
+		free(label_sq);
+	free(name_sq);
+	free(cmd);
 }
 
-static void show_diff_empty(struct cache_entry *ce)
+static void show_diff_empty(struct cache_entry *ce, int reverse)
 {
 	char *old;
 	unsigned long int size;
-	int lines=0;
-	unsigned char type[20], *p, *end;
+	unsigned char type[20];
 
 	old = read_sha1_file(ce->sha1, type, &size);
-	if (size > 0) {
-		int startline = 1;
-		int c = 0;
-
-		printf("--- %s\n", ce->name);
-		printf("+++ /dev/null\n");
-		p = old;
-		end = old + size;
-		while (p < end)
-			if (*p++ == '\n')
-				lines ++;
-		printf("@@ -1,%d +0,0 @@\n", lines);
-		p = old;
-		while (p < end) {
-			c = *p++;
-			if (startline) {
-				putchar('-');
-				startline = 0;
-			}
-			putchar(c);
-			if (c == '\n')
-				startline = 1;
-		}
-		if (c!='\n')
-			printf("\n");
-		fflush(stdout);
+	if (! old) {
+		error("unable to read blob object for %s (%s)", ce->name,
+		      sha1_to_hex(ce->sha1));
+		return;
 	}
+	show_differences("/dev/null", ce->name, old, size, reverse);
 	free(old);
 }
 
@@ -133,11 +128,14 @@ int main(int argc, char **argv)
 	int silent = 0;
 	int silent_on_nonexisting_files = 0;
 	int machine_readable = 0;
+	int reverse = 0;
 	int entries = read_cache();
 	int i;
 
 	while (1 < argc && argv[1][0] == '-') {
-		if (!strcmp(argv[1], "-s"))
+		if  (!strcmp(argv[1], "-R"))
+			reverse = 1;
+		else if (!strcmp(argv[1], "-s"))
 			silent_on_nonexisting_files = silent = 1;
 		else if (!strcmp(argv[1], "-q"))
 			silent_on_nonexisting_files = 1;
@@ -155,6 +153,7 @@ int main(int argc, char **argv)
 		perror("read_cache");
 		exit(1);
 	}
+	prepare_diff_cmd();
 	for (i = 0; i < entries; i++) {
 		struct stat st;
 		struct cache_entry *ce = active_cache[i];
@@ -188,7 +187,7 @@ int main(int argc, char **argv)
 			else {
 				printf("%s: %s\n", ce->name, strerror(errno));
 				if (errno == ENOENT)
-					show_diff_empty(ce);
+					show_diff_empty(ce, reverse);
 			}
 			continue;
 		}
@@ -201,12 +200,16 @@ int main(int argc, char **argv)
 			printf("%s %s%c", sha1_to_hex(ce->sha1), ce->name, 0);
 			continue;
 		}
-		fflush(stdout);
 		if (silent)
 			continue;
 
 		old = read_sha1_file(ce->sha1, type, &size);
-		show_differences(ce->name, old, size);
+		if (! old)
+			error("unable to read blob object for %s (%s)",
+			      ce->name, sha1_to_hex(ce->sha1));
+		else
+			show_differences(ce->name, ce->name, old, size,
+					 reverse);
 		free(old);
 	}
 	return 0;
