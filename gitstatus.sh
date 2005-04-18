@@ -12,7 +12,7 @@ while [ "$1" ]; do
 	tag=$(echo "$1" | cut -d " " -f 1);
 	filename=$(echo "$1" | cut -d " " -f 2-);
 	case "$filename" in
-	*.o | tags) ;;
+	*.[ao] | tags | ,,merge*) ;;
 	*)   echo "$tag $filename";;
 	esac
 	shift
