@@ -15,7 +15,7 @@ die () {
 }
 
 
-[ -s .git/blocked ] && die "committing blocked (unfinished merge?)"
+[ -s .git/blocked ] && die "committing blocked: $(cat .git/blocked)"
 
 if [ "$1" ]; then
 	# FIXME: Update the add/rm queues!
@@ -95,7 +95,7 @@ rm -f .git/add-queue .git/rm-queue
 if [ "$newhead" ]; then
 	echo "Committed as $newhead."
 	if [ "$merging" ]; then
-		echo "passed merge" >.git/blocked
+		echo "merged" >.git/blocked
 		mergetree=$(pwd)
 		cd $dsttree
 		mv "$mergetree" "$mergetree~$newhead"

@@ -43,11 +43,10 @@ branch=$(gitXnormid.sh -c "$1") || exit 1
 [ "$base" ] || die "unable to automatically determine merge base"
 
 
-if [ -e .git/blocked ] || [ -e ,,merge ]; then
-	die "another merge in progress"
-fi
+[ -e ,,merge ] && die "another merge in progress"
+[ -s .git/blocked ] && die "action blocked: $(cat .git/blocked)"
 
-echo merge >.git/blocked
+echo merging $branch: ,,merge >.git/blocked
 git lntree ,,merge
 echo $(pwd) >,,merge/.git/merging-to
 cd ,,merge
