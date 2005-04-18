@@ -5,7 +5,11 @@
 #
 # By default compares the current working tree to the state at the
 # last commit. You can specify -r rev1:rev2 or -r rev1 -r rev2 to
-# tell it to make a diff between the specified revisions.
+# tell it to make a diff between the specified revisions. If you
+# do not specify a revision, the current working tree is implied
+# (note that no revision is different from empty revision - -r rev:
+# compares between rev and HEAD, while -r rev compares between rev
+# and working tree).
 #
 # -p instead of one ID denotes a parent commit to the specified ID
 # (which must not be a tree, obviously).
@@ -13,8 +17,8 @@
 # Outputs a diff converting the first tree to the second one.
 
 
-id1=
-id2=
+id1=" "
+id2=" "
 parent=
 
 # FIXME: The commandline parsing is awful.
@@ -27,7 +31,7 @@ fi
 if [ "$1" = "-r" ]; then
 	shift
 	id1=$(echo "$1": | cut -d : -f 1)
-	id2=$(echo "$1": | cut -d : -f 2)
+	[ "$id1" != "$1" ] && id2=$(echo "$1": | cut -d : -f 2)
 	shift
 fi
 
@@ -42,10 +46,18 @@ if [ "$parent" ]; then
 	id1=$(parent-id "$id2" | head -n 1)
 fi
 
-if [ ! "$id1" ] && [ ! "$id2" ]; then
+if [ "$id2" = " " ]; then
+	if [ "$id1" != " " ]; then
+		read-tree $(gitXnormid.sh "$id1")
+		update-cache --refresh
+	fi
 	# FIXME: We should squeeze gitdiff-do-alike output from this.
 	# TODO: Show diffs for added/removed files based on the queues.
 	show-diff -q
+	if [ "$id1" != " " ]; then
+		read-tree $(tree-id)
+		update-cache --refresh
+	fi
 	exit
 fi
 
