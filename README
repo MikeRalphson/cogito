@@ -68,7 +68,7 @@ IDs will be printed (I mean the line saying "Tree change"). Pass those as
 parameters to git diff and you will get a diff describing changes from the last
 time you pulled. You can also
 
-	git diff pasky
+	git diff -r pasky:this
 
 which will show changes between my and your branch.
 
