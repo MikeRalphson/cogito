@@ -196,10 +196,8 @@ int main(int argc, char **argv)
 			continue;
 		if (!machine_readable)
 			printf("%s: %s\n", ce->name, sha1_to_hex(ce->sha1));
-		else {
-			printf("%s %s%c", sha1_to_hex(ce->sha1), ce->name, 0);
-			continue;
-		}
+		else
+			printf("M %s %s%c", sha1_to_hex(ce->sha1), ce->name, 0);
 		if (silent)
 			continue;
 
