@@ -6,7 +6,7 @@
 # This script reverts the working tree to a consistent state before
 # any changes to it (including merges etc) were done.
 #
-# Basically, this is the negation of git commit in some sense.
+# Basically, this is the opposite of git commit in some sense.
 #
 # Takes no arguments. Takes the evil changes from the tree.
 
