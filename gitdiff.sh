@@ -60,12 +60,16 @@ if [ "$id2" = " " ]; then
 	fi
 	# FIXME: We should squeeze gitdiff-do-alike output from this.
 	# TODO: Show diffs for added/removed files based on the queues.
-	show-diff -q "$@"
+	ret=0
+	if ! show-diff -q "$@"; then
+		echo "gitdiff.sh: no files matched" >&2
+		ret=1
+	fi
 	if [ "$id1" != " " ]; then
 		read-tree $(tree-id)
 		update-cache --refresh
 	fi
-	exit
+	exit $ret
 fi
 
 id1=$(gitXnormid.sh "$id1") || exit 1
