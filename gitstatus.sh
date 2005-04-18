@@ -12,7 +12,7 @@
 } | sort -z -k 2 | xargs -0 sh -c '
 while [ "$1" ]; do
 	tag=${1% *};
-	filename=${1r* };
+	filename=${1#* };
 	case "$filename" in
 	*.[ao] | tags | ,,merge*) ;;
 	*)   echo "$tag $filename";;
