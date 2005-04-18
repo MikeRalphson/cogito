@@ -18,8 +18,8 @@ die () {
 [ -s .git/blocked ] && die "committing blocked: $(cat .git/blocked)"
 
 if [ "$1" ]; then
-	# FIXME: Update the add/rm queues!
 	commitfiles="$@"
+	customfiles=$commitfiles
 
 	[ -s .git/merging ] && die "cannot commit individual files when merging"
 
@@ -59,7 +59,7 @@ for file in $commitfiles; do
 	echo $file;
 done
 echo "Enter commit message, terminated by ctrl-D on a separate line:"
-LOGMSG=`mktemp -t gitci.XXXXXX`
+LOGMSG=$(mktemp -t gitci.XXXXXX)
 if [ "$merging" ]; then
 	cat .git/merging | sed 's/^/Merging: /' >>$LOGMSG
 	cat .git/merging | sed 's/^/Merging: /'
@@ -90,7 +90,19 @@ fi
 
 newhead=$(commit-tree $treeid $oldheadstr $merging <$LOGMSG)
 rm $LOGMSG
-rm -f .git/add-queue .git/rm-queue
+
+if [ ! "$customfiles" ]; then
+	rm -f .git/add-queue .git/rm-queue
+else
+	greptmp=$(mktemp -t gitci.XXXXXX)
+	for file in $customfiles; do
+		fgrep -v "$file" .git/add-queue >$greptmp
+		cat $greptmp >.git/add-queue
+		fgrep -v "$file" .git/rm-queue >$greptmp
+		cat $greptmp >.git/rm-queue
+	done
+	rm $greptmp
+fi
 
 if [ "$newhead" ]; then
 	echo "Committed as $newhead."
