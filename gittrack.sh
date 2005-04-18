@@ -9,19 +9,20 @@
 # head pointer will be updated.
 #
 # You can track only one branch; not multiple branches simultanously,
-# and they don't even stack. Your branch before checking (probably
-# the local branch) can be referenced to by id "local" until you
-# untrack (or try to track "local", which is equivalent).
+# and they don't even stack. You track the branch on the top of your
+# current HEAD. One good way to set up a tree which will be just
+# mirroring a given remote branch could be:
+#
+#	git fork pasky-l ~/pasky pasky
+#	cd ~/pasky
+#	git track pasky
 #
 # BTW, we do the tracking by applying a patch instead of read-tree &&
 # checkout-cache since that will destroy all the local changes but
 # also not wipe out any stale files. It is going to be much faster
 # anyway.
 #
-# If you want to offer people a branch which is tracked by default,
-# you do not want any local branch. Just delete .git/HEAD.local.
-#
-# Takes the branch name. No parameter (or "local") untracks the tree.
+# Takes the branch name. No parameter untracks the tree.
 
 name=$1
 
@@ -30,53 +31,19 @@ die () {
 	exit 1
 }
 
+[ -e .git/remotes ] || >.git/remotes
 mkdir -p .git/heads
 
-tracking=""
-[ -s .git/tracking ] && tracking=$(cat .git/tracking)
-
-[ "$name" = "local" ] && name=""
-
 if [ "$name" ]; then
-	[ "$tracking" ] && \
-		die "already tracking branch \"$tracking\""
-	[ -s ".git/heads/$name" ] || \
-		die "unknown branch \"$name\" (did you git pull first?)"
-	[ -s ".git/HEAD.local" ] && \
-		die "not tracking anything but \"local\" branch exists!"
+	grep -q $(echo -e "^$name\t" | sed 's/\./\\./g') .git/remotes || \
+		[ -s ".git/heads/$name" ] || \
+		die "unknown branch \"$name\""
 
-	cat .git/HEAD >.git/HEAD.local
-	cat ".git/heads/$name" >.git/HEAD
 	echo $name >.git/tracking
 
-	read-tree $(tree-id "$name")
-	gitdiff.sh -r local:"$name" | gitapply.sh
-	update-cache --refresh
-
 else
-	[ "$tracking" ] || \
-		die "not tracking a branch"
-	[ -s ".git/heads/$tracking" ] || \
-		die "tracked \"$tracking\" branch missing!"
-
-	if [ -s ".git/HEAD.local" ]; then
-		gitdiff.sh -r "$tracking":local | gitapply.sh
-		read-tree $(tree-id local)
-		update-cache --refresh
-
-		head=$(cat .git/HEAD)
-		branchhead=$(cat .git/heads/$tracking)
-		if [ "$head" != "$branchhead" ]; then
-			echo "Warning: Overriding \"$tracking\"'s local microbranch:" >&2
-			echo -e "\t$branchhead $head" >&2
-			echo -e "Write it down, nothing points at it now!\a" >&2
-		fi
-
-		cat .git/HEAD.local >.git/HEAD
-		rm .git/HEAD.local
-	else
-		echo "First-time untracking (no local branch)." >&2
-	fi
+	[ -s .git/tracking ] || \
+		die "not tracking any branch"
 
 	rm .git/tracking
 fi

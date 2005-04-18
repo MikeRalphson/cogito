@@ -46,18 +46,19 @@ This tree is tracked. That is, you can get my latest changes by doing:
 
 	git pull pasky
 
-If you did some local commits in the meantime, git will attempt to merge them
-with the pasky branch. You then need to check that the merging went correctly
-and without conflicts, possibly do merge-related fixes, and then record the
-merge with git commit.
+(If you are tracking a branch, "git pull" without any arguments will default
+to the tracked branch.) If you did some local commits in the meantime, git will
+attempt to merge them with the pasky branch. You then need to check that
+the merging went correctly and without conflicts, possibly do merge-related
+fixes, and then record the merge with git commit.
 
 You may want to untrack my tree (to do independent development or re-track to
-e.g. linus), like
+e.g. linus), by doing
 
-	git track local
+	git track
 
-(git track without any parameters will do too). The branch is still there,
-though, and you can pull the latest updates again with:
+(passing no arguments will untrack the tree). The branch is still there, though,
+and you can pull the latest updates again with:
 
 	git pull pasky
 
