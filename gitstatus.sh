@@ -2,6 +2,8 @@
 #
 # Show status of entries in your working tree.
 # Copyright (c) Petr Baudis, 2005
+#
+# Takes no arguments.
 
 {
 	show-files -z -t --others --deleted --unmerged
