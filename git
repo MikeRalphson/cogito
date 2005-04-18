@@ -29,8 +29,8 @@ Available commands:
 	addremote	RNAME RSYNC_URL
 	apply				< patch on stdin
 	cancel
-	ci, commit	[FILE...]	< log message on stdin
-	diff		[-p] [-r FROM_ID[:TO_ID]]
+	ci, commit	[FILE]...	< log message on stdin
+	diff		[-p] [-r FROM_ID[:TO_ID]] [FILE]...
 	export		DESTDIR [TREE_ID]
 	fork		BNAME BRANCH_DIR [COMMIT_ID]
 	help
