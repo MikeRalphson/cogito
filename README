@@ -90,7 +90,12 @@ Of course you will want to commit. If you added any new files, do
 
 	git add newfile1 newfile2 ...
 
-first. Then feel free to commit by
+first. Then examine your changes by git diff or just show what files did you
+change by
+
+	git status
+
+and feel free to commit by
 
 	git commit
 
@@ -103,8 +108,26 @@ It is nice to be able to examine the commit history. We have tool for that too.
 will get you the history of my branch. git log with no arguments will default
 to the history of the current branch.
 
+If you want to start out new project, do (IN NEW DIRECTORY)
 
-For reference, my branch URL is:
+	git init
+
+and if you want to have a look at someone else's project, do
+
+	git init URL
+
+(your working directory will be by default tracking branch 'origin').
+
+Note that we missed out a lot of stuff here. There is already some
+(fundamentally inferior) support for forking branches (git fork),
+merging (git merge), moving your tree to an older commit (git seek), etc.
+
+For quick reference, please see
+
+	git help
+
+
+And for reference, my branch URL is:
 
 	rsync://pasky.or.cz/git
 
