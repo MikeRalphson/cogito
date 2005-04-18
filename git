@@ -44,6 +44,7 @@ Available commands:
 	pull		[RNAME]
 	rm		FILE...
 	seek		[COMMIT_ID]
+	status
 	tag		TNAME [COMMIT_ID]
 	track		[RNAME]
 	version
@@ -107,6 +108,7 @@ case "$cmd" in
 "pull")       gitpull.sh "$@";;
 "rm")         gitrm.sh "$@";;
 "seek")       gitseek.sh "$@";;
+"status")     gitstatus.sh "$@";;
 "tag")        gittag.sh "$@";;
 "track")      gittrack.sh "$@";;
 "version")    gitversion.sh "$@";;
