@@ -10,6 +10,7 @@
 CFLAGS=-g -O3 -Wall
 
 CC=gcc
+AR=ar
 
 
 PROG=   update-cache show-diff init-db write-tree read-tree commit-tree \
@@ -28,16 +29,19 @@ GEN_SCRIPT= gitversion.sh
 
 VERSION= VERSION
 
+LIB_OBJS=read-cache.o object.o commit.o tree.o blob.o
+LIB_FILE=libgit.a
+
+LIBS= $(LIB_FILE) -lssl -lz
+
+
 all: $(PROG) $(GEN_SCRIPT)
 
-install: $(PROG) $(GEN_SCRIPT)
-	install $(PROG) $(SCRIPT) $(GEN_SCRIPT) $(HOME)/bin/
-
-LIBS= -lssl -lz
-
-
-$(PROG):%: %.o $(COMMON)
+$(PROG):%: %.o $(LIB_FILE)
 	$(CC) $(CFLAGS) -o $@ $^ $(LIBS)
+
+$(LIB_FILE): $(LIB_OBJS)
+	$(AR) rcs $@ $(LIB_OBJS)
 
 read-cache.o: cache.h
 show-diff.o: cache.h
@@ -49,8 +53,11 @@ gitversion.sh: $(VERSION)
 	@echo "echo \"$(shell cat $(VERSION)) ($(shell commit-id))\"" >> $@
 	@chmod +x $@
 
+install: $(PROG) $(GEN_SCRIPT)
+	install $(PROG) $(SCRIPT) $(GEN_SCRIPT) $(HOME)/bin/
+
 clean:
-	rm -f *.o $(PROG) $(GEN_SCRIPT)
+	rm -f *.o $(PROG) $(GEN_SCRIPT) $(LIB_FILE)
 
 backup: clean
 	cd .. ; tar czvf dircache.tar.gz dir-cache
