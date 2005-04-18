@@ -29,8 +29,9 @@ GEN_SCRIPT= gitversion.sh
 
 VERSION= VERSION
 
-LIB_OBJS=read-cache.o object.o commit.o tree.o blob.o
+LIB_OBJS=read-cache.o sha1_file.o usage.o object.o commit.o tree.o blob.o
 LIB_FILE=libgit.a
+LIB_H=cache.h object.h
 
 LIBS= $(LIB_FILE) -lssl -lz
 
@@ -43,8 +44,7 @@ $(PROG):%: %.o $(LIB_FILE)
 $(LIB_FILE): $(LIB_OBJS)
 	$(AR) rcs $@ $(LIB_OBJS)
 
-read-cache.o: cache.h
-show-diff.o: cache.h
+%.o: $(LIB_H)
 
 gitversion.sh: $(VERSION)
 	@echo Generating gitversion.sh...
