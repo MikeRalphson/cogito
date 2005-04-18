@@ -27,6 +27,38 @@ die () {
 	exit 1
 }
 
+diffqfile () {
+	dir=$1; shift
+	file=$1; shift
+
+	if [ "$dir" = 1 ]; then
+		diff -u -L /dev/null -L "b/$file" /dev/null "$file"
+	else
+		diff -u -L "b/$file" -L /dev/null "$file" /dev/null
+	fi
+}
+
+diffqueue () {
+	ret=1
+
+	dir=$1; shift
+	queue=$1; shift
+
+	if [ "$@" ]; then
+		for file in "$@"; do
+			fgrep -q "$file" "$queue" && diffqfile $dir "$file" \
+				&& ret=
+		done
+	else
+		ret=
+		for file in $(cat $queue); do
+			diffqfile $dir "$file"
+		done
+	fi
+
+	return $ret
+}
+
 
 # FIXME: The commandline parsing is awful.
 
@@ -53,24 +85,29 @@ if [ "$parent" ]; then
 	id1=$(parent-id "$id2" | head -n 1)
 fi
 
+
 if [ "$id2" = " " ]; then
 	if [ "$id1" != " " ]; then
 		read-tree $(gitXnormid.sh "$id1")
 		update-cache --refresh
 	fi
+
 	# FIXME: We should squeeze gitdiff-do-alike output from this.
 	# TODO: Show diffs for added/removed files based on the queues.
-	ret=0
-	if ! show-diff -q "$@"; then
-		echo "gitdiff.sh: no files matched" >&2
-		ret=1
-	fi
+	ret=
+	show-diff -q "$@" || ret=1
+	[ -s .git/add-queue ] && diffqueue 1 .git/add-queue "$@" && ret=
+	[ -s .git/rm-queue  ] && diffqueue 2 .git/rm-queue  "$@" && ret=
+
 	if [ "$id1" != " " ]; then
 		read-tree $(tree-id)
 		update-cache --refresh
 	fi
+
+	[ "$ret" ] && die "no files matched"
 	exit $ret
 fi
+
 
 id1=$(gitXnormid.sh "$id1") || exit 1
 id2=$(gitXnormid.sh "$id2") || exit 1
