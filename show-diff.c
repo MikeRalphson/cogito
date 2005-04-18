@@ -27,7 +27,7 @@ static char *sq_expand(char *src)
 	int cnt, c;
 	char *cp;
 
-	/* count single quote characters */ 
+	/* count bytes needed to store the quoted string. */ 
 	for (cnt = 1, cp = src; *cp; cnt++, cp++)
 		if (*cp == '\'')
 			cnt += 3;
