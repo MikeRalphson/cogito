@@ -18,6 +18,11 @@ static int show_stage = 0;
 static int show_unmerged = 0;
 static int line_terminator = '\n';
 
+static const char *tag_cached = "";
+static const char *tag_unmerged = "";
+static const char *tag_deleted = "";
+static const char *tag_other = "";
+
 static const char **dir;
 static int nr_dir;
 static int dir_alloc;
@@ -108,7 +113,7 @@ static void show_files(void)
 	}
 	if (show_others) {
 		for (i = 0; i < nr_dir; i++)
-			printf("%s%c", dir[i], line_terminator);
+			printf("%s%s%c", tag_other, dir[i], line_terminator);
 	}
 	if (show_cached | show_stage) {
 		for (i = 0; i < active_nr; i++) {
@@ -116,10 +121,13 @@ static void show_files(void)
 			if (show_unmerged && !ce_stage(ce))
 				continue;
 			if (!show_stage)
-				printf("%s%c", ce->name, line_terminator);
+				printf("%s%s%c",
+				       ce_stage(ce) ? tag_unmerged : tag_cached,
+				       ce->name, line_terminator);
 			else
 				printf(/* "%06o %s %d %10d %s%c", */
-				       "%06o %s %d %s%c",
+				       "%s %06o %s %d %s%c",
+				       ce_stage(ce) ? tag_unmerged : tag_cached,
 				       ntohl(ce->ce_mode),
 				       sha1_to_hex(ce->sha1),
 				       ce_stage(ce),
@@ -133,7 +141,7 @@ static void show_files(void)
 			struct stat st;
 			if (!stat(ce->name, &st))
 				continue;
-			printf("%s%c", ce->name, line_terminator);
+			printf("%s%s%c", tag_deleted, ce->name, line_terminator);
 		}
 	}
 	if (show_ignored) {
@@ -150,6 +158,13 @@ int main(int argc, char **argv)
 
 		if (!strcmp(arg, "-z")) {
 			line_terminator = 0;
+			continue;
+		}
+		if (!strcmp(arg, "-t")) {
+			tag_cached = "H ";
+			tag_unmerged = "M ";
+			tag_deleted = "D ";
+			tag_other = "? ";
 			continue;
 		}
 
@@ -180,7 +195,7 @@ int main(int argc, char **argv)
 			continue;
 		}
 
-		usage("show-files [-z] (--[cached|deleted|others|ignored|stage])*");
+		usage("show-files [-z] [-t] (--[cached|deleted|others|ignored|stage])*");
 	}
 
 	/* With no flags, we default to showing the cached files */
