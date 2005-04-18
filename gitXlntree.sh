@@ -20,7 +20,7 @@ die () {
 }
 
 
-[ "$destdir" ] || die "usage: git lntree DESTDIR"
+[ "$destdir" ] || die "usage: gitXlntree.sh DESTDIR"
 
 srcdir=$(pwd)
 dgitdir=$destdir/.git

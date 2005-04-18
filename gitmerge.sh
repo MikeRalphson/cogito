@@ -46,7 +46,7 @@ branch=$(gitXnormid.sh -c "$1") || exit 1
 [ -s .git/blocked ] && die "action blocked: $(cat .git/blocked)"
 
 echo merging $branch: ,,merge >.git/blocked
-git lntree ,,merge
+gitXlntree.sh ,,merge
 echo $(pwd) >,,merge/.git/merging-to
 cd ,,merge
 read-tree $(tree-id $head)

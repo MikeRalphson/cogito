@@ -36,7 +36,7 @@ fi
 
 [ -e "$destdir" ] && die "$destdir already exists"
 
-git lntree "$destdir"
+gitXlntree.sh "$destdir"
 # FIXME: We should allow only forkign unused branches!
 [ -s ".git/heads/$name" ] || echo $head >.git/heads/$name
 ln -s heads/$name "$destdir/.git/HEAD"

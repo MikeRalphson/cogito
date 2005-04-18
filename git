@@ -35,7 +35,6 @@ Available commands:
 	fork		BNAME BRANCH_DIR [COMMIT_ID]
 	help
 	init		RSYNC_URL
-	lntree		DESTDIR
 	log
 	ls		[TREE_ID]
 	lsobj		[OBJTYPE]
@@ -99,7 +98,6 @@ case "$cmd" in
 "fork")       gitfork.sh "$@";;
 "help")       help "$@";;
 "init")       gitinit.sh "$@";;
-"lntree")     gitlntree.sh "$@";;
 "log")        gitlog.sh "$@";;
 "ls")         gitls.sh "$@";;
 "lsobj")      gitlsobj.sh "$@";;

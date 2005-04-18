@@ -18,7 +18,7 @@ id=$(gitXnormid.sh $2)
 
 [ -e "$destdir" ] && die "$destdir already exists."
 
-git lntree $destdir || exit 1
+gitXlntree.sh $destdir || exit 1
 cd $destdir
 read-tree $id
 checkout-cache -a
