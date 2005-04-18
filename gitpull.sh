@@ -63,7 +63,7 @@ if [ "$tracking" = "$name" ]; then
 		gitmerge.sh -b "$orig_head" "$new_head"
 
 	else
-		gitdiff.sh "$orig_head":"$new_head" | gitapply.sh
+		gitdiff.sh -r "$orig_head":"$new_head" | gitapply.sh
 		read-tree $(tree-id $new_head)
 		update-cache --refresh
 
