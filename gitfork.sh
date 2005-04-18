@@ -27,7 +27,7 @@ die () {
 
 ([ "$name" ] && [ "$destdir" ]) || die "usage: git fork BNAME DESTDIR [COMMIT_ID]"
 
-if [ "$name" = "local" ] || [ "$name" = "this" ]; then
+if [ "$name" = "this" ]; then
 	die "given branch name is reserved"
 fi
 if grep -q $(echo -e "^$name\t" | sed 's/\./\\./g') .git/remotes; then

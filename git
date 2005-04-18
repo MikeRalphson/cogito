@@ -50,7 +50,6 @@ Available commands:
 
 Note that these expressions can be used interchangably as "ID"s:
 	empty string (current HEAD)
-	local (the local branch if tracking a remote one)
 	remote name (as registered with git addremote)
 	tag name (as registered with git tag)
 	shortcut hash (shorted unambiguous hash lead)

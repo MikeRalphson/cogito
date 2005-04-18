@@ -21,9 +21,6 @@ id=$1
 if [ ! "$id" ] || [ "$id" = "this" ]; then
 	id=$(cat .git/HEAD)
 fi
-if [ "$id" = "local" ]; then
-	id=$(cat .git/HEAD.local)
-fi
 
 if (echo $id | egrep -vq "$SHA1ONLY") && [ -r ".git/tags/$id" ]; then
 	id=$(cat ".git/tags/$id")
