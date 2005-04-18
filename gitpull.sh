@@ -25,7 +25,7 @@ tracking=
 [ -s .git/tracking ] && tracking=$(cat .git/tracking)
 
 orig_head=
-if [ "$tracking" ]; then
+if [ "$tracking" = "$name" ]; then
 	[ -s .git/HEAD.tracked ] && orig_head=$(cat .git/HEAD.tracked)
 else
 	[ -s ".git/heads/$name" ] && orig_head=$(cat ".git/heads/$name")
