@@ -33,7 +33,6 @@ if [ "$1" = "-b" ]; then
 	shift
 	[ "$1" ] || die "usage: git merge [-a] [-b BASE_ID] FROM_ID"
 	base=$(gitXnormid.sh -c "$1") || exit 1; shift
-	shift
 fi
 
 [ "$1" ] || die "usage: git merge [-a] [-b BASE_ID] FROM_ID"
