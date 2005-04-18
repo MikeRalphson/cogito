@@ -12,6 +12,9 @@
 # but has only the changed files checked out. You then have to
 # examine it and then do git commit, which will also automatically
 # bring your working tree up-to-date.
+#
+# Alternatively, it will just bring the HEAD forward, if your current
+# HEAD is also the merge base.
 
 
 die () {
@@ -45,6 +48,25 @@ branch=$(gitXnormid.sh -c "$1") || exit 1
 [ -e ,,merge ] && die "another merge in progress"
 [ -s .git/blocked ] && die "action blocked: $(cat .git/blocked)"
 
+
+if [ "$head" = "$base" ]; then
+	# No need to do explicit merge with a merge commit; just bring
+	# the HEAD forward.
+
+	echo "Fast-forwarding $base -> $branch" >&2
+	echo -e "\ton top of $head..." >&2
+	gitdiff.sh -r "$base":"$branch" | gitapply.sh
+	read-tree $(tree-id $branch)
+	update-cache --refresh
+	echo $branch >.git/HEAD
+
+	exit 0
+fi
+
+
+echo "Merging $base -> $branch" >&2
+echo -e "\tto $head..." >&2
+
 echo merging $branch: ,,merge >.git/blocked
 gitXlntree.sh ,,merge
 echo $(pwd) >,,merge/.git/merging-to
@@ -68,6 +90,7 @@ update-cache --refresh
 gitdiff.sh -r "$base":"$branch" | gitapply.sh
 
 cat >&2 <<__END__
+
 Please inspect the merge in the ,,merge/ subdirectory. Commit from that
 directory when you are done. Commits in the current directory are blocked
 during the merge.

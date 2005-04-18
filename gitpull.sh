@@ -62,22 +62,9 @@ fi
 if [ "$tracking" = "$name" ]; then
 	echo "Tracked branch, applying changes..."
 
-	head=$(cat .git/HEAD)
+	head=$(commit-id)
 	[ "$orig_head" ] || orig_head=$(merge-base "$head" "$new_head")
 	echo "$new_head" >.git/HEAD.tracked
 
-	if [ "$head" != "$orig_head" ]; then
-		echo "Merging $orig_head -> $new_head" >&2
-		echo -e "\tto $head..." >&2
-		gitmerge.sh -b "$orig_head" "$new_head"
-
-	else
-		echo "Fast-forwarding $orig_head -> $new_head" >&2
-		echo -e "\tto $head..." >&2
-		gitdiff.sh -r "$orig_head":"$new_head" | gitapply.sh
-		read-tree $(tree-id $new_head)
-		update-cache --refresh
-
-		echo $new_head >.git/HEAD
-	fi
+	gitmerge.sh -b "$orig_head" "$new_head"
 fi
