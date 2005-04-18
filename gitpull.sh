@@ -7,8 +7,6 @@
 #
 # Takes the remote's name.
 
-# FIXME: Multiple local branches tracking the same remote branch.
-
 name=$1
 
 die () {
@@ -16,16 +14,25 @@ die () {
 	exit 1
 }
 
+
 [ "$name" ] || name=$(cat .git/tracking 2>/dev/null)
 [ "$name" ] || die "where to pull from?"
 uri=$(grep $(echo -e "^$name\t" | sed 's/\./\\./g') .git/remotes | cut -f 2)
 [ "$uri" ] || die "unknown remote"
 
+
+tracking=
+[ -s .git/tracking ] && tracking=$(cat .git/tracking)
+
 orig_head=
-[ -s ".git/heads/$name" ] && orig_head=$(cat ".git/heads/$name")
+if [ "$tracking" ]; then
+	[ -s .git/HEAD.tracked ] && orig_head=$(cat .git/HEAD.tracked)
+else
+	[ -s ".git/heads/$name" ] && orig_head=$(cat ".git/heads/$name")
+fi
+
 
 mkdir -p .git/heads
-
 rsync $RSYNC_FLAGS -Lr "$uri/HEAD" ".git/heads/$name"
 
 [ -d .git/objects ] || mkdir -p .git/objects
@@ -35,6 +42,7 @@ rsync $RSYNC_FLAGS --ignore-existing --whole-file \
 
 # FIXME: Warn about conflicting tag names?
 rsync $RSYNC_FLAGS --ignore-existing -r "$uri/tags" ".git" | grep -v '^MOTD:'
+
 
 new_head=$(cat ".git/heads/$name")
 
@@ -51,18 +59,21 @@ else
 fi
 
 
-tracking=
-[ -s .git/tracking ] && tracking=$(cat .git/tracking)
 if [ "$tracking" = "$name" ]; then
 	echo "Tracked branch, applying changes..."
 
 	head=$(cat .git/HEAD)
+	[ "$orig_head" ] || orig_head=$(merge-base "$head" "$new_head")
+	echo "$new_head" >.git/HEAD.tracked
+
 	if [ "$head" != "$orig_head" ]; then
 		echo "Merging $orig_head -> $new_head" >&2
 		echo -e "\tto $head..." >&2
 		gitmerge.sh -b "$orig_head" "$new_head"
 
 	else
+		echo "Fast-forwarding $orig_head -> $new_head" >&2
+		echo -e "\tto $head..." >&2
 		gitdiff.sh -r "$orig_head":"$new_head" | gitapply.sh
 		read-tree $(tree-id $new_head)
 		update-cache --refresh
