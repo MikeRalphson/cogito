@@ -40,7 +40,7 @@ Available commands:
 	lsobj		[OBJTYPE]
 	lsremote
 	merge		[-c] [-b BASE_ID] FROM_ID
-	patch
+	patch		[COMMIT_ID]
 	pull		[RNAME]
 	rm		FILE...
 	seek		[COMMIT_ID]
