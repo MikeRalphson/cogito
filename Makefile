@@ -5,17 +5,24 @@
 #
 # Define PPC_SHA1 environment variable when running make to make use of
 # a bundled SHA1 routine optimized for PowerPC.
-#
-# -DCOLLISION_CHECK if you believe that SHA1's
+
+
+# Define COLLISION_CHECK below if you believe that SHA1's
 # 1461501637330902918203684832716283019655932542976 hashes do not give you
-# enough guarantees about no collisions between objects ever hapenning.
-#
-# -DNSEC if you want git to care about sub-second file mtimes and ctimes.
-# Note that you need some new glibc (at least >2.2.4) for this, and it will
-# BREAK YOUR LOCAL DIFFS! show-diff and anything using it will likely randomly
-# break unless your underlying filesystem supports those sub-second times
-# (my ext3 doesn't).
+# sufficient guarantee that no collisions between objects will ever happen.
+
+# DEFINES += -DCOLLISION_CHECK
+
+# Define NSEC below if you want git to care about sub-second file mtimes and
+# ctimes. Note that you need recent glibc (at least 2.2.4) for this, and it
+# will BREAK YOUR LOCAL DIFFS! show-diff and anything using it will likely
+# randomly break unless your underlying filesystem supports those sub-second
+# times (my ext3 doesn't).
+
+# DEFINES += -DNSEC
+
 CFLAGS=-g -O2 -Wall
+CFLAGS+=$(DEFINES)
 
 # Should be changed to /usr/local
 prefix=$(HOME)
