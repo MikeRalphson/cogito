@@ -63,9 +63,24 @@ echo -e "\tto $head..." >&2
 echo $base >>.git/merge-base
 echo $branch >>.git/merging
 
-gitdiff.sh -r "$base":"$branch" | gitapply.sh
 
-cat >&2 <<__END__
+read-tree -m $(tree-id $base) $(tree-id $head) $(tree-id $branch) || die "read-tree failed"
+if ! merge-cache gitmerge-file.sh -a; then
+	checkout-cache -f -a
+	read-tree $(tree-id)
+	update-cache --refresh >/dev/null
 
-Please inspect the merge result and then do git commit.
+	cat >&2 <<__END__
+
+	Conflicts during merge. Do git commit after resolving them.
 __END__
+	exit 2
+fi
+
+echo
+readtree=
+git commit -C || { readtree=1 ; echo "gitmerge.sh: COMMIT FAILED, retry manually" >&2; }
+
+checkout-cache -f -a
+[ "$readtree" ] && read-tree $(tree-id)
+update-cache --refresh

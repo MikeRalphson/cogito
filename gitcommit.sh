@@ -5,6 +5,8 @@
 # Based on an example script fragment sent to LKML by Linus Torvalds.
 #
 # Ignores any parameters for now, excepts changelog entry on stdin.
+# -C makes git commit ignore cache and just commit the thing as-is;
+# this is for internal purposes (merging).
 #
 # FIXME: Gets it wrong for filenames containing spaces.
 
@@ -16,6 +18,12 @@ die () {
 
 
 [ -s .git/blocked ] && die "committing blocked: $(cat .git/blocked)"
+
+ignorecache=
+if [ "$1" = "-C" ]; then
+	ignorecache=1
+	shift
+fi
 
 if [ "$1" ]; then
 	commitfiles="$@"
@@ -31,30 +39,34 @@ else
 	# conflicts would be a PITA since added/removed files would
 	# be committed along automagically as well.
 
-	addedfiles=
-	[ -r .git/add-queue ] && addedfiles=$(cat .git/add-queue)
+	if [ ! "$ignorecache" ]; then
+		addedfiles=
+		[ -r .git/add-queue ] && addedfiles=$(cat .git/add-queue)
 
-	remfiles=
-	[ -r .git/rm-queue ] && remfiles=$(cat .git/rm-queue)
+		remfiles=
+		[ -r .git/rm-queue ] && remfiles=$(cat .git/rm-queue)
 
-	changedfiles=$(show-diff -s | cut -d : -f 1)
-	commitfiles="$addedfiles $remfiles $changedfiles"
+		changedfiles=$(show-diff -s | cut -d : -f 1)
+		commitfiles="$addedfiles $remfiles $changedfiles"
+	fi
 
 	merging=
 	[ -s .git/merging ] && merging=$(cat .git/merging | sed 's/^/-p /')
 
 fi
-if [ ! "$commitfiles" ]; then
-	echo 'Nothing to commit.' >&2
-	exit 2
+
+if [ ! "$ignorecache" ]; then
+	if [ ! "$commitfiles" ]; then
+		echo 'Nothing to commit.' >&2
+		exit 2
+	fi
+	for file in $commitfiles; do
+		# Prepend a letter describing whether it's addition,
+		# removal or update. Or call git status on those files.
+		echo $file;
+	done
 fi
 
-
-for file in $commitfiles; do
-	# Prepend a letter describing whether it's addition, removal or update.
-	# Or call git status on those files.
-	echo $file;
-done
 echo "Enter commit message, terminated by ctrl-D on a separate line:"
 LOGMSG=$(mktemp -t gitci.XXXXXX)
 if [ "$merging" ]; then
@@ -65,9 +77,11 @@ fi
 cat >>$LOGMSG
 
 
-# TODO: Do the proper separation of adds, removes, and changes.
-echo $commitfiles | xargs update-cache --add --remove \
-	|| die "update-cache failed"
+if [ ! "$ignorecache" ]; then
+	# TODO: Do the proper separation of adds, removes, and changes.
+	echo $commitfiles | xargs update-cache --add --remove \
+		|| die "update-cache failed"
+fi
 
 
 oldhead=
