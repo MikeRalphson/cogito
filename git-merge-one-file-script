@@ -44,7 +44,8 @@ case "${1:-.}${2:-.}${3:-.}" in
 	src1=$(unpack-file $2)
 	src2=$(unpack-file $3)
 	merge "$src2" "$orig" "$src1" || (echo Leaving conflict merge in $src2 && exit 1)
-	cp "$src2" "$4" && update-cache --add -- "$4" && exit 0
+	(cp "$src2" "$4" && update-cache --add -- "$4") || (echo "Choosing $src2 -> $4 failed" && exit 1)
+	exit 0
 	;;
 
 *)
