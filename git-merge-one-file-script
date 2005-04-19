@@ -1,9 +1,11 @@
 #!/bin/sh
 #
+# Copyright (c) Linus Torvalds, 2005
+#
 # [This script is an example script of the Linus' git and not part of
 # git-pasky.]
 #
-# This is the git merge script, called with
+# This is the per-file merge script, called with
 #
 #   $1 - original file SHA1 (or empty)
 #   $2 - file in branch1 SHA1 (or empty)
