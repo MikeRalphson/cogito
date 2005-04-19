@@ -57,7 +57,7 @@ if [ "$head" = "$base" ]; then
 
 	echo "Fast-forwarding $base -> $branch" >&2
 	echo -e "\ton top of $head..." >&2
-	read-tree $(tree-id $branch)
+	read-tree -m $(tree-id $branch)
 	[ -s .git/add-queue ] && mv .git/add-queue .git/add-queue.orig
 	[ -s .git/rm-queue ] && mv .git/rm-queue .git/rm-queue.orig
 	gitdiff.sh -r "$base":"$branch" | gitapply.sh
@@ -86,7 +86,7 @@ echo $branchname >>.git/merging-sym
 read-tree -m $(tree-id $base) $(tree-id $head) $(tree-id $branch) || die "read-tree failed"
 if ! merge-cache gitmerge-file.sh -a || [ "$careful" ]; then
 	checkout-cache -f -a
-	read-tree $(tree-id)
+	read-tree -m $(tree-id)
 	update-cache --refresh >/dev/null
 
 	[ ! "$careful" ] && cat >&2 <<__END__
@@ -101,5 +101,5 @@ readtree=
 git commit -C || { readtree=1 ; echo "gitmerge.sh: COMMIT FAILED, retry manually" >&2; }
 
 checkout-cache -f -a
-[ "$readtree" ] && read-tree $(tree-id)
+[ "$readtree" ] && read-tree -m $(tree-id)
 update-cache --refresh
