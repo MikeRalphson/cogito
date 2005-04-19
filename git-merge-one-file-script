@@ -32,7 +32,7 @@ case "${1:-.}${2:-.}${3:-.}" in
 # added in one, or added identically in both
 #
 ".$2." | "..$3" | ".$2$2")
-	mv $(unpack-file "${2:-$3}") $4
+	cat-file blob "${2:-$3}" >"$4"
 	update-cache --add -- $4
 	exit 0
 	;;
@@ -48,14 +48,14 @@ case "${1:-.}${2:-.}${3:-.}" in
 	ret=0
 	if ! merge "$src2" "$orig" "$src1"; then
 		echo Conflicting merge!
-		cp "$src2" "$4"
+		cat "$src2" >"$4"
 		ret=1
 
-	elif ! cp "$src2" "$4" && update-cache --add -- "$4"; then
+	elif ! cat "$src2" >"$4" && update-cache --add -- "$4"; then
 		echo "Choosing $src2 -> $4 failed"
 		ret=1
 	fi
-	rm -- "$orig" "$src1" "$src2"
+	rm "$orig" "$src1" "$src2"
 	exit 0
 	;;
 
