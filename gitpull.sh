@@ -61,9 +61,6 @@ fi
 
 if [ "$tracking" = "$name" ]; then
 	echo "Tracked branch, applying changes..."
-
-	[ "$orig_head" ] && orig_head="-b $orig_head"
-	gitmerge.sh $orig_head "$new_head" || die "merge failed"
-
+	gitmerge.sh "$new_head"
 	echo "$new_head" >.git/HEAD.tracked
 fi
