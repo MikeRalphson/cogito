@@ -82,6 +82,13 @@ static void remove_lock_file(void)
 		unlink(".git/index.lock");
 }
 
+static int path_matches(struct cache_entry *a, struct cache_entry *b)
+{
+	int len = ce_namelen(a);
+	return ce_namelen(b) == len &&
+		!memcmp(a->name, b->name, len);
+}
+
 static int same(struct cache_entry *a, struct cache_entry *b)
 {
 	return a->ce_mode == b->ce_mode && 
@@ -141,29 +148,73 @@ static struct cache_entry *merge_entries(struct cache_entry *a,
 
 static void trivially_merge_cache(struct cache_entry **src, int nr)
 {
+	static struct cache_entry null_entry;
 	struct cache_entry **dst = src;
+	struct cache_entry *old = &null_entry;
 
 	while (nr) {
 		struct cache_entry *ce, *result;
 
 		ce = src[0];
+
+		/* We throw away original cache entries except for the stat information */
+		if (!ce_stage(ce)) {
+			old = ce;
+			src++;
+			nr--;
+			active_nr--;
+			continue;
+		}
 		if (nr > 2 && (result = merge_entries(ce, src[1], src[2])) != NULL) {
+			/*
+			 * See if we can re-use the old CE directly?
+			 * That way we get the uptodate stat info.
+			 */
+			if (path_matches(result, old) && same(result, old))
+				*result = *old;
 			ce = result;
 			ce->ce_flags &= ~htons(CE_STAGEMASK);
 			src += 2;
 			nr -= 2;
 			active_nr -= 2;
 		}
-		*dst = ce;
+		*dst++ = ce;
 		src++;
-		dst++;
+		nr--;
+	}
+}
+
+static void merge_stat_info(struct cache_entry **src, int nr)
+{
+	static struct cache_entry null_entry;
+	struct cache_entry **dst = src;
+	struct cache_entry *old = &null_entry;
+
+	while (nr) {
+		struct cache_entry *ce;
+
+		ce = src[0];
+
+		/* We throw away original cache entries except for the stat information */
+		if (!ce_stage(ce)) {
+			old = ce;
+			src++;
+			nr--;
+			active_nr--;
+			continue;
+		}
+		if (path_matches(ce, old) && same(ce, old))
+			*ce = *old;
+		ce->ce_flags &= ~htons(CE_STAGEMASK);
+		*dst++ = ce;
+		src++;
 		nr--;
 	}
 }
 
 int main(int argc, char **argv)
 {
-	int i, newfd;
+	int i, newfd, merge;
 	unsigned char sha1[20];
 
 	newfd = open(".git/index.lock", O_RDWR | O_CREAT | O_EXCL, 0600);
@@ -172,12 +223,22 @@ int main(int argc, char **argv)
 	atexit(remove_lock_file);
 	remove_lock = 1;
 
+	merge = 0;
 	for (i = 1; i < argc; i++) {
 		const char *arg = argv[i];
 
 		/* "-m" stands for "merge", meaning we start in stage 1 */
 		if (!strcmp(arg, "-m")) {
+			int i;
+			if (stage)
+				usage("-m needs to come first");
+			read_cache();
+			for (i = 0; i < active_nr; i++) {
+				if (ce_stage(active_cache[i]))
+					usage("you need to resolve your current index first");
+			}
 			stage = 1;
+			merge = 1;
 			continue;
 		}
 		if (get_sha1_hex(arg, sha1) < 0)
@@ -188,8 +249,18 @@ int main(int argc, char **argv)
 			die("failed to unpack tree object %s", arg);
 		stage++;
 	}
-	if (stage == 4)
-		trivially_merge_cache(active_cache, active_nr);
+	if (merge) {
+		switch (stage) {
+		case 4:	/* Three-way merge */
+			trivially_merge_cache(active_cache, active_nr);
+			break;
+		case 2:	/* Just read a tree, merge with old cache contents */
+			merge_stat_info(active_cache, active_nr);
+			break;
+		default:
+			die("just how do you expect me to merge %d trees?", stage-1);
+		}
+	}
 	if (write_cache(newfd, active_cache, active_nr) ||
 	    rename(".git/index.lock", ".git/index"))
 		die("unable to write new index file");
