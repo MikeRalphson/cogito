@@ -52,7 +52,6 @@ else
 
 	merging=
 	[ -s .git/merging ] && merging=$(cat .git/merging | sed 's/^/-p /')
-
 fi
 
 if [ ! "$ignorecache" ]; then
@@ -70,8 +69,15 @@ fi
 echo "Enter commit message, terminated by ctrl-D on a separate line:"
 LOGMSG=$(mktemp -t gitci.XXXXXX)
 if [ "$merging" ]; then
-	cat .git/merging | sed 's/^/Merging: /' >>$LOGMSG
-	cat .git/merging | sed 's/^/Merging: /'
+	echo -n 'Merge with ' >>$LOGMSG
+	echo -n 'Merge with '
+	[ -s .git/merging-sym ] || cp .git/merging .git/merging-sym
+	for sym in $(cat .git/merging-sym); do
+		uri=$(grep $(echo -e "^$sym\t" | sed 's/\./\\./g') .git/remotes | cut -f 2)
+		[ "$uri" ] || uri="$sym"
+		echo "$uri" >>$LOGMSG
+		echo "$uri"
+	done
 	echo >>$LOGMSG; echo
 fi
 cat >>$LOGMSG
@@ -122,7 +128,7 @@ fi
 if [ "$newhead" ]; then
 	echo "Committed as $newhead."
 	echo $newhead >.git/HEAD
-	[ "$merging" ] && rm .git/merging .git/merge-base
+	[ "$merging" ] && rm .git/merging .git/merging-sym .git/merge-base
 else
 	die "error during commit (oldhead $oldhead, treeid $treeid)"
 fi

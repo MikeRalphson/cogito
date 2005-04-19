@@ -13,7 +13,7 @@
 [ -s ".git/add-queue" ] && rm $(cat .git/add-queue)
 rm -f .git/add-queue .git/rm-queue
 
-rm -f .git/blocked .git/merging .git/merge-base
+rm -f .git/blocked .git/merging .git/merging-sym .git/merge-base
 read-tree $(tree-id)
 
 checkout-cache -f -a

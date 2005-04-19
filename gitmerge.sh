@@ -36,7 +36,8 @@ if [ "$1" = "-b" ]; then
 fi
 
 [ "$1" ] || die "usage: git merge [-c] [-b BASE_ID] FROM_ID"
-branch=$(gitXnormid.sh -c "$1") || exit 1
+branchname="$1"
+branch=$(gitXnormid.sh -c "$branchname") || exit 1
 
 [ "$base" ] || base=$(merge-base "$head" "$branch")
 [ "$base" ] || die "unable to automatically determine merge base"
@@ -79,6 +80,7 @@ echo -e "\tto $head..." >&2
 
 echo $base >>.git/merge-base
 echo $branch >>.git/merging
+echo $branchname >>.git/merging-sym
 
 
 read-tree -m $(tree-id $base) $(tree-id $head) $(tree-id $branch) || die "read-tree failed"
