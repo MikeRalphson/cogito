@@ -46,7 +46,7 @@ diffqueue () {
 
 	if [ "$@" ]; then
 		for file in "$@"; do
-			fgrep -q "$file" "$queue" && diffqfile $dir "$file" \
+			fgrep -qx "$file" "$queue" && diffqfile $dir "$file" \
 				&& ret=
 		done
 	else

@@ -108,11 +108,11 @@ else
 	greptmp=$(mktemp -t gitci.XXXXXX)
 	for file in $customfiles; do
 		if [ -s .git/add-queue ]; then
-			fgrep -v "$file" .git/add-queue >$greptmp
+			fgrep -vx "$file" .git/add-queue >$greptmp
 			cat $greptmp >.git/add-queue
 		fi
 		if [ -s .git/rm-queue ]; then
-			fgrep -v "$file" .git/rm-queue >$greptmp
+			fgrep -vx "$file" .git/rm-queue >$greptmp
 			cat $greptmp >.git/rm-queue
 		fi
 	done
