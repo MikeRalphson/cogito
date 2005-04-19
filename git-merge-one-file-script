@@ -18,6 +18,11 @@
 # do any merges that migth change the tree layout
 #
 
+# if the directory is newly added in a branch, it might not exist
+# in the current tree
+dir=$(dirname "$4")
+mkdir -p "$dir"
+
 case "${1:-.}${2:-.}${3:-.}" in
 #
 # deleted in both, or deleted in one and unchanged in the other
