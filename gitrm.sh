@@ -4,7 +4,7 @@
 # Copyright (c) Petr Baudis, 2005
 #
 # Takes a list of file names at the command line, and schedules them
-# for addition to the GIT repository at the next commit.
+# for removal from the GIT repository at the next commit.
 #
 # FIXME: Those files are omitted from show-diff output!
 
