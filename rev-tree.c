@@ -55,6 +55,9 @@ void process_commit(unsigned char *sha1)
 {
 	struct commit_list *parents;
 	struct commit *obj = lookup_commit(sha1);
+
+	if (obj && obj->object.parsed)
+		return;
 	if (!obj || parse_commit(obj))
 		die("unable to parse commit (%s)", sha1_to_hex(sha1));
 	
