@@ -41,11 +41,7 @@ else
 	commitfiles="$addedfiles $remfiles $changedfiles"
 
 	merging=
-	dsttree=
-	if [ -s .git/merging ]; then
-		merging=$(cat .git/merging | sed 's/^/-p /')
-		dsttree=$(cat .git/merging-to)/
-	fi
+	[ -s .git/merging ] && merging=$(cat .git/merging | sed 's/^/-p /')
 
 fi
 if [ ! "$commitfiles" ]; then
@@ -56,6 +52,7 @@ fi
 
 for file in $commitfiles; do
 	# Prepend a letter describing whether it's addition, removal or update.
+	# Or call git status on those files.
 	echo $file;
 done
 echo "Enter commit message, terminated by ctrl-D on a separate line:"
@@ -68,14 +65,14 @@ fi
 cat >>$LOGMSG
 
 
-# TODO: Do the proper separation of adds, removed, and changes.
+# TODO: Do the proper separation of adds, removes, and changes.
 echo $commitfiles | xargs update-cache --add --remove \
 	|| die "update-cache failed"
 
 
 oldhead=
-if [ -s "$dsttree.git/HEAD" ]; then
-	oldhead=$(cat $dsttree.git/HEAD)
+if [ -s ".git/HEAD" ]; then
+	oldhead=$(cat .git/HEAD)
 	oldheadstr="-p $oldhead"
 fi
 
@@ -110,20 +107,8 @@ fi
 
 if [ "$newhead" ]; then
 	echo "Committed as $newhead."
-	if [ "$merging" ]; then
-		echo "merged" >.git/blocked
-		mergetree=$(pwd)
-		cd $dsttree
-		mv "$mergetree" "$mergetree~$newhead"
-	fi
 	echo $newhead >.git/HEAD
-	if [ "$merging" ]; then
-		rm .git/blocked
-		# Update the tree with the merged changes
-		read-tree $(tree-id $newhead)
-		gitdiff.sh -r "$oldhead":"$newhead" | git apply
-		update-cache --refresh
-	fi
+	[ "$merging" ] && rm .git/merging .git/merge-base
 else
 	die "error during commit (oldhead $oldhead, treeid $treeid)"
 fi

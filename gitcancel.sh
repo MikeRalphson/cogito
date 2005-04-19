@@ -8,19 +8,13 @@
 #
 # Basically, this is the opposite of git commit in some sense.
 #
-# Takes no arguments. Takes the evil changes from the tree.
-
-if [ -s ".git/merging-to" ]; then
-	mergetree=$(pwd)
-	dsttree=$(cat .git/merging-to)
-	cd "$dsttree"
-	mv "$mergetree" "$mergetree~cancelled-"$(date +"%s")
-	rm .git/blocked
-	exit
-fi
+# Takes no arguments and the evil changes from the tree.
 
 [ -s ".git/add-queue" ] && rm $(cat .git/add-queue)
-
 rm -f .git/add-queue .git/rm-queue
+
+rm -f .git/blocked .git/merging .git/merge-base
+read-tree $(tree-id)
+
 checkout-cache -f -a
 update-cache --refresh
