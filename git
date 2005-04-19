@@ -39,7 +39,7 @@ Available commands:
 	ls		[TREE_ID]
 	lsobj		[OBJTYPE]
 	lsremote
-	merge		[-b BASE_ID] FROM_ID
+	merge		[-c] [-b BASE_ID] FROM_ID
 	pull		[RNAME]
 	rm		FILE...
 	seek		[COMMIT_ID]

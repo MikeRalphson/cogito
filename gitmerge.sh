@@ -5,6 +5,8 @@
 #
 # Takes a parameter identifying the branch to be merged.
 # Optional "-b base_commit" parameter specifies the base for the merge.
+# Optional "-c" parameter specifies that you want to have tree merge
+# never autocomitted, but want to review and commit it manually.
 #
 # You have to examine the tree after the merge and then do git commit.
 #
@@ -20,14 +22,20 @@ die () {
 head=$(commit-id)
 
 
+careful=
+if [ "$1" = "-c" ]; then
+	shift
+	careful=1
+fi
+
 base=
 if [ "$1" = "-b" ]; then
 	shift
-	[ "$1" ] || die "usage: git merge [-b BASE_ID] FROM_ID"
+	[ "$1" ] || die "usage: git merge [-c] [-b BASE_ID] FROM_ID"
 	base=$(gitXnormid.sh -c "$1") || exit 1; shift
 fi
 
-[ "$1" ] || die "usage: git merge [-b BASE_ID] FROM_ID"
+[ "$1" ] || die "usage: git merge [-c] [-b BASE_ID] FROM_ID"
 branch=$(gitXnormid.sh -c "$1") || exit 1
 
 [ "$base" ] || base=$(merge-base "$head" "$branch")
@@ -70,12 +78,12 @@ echo $branch >>.git/merging
 
 
 read-tree -m $(tree-id $base) $(tree-id $head) $(tree-id $branch) || die "read-tree failed"
-if ! merge-cache gitmerge-file.sh -a; then
+if ! merge-cache gitmerge-file.sh -a || [ "$careful" ]; then
 	checkout-cache -f -a
 	read-tree $(tree-id)
 	update-cache --refresh >/dev/null
 
-	cat >&2 <<__END__
+	[ ! "$careful" ] && cat >&2 <<__END__
 
 	Conflicts during merge. Do git commit after resolving them.
 __END__
