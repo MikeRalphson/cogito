@@ -4,7 +4,7 @@
 # Copyright (c) Petr Baudis, 2005
 #
 # Takes a parameter identifying the branch to be merged.
-# Optional "-b base_commit" parameter specifies the base for the
+# Optional "-b base_commit" parameter specifies the base for the merge.
 #
 # You have to examine the tree after the merge and then do git commit.
 #
@@ -51,6 +51,11 @@ if [ "$head" = "$base" ]; then
 	exit 0
 fi
 
+
+[ "$(show-diff -s)" ] && update-cache --refresh
+if [ "$(show-diff -s)" ] || [ -s .git/add-queue ] || [ -s .git/rm-queue ]; then
+	die "merge blocked: local changes"
+fi
 
 echo "Merging $base -> $branch" >&2
 echo -e "\tto $head..." >&2
