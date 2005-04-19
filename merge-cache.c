@@ -5,6 +5,7 @@
 
 static const char *pgm = NULL;
 static const char *arguments[5];
+static int err;
 
 static void run_program(void)
 {
@@ -22,7 +23,7 @@ static void run_program(void)
 		die("unable to execute '%s'", pgm);
 	}
 	if (waitpid(pid, &status, 0) < 0 || !WIFEXITED(status) || WEXITSTATUS(status))
-		die("merge program failed");
+		err = 1;
 }
 
 static int merge_entry(int pos, const char *path)
@@ -102,5 +103,7 @@ int main(int argc, char **argv)
 		}
 		merge_file(arg);
 	}
+	if (err)
+		die("merge program failed");
 	return 0;
 }
