@@ -57,12 +57,14 @@ if [ "$head" = "$base" ]; then
 
 	echo "Fast-forwarding $base -> $branch" >&2
 	echo -e "\ton top of $head..." >&2
+
+	patchfile=$(mktemp -t gitmerge.XXXXXX)
+	gitdiff.sh >$patchfile
 	read-tree -m $(tree-id $branch)
-	[ -s .git/add-queue ] && mv .git/add-queue .git/add-queue.orig
-	[ -s .git/rm-queue ] && mv .git/rm-queue .git/rm-queue.orig
-	gitdiff.sh -r "$base":"$branch" | gitapply.sh
-	[ -s .git/add-queue.orig ] && mv .git/add-queue.orig .git/add-queue
-	[ -s .git/rm-queue.orig ] && mv .git/rm-queue.orig .git/rm-queue
+	checkout-cache -f -a
+	patch -p0 <$patchfile
+	rm $patchfile
+
 	update-cache --refresh
 	echo $branch >.git/HEAD
 
