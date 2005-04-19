@@ -52,8 +52,8 @@ if [ "$curcommit" != "$dstcommit" ]; then
 	[ -s .git/add-queue ] && mv .git/add-queue .git/add-queue.orig
 	[ -s .git/rm-queue ] && mv .git/rm-queue .git/rm-queue.orig
 	git diff -r $curcommit:$dstcommit | git apply
-	[ -s .git/add-queue.queue ] && mv .git/add-queue.orig .git/add-queue
-	[ -s .git/rm-queue.queue ] && mv .git/rm-queue.orig .git/rm-queue
+	[ -s .git/add-queue.orig ] && mv .git/add-queue.orig .git/add-queue
+	[ -s .git/rm-queue.orig ] && mv .git/rm-queue.orig .git/rm-queue
 	update-cache --refresh
 fi
 
