@@ -37,6 +37,11 @@ branch=$(gitXnormid.sh -c "$1") || exit 1
 [ -s .git/blocked ] && die "merge blocked: $(cat .git/blocked)"
 
 
+if [ "$base" = "$branch" ]; then
+	echo "Branch already fully merged." >&2
+	exit 0
+fi
+
 if [ "$head" = "$base" ]; then
 	# No need to do explicit merge with a merge commit; just bring
 	# the HEAD forward.
