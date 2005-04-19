@@ -56,8 +56,12 @@ if [ "$head" = "$base" ]; then
 
 	echo "Fast-forwarding $base -> $branch" >&2
 	echo -e "\ton top of $head..." >&2
-	gitdiff.sh -r "$base":"$branch" | gitapply.sh
 	read-tree $(tree-id $branch)
+	[ -s .git/add-queue ] && mv .git/add-queue .git/add-queue.orig
+	[ -s .git/rm-queue ] && mv .git/rm-queue .git/rm-queue.orig
+	gitdiff.sh -r "$base":"$branch" | gitapply.sh
+	[ -s .git/add-queue.queue ] && mv .git/add-queue.orig .git/add-queue
+	[ -s .git/rm-queue.queue ] && mv .git/rm-queue.orig .git/rm-queue
 	update-cache --refresh
 	echo $branch >.git/HEAD
 

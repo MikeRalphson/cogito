@@ -49,7 +49,11 @@ fi
 
 if [ "$curcommit" != "$dstcommit" ]; then
 	read-tree $(tree-id)
+	[ -s .git/add-queue ] && mv .git/add-queue .git/add-queue.orig
+	[ -s .git/rm-queue ] && mv .git/rm-queue .git/rm-queue.orig
 	git diff -r $curcommit:$dstcommit | git apply
+	[ -s .git/add-queue.queue ] && mv .git/add-queue.orig .git/add-queue
+	[ -s .git/rm-queue.queue ] && mv .git/rm-queue.orig .git/rm-queue
 	update-cache --refresh
 fi
 
