@@ -7,6 +7,7 @@
 
 id=$(gitXnormid.sh -c $1) || exit 1
 
+echo commit $id
 cat-file commit $id
 echo
 git diff -p -r $id
