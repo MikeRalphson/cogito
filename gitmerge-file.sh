@@ -36,6 +36,7 @@ case "${1:-.}${2:-.}${3:-.}" in
 #
 "..$3")
 	# FIXME: Permissions!
+	mkdir -p "$(dirname "$4")"
 	cat-file blob "$3" >"$4"; git add "$4"
 	update-cache --add -- "$4"
 	exit 0
