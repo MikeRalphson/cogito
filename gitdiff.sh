@@ -88,6 +88,7 @@ fi
 
 if [ "$id2" = " " ]; then
 	if [ "$id1" != " " ]; then
+		cp .git/index .git/index.orig
 		read-tree $(gitXnormid.sh "$id1")
 		update-cache --refresh
 	fi
@@ -100,8 +101,7 @@ if [ "$id2" = " " ]; then
 	[ -s .git/rm-queue  ] && diffqueue 2 .git/rm-queue  "$@" && ret=
 
 	if [ "$id1" != " " ]; then
-		read-tree $(tree-id)
-		update-cache --refresh
+		mv .git/index.orig .git/index
 	fi
 
 	[ "$ret" ] && die "no files matched"
