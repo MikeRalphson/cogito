@@ -13,6 +13,19 @@
 [ -s ".git/add-queue" ] && rm $(cat .git/add-queue)
 rm -f .git/add-queue .git/rm-queue
 
+# Undo seek?
+branch=
+[ -s .git/blocked ] && branch=$(grep '^seeked from ' .git/blocked | sed 's/^seeked from //')
+if [ "$branch" ]; then
+	echo "Unseeking: $(cat .git/HEAD) -> $(cat ".git/heads/$branch")"
+	if [ -s ".git/heads/$branch" ]; then
+		rm .git/HEAD
+		ln -s "heads/$branch" .git/HEAD
+	else
+		echo "ERROR: Unknown branch $branch! Preserving HEAD." >&2
+	fi
+fi
+
 rm -f .git/blocked .git/merging .git/merging-sym .git/merge-base
 read-tree $(tree-id)
 
