@@ -22,7 +22,8 @@ SCRIPT=	parent-id tree-id git gitXnormid.sh gitadd.sh gitaddremote.sh \
 	gitcommit.sh gitdiff-do gitdiff.sh gitlog.sh gitls.sh gitlsobj.sh \
 	gitmerge.sh gitpull.sh gitrm.sh gittag.sh gittrack.sh gitexport.sh \
 	gitapply.sh gitcancel.sh gitXlntree.sh commit-id gitlsremote.sh \
-	gitfork.sh gitinit.sh gitseek.sh gitstatus.sh gitpatch.sh
+	gitfork.sh gitinit.sh gitseek.sh gitstatus.sh gitpatch.sh \
+	gitmerge-file.sh
 
 COMMON=	read-cache.o
 
