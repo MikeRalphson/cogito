@@ -21,16 +21,23 @@ static int index_fd(unsigned char *sha1, int fd, struct stat *st)
 	int max_out_bytes = size + 200;
 	void *out = malloc(max_out_bytes);
 	void *metadata = malloc(200);
+	int metadata_size;
 	void *in;
 	SHA_CTX c;
-	int ret = -1;
 
 	in = "";
 	if (size)
 		in = mmap(NULL, size, PROT_READ, MAP_PRIVATE, fd, 0);
 	close(fd);
 	if (!out || (int)(long)in == -1)
-		goto bye;
+		return -1;
+
+	metadata_size = 1+sprintf(metadata, "blob %lu", size);
+
+	SHA1_Init(&c);
+	SHA1_Update(&c, metadata, metadata_size);
+	SHA1_Update(&c, in, size);
+	SHA1_Final(sha1, &c);
 
 	memset(&stream, 0, sizeof(stream));
 	deflateInit(&stream, Z_BEST_COMPRESSION);
@@ -39,7 +46,7 @@ static int index_fd(unsigned char *sha1, int fd, struct stat *st)
 	 * ASCII size + nul byte
 	 */	
 	stream.next_in = metadata;
-	stream.avail_in = 1+sprintf(metadata, "blob %lu", size);
+	stream.avail_in = metadata_size;
 	stream.next_out = out;
 	stream.avail_out = max_out_bytes;
 	while (deflate(&stream, 0) == Z_OK)
@@ -55,18 +62,7 @@ static int index_fd(unsigned char *sha1, int fd, struct stat *st)
 
 	deflateEnd(&stream);
 	
-	SHA1_Init(&c);
-	SHA1_Update(&c, out, stream.total_out);
-	SHA1_Final(sha1, &c);
-
-	ret = write_sha1_buffer(sha1, out, stream.total_out);
-
-bye:
-	free(out);
-	free(metadata);
-	if ((int)(long)in != -1 && size)
-		munmap(in, size);
-	return ret;
+	return write_sha1_buffer(sha1, out, stream.total_out);
 }
 
 /*
