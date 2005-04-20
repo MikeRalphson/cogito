@@ -88,7 +88,7 @@ echo $branchname >>.git/merging-sym
 read-tree -m $(tree-id $base) $(tree-id $head) $(tree-id $branch) || die "read-tree failed"
 if ! merge-cache gitmerge-file.sh -a || [ "$careful" ]; then
 	checkout-cache -f -a
-	read-tree -m $(tree-id)
+	read-tree $(tree-id)
 	update-cache --refresh >/dev/null
 
 	[ ! "$careful" ] && cat >&2 <<__END__
