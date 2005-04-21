@@ -60,13 +60,15 @@ if [ "$head" = "$base" ]; then
 
 	patchfile=$(mktemp -t gitmerge.XXXXXX)
 	gitdiff.sh >$patchfile
+
 	read-tree -m $(tree-id $branch)
+	echo $branch >.git/HEAD
 	checkout-cache -f -a
+
 	grep -v '^[^ @+-]' $patchfile | patch -p1
 	rm $patchfile
 
 	update-cache --refresh
-	echo $branch >.git/HEAD
 
 	exit 0
 fi
