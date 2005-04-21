@@ -23,63 +23,72 @@ static int read_one_entry(unsigned char *sha1, const char *base, int baselen, co
 	return add_cache_entry(ce, 1);
 }
 
-static int read_tree(unsigned char *sha1, const char *base, int baselen)
+static int read_tree_recursive(void *buffer, const char *type,
+			       unsigned long size,
+			       const char *base, int baselen)
 {
-	void *buffer, *bufptr;
-	unsigned long size;
-	char type[20];
-
-	buffer = bufptr = read_sha1_file(sha1, type, &size);
-	if (!buffer)
+	if (!buffer || strcmp(type, "tree"))
 		return -1;
-	if (strcmp(type, "tree")) {
-		free(buffer);
-		return -1;
-	}
 	while (size) {
-		int len = strlen(bufptr)+1;
-		unsigned char *sha1 = bufptr + len;
-		char *path = strchr(bufptr, ' ')+1;
+		int len = strlen(buffer)+1;
+		unsigned char *sha1 = buffer + len;
+		char *path = strchr(buffer, ' ')+1;
 		unsigned int mode;
 
-		if (size < len + 20 || sscanf(bufptr, "%o", &mode) != 1) {
-			free(buffer);
+		if (size < len + 20 || sscanf(buffer, "%o", &mode) != 1)
 			return -1;
-		}
 
-		bufptr = sha1 + 20;
+		buffer = sha1 + 20;
 		size -= len + 20;
 
 		if (S_ISDIR(mode)) {
 			int retval;
 			int pathlen = strlen(path);
 			char *newbase = malloc(baselen + 1 + pathlen);
+			void *eltbuf;
+			char elttype[20];
+			unsigned long eltsize;
+
+			eltbuf = read_sha1_file(sha1, elttype, &eltsize);
+			if (!eltbuf)
+				return -1;
 			memcpy(newbase, base, baselen);
 			memcpy(newbase + baselen, path, pathlen);
 			newbase[baselen + pathlen] = '/';
-			retval = read_tree(sha1, newbase, baselen + pathlen + 1);
+			retval = read_tree_recursive(eltbuf, elttype, eltsize,
+						     newbase,
+						     baselen + pathlen + 1);
+			free(eltbuf);
 			free(newbase);
-			if (retval) {
-				free(buffer);
+			if (retval)
 				return -1;
-			}
 			continue;
 		}
-		if (read_one_entry(sha1, base, baselen, path, mode) < 0) {
-			free(buffer);
+		if (read_one_entry(sha1, base, baselen, path, mode) < 0)
 			return -1;
-		}
 	}
-	free(buffer);
 	return 0;
 }
 
-static int remove_lock = 0;
+static int read_tree(unsigned char *sha1, const char *base, int baselen)
+{
+	void *buffer;
+	unsigned long size;
+	int ret;
+
+	buffer = read_tree_with_tree_or_commit_sha1(sha1, &size, 0);
+	ret = read_tree_recursive(buffer, "tree", size, base, baselen);
+	if (buffer)
+		free(buffer);
+	return ret;
+}
+
+static char *lockfile_name;
 
 static void remove_lock_file(void)
 {
-	if (remove_lock)
-		unlink(".git/index.lock");
+	if (lockfile_name)
+		unlink(lockfile_name);
 }
 
 static int path_matches(struct cache_entry *a, struct cache_entry *b)
@@ -212,16 +221,22 @@ static void merge_stat_info(struct cache_entry **src, int nr)
 	}
 }
 
+static char *read_tree_usage = "read-tree (<sha> | -m <sha1> [<sha2> <sha3>])";
+
 int main(int argc, char **argv)
 {
 	int i, newfd, merge;
 	unsigned char sha1[20];
+	static char lockfile[MAXPATHLEN+1];
+	const char *indexfile = get_index_file();
 
-	newfd = open(".git/index.lock", O_RDWR | O_CREAT | O_EXCL, 0600);
+	snprintf(lockfile, sizeof(lockfile), "%s.lock", indexfile);
+
+	newfd = open(lockfile, O_RDWR | O_CREAT | O_EXCL, 0600);
 	if (newfd < 0)
 		die("unable to create new cachefile");
 	atexit(remove_lock_file);
-	remove_lock = 1;
+	lockfile_name = lockfile;
 
 	merge = 0;
 	for (i = 1; i < argc; i++) {
@@ -231,20 +246,20 @@ int main(int argc, char **argv)
 		if (!strcmp(arg, "-m")) {
 			int i;
 			if (stage)
-				usage("-m needs to come first");
+				die("-m needs to come first");
 			read_cache();
 			for (i = 0; i < active_nr; i++) {
 				if (ce_stage(active_cache[i]))
-					usage("you need to resolve your current index first");
+					die("you need to resolve your current index first");
 			}
 			stage = 1;
 			merge = 1;
 			continue;
 		}
 		if (get_sha1_hex(arg, sha1) < 0)
-			usage("read-tree [-m] <sha1>");
+			usage(read_tree_usage);
 		if (stage > 3)
-			usage("can't merge more than two trees");
+			usage(read_tree_usage);
 		if (read_tree(sha1, "", 0) < 0)
 			die("failed to unpack tree object %s", arg);
 		stage++;
@@ -261,9 +276,8 @@ int main(int argc, char **argv)
 			die("just how do you expect me to merge %d trees?", stage-1);
 		}
 	}
-	if (write_cache(newfd, active_cache, active_nr) ||
-	    rename(".git/index.lock", ".git/index"))
+	if (write_cache(newfd, active_cache, active_nr) || rename(lockfile, indexfile))
 		die("unable to write new index file");
-	remove_lock = 0;
+	lockfile_name = NULL;
 	return 0;
 }

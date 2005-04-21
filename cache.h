@@ -1,6 +1,7 @@
 #ifndef CACHE_H
 #define CACHE_H
 
+#include <unistd.h>
 #include <stdio.h>
 #include <sys/stat.h>
 #include <fcntl.h>
@@ -11,6 +12,7 @@
 #include <unistd.h>
 #include <errno.h>
 #include <sys/mman.h>
+#include <sys/param.h>
 #include <netinet/in.h>
 
 #include <openssl/sha.h>
@@ -84,6 +86,13 @@ unsigned int active_nr, active_alloc;
 #define DB_ENVIRONMENT "SHA1_FILE_DIRECTORY"
 #define DEFAULT_DB_ENVIRONMENT ".git/objects"
 
+#define get_object_directory() (getenv(DB_ENVIRONMENT) ? : DEFAULT_DB_ENVIRONMENT)
+
+#define INDEX_ENVIRONMENT "GIT_INDEX_FILE"
+#define DEFAULT_INDEX_ENVIRONMENT ".git/index"
+
+#define get_index_file() (getenv(INDEX_ENVIRONMENT) ? : DEFAULT_INDEX_ENVIRONMENT)
+
 #define alloc_nr(x) (((x)+16)*3/2)
 
 /* Initialize and use the cache information */
@@ -124,5 +133,9 @@ extern void die(const char *err, ...);
 extern int error(const char *err, ...);
 
 extern int cache_name_compare(const char *name1, int len1, const char *name2, int len2);
+
+extern void *read_tree_with_tree_or_commit_sha1(const unsigned char *sha1,
+						unsigned long *size,
+						unsigned char *tree_sha1_ret);
 
 #endif /* CACHE_H */
