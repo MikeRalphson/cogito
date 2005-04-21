@@ -14,12 +14,10 @@
 # (my ext3 doesn't).
 CFLAGS=-g -O2 -Wall
 
-ifndef PREFIX
-PREFIX=$(HOME)
-endif
-ifndef BINDIR
-BINDIR=$(PREFIX)/bin
-endif
+# Should be changed to /usr/local
+prefix=$(HOME)
+
+bindir=$(prefix)/bin
 
 CC=gcc
 AR=ar
@@ -81,8 +79,8 @@ gitversion.sh: $(VERSION)
 
 
 install: $(PROG) $(GEN_SCRIPT)
-	install -m755 -d $(BINDIR)
-	install $(PROG) $(SCRIPT) $(GEN_SCRIPT) $(DESTDIR)$(BINDIR)
+	install -m755 -d $(DESTDIR)$(bindir)
+	install $(PROG) $(SCRIPT) $(GEN_SCRIPT) $(DESTDIR)$(bindir)
 
 clean:
 	rm -f *.o mozilla-sha1/*.o $(PROG) $(GEN_SCRIPT) $(LIB_FILE)
