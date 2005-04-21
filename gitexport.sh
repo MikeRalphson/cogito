@@ -18,8 +18,8 @@ id=$(gitXnormid.sh $2)
 
 [ -e "$destdir" ] && die "$destdir already exists."
 
-gitXlntree.sh $destdir || exit 1
-cd $destdir
+mkdir -p $destdir || die "cannot create $destdir"
+export GIT_INDEX_FILE="$destdir/.git-index"
 read-tree $id
-checkout-cache -a
-rm -r .git
+checkout-cache "--prefix=$destdir/" -a
+rm $GIT_INDEX_FILE
