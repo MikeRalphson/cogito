@@ -41,11 +41,11 @@ if echo $id | egrep -vq "$SHA1ONLY"; then
 	exit 1
 fi
 
-if [ "$type" = "tree" ] && [ $(cat-file -t "$id") = "commit" ]; then
+if [ "$type" = "tree" ] && [ "$(cat-file -t "$id")" = "commit" ]; then
 	id=$(cat-file commit $id | egrep "$TREE" | cut -d ' ' -f 2)
 fi
 
-if [ $(cat-file -t "$id") != "$type" ]; then
+if [ "$(cat-file -t "$id")" != "$type" ]; then
 	echo "Invalid id: $id" >&2
 	exit 1
 fi
