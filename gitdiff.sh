@@ -88,7 +88,7 @@ fi
 
 if [ "$id2" = " " ]; then
 	if [ "$id1" != " " ]; then
-		cp .git/index .git/index.orig
+		export GIT_INDEX_FILE=$(mktemp -t gitdiff.XXXXXX)
 		read-tree $(gitXnormid.sh "$id1")
 		update-cache --refresh
 	fi
@@ -101,7 +101,7 @@ if [ "$id2" = " " ]; then
 	[ -s .git/rm-queue  ] && diffqueue 2 .git/rm-queue  "$@" && ret=
 
 	if [ "$id1" != " " ]; then
-		mv .git/index.orig .git/index
+		rm $GIT_INDEX_FILE
 	fi
 
 	[ "$ret" ] && die "no files matched"
