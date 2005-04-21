@@ -28,7 +28,7 @@ rev-tree $base | sort -rn | while read time commit parents; do
 				fi
 				;;
 			"")
-				echo; cat
+				echo; sed 's/^/    /'
 				;;
 			*)
 				echo $key $rest
@@ -36,5 +36,5 @@ rev-tree $base | sort -rn | while read time commit parents; do
 			esac
 
 		done
-	echo -e "\n--------------------------"
-done
+	echo
+done | ${PAGER:-less}
