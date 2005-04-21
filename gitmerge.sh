@@ -62,7 +62,7 @@ if [ "$head" = "$base" ]; then
 	gitdiff.sh >$patchfile
 	read-tree -m $(tree-id $branch)
 	checkout-cache -f -a
-	patch -p1 <$patchfile
+	grep -v '^[^ @+-]' $patchfile | patch -p1
 	rm $patchfile
 
 	update-cache --refresh
