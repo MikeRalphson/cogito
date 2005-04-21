@@ -9,6 +9,13 @@
 # (my ext3 doesn't).
 CFLAGS=-g -O2 -Wall
 
+ifndef PREFIX
+PREFIX=$(HOME)
+endif
+ifndef BINDIR
+BINDIR=$(PREFIX)/bin
+endif
+
 CC=gcc
 AR=ar
 
@@ -56,7 +63,8 @@ gitversion.sh: $(VERSION)
 	@chmod +x $@
 
 install: $(PROG) $(GEN_SCRIPT)
-	install $(PROG) $(SCRIPT) $(GEN_SCRIPT) $(HOME)/bin/
+	install -m755 -d $(BINDIR)
+	install $(PROG) $(SCRIPT) $(GEN_SCRIPT) $(DESTDIR)$(BINDIR)
 
 clean:
 	rm -f *.o $(PROG) $(GEN_SCRIPT) $(LIB_FILE)
