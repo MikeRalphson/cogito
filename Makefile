@@ -1,3 +1,8 @@
+# Define MOZILLA_SHA1 environment variable when running make to make use of
+# a bundled SHA1 routine coming from Mozilla. It is GPL'd and should be fast
+# on non-x86 architectures (e.g. PowerPC), while the OpenSSL version (default
+# choice) has very fast version optimized for i586.
+#
 # -DCOLLISION_CHECK if you believe that SHA1's
 # 1461501637330902918203684832716283019655932542976 hashes do not give you
 # enough guarantees about no collisions between objects ever hapenning.
@@ -42,7 +47,19 @@ LIB_OBJS=read-cache.o sha1_file.o usage.o object.o commit.o tree.o blob.o
 LIB_FILE=libgit.a
 LIB_H=cache.h object.h
 
-LIBS= $(LIB_FILE) -lssl -lz
+
+LIBS = $(LIB_FILE)
+LIBS += -lz
+
+ifdef MOZILLA_SHA1
+	SHA1_HEADER="mozilla-sha1/sha1.h"
+	LIB_OBJS += mozilla-sha1/sha1.o
+else
+	SHA1_HEADER=<openssl/sha.h>
+	LIBS += -lssl
+endif
+
+CFLAGS += '-DSHA1_HEADER=$(SHA1_HEADER)'
 
 
 all: $(PROG) $(GEN_SCRIPT)
@@ -62,12 +79,13 @@ gitversion.sh: $(VERSION)
 	@echo "echo \"$(shell cat $(VERSION)) ($(shell commit-id))\"" >> $@
 	@chmod +x $@
 
+
 install: $(PROG) $(GEN_SCRIPT)
 	install -m755 -d $(BINDIR)
 	install $(PROG) $(SCRIPT) $(GEN_SCRIPT) $(DESTDIR)$(BINDIR)
 
 clean:
-	rm -f *.o $(PROG) $(GEN_SCRIPT) $(LIB_FILE)
+	rm -f *.o mozilla-sha1/*.o $(PROG) $(GEN_SCRIPT) $(LIB_FILE)
 
 backup: clean
 	cd .. ; tar czvf dircache.tar.gz dir-cache
