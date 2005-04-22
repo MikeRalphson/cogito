@@ -24,7 +24,7 @@ if [ "$branch" ]; then
 fi
 
 rm -f .git/blocked .git/merging .git/merging-sym .git/merge-base
-read-tree $(tree-id)
+read-tree -m $(tree-id) || read-tree $(tree-id)
 
 checkout-cache -f -a
 update-cache --refresh
