@@ -20,6 +20,12 @@ die () {
 uri=$(grep $(echo -e "^$name\t" | sed 's/\./\\./g') .git/remotes | cut -f 2)
 [ "$uri" ] || die "unknown remote"
 
+rembranch=master
+if echo "$uri" | grep -q '#'; then
+	rembranch=$(echo $uri | cut -d '#' -f 2)
+	uri=$(echo $uri | cut -d '#' -f 1)
+fi
+
 
 tracking=
 [ -s .git/tracking ] && tracking=$(cat .git/tracking)
@@ -33,7 +39,13 @@ fi
 
 
 mkdir -p .git/heads
-rsync $RSYNC_FLAGS -Lr "$uri/HEAD" ".git/heads/$name"
+rsyncerr=
+rsync $RSYNC_FLAGS -Lr "$uri/heads/$rembranch" ".git/heads/$name" 2>/dev/null || rsyncerr=1
+if [ "$rsyncerr" ] && [ "$rembranch" = "master" ]; then
+	rsyncerr=
+	rsync $RSYNC_FLAGS -Lr "$uri/HEAD" ".git/heads/$name" | grep -v '^MOTD:' || rsyncerr=1
+fi
+[ "$rsyncerr" ] && die "unable to get the head pointer of branch $rembranch"
 
 [ -d .git/objects ] || mkdir -p .git/objects
 # We already saw the MOTD, thank you very much.

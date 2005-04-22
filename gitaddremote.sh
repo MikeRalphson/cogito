@@ -15,6 +15,17 @@
 # (TODO: gitdiff.sh et al should accept remote names as ids.)
 #
 #
+# Only rsync scheme URLs are supported for now. An URL can have a fragment
+# part, which identifies a branch inside of the repository. So if you have
+# a repository rsync://kernel.org/pub/scm/linux/kernel/mj/linux.git and
+# you are interested in its 'testing' branch, you can e.g.
+#
+#	git addremote mj-testing \
+#		rsync://kernel.org/pub/scm/linux/kernel/mj/linux.git#testing
+#
+# and refer to it as 'mj-testing' anytime later.
+#
+#
 # Takes the remote's name and rsync URL.
 
 name=$1

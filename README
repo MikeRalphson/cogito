@@ -77,7 +77,8 @@ Note that you can also access the Linus' official branch, just by specifying
 
 	git addremote name rsyncurl
 
-When you do some local changes, you can do
+(the rsyncurl can have a fragment part identifying a branch inside of the
+repository accessible over rsync).  When you do some local changes, you can do
 
 	git diff
 
