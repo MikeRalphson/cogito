@@ -12,11 +12,12 @@
 
 if [ "$1" = "-c" ]; then
 	shift
-	colheader=$(setterm -foreground green)
-	colauthor=$(setterm -foreground cyan)
-	colcommitter=$(setterm -foreground magenta)
-	colsignoff=$(setterm -foreground yellow)
-	coldefault=$(setterm -foreground default)
+	# See terminfo(5), "Color Handling"
+	colheader="$(tput setaf 2)"    # Green
+	colauthor="$(tput setaf 6)"    # Cyan
+	colcommitter="$(tput setaf 5)" # Magenta
+	colsignoff="$(tput setaf 3)"   # Yellow
+	coldefault="$(tput op)"        # Restore default
 else
 	colheader=
 	colauthor=
