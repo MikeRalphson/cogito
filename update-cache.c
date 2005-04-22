@@ -104,6 +104,11 @@ static int add_file_to_cache(char *path)
 		close(fd);
 		return -1;
 	}
+	if (S_ISDIR(st.st_mode)) {
+		fprintf(stderr, "'%s' is a directory, ignoring\n", path);
+		close(fd);
+		return 0;
+	}
 	namelen = strlen(path);
 	size = cache_entry_size(namelen);
 	ce = malloc(size);
