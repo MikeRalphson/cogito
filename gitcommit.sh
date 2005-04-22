@@ -29,6 +29,7 @@ if [ "$1" ]; then
 	commitfiles="$@"
 	customfiles=$commitfiles
 
+	[ "$ignorecache" ] && die "-C and listing files to commit does not make sense"
 	[ -s .git/merging ] && die "cannot commit individual files when merging"
 
 else
