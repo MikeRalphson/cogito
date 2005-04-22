@@ -26,17 +26,25 @@ This currently simply describes what should you do when you get a tarball
 of GIT and start to use it and hack upon it. It can give you some guide,
 but the documentation should be certainly consolidated and rewritten.
 
+Build it by make, make sure the scripts are in $PATH.
+
 This mini-HOWTO assumes two facts about the tarball you just got:
+
 	(i)  It is "tracking" some branch
 	(ii) It is "tracking" branch called "pasky"
 
-Build it by make, make sure the scripts are in $PATH, and update it to the
+If this is not the case (most notably when you have no .git subdirectory),
+create a new directory, and do
+
+	git init rsync://pasky.or.cz/git
+
+in that directory.  If you already have the .git subdirectory, update it to the
 latest version by
 
 	git pull pasky
 
 (and repeat that after some time to get the future updates - but see below).
-Then you can finally build it, doing
+Then build it again, doing
 
 	make
 
