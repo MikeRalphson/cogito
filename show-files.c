@@ -19,7 +19,7 @@ static int line_terminator = '\n';
 
 static const char *tag_cached = "";
 static const char *tag_unmerged = "";
-static const char *tag_deleted = "";
+static const char *tag_removed = "";
 static const char *tag_other = "";
 
 static const char **dir;
@@ -140,7 +140,7 @@ static void show_files(void)
 			struct stat st;
 			if (!stat(ce->name, &st))
 				continue;
-			printf("%s%s%c", tag_deleted, ce->name, line_terminator);
+			printf("%s%s%c", tag_removed, ce->name, line_terminator);
 		}
 	}
 	if (show_ignored) {
@@ -162,7 +162,7 @@ int main(int argc, char **argv)
 		if (!strcmp(arg, "-t")) {
 			tag_cached = "H ";
 			tag_unmerged = "M ";
-			tag_deleted = "D ";
+			tag_removed = "R ";
 			tag_other = "? ";
 			continue;
 		}
