@@ -299,7 +299,7 @@ static int fsck_dir(int i, char *path)
 int main(int argc, char **argv)
 {
 	int i, heads;
-	char *sha1_dir;
+	const char *sha1_dir;
 
 	for (i = 1; i < argc; i++) {
 		const char *arg = argv[i];

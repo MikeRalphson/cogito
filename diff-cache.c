@@ -164,7 +164,7 @@ static void mark_merge_entries(void)
 	}
 }
 
-static char *diff_cache_usage =
+static const char *diff_cache_usage =
 "git-diff-cache [-p] [-r] [-z] [-m] [--cached] <tree sha1>";
 
 int main(int argc, char **argv)
