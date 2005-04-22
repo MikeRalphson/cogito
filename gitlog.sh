@@ -7,7 +7,8 @@
 # Major optimizations by (c) Phillip Lougher.
 # Rendered trivial by Linus Torvalds.
 #
-# Takes an id resolving to a commit to start from (HEAD by default).
+# Takes an id resolving to a commit to start from (HEAD by default),
+# or id1:id2 representing an (id1;id2] range of commits to show.
 
 if [ "$1" = "-c" ]; then
 	shift
@@ -24,9 +25,15 @@ else
 	coldefault=
 fi
 
-base=$(gitXnormid.sh -c $1) || exit 1
+if echo "$1" | grep -q ':'; then
+	id1=$(gitXnormid.sh -c $(echo "$1" | cut -d : -f 1)) || exit 1
+	id2=$(gitXnormid.sh -c $(echo "$1" | cut -d : -f 2)) || exit 1
+	rev_tree="$id2 ^$id1"
+else
+	rev_tree="$(gitXnormid.sh -c $1)" || exit 1
+fi
 
-rev-tree $base | sort -rn | while read time commit parents; do
+rev-tree $rev_tree | sort -rn | while read time commit parents; do
 	echo $colheader commit ${commit%:*} $coldefault;
 	cat-file commit $commit | \
 		while read key rest; do
