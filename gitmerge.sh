@@ -65,7 +65,7 @@ if [ "$head" = "$base" ]; then
 	echo $branch >.git/HEAD
 	checkout-cache -f -a
 
-	git apply <$patchfile
+	grep -v '^[^ @+-]' $patchfile | git apply
 	rm $patchfile
 
 	update-cache --refresh
