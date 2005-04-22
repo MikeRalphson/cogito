@@ -40,7 +40,7 @@ else
 	# be committed along automagically as well.
 
 	if [ ! "$ignorecache" ]; then
-		changedfiles=$(show-diff -s | cut -d : -f 1)
+		changedfiles=$(diff-cache $(tree-id) | cut -f 4-)
 		commitfiles="$addedfiles $remfiles $changedfiles"
 	fi
 
