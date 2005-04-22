@@ -1,4 +1,4 @@
-#!/bin/sh
+#!/usr/bin/env bash
 #
 # Get ID of commit associated with given id or HEAD.
 # Copyright (c) Petr Baudis, 2005

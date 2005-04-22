@@ -1,4 +1,4 @@
-#!/bin/sh
+#!/usr/bin/env bash
 #
 # Initialize a GIT repository.
 # Copyright (c) Petr Baudis, 2005

@@ -1,4 +1,4 @@
-#!/bin/sh
+#!/usr/bin/env bash
 #
 # The GIT scripted toolkit.
 # Copyright (c) Petr Baudis, 2005

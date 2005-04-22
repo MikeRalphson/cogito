@@ -1,4 +1,4 @@
-#!/bin/sh
+#!/usr/bin/env bash
 #
 # Internal: Normalize the given ID to a tree ID.
 # Copyright (c) Petr Baudis, 2005

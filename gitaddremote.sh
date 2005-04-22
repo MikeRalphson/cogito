@@ -1,4 +1,4 @@
-#!/bin/sh
+#!/usr/bin/env bash
 #
 # Add new "remote" to the GIT repository.
 # Copyright (c) Petr Baudis, 2005

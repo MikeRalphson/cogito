@@ -1,4 +1,4 @@
-#!/bin/sh
+#!/usr/bin/env bash
 #
 # Seek the working tree to a given commit.
 # Copyright (c) Petr Baudis, 2005

@@ -1,4 +1,4 @@
-#!/bin/sh
+#!/usr/bin/env bash
 #
 # Get ID of tree associated with given commit or HEAD.
 # Copyright (c) Petr Baudis, 2005

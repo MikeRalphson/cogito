@@ -1,4 +1,4 @@
-#!/bin/sh
+#!/usr/bin/env bash
 #
 # Create a branch sharing the objects database.
 # Copyright (c) Petr Baudis, 2005

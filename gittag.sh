@@ -1,4 +1,4 @@
-#!/bin/sh
+#!/usr/bin/env bash
 #
 # Mark certain commit by a tag.
 # Copyright (c) Petr Baudis, 2005

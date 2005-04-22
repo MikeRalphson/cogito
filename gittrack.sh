@@ -1,4 +1,4 @@
-#!/bin/sh
+#!/usr/bin/env bash
 #
 # Makes your working tree track the given branch.
 # Copyright (c) Petr Baudis, 2005

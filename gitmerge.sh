@@ -1,4 +1,4 @@
-#!/bin/sh
+#!/usr/bin/env bash
 #
 # Merge a branch to the current tree.
 # Copyright (c) Petr Baudis, 2005

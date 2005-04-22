@@ -1,4 +1,4 @@
-#!/bin/sh
+#!/usr/bin/env bash
 #
 # Pulls changes from "remote" to the local GIT repository.
 # Copyright (c) Petr Baudis, 2005

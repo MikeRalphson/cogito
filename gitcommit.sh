@@ -1,4 +1,4 @@
-#!/bin/sh
+#!/usr/bin/env bash
 #
 # Commit into a GIT repository.
 # Copyright (c) Petr Baudis, 2005

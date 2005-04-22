@@ -1,4 +1,4 @@
-#!/bin/sh
+#!/usr/bin/env bash
 #
 # Show status of entries in your working tree.
 # Copyright (c) Petr Baudis, 2005

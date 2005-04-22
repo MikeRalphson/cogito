@@ -1,4 +1,4 @@
-#!/bin/sh
+#!/usr/bin/env bash
 #
 # Provide an independent view to the objects database.
 # Copyright (c) Petr Baudis, 2005

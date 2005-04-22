@@ -1,4 +1,4 @@
-#!/bin/sh
+#!/usr/bin/env bash
 #
 # Exports a particular revision from a GIT repository.
 # Copyright (c) Johannes E. Schindelin, 2005

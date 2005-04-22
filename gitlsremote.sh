@@ -1,4 +1,4 @@
-#!/bin/sh
+#!/usr/bin/env bash
 #
 # Lists remote GIT repositories
 # Copyright (c) Steven Cole 2005

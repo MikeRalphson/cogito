@@ -1,4 +1,4 @@
-#!/bin/sh
+#!/usr/bin/env bash
 #
 # List objects of the GIT repository.
 # Copyright (c) Randy Dunlap, 2005

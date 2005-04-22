@@ -1,4 +1,4 @@
-#!/bin/sh
+#!/usr/bin/env bash
 #
 # Cancels current edits in the working tree.
 # Copyright (c) Petr Baudis, 2005

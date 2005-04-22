@@ -1,4 +1,4 @@
-#!/bin/sh
+#!/usr/bin/env bash
 #
 # Make a patch from a given commit.
 # Copyright (c) Petr Baudis, 2005
