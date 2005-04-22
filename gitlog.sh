@@ -7,6 +7,14 @@
 # Major optimizations by (c) Phillip Lougher.
 # Rendered trivial by Linus Torvalds.
 #
+# Takes a -c option to add color to the output.
+# Currently, the colors are:
+#
+#	header		Green	
+#	author 		Cyan
+#	committer	Magenta
+#	signoff		Yellow
+#
 # Takes an id resolving to a commit to start from (HEAD by default),
 # or id1:id2 representing an (id1;id2] range of commits to show.
 

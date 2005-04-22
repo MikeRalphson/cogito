@@ -35,7 +35,7 @@ Available commands:
 	fork		BNAME BRANCH_DIR [COMMIT_ID]
 	help
 	init		RSYNC_URL
-	log		[COMMIT_ID | COMMIT_ID:COMMIT_ID]
+	log		[-c] [COMMIT_ID | COMMIT_ID:COMMIT_ID]
 	ls		[TREE_ID]
 	lsobj		[OBJTYPE]
 	lsremote
