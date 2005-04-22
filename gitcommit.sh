@@ -79,6 +79,12 @@ cat >>$LOGMSG
 
 
 if [ ! "$ignorecache" ]; then
+	if [ "$customfiles" ]; then
+		echo $commitfiles | xargs update-cache --add --remove \
+			|| die "update-cache failed"
+		export GIT_INDEX_FILE=$(mktemp -t gitci.XXXXXX)
+		read-tree $(tree-id)
+	fi
 	# TODO: Do the proper separation of adds, removes, and changes.
 	echo $commitfiles | xargs update-cache --add --remove \
 		|| die "update-cache failed"
@@ -102,6 +108,11 @@ fi
 
 newhead=$(commit-tree $treeid $oldheadstr $merging <$LOGMSG)
 rm $LOGMSG
+
+if [ "$customfiles" ]; then
+	rm $GIT_INDEX_FILE
+	export GIT_INDEX_FILE=
+fi
 
 if [ "$newhead" ]; then
 	echo "Committed as $newhead."
