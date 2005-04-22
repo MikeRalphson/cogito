@@ -36,7 +36,7 @@ This mini-HOWTO assumes two facts about the tarball you just got:
 If this is not the case (most notably when you have no .git subdirectory),
 create a new directory, and do
 
-	git init rsync://pasky.or.cz/git
+	git init rsync://rsync.kernel.org/pub/scm/cogito/cogito.git
 
 in that directory.  If you already have the .git subdirectory, update it to the
 latest version by
@@ -138,7 +138,7 @@ For quick reference, please see
 
 And for reference, my branch URL is:
 
-	rsync://pasky.or.cz/git
+	rsync://rsync.kernel.org/pub/scm/cogito/cogito.git
 
 Note that this all is highly experimental and is likely break frequently. You
 are advised to track LKML and/or the git mailing list.
