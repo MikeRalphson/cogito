@@ -34,7 +34,7 @@ else
 fi
 
 rev-tree $rev_tree | sort -rn | while read time commit parents; do
-	echo $colheader commit ${commit%:*} $coldefault;
+	echo $colheader""commit ${commit%:*} $coldefault;
 	cat-file commit $commit | \
 		while read key rest; do
 			case "$key" in
@@ -50,10 +50,10 @@ rev-tree $rev_tree | sort -rn | while read time commit parents; do
 				dtz=${tz/+/+ }; dtz=${dtz/-/- }
 				pdate="$(date -Rud "1970-01-01 UTC + $sec sec $dtz" 2>/dev/null)"
 				if [ "$pdate" ]; then
-					echo -n $color $key $rest | sed "s/>.*/> ${pdate/+0000/$tz}/"
+					echo -n $color$key $rest | sed "s/>.*/> ${pdate/+0000/$tz}/"
 					echo $coldefault
 				else
-					echo $color $key $rest $coldefault
+					echo $color$key $rest $coldefault
 				fi
 				;;
 			"")
@@ -63,7 +63,7 @@ rev-tree $rev_tree | sort -rn | while read time commit parents; do
 				'
 				;;
 			*)
-				echo $colheader $key $rest $coldefault
+				echo $colheader$key $rest $coldefault
 				;;
 			esac
 
