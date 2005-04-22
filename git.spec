@@ -28,7 +28,7 @@ make
 
 %install
 rm -rf $RPM_BUILD_ROOT
-make DESTDIR=$RPM_BUILD_ROOT/usr/local/ bindir=bin/ install
+make DESTDIR=$RPM_BUILD_ROOT prefix=/usr/local install
 
 %clean
 rm -rf $RPM_BUILD_ROOT
