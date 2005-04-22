@@ -65,7 +65,7 @@ if [ "$head" = "$base" ]; then
 	echo $branch >.git/HEAD
 	checkout-cache -f -a
 
-	grep -v '^[^ @+-]' $patchfile | patch -p1
+	git apply <$patchfile
 	rm $patchfile
 
 	update-cache --refresh
@@ -75,7 +75,7 @@ fi
 
 
 [ "$(show-diff -s)" ] && update-cache --refresh
-if [ "$(show-diff -s)" ] || [ -s .git/add-queue ] || [ -s .git/rm-queue ]; then
+if [ "$(show-diff -s)" ] || [ "$(diff-cache $(tree-id))" ]; then
 	die "merge blocked: local changes"
 fi
 

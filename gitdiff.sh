@@ -27,38 +27,6 @@ die () {
 	exit 1
 }
 
-diffqfile () {
-	dir=$1; shift
-	file=$1; shift
-
-	if [ "$dir" = 1 ]; then
-		diff -u -L /dev/null -L "b/$file" /dev/null "$file"
-	else
-		diff -u -L "b/$file" -L /dev/null "$file" /dev/null
-	fi
-}
-
-diffqueue () {
-	ret=1
-
-	dir=$1; shift
-	queue=$1; shift
-
-	if [ "$@" ]; then
-		for file in "$@"; do
-			fgrep -qx "$file" "$queue" && diffqfile $dir "$file" \
-				&& ret=
-		done
-	else
-		ret=
-		for file in $(cat $queue); do
-			diffqfile $dir "$file"
-		done
-	fi
-
-	return $ret
-}
-
 
 # FIXME: The commandline parsing is awful.
 
@@ -86,19 +54,23 @@ if [ "$parent" ]; then
 fi
 
 
+[ "$@" ] && die "diffing individual files is currently not supported, sorry"
+
 if [ "$id2" = " " ]; then
 	if [ "$id1" != " " ]; then
 		export GIT_INDEX_FILE=$(mktemp -t gitdiff.XXXXXX)
 		read-tree $(gitXnormid.sh "$id1")
 		update-cache --refresh
+		tree=$(gitXnormid.sh "$id1")
+	else
+		tree=$(tree-id)
 	fi
 
 	# FIXME: We should squeeze gitdiff-do-alike output from this.
-	# TODO: Show diffs for added/removed files based on the queues.
+	# FIXME: Update ret based on what did we match. And take "$@"
+	# to account after all.
 	ret=
-	show-diff -q "$@" || ret=1
-	[ -s .git/add-queue ] && diffqueue 1 .git/add-queue "$@" && ret=
-	[ -s .git/rm-queue  ] && diffqueue 2 .git/rm-queue  "$@" && ret=
+	diff-cache -r -z $tree | xargs -0 gitdiff-do "$tree" uncommitted
 
 	if [ "$id1" != " " ]; then
 		rm $GIT_INDEX_FILE
@@ -112,7 +84,6 @@ fi
 id1=$(gitXnormid.sh "$id1") || exit 1
 id2=$(gitXnormid.sh "$id2") || exit 1
 
-[ "$@" ] && die "diffing individual files is not yet supported"
 [ "$id1" = "$id2" ] && die "trying to diff $id1 against itself"
 
 diff-tree -r -z $id1 $id2 | xargs -0 gitdiff-do $id1 $id2

@@ -10,9 +10,6 @@
 #
 # Takes no arguments and the evil changes from the tree.
 
-[ -s ".git/add-queue" ] && rm $(cat .git/add-queue)
-rm -f .git/add-queue .git/rm-queue
-
 # Undo seek?
 branch=
 [ -s .git/blocked ] && branch=$(grep '^seeked from ' .git/blocked | sed 's/^seeked from //')

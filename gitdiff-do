@@ -20,7 +20,12 @@ id2=$1; shift
 mkbanner () {
 	loc=$1; treeid=$2; fname=$3; mode=$4; sha1=$5;
 
-	cat-file blob $sha1 >$loc
+	if [ "$sha1" != "0000000000000000000000000000000000000000" ]; then
+		cat-file blob $sha1 >$loc
+	else
+		ln -s "$(pwd)/$fname" "$loc"
+		sha1="!"
+	fi
 
 	label="$treeid/$fname";
 
@@ -80,7 +85,7 @@ while [ "$1" ]; do
 		echo "Unknown operator $op, ignoring delta: $1";;
 	esac
 
-	rm -f "$loc1" "$loc2"
+	#rm -f "$loc1" "$loc2"
 	shift
 done
 

@@ -40,12 +40,6 @@ else
 	# be committed along automagically as well.
 
 	if [ ! "$ignorecache" ]; then
-		addedfiles=
-		[ -r .git/add-queue ] && addedfiles=$(cat .git/add-queue)
-
-		remfiles=
-		[ -r .git/rm-queue ] && remfiles=$(cat .git/rm-queue)
-
 		changedfiles=$(show-diff -s | cut -d : -f 1)
 		commitfiles="$addedfiles $remfiles $changedfiles"
 	fi
@@ -107,23 +101,6 @@ fi
 
 newhead=$(commit-tree $treeid $oldheadstr $merging <$LOGMSG)
 rm $LOGMSG
-
-if [ ! "$customfiles" ]; then
-	rm -f .git/add-queue .git/rm-queue
-else
-	greptmp=$(mktemp -t gitci.XXXXXX)
-	for file in $customfiles; do
-		if [ -s .git/add-queue ]; then
-			fgrep -vx "$file" .git/add-queue >$greptmp
-			cat $greptmp >.git/add-queue
-		fi
-		if [ -s .git/rm-queue ]; then
-			fgrep -vx "$file" .git/rm-queue >$greptmp
-			cat $greptmp >.git/rm-queue
-		fi
-	done
-	rm $greptmp
-fi
 
 if [ "$newhead" ]; then
 	echo "Committed as $newhead."
