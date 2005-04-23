@@ -57,7 +57,7 @@ rsync $RSYNC_FLAGS --ignore-existing --whole-file \
 # may have tags/ and users were confused by the harmless errors.
 [ -d .git/tags ] || mkdir -p .git/tags
 rsync $RSYNC_FLAGS --ignore-existing \
-	-v -Lr "$uri/tags" ".git/tags/." 2>/dev/null | grep -v '^MOTD:'
+	-v -Lr "$uri/tags/." ".git/tags/." 2>/dev/null | grep -v '^MOTD:'
 
 
 new_head=$(cat ".git/heads/$name")
