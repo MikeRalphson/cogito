@@ -50,14 +50,14 @@ fi
 [ -d .git/objects ] || mkdir -p .git/objects
 # We already saw the MOTD, thank you very much.
 rsync $RSYNC_FLAGS --ignore-existing --whole-file \
-	-v -Lr "$uri/objects/." ".git/objects/." | grep -v '^MOTD:'
+	-v -Lr "$uri/objects/." ".git/objects/." | grep -v '^MOTD:' || die "rsync error"
 
 # FIXME: Warn about conflicting tag names?
 # XXX: We now throw stderr to /dev/null since not all repositories
 # may have tags/ and users were confused by the harmless errors.
 [ -d .git/tags ] || mkdir -p .git/tags
 rsync $RSYNC_FLAGS --ignore-existing \
-	-v -Lr "$uri/tags/." ".git/tags/." 2>/dev/null | grep -v '^MOTD:'
+	-v -Lr "$uri/tags/." ".git/tags/." 2>/dev/null | grep -v '^MOTD:' || die "rsync error"
 
 
 new_head=$(cat ".git/heads/$name")
