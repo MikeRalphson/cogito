@@ -38,8 +38,17 @@ create a new directory, and do
 
 	git init rsync://rsync.kernel.org/pub/scm/cogito/cogito.git
 
-in that directory.  If you already have the .git subdirectory, update it to the
-latest version by
+in that directory, and do
+
+	git addremote pasky rsync://rsync.kernel.org/pub/scm/cogito/cogito.git
+	git track
+	git track pasky
+
+(there is already the same branch called "origin" created by git init, however
+we expect the branch name to be "pasky" for the result of the tutorial;
+alternatively, just use "origin" everywhere instead of "pasky").
+
+If you already have the .git subdirectory, update it to the latest version by
 
 	git pull pasky
 
