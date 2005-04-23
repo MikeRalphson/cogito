@@ -104,7 +104,9 @@ extern int read_cache(void);
 extern int write_cache(int newfd, struct cache_entry **cache, int entries);
 extern int cache_name_pos(const char *name, int namelen);
 extern int add_cache_entry(struct cache_entry *ce, int ok_to_add);
+extern int remove_entry_at(int pos);
 extern int remove_file_from_cache(char *path);
+extern int same_name(struct cache_entry *a, struct cache_entry *b);
 extern int cache_match_stat(struct cache_entry *ce, struct stat *st);
 
 #define MTIME_CHANGED	0x0001
@@ -126,6 +128,9 @@ extern void * unpack_sha1_file(void *map, unsigned long mapsize, char *type, uns
 extern void * read_sha1_file(const unsigned char *sha1, char *type, unsigned long *size);
 extern int write_sha1_file(char *buf, unsigned len, unsigned char *return_sha1);
 extern int check_sha1_signature(unsigned char *sha1, void *buf, unsigned long size, const char *type);
+
+/* Read a tree into the cache */
+extern int read_tree(void *buffer, unsigned long size, int stage);
 
 /* Convert to/from hex/sha1 representation */
 extern int get_sha1_hex(const char *hex, unsigned char *sha1);

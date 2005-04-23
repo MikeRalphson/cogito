@@ -3,6 +3,9 @@
 # on non-x86 architectures (e.g. PowerPC), while the OpenSSL version (default
 # choice) has very fast version optimized for i586.
 #
+# Define PPC_SHA1 environment variable when running make to make use of
+# a bundled SHA1 routine optimized for PowerPC.
+#
 # -DCOLLISION_CHECK if you believe that SHA1's
 # 1461501637330902918203684832716283019655932542976 hashes do not give you
 # enough guarantees about no collisions between objects ever hapenning.
@@ -53,8 +56,13 @@ ifdef MOZILLA_SHA1
 	SHA1_HEADER="mozilla-sha1/sha1.h"
 	LIB_OBJS += mozilla-sha1/sha1.o
 else
+ifdef PPC_SHA1
+	SHA1_HEADER="ppc/sha1.h"
+	LIB_OBJS += ppc/sha1.o ppc/sha1ppc.o
+else
 	SHA1_HEADER=<openssl/sha.h>
 	LIBS += -lssl
+endif
 endif
 
 CFLAGS += '-DSHA1_HEADER=$(SHA1_HEADER)'
@@ -83,7 +91,7 @@ install: $(PROG) $(GEN_SCRIPT)
 	install $(PROG) $(SCRIPT) $(GEN_SCRIPT) $(DESTDIR)$(bindir)
 
 clean:
-	rm -f *.o mozilla-sha1/*.o $(PROG) $(GEN_SCRIPT) $(LIB_FILE)
+	rm -f *.o mozilla-sha1/*.o ppc/*.o $(PROG) $(GEN_SCRIPT) $(LIB_FILE)
 
 backup: clean
 	cd .. ; tar czvf dircache.tar.gz dir-cache
