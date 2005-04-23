@@ -15,6 +15,7 @@
 
 id1=$1; shift
 id2=$1; shift
+filter=$1; shift
 
 # Leaves the result in $label.
 mkbanner () {
@@ -50,6 +51,10 @@ while [ "$1" ]; do
 	type=${param[1]}
 	sha=${param[2]}
 	name=${param[3]}
+
+	if [ "$filter" ] && (echo "$name" | grep -vqxFf $filter); then
+		shift; continue
+	fi
 
 	echo -e "Index: $name\n==================================================================="
 

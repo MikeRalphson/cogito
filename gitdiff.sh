@@ -54,7 +54,13 @@ if [ "$parent" ]; then
 fi
 
 
-[ "$@" ] && die "diffing individual files is currently not supported, sorry"
+filter=
+if [ "$*" ]; then
+	filter=$(mktemp -t gitdiff.XXXXXX)
+	for file in "$@"; do
+		echo "$file" >>$filter
+	done
+fi
 
 if [ "$id2" = " " ]; then
 	if [ "$id1" != " " ]; then
@@ -70,11 +76,12 @@ if [ "$id2" = " " ]; then
 	# FIXME: Update ret based on what did we match. And take "$@"
 	# to account after all.
 	ret=
-	diff-cache -r -z $tree | xargs -0 gitdiff-do "$tree" uncommitted
+	diff-cache -r -z $tree | xargs -0 gitdiff-do "$tree" uncommitted "$filter"
 
 	if [ "$id1" != " " ]; then
 		rm $GIT_INDEX_FILE
 	fi
+	[ "$filter" ] && rm $filter
 
 	[ "$ret" ] && die "no files matched"
 	exit $ret
@@ -86,4 +93,6 @@ id2=$(gitXnormid.sh "$id2") || exit 1
 
 [ "$id1" = "$id2" ] && die "trying to diff $id1 against itself"
 
-diff-tree -r -z $id1 $id2 | xargs -0 gitdiff-do $id1 $id2
+diff-tree -r -z $id1 $id2 | xargs -0 gitdiff-do $id1 $id2 "$filter"
+
+[ "$filter" ] && rm $filter
