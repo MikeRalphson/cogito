@@ -56,8 +56,9 @@ rev-tree $rev_tree | sort -rn | while read time commit parents; do
 
 				date=(${rest#*> })
 				sec=${date[0]}; tz=${date[1]}
-				dtz=${tz/+/+ }; dtz=${dtz/-/- }
-				pdate="$(date -Rud "1970-01-01 UTC + $sec sec $dtz" 2>/dev/null)"
+				dtz=${tz/+/}
+				lsec=$(expr $dtz / 100 \* 3600 + $dtz % 100 \* 60 + $sec)
+				pdate="$(date -Rud "1970-01-01 UTC + $lsec sec" 2>/dev/null)"
 				if [ "$pdate" ]; then
 					echo -n $color$key $rest | sed "s/>.*/> ${pdate/+0000/$tz}/"
 					echo $coldefault
