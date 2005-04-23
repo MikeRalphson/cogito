@@ -49,8 +49,7 @@ LIB_FILE=libgit.a
 LIB_H=cache.h object.h
 
 
-LIBS = $(LIB_FILE)
-LIBS += -lz
+LIBS = -lz
 
 ifdef MOZILLA_SHA1
 	SHA1_HEADER="mozilla-sha1/sha1.h"
@@ -70,7 +69,7 @@ CFLAGS += '-DSHA1_HEADER=$(SHA1_HEADER)'
 
 all: $(PROG) $(GEN_SCRIPT)
 
-$(PROG):%: %.o $(LIB_FILE)
+$(PROG):%: %.c $(LIB_FILE)
 	$(CC) $(CFLAGS) -o $@ $^ $(LIBS)
 
 $(LIB_FILE): $(LIB_OBJS)
