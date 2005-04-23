@@ -8,14 +8,21 @@
 
 
 showpatch () {
+	header=$(mktemp -t gitpatch.XXXXXX)
 	id=$1
-	echo commit $id
 	cat-file commit $id | while read line; do
-		echo $line
-		[ ! "$line" ] && sed 's/^/    /'
+		if [ ! "$line" ]; then
+			cat
+			echo
+			echo ---
+			echo commit $id
+			cat $header
+		fi
+		echo $line >>$header
 	done
 	echo
 	git diff -p -r $id
+	rm $header
 }
 
 
