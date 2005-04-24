@@ -21,7 +21,7 @@ die () {
 cmd=$1; shift
 if [ ! "$cmd" ]; then
 	error "missing command"
-	help
+	githelp.sh
 	exit 1
 fi
 
@@ -51,5 +51,5 @@ case "$cmd" in
 "tag")        gittag.sh "$@";;
 "track")      gittrack.sh "$@";;
 "version")    gitversion.sh "$@";;
-*)            error "unknown command"; help;;
+*)            error "unknown command"; githelp.sh;;
 esac
