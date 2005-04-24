@@ -90,8 +90,37 @@ echo $branchname >>.git/merging-sym
 read-tree -m $(tree-id $base) $(tree-id $head) $(tree-id $branch) || die "read-tree failed"
 if ! merge-cache gitmerge-file.sh -a || [ "$careful" ]; then
 	checkout-cache -f -a
-	read-tree $(tree-id)
-	update-cache --refresh >/dev/null
+
+	# "Resolve" merges still in the cache (conflicts).
+	# We will resolve only those caught by merge-cache;
+	# that is "three-way conflicts". Others should still
+	# be resolved manually on the lower level by the user.
+	show-files --unmerged | {
+		stage1mode=
+		stage1hash=
+		stage1name=
+		stage2seen=
+		while read mode sha1 stage filename; do
+			case $stage in
+			1)
+				stage1mode="$mode"
+				stage1hash="$sha1"
+				stage1name="$filename"
+				continue
+				;;
+			2)
+				stage2seen=
+				[ "$stage1name" = "$filename" ] && stage2seen=1
+				continue
+				;;
+			3)
+				[ "$stage1name" = "$filename" ] || continue
+				[ "$stage2seen" ] || continue
+				stage2seen=
+			esac
+			update-cache --cacheinfo $stage1mode $stage1hash $stage1name
+		done
+	}
 
 	[ ! "$careful" ] && cat >&2 <<__END__
 
