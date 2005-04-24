@@ -1,0 +1,45 @@
+#!/usr/bin/env bash
+#
+# The help for the Cogito toolkit.
+# Copyright (c) Petr Baudis, 2005
+
+cat <<__END__
+The Cogito version control system  $(gitversion.sh)
+
+Usage: cg-COMMAND [ARG]...
+
+Available commands:
+	cg-add		FILE...
+	cg-cancel
+	cg-commit	[FILE]...	< log message on stdin
+	cg-diff		[-p] [-r FROM_ID[:TO_ID]] [FILE]...
+	cg-export	DESTDIR [TREE_ID]
+	cg-fork		BNAME BRANCH_DIR [COMMIT_ID]
+	cg-help
+	cg-init		RSYNC_URL
+	cg-log		[-c] [COMMIT_ID | COMMIT_ID:COMMIT_ID]
+	cg-ls		[TREE_ID]
+	cg-merge	[-c] [-b BASE_ID] FROM_ID
+	cg-mkpatch	[COMMIT_ID | COMMIT_ID:COMMIT_ID]
+	cg-patch			< patch on stdin
+	cg-pull		[RNAME]
+	cg-remote-add	RNAME RSYNC_URL
+	cg-remote-ls
+	cg-rm		FILE...
+	cg-seek		[COMMIT_ID]
+	cg-status
+	cg-tag		TNAME [COMMIT_ID]
+	cg-track	[RNAME]
+	cg-version
+
+Advanced commands:
+	cg-admin-lsobj	[OBJTYPE]
+
+Note that these expressions can be used interchangably as "ID"s:
+	empty string, "this" or "HEAD" (current HEAD)
+	remote name (as registered with cg-remote-add)
+	tag name (as registered with cg-tag)
+	shortcut hash (shorted unambiguous hash lead)
+	commit object hash (as returned by commit-id)
+	tree object hash (accepted only by some commands)
+__END__

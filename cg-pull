@@ -3,14 +3,14 @@
 # Pulls changes from "remote" to the local GIT repository.
 # Copyright (c) Petr Baudis, 2005
 #
-# See gitaddremote.sh for some description.
+# See cg-remote-add for some description.
 #
 # Takes the remote's name.
 
 name=$1
 
 die () {
-	echo gitpull.sh: $@ >&2
+	echo cg-pull: $@ >&2
 	exit 1
 }
 
@@ -77,6 +77,6 @@ fi
 
 if [ "$tracking" = "$name" ]; then
 	echo "Tracked branch, applying changes..."
-	gitmerge.sh "$new_head"
+	cg-merge "$new_head"
 	echo "$new_head" >.git/HEAD.tracked
 fi

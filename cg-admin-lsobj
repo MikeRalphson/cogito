@@ -10,7 +10,7 @@
 # Example usage:
 # Oh, I was messing with my HEADs and lost few commits, where on the earth
 # could they be...?
-#	for i in `gitlsobj.sh commit | cut -f 1`; do
+#	for i in `cg-admin-lsobj commit | cut -f 1`; do
 #		echo -e "\n==================\nme $i"; cat-file commit $i;
 #	done
 #

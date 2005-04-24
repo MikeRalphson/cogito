@@ -15,12 +15,12 @@
 destdir=$1
 
 die () {
-	echo gitlntree.sh: $@ >&2
+	echo cg-Xlntree: $@ >&2
 	exit 1
 }
 
 
-[ "$destdir" ] || die "usage: gitXlntree.sh DESTDIR"
+[ "$destdir" ] || die "usage: cg-Xlntree DESTDIR"
 
 srcdir=$(pwd)
 dgitdir=$destdir/.git

@@ -12,7 +12,7 @@
 
 
 die () {
-	echo gitcommit.sh: $@ >&2
+	echo cg-commit: $@ >&2
 	exit 1
 }
 
@@ -34,7 +34,7 @@ if [ "$1" ]; then
 
 else
 	# We bother with added/removed files here instead of updating
-	# the cache at the time of git(add|rm).sh, since we want to
+	# the cache at the time of cg-(add|rm), since we want to
 	# have the cache in a consistent state representing the tree
 	# as it was the last time we committed. Otherwise, e.g. partial
 	# conflicts would be a PITA since added/removed files would

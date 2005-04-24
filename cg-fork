@@ -20,12 +20,12 @@ destdir=$2
 head=$(commit-id $3)
 
 die () {
-	echo gitfork.sh: $@ >&2
+	echo cg-fork: $@ >&2
 	exit 1
 }
 
 
-([ "$name" ] && [ "$destdir" ]) || die "usage: git fork BNAME DESTDIR [COMMIT_ID]"
+([ "$name" ] && [ "$destdir" ]) || die "usage: cg-fork BNAME DESTDIR [COMMIT_ID]"
 
 if [ "$name" = "this" ] || [ "$name" = "HEAD" ]; then
 	die "given branch name is reserved"

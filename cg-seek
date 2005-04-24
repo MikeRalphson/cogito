@@ -10,20 +10,20 @@
 #
 # Therefore, for a quick excurse to the past of the 'master' branch:
 #
-#	git seek git-pasky-0.1
-#	git diff this master # will do the correct thing
-#	git seek # will restore what we had before
+#	cg-seek git-pasky-0.1
+#	cg-diff this master # will do the correct thing
+#	cg-seek # will restore what we had before
 #
-# For intiutiveness, specifying the branch name (git seek master) will do
+# For intiutiveness, specifying the branch name (cg-seek master) will do
 # the right thing too. If you want to migrate your working tree to another
-# branch, use git fork.
+# branch, use cg-fork.
 #
 # Takes the target commit ID.
 
 dstcommit=$1
 
 die () {
-	echo gitseek.sh: $@ >&2
+	echo cg-seek: $@ >&2
 	exit 1
 }
 

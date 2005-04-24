@@ -21,7 +21,7 @@ showpatch () {
 		echo $line >>$header
 	done
 	echo
-	git diff -p -r $id
+	cg-diff -p -r $id
 	rm $header
 }
 

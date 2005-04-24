@@ -7,7 +7,7 @@
 # for addition to the GIT repository at the next commit.
 
 if [ ! "$1" ]; then
-	echo "gitadd.sh: usage: git add FILE..." >&2
+	echo "cg-add: usage: cg-add FILE..." >&2
 	exit 1;
 fi
 

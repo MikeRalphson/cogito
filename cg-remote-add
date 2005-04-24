@@ -3,16 +3,16 @@
 # Add new "remote" to the GIT repository.
 # Copyright (c) Petr Baudis, 2005
 #
-# After you add a remote, you can "./gitpull.sh" it whenever you want
+# After you add a remote, you can cg-pull it whenever you want
 # and it will keep your dircache in sync with it. Its latest commit
 # is accessible as .git/heads/remotename (or - more conveniently -
 # as $(commit-id remotename)). For example, to make a diff between
 # Linus (after you added him) and your current tree, do
 #
-#	gitpull.sh linus
-#	gitdiff.sh $(commit-id linus)
+#	cg-pull linus
+#	cg-diff $(commit-id linus)
 #
-# (TODO: gitdiff.sh et al should accept remote names as ids.)
+# (TODO: cg-diff et al should accept remote names as ids.)
 #
 #
 # Only rsync scheme URLs are supported for now. An URL can have a fragment
@@ -20,7 +20,7 @@
 # a repository rsync://kernel.org/pub/scm/linux/kernel/mj/linux.git and
 # you are interested in its 'testing' branch, you can e.g.
 #
-#	git addremote mj-testing \
+#	cg-remote-add mj-testing \
 #		rsync://kernel.org/pub/scm/linux/kernel/mj/linux.git#testing
 #
 # and refer to it as 'mj-testing' anytime later.
@@ -32,11 +32,11 @@ name=$1
 uri=$2
 
 die () {
-	echo gitaddremote.sh: $@ >&2
+	echo cg-remote-add: $@ >&2
 	exit 1
 }
 
-([ "$name" ] && [ "$uri" ]) || die "usage: git addremote NAME URI"
+([ "$name" ] && [ "$uri" ]) || die "usage: cg-remote-add NAME URI"
 (echo $name | egrep -qv '[^a-zA-Z0-9_.@!:-]') || \
 	die "name contains invalid characters"
 if [ "$name" = "this" ] || [ "$name" = "HEAD" ]; then

@@ -7,14 +7,14 @@
 # defaulting to HEAD.
 
 die () {
-	echo gitexport.sh: $@ >&2
+	echo cg-export: $@ >&2
 	exit 1
 }
 
 destdir=$1
 id=$(tree-id $2)
 
-([ "$destdir" ] && [ "$id" ]) || die "usage: git export DESTDIR [TREE_ID]"
+([ "$destdir" ] && [ "$id" ]) || die "usage: cg-export DESTDIR [TREE_ID]"
 
 [ -e "$destdir" ] && die "$destdir already exists."
 

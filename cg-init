@@ -11,7 +11,7 @@ uri=$1
 
 
 die () {
-	echo gitinit.sh: $@ >&2
+	echo cg-init: $@ >&2
 	exit 1
 }
 
@@ -24,7 +24,7 @@ ln -s heads/master .git/HEAD
 
 if [ "$uri" ]; then
 	echo -e "origin\t$uri" >.git/remotes
-	git pull origin || die "pull failed"
+	cg-pull origin || die "pull failed"
 
 	cp .git/heads/origin .git/heads/master
 	read-tree $(tree-id)

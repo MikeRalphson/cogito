@@ -12,11 +12,11 @@ name=$1
 id=$2
 
 die () {
-	echo gittag.sh: $@ >&2
+	echo cg-tag: $@ >&2
 	exit 1
 }
 
-[ "$name" ] || die "usage: git tag TNAME [COMMIT_ID]"
+[ "$name" ] || die "usage: cg-tag TNAME [COMMIT_ID]"
 [ "$id" ] || id=$(commit-id)
 
 (echo $name | egrep -qv '[^a-zA-Z0-9_.@!:-]') || \

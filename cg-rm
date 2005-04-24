@@ -7,7 +7,7 @@
 # for removal from the GIT repository at the next commit.
 
 if [ ! "$1" ]; then
-	echo "gitrm.sh: usage: git rm FILE..." >&2
+	echo "cg-rm: usage: cg-rm FILE..." >&2
 	exit 1;
 fi
 

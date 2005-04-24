@@ -23,7 +23,7 @@ parent=
 
 
 die () {
-	echo gitdiff.sh: $@ >&2
+	echo cg-diff: $@ >&2
 	exit 1
 }
 
@@ -73,11 +73,10 @@ if [ "$id2" = " " ]; then
 		tree=$(tree-id)
 	fi
 
-	# FIXME: We should squeeze gitdiff-do-alike output from this.
 	# FIXME: Update ret based on what did we match. And take "$@"
 	# to account after all.
 	ret=
-	diff-cache -r -z $tree | xargs -0 gitdiff-do "$tree" uncommitted "$filter"
+	diff-cache -r -z $tree | xargs -0 cg-Xdiffdo "$tree" uncommitted "$filter"
 
 	if [ "$id1" != " " ]; then
 		rm $GIT_INDEX_FILE
@@ -94,6 +93,6 @@ id2=$(tree-id "$id2") || exit 1
 
 [ "$id1" = "$id2" ] && die "trying to diff $id1 against itself"
 
-diff-tree -r -z $id1 $id2 | xargs -0 gitdiff-do $id1 $id2 "$filter"
+diff-tree -r -z $id1 $id2 | xargs -0 cg-Xdiffdo $id1 $id2 "$filter"
 
 [ "$filter" ] && rm $filter

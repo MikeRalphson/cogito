@@ -8,14 +8,14 @@
 # Optional "-c" parameter specifies that you want to have tree merge
 # never autocomitted, but want to review and commit it manually.
 #
-# You have to examine the tree after the merge and then do git commit.
+# You have to examine the tree after the merge and then do cg-commit.
 #
 # Alternatively, it will just bring the HEAD forward, if your current
 # HEAD is also the merge base.
 
 
 die () {
-	echo gitmerge.sh: $@ >&2
+	echo cg-merge: $@ >&2
 	exit 1
 }
 
@@ -31,11 +31,11 @@ fi
 base=
 if [ "$1" = "-b" ]; then
 	shift
-	[ "$1" ] || die "usage: git merge [-c] [-b BASE_ID] FROM_ID"
+	[ "$1" ] || die "usage: cg-merge [-c] [-b BASE_ID] FROM_ID"
 	base=$(commit-id "$1") || exit 1; shift
 fi
 
-[ "$1" ] || die "usage: git merge [-c] [-b BASE_ID] FROM_ID"
+[ "$1" ] || die "usage: cg-merge [-c] [-b BASE_ID] FROM_ID"
 branchname="$1"
 branch=$(commit-id "$branchname") || exit 1
 
@@ -59,13 +59,13 @@ if [ "$head" = "$base" ]; then
 	echo -e "\ton top of $head..." >&2
 
 	patchfile=$(mktemp -t gitmerge.XXXXXX)
-	gitdiff.sh >$patchfile
+	cg-diff >$patchfile
 
 	read-tree -m $(tree-id $branch)
 	echo $branch >.git/HEAD
 	checkout-cache -f -a
 
-	grep -v '^[^ @+-]' $patchfile | git apply
+	grep -v '^[^ @+-]' $patchfile | cg-patch
 	rm $patchfile
 
 	update-cache --refresh
@@ -88,7 +88,7 @@ echo $branchname >>.git/merging-sym
 
 
 read-tree -m $(tree-id $base) $(tree-id $head) $(tree-id $branch) || die "read-tree failed"
-if ! merge-cache gitmerge-file.sh -a || [ "$careful" ]; then
+if ! merge-cache cg-Xmergefile -a || [ "$careful" ]; then
 	checkout-cache -f -a
 
 	# "Resolve" merges still in the cache (conflicts).
@@ -124,14 +124,14 @@ if ! merge-cache gitmerge-file.sh -a || [ "$careful" ]; then
 
 	[ ! "$careful" ] && cat >&2 <<__END__
 
-	Conflicts during merge. Do git commit after resolving them.
+	Conflicts during merge. Do cg-commit after resolving them.
 __END__
 	exit 2
 fi
 
 echo
 readtree=
-git commit -C || { readtree=1 ; echo "gitmerge.sh: COMMIT FAILED, retry manually" >&2; }
+cg-commit -C || { readtree=1 ; echo "cg-merge: COMMIT FAILED, retry manually" >&2; }
 
 checkout-cache -f -a
 [ "$readtree" ] && read-tree -m $(tree-id)
