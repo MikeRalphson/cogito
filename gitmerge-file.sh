@@ -8,6 +8,9 @@
 #   $2 - file in branch1 SHA1 (or empty)
 #   $3 - file in branch2 SHA1 (or empty)
 #   $4 - pathname in repository
+#   $5 - original permissions
+#   $6 - new permissions in branch1
+#   $7 - new permissions in branch2
 #
 # We are designed to merge $3 _to_ $2, so we will give it
 # a preference.
@@ -16,33 +19,53 @@
 # Handle some trivial cases.. The _really_ trivial cases have
 # been handled already by read-tree, but that one doesn't
 # do any merges that migth change the tree layout
+#
+
+# if the directory is newly added in a branch, it might not exist
+# in the current tree
+dir=$(dirname "$4")
+mkdir -p "$dir"
 
 case "${1:-.}${2:-.}${3:-.}" in
 #
-# deleted in both, or deleted in one and unchanged in the other
+# deleted in both
 #
-"$1$1.")
-	rm -- "$4"; git rm "$4"
-	update-cache --remove -- "$4"
-	exit 0
+"$1..")
+	echo "ERROR: $4 is removed in both branches"
+	echo "ERROR: This is a potential rename conflict"
+	exit 1
 	;;
-"$1.." | "$1.$1")
-	update-cache --remove -- "$4"
+#
+# deleted in one and unchanged in the other
+#
+"$1.$1" | "$1$1.")
+	echo "Removing $4"
+	rm -f -- "$4"; update-cache --remove -- "$4"
 	exit 0
 	;;
 
 #
-# added in one, or added identically in both
+# added in one
 #
-"..$3")
-	# FIXME: Permissions!
-	mkdir -p "$(dirname "$4")"
-	cat-file blob "$3" >"$4"; git add "$4"
-	update-cache --add -- "$4"
+".$2." | "..$3" )
+	echo "Adding $4 with perm $6$7"
+	cat-file blob "${2:-$3}" >"$4"
+	chmod "${6:-$7}" "$4"
+	update-cache --add -- $4
 	exit 0
 	;;
-".$2." | ".$2$2")
-	update-cache --add -- "$4"
+#
+# Added in both (check for same permissions)
+#
+".$2$2")
+	echo "Adding $4 with perm $6"
+	cat-file blob "${2:-$3}" >"$4"
+	chmod "${6:-$7}" "$4"
+	update-cache --add -- $4
+	if [ "$6" != "$7" ]; then
+		echo "ERROR: Added in both branches, permissions conflict $6->$7"
+		exit 1
+	fi
 	exit 0
 	;;
 
@@ -55,16 +78,21 @@ case "${1:-.}${2:-.}${3:-.}" in
 	src1=$(unpack-file $2)
 	src2=$(unpack-file $3)
 	ret=0
+	if [ "$6" != "$7" ]; then
+		echo "ERROR: Permissions conflict: $5->$6 here but merging $7"
+		ret=1
+	fi
+	chmod "$6" "$src2"
 	if ! merge "$src2" "$orig" "$src1"; then
 		echo Conflicting merge!
-		cat "$src2" >"$4"
+		mv -- "$src2" "$4"
 		ret=1
 
-	elif ! cat "$src2" >"$4" || ! update-cache --add -- "$4"; then
+	elif ! mv -- "$src2" "$4" || ! update-cache --add -- "$4"; then
 		echo "Choosing $src2 -> $4 failed"
 		ret=1
 	fi
-	rm "$orig" "$src1" "$src2"
+	rm "$orig" "$src1"
 	exit $ret
 	;;
 
