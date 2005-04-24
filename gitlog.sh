@@ -37,12 +37,18 @@ fi
 if echo "$1" | grep -q ':'; then
 	id1=$(gitXnormid.sh -c $(echo "$1" | cut -d : -f 1)) || exit 1
 	id2=$(gitXnormid.sh -c $(echo "$1" | cut -d : -f 2)) || exit 1
-	rev_tree="$id2 ^$id1"
+	revls="rev-tree $id2 ^$id1"
+	revsort="sort -rn"
+	revfmt="rev-tree"
 else
-	rev_tree="$(gitXnormid.sh -c $1)" || exit 1
+	id1="$(gitXnormid.sh -c $1)" || exit 1
+	revls="rev-list $id1" || exit 1
+	revsort="cat"
+	revfmt="rev-list"
 fi
 
-rev-tree $rev_tree | sort -rn | while read time commit parents; do
+$revls | $revsort | while read time commit parents; do
+	[ "$revfmt" = "rev-list" ] && commit="$time"
 	echo $colheader""commit ${commit%:*} $coldefault;
 	cat-file commit $commit | \
 		while read key rest; do
