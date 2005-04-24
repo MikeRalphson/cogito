@@ -65,7 +65,8 @@ fi
 if [ "$id2" = " " ]; then
 	if [ "$id1" != " " ]; then
 		export GIT_INDEX_FILE=$(mktemp -t gitdiff.XXXXXX)
-		read-tree $(gitXnormid.sh "$id1")
+		cp .git/index $GIT_INDEX_FILE
+		read-tree -m $(gitXnormid.sh "$id1")
 		update-cache --refresh
 		tree=$(gitXnormid.sh "$id1")
 	else
