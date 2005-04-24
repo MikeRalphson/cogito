@@ -162,6 +162,7 @@ Software requirements:
 	diff, patch
 	libssl
 	rsync
+	RCS (the merge program from this package)
 
 
 
