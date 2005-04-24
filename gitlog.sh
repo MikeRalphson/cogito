@@ -68,7 +68,7 @@ rev-tree $rev_tree | sort -rn | while read time commit parents; do
 				;;
 			"")
 				echo; sed -re '
-					/ *Signed-off-by.*/Is//'$colsignoff'&'$coldefault'/
+					/ *Signed-off-by:.*/Is//'$colsignoff'&'$coldefault'/
 					s/^/    /
 				'
 				;;
