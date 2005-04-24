@@ -81,7 +81,7 @@ gitversion.sh: $(VERSION)
 	@echo Generating gitversion.sh...
 	@rm -f $@
 	@echo "#!/bin/sh" > $@
-	@echo "echo \"$(shell cat $(VERSION)) ($(shell commit-id))\"" >> $@
+	@PATH=.:$(PATH) echo "echo \"$(shell cat $(VERSION)) ($(shell commit-id))\"" >> $@
 	@chmod +x $@
 
 
