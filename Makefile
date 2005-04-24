@@ -29,7 +29,7 @@ AR=ar
 PROG=   update-cache show-diff init-db write-tree read-tree commit-tree \
 	cat-file fsck-cache checkout-cache diff-tree rev-tree show-files \
 	check-files ls-tree merge-base merge-cache unpack-file git-export \
-	diff-cache convert-cache
+	diff-cache convert-cache http-pull rpush rpull rev-list
 
 SCRIPT=	parent-id tree-id git gitXnormid.sh gitadd.sh gitaddremote.sh \
 	gitcommit.sh gitdiff-do gitdiff.sh gitlog.sh gitls.sh gitlsobj.sh \
@@ -76,6 +76,10 @@ $(LIB_FILE): $(LIB_OBJS)
 	$(AR) rcs $@ $(LIB_OBJS)
 
 %.o: $(LIB_H)
+rpush: rsh.c
+rpull: rsh.c
+http-pull: LIBS += -lcurl
+
 
 gitversion.sh: $(VERSION)
 	@echo Generating gitversion.sh...
@@ -83,7 +87,6 @@ gitversion.sh: $(VERSION)
 	@echo "#!/bin/sh" > $@
 	@PATH=.:$(PATH) echo "echo \"$(shell cat $(VERSION)) ($(shell commit-id))\"" >> $@
 	@chmod +x $@
-
 
 install: $(PROG) $(GEN_SCRIPT)
 	install -m755 -d $(DESTDIR)$(bindir)
