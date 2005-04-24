@@ -26,20 +26,26 @@
 dir=$(dirname "$4")
 mkdir -p "$dir"
 
+
+error () {
+	echo "MERGE ERROR: $@" >&2
+}
+
+
 case "${1:-.}${2:-.}${3:-.}" in
 #
 # deleted in both
 #
 "$1..")
-	echo "ERROR: $4 is removed in both branches"
-	echo "ERROR: This is a potential rename conflict"
+	error "$4 is removed in both branches"
+	error "This is a potential rename conflict"
 	exit 1
 	;;
 #
 # deleted in one and unchanged in the other
 #
 "$1.$1" | "$1$1.")
-	echo "Removing $4"
+	#echo "Removing $4"
 	rm -f -- "$4"; update-cache --remove -- "$4"
 	exit 0
 	;;
@@ -48,7 +54,7 @@ case "${1:-.}${2:-.}${3:-.}" in
 # added in one
 #
 ".$2." | "..$3" )
-	echo "Adding $4 with perm $6$7"
+	#echo "Adding $4 with perm $6$7"
 	cat-file blob "${2:-$3}" >"$4"
 	chmod "${6:-$7}" "$4"
 	update-cache --add -- $4
@@ -58,12 +64,12 @@ case "${1:-.}${2:-.}${3:-.}" in
 # Added in both (check for same permissions)
 #
 ".$2$2")
-	echo "Adding $4 with perm $6"
+	#echo "Adding $4 with perm $6"
 	cat-file blob "${2:-$3}" >"$4"
 	chmod "${6:-$7}" "$4"
 	update-cache --add -- $4
 	if [ "$6" != "$7" ]; then
-		echo "ERROR: Added in both branches, permissions conflict $6->$7"
+		error "Added in both branches, permissions conflict $6->$7"
 		exit 1
 	fi
 	exit 0
@@ -73,23 +79,23 @@ case "${1:-.}${2:-.}${3:-.}" in
 # Modified in both, but differently ;(
 #
 "$1$2$3")
-	echo "Auto-merging $4"
+	echo "... Auto-merging $4"
 	orig=$(unpack-file $1)
 	src1=$(unpack-file $2)
 	src2=$(unpack-file $3)
 	ret=0
 	if [ "$6" != "$7" ]; then
-		echo "ERROR: Permissions conflict: $5->$6 here but merging $7"
+		error "Permissions conflict: $5->$6 here but merging $7"
 		ret=1
 	fi
 	chmod "$6" "$src2"
 	if ! merge "$src2" "$orig" "$src1"; then
-		echo Conflicting merge!
+		error "Auto-merge failed"
 		mv -- "$src2" "$4"
 		ret=1
 
 	elif ! mv -- "$src2" "$4" || ! update-cache --add -- "$4"; then
-		echo "Choosing $src2 -> $4 failed"
+		error "Choosing $src2 -> $4 failed"
 		ret=1
 	fi
 	rm "$orig" "$src1"
@@ -97,7 +103,7 @@ case "${1:-.}${2:-.}${3:-.}" in
 	;;
 
 *)
-	echo "Not handling case $1 -> $2 -> $3"
+	error "Not handling case $1 -> $2 -> $3"
 	;;
 esac
 exit 1
