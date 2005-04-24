@@ -39,7 +39,7 @@ die () {
 ([ "$name" ] && [ "$uri" ]) || die "usage: git addremote NAME URI"
 (echo $name | egrep -qv '[^a-zA-Z0-9_.@!:-]') || \
 	die "name contains invalid characters"
-if [ "$name" = "this" ]; then
+if [ "$name" = "this" ] || [ "$name" = "HEAD" ]; then
 	die "given branch name is reserved"
 fi
 if grep -q $(echo -e "^$name\t" | sed 's/\./\\./g') .git/remotes \
