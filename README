@@ -155,14 +155,12 @@ are advised to track LKML and/or the git mailing list.
 
 Software requirements:
 
-	C compiler
-	bash
-	basic shell environment (sed, grep, textutils, ...)
+	bash, basic shell environment (sed, grep, textutils, ...)
+	diff, patch, RCS (the merge program from this package)
 	mktemp 1.5+ (Mandrake users beware!)
-	diff, patch
 	libssl
 	rsync
-	RCS (the merge program from this package)
+	libcurl
 
 
 
