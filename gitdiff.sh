@@ -66,9 +66,9 @@ if [ "$id2" = " " ]; then
 	if [ "$id1" != " " ]; then
 		export GIT_INDEX_FILE=$(mktemp -t gitdiff.XXXXXX)
 		cp .git/index $GIT_INDEX_FILE
-		read-tree -m $(gitXnormid.sh "$id1")
+		read-tree -m $(tree-id "$id1")
 		update-cache --refresh
-		tree=$(gitXnormid.sh "$id1")
+		tree=$(tree-id "$id1")
 	else
 		tree=$(tree-id)
 	fi
@@ -89,8 +89,8 @@ if [ "$id2" = " " ]; then
 fi
 
 
-id1=$(gitXnormid.sh "$id1") || exit 1
-id2=$(gitXnormid.sh "$id2") || exit 1
+id1=$(tree-id "$id1") || exit 1
+id2=$(tree-id "$id2") || exit 1
 
 [ "$id1" = "$id2" ] && die "trying to diff $id1 against itself"
 

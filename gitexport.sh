@@ -12,7 +12,7 @@ die () {
 }
 
 destdir=$1
-id=$(gitXnormid.sh $2)
+id=$(tree-id $2)
 
 ([ "$destdir" ] && [ "$id" ]) || die "usage: git export DESTDIR [TREE_ID]"
 

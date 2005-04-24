@@ -5,6 +5,6 @@
 #
 # Optionally takes commit or tree id as a parameter, defaulting to HEAD.
 
-id=$(gitXnormid.sh $1) || exit 1
+id=$(tree-id $1) || exit 1
 
 ls-tree "$id"

@@ -27,8 +27,8 @@ showpatch () {
 
 
 if echo "$1" | grep -q ':'; then
-	id1=$(gitXnormid.sh -c $(echo "$1" | cut -d : -f 1)) || exit 1
-	id2=$(gitXnormid.sh -c $(echo "$1" | cut -d : -f 2)) || exit 1
+	id1=$(commit-id $(echo "$1" | cut -d : -f 1)) || exit 1
+	id2=$(commit-id $(echo "$1" | cut -d : -f 2)) || exit 1
 
 	rev-tree $id2 ^$id1 | sort -n | while read time commit rest; do
 		id=$(echo $commit | cut -d : -f 1)
@@ -42,6 +42,6 @@ if echo "$1" | grep -q ':'; then
 	done
 
 else
-	id=$(gitXnormid.sh -c $1) || exit 1
+	id=$(commit-id $1) || exit 1
 	showpatch $id
 fi

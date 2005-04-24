@@ -43,7 +43,7 @@ if [ ! "$dstcommit" ] || [ "$dstcommit" = "$branch" ]; then
 	rm .git/blocked
 	dstcommit=$(commit-id)
 else
-	echo $(gitXnormid.sh -c "$dstcommit") >.git/HEAD
+	echo $(commit-id "$dstcommit") >.git/HEAD
 	[ -s .git/blocked ] || echo "seeked from $branch" >.git/blocked
 fi
 

@@ -31,10 +31,10 @@ PROG=   update-cache show-diff init-db write-tree read-tree commit-tree \
 	check-files ls-tree merge-base merge-cache unpack-file git-export \
 	diff-cache convert-cache http-pull rpush rpull rev-list
 
-SCRIPT=	parent-id tree-id git gitXnormid.sh gitadd.sh gitaddremote.sh \
+SCRIPT=	commit-id tree-id parent-id git gitadd.sh gitaddremote.sh \
 	gitcommit.sh gitdiff-do gitdiff.sh gitlog.sh gitls.sh gitlsobj.sh \
 	gitmerge.sh gitpull.sh gitrm.sh gittag.sh gittrack.sh gitexport.sh \
-	gitapply.sh gitcancel.sh gitXlntree.sh commit-id gitlsremote.sh \
+	gitapply.sh gitcancel.sh gitXlntree.sh gitlsremote.sh \
 	gitfork.sh gitinit.sh gitseek.sh gitstatus.sh gitpatch.sh \
 	gitmerge-file.sh
 

@@ -17,7 +17,7 @@
 
 name=$1
 destdir=$2
-head=$(gitXnormid.sh -c $3)
+head=$(commit-id $3)
 
 die () {
 	echo gitfork.sh: $@ >&2

@@ -32,12 +32,12 @@ base=
 if [ "$1" = "-b" ]; then
 	shift
 	[ "$1" ] || die "usage: git merge [-c] [-b BASE_ID] FROM_ID"
-	base=$(gitXnormid.sh -c "$1") || exit 1; shift
+	base=$(commit-id "$1") || exit 1; shift
 fi
 
 [ "$1" ] || die "usage: git merge [-c] [-b BASE_ID] FROM_ID"
 branchname="$1"
-branch=$(gitXnormid.sh -c "$branchname") || exit 1
+branch=$(commit-id "$branchname") || exit 1
 
 [ "$base" ] || base=$(merge-base "$head" "$branch")
 [ "$base" ] || die "unable to automatically determine merge base"

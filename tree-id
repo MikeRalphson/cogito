@@ -5,4 +5,14 @@
 #
 # Takes ID of the appropriate commit, defaults to HEAD.
 
-gitXnormid.sh $1
+SHA1="[A-Za-z0-9]{40}"
+TREE="^tree $SHA1$"
+
+id=$(cat-file commit $(commit-id "$1") | egrep "$TREE" | cut -d ' ' -f 2)
+
+if [ "$(cat-file -t "$id")" != "tree" ]; then
+	echo "Invalid id: $id" >&2
+	exit 1
+fi
+
+echo $id

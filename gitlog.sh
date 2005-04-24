@@ -35,13 +35,13 @@ else
 fi
 
 if echo "$1" | grep -q ':'; then
-	id1=$(gitXnormid.sh -c $(echo "$1" | cut -d : -f 1)) || exit 1
-	id2=$(gitXnormid.sh -c $(echo "$1" | cut -d : -f 2)) || exit 1
+	id1=$(commit-id $(echo "$1" | cut -d : -f 1)) || exit 1
+	id2=$(commit-id $(echo "$1" | cut -d : -f 2)) || exit 1
 	revls="rev-tree $id2 ^$id1"
 	revsort="sort -rn"
 	revfmt="rev-tree"
 else
-	id1="$(gitXnormid.sh -c $1)" || exit 1
+	id1="$(commit-id $1)" || exit 1
 	revls="rev-list $id1" || exit 1
 	revsort="cat"
 	revfmt="rev-list"
