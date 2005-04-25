@@ -1,0 +1,14 @@
+#!/usr/bin/env bash
+#
+# Common code shared by the Cogito toolkit.
+# Copyright (c) Petr Baudis, 2005
+#
+# This file provides a library containing common code shared with all the
+# Cogito programs.
+
+_cg_cmd=${0##*/}
+
+die () {
+	echo $_cg_cmd: $@ >&2
+	exit 1
+}

@@ -3,6 +3,8 @@
 # The help for the Cogito toolkit.
 # Copyright (c) Petr Baudis, 2005
 
+. cg-Xlib
+
 cat <<__END__
 The Cogito version control system  $(gitversion.sh)
 

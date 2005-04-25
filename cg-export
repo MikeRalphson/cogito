@@ -6,10 +6,7 @@
 # Takes a target directory and optionally an id as a parameter,
 # defaulting to HEAD.
 
-die () {
-	echo cg-export: $@ >&2
-	exit 1
-}
+. cg-Xlib
 
 destdir=$1
 id=$(tree-id $2)

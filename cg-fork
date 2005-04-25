@@ -15,14 +15,11 @@
 # Takes the desired branch name, its directory name, and potentially
 # the head commit ID (for new branch).
 
+. cg-Xlib
+
 name=$1
 destdir=$2
 head=$(commit-id $3)
-
-die () {
-	echo cg-fork: $@ >&2
-	exit 1
-}
 
 
 ([ "$name" ] && [ "$destdir" ]) || die "usage: cg-fork BNAME DESTDIR [COMMIT_ID]"

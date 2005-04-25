@@ -16,16 +16,12 @@
 #
 # Outputs a diff converting the first tree to the second one.
 
+. cg-Xlib
+
 
 id1=" "
 id2=" "
 parent=
-
-
-die () {
-	echo cg-diff: $@ >&2
-	exit 1
-}
 
 
 # FIXME: The commandline parsing is awful.

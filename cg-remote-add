@@ -28,13 +28,10 @@
 #
 # Takes the remote's name and rsync URL.
 
+. cg-Xlib
+
 name=$1
 uri=$2
-
-die () {
-	echo cg-remote-add: $@ >&2
-	exit 1
-}
 
 ([ "$name" ] && [ "$uri" ]) || die "usage: cg-remote-add NAME URI"
 (echo $name | egrep -qv '[^a-zA-Z0-9_.@!:-]') || \

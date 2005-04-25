@@ -8,6 +8,8 @@
 #
 # Takes the diff on stdin.
 
+. cg-Xlib
+
 gonefile=$(mktemp -t gitapply.XXXXXX)
 todo=$(mktemp -t gitapply.XXXXXX)
 patchfifo=$(mktemp -t gitapply.XXXXXX)

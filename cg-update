@@ -6,6 +6,8 @@
 # Takes the remote's name; no parameter will cause it to update
 # against HEAD (only recovers lost files for now).
 
+. cg-Xlib
+
 name=$1
 
 if [ ! "$name" ]; then

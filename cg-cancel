@@ -10,6 +10,8 @@
 #
 # Takes no arguments and the evil changes from the tree.
 
+. cg-Xlib
+
 # Undo seek?
 branch=
 [ -s .git/blocked ] && branch=$(grep '^seeked from ' .git/blocked | sed 's/^seeked from //')

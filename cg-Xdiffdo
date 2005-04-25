@@ -12,6 +12,8 @@
 #
 # Outputs a diff converting the first tree to the second one.
 
+. cg-Xlib
+
 
 id1=$1; shift
 id2=$1; shift

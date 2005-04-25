@@ -20,12 +20,9 @@
 #
 # Takes the target commit ID.
 
-dstcommit=$1
+. cg-Xlib
 
-die () {
-	echo cg-seek: $@ >&2
-	exit 1
-}
+dstcommit=$1
 
 
 [ -s .git/blocked ] && grep -vq '^seeked from ' .git/blocked && die "action blocked: $(cat .git/blocked)"

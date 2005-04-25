@@ -13,11 +13,7 @@
 # Alternatively, it will just bring the HEAD forward, if your current
 # HEAD is also the merge base.
 
-
-die () {
-	echo cg-merge: $@ >&2
-	exit 1
-}
+. cg-Xlib
 
 head=$(commit-id)
 

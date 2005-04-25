@@ -5,6 +5,8 @@
 #
 # Optionally takes commit or tree id as a parameter, defaulting to HEAD.
 
+. cg-Xlib
+
 id=$(tree-id $1) || exit 1
 
 ls-tree "$id"

@@ -10,11 +10,7 @@
 #
 # FIXME: Gets it wrong for filenames containing spaces.
 
-
-die () {
-	echo cg-commit: $@ >&2
-	exit 1
-}
+. cg-Xlib
 
 
 [ -s .git/blocked ] && die "committing blocked: $(cat .git/blocked)"

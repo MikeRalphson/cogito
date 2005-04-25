@@ -18,6 +18,8 @@
 # Takes an id resolving to a commit to start from (HEAD by default),
 # or id1:id2 representing an (id1;id2] range of commits to show.
 
+. cg-Xlib
+
 if [ "$1" = "-c" ]; then
 	shift
 	# See terminfo(5), "Color Handling"

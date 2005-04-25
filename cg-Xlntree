@@ -12,14 +12,9 @@
 #
 # Takes the new directory name.
 
+. cg-Xlib
+
 destdir=$1
-
-die () {
-	echo cg-Xlntree: $@ >&2
-	exit 1
-}
-
-
 [ "$destdir" ] || die "usage: cg-Xlntree DESTDIR"
 
 srcdir=$(pwd)

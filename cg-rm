@@ -6,10 +6,9 @@
 # Takes a list of file names at the command line, and schedules them
 # for removal from the GIT repository at the next commit.
 
-if [ ! "$1" ]; then
-	echo "cg-rm: usage: cg-rm FILE..." >&2
-	exit 1;
-fi
+. cg-Xlib
+
+[ "$1" ] || die "usage: cg-rm FILE..."
 
 rm -f "$@"
 update-cache --remove -- "$@"

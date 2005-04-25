@@ -16,6 +16,8 @@
 #
 # Takes the object type as the first parameter, defaults to all objects.
 
+. cg-Xlib
+
 target=$1
 
 

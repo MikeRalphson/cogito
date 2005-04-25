@@ -7,12 +7,9 @@
 #
 # Takes the remote's name.
 
-name=$1
+. cg-Xlib
 
-die () {
-	echo cg-pull: $@ >&2
-	exit 1
-}
+name=$1
 
 
 [ "$name" ] || die "where to pull from?"

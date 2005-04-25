@@ -6,9 +6,8 @@
 # Takes a list of file names at the command line, and schedules them
 # for addition to the GIT repository at the next commit.
 
-if [ ! "$1" ]; then
-	echo "cg-add: usage: cg-add FILE..." >&2
-	exit 1;
-fi
+. cg-Xlib
+
+[ "$1" ] || die "usage: cg-add FILE..."
 
 update-cache --add -- "$@"

@@ -6,13 +6,9 @@
 # Takes an optional parameter which will make it "clone" a specified
 # remote repository.
 
+. cg-Xlib
+
 uri=$1
-
-
-die () {
-	echo cg-init: $@ >&2
-	exit 1
-}
 
 [ -e .git ] && die ".git already exists"
 

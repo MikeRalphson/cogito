@@ -8,13 +8,10 @@
 #
 # Takes the tag's name and optionally the associated ID.
 
+. cg-Xlib
+
 name=$1
 id=$2
-
-die () {
-	echo cg-tag: $@ >&2
-	exit 1
-}
 
 [ "$name" ] || die "usage: cg-tag TNAME [COMMIT_ID]"
 [ "$id" ] || id=$(commit-id)

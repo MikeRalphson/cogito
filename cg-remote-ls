@@ -5,9 +5,8 @@
 #
 # Takes no parameters
 
-if [ ! -s .git/remotes ]; then
-	echo "List of remotes is empty. See cg-remote-add." >&2
-	exit 1
-fi
+. cg-Xlib
+
+[ -s .git/remotes ] || die "List of remotes is empty. See cg-remote-add."
 
 cat .git/remotes
