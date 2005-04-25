@@ -3,11 +3,20 @@
 # Pulls changes from "remote" to the local GIT repository, and merge them.
 # Copyright (c) Petr Baudis, 2005
 #
-# Takes the remote's name.
+# Takes the remote's name; no parameter will cause it to update
+# against HEAD (only recovers lost files for now).
 
 name=$1
 
-[ "$name" ] || name=$(cat .git/tracking 2>/dev/null)
+if [ ! "$name" ]; then
+	# Update working tree against HEAD. Fair enough. We just
+	# reintroduce the missing files for now.
+	if [ "$(show-files --deleted)" ]; then
+		echo "Recovering files:"
+		show-files --deleted | sed "s/^/$(echo -e "\t")/"
+		show-files -z --deleted | xargs -0 checkout-cache --
+	fi
+fi
 
 cg-pull $name || exit 1
 echo

@@ -4,8 +4,7 @@
 # Copyright (c) Petr Baudis, 2005
 #
 # Takes an optional parameter which will make it "clone" a specified
-# remote repository by pulling it and then making the current tree
-# tracking it.
+# remote repository.
 
 uri=$1
 
@@ -31,8 +30,5 @@ if [ "$uri" ]; then
 	checkout-cache -a
 	update-cache --refresh
 
-	# We are tracked by default
-	echo origin >.git/tracking
-
-	echo "Cloned and tracking branch \"origin\" ($uri)"
+	echo "Cloned $uri (origin available as branch \"origin\")"
 fi

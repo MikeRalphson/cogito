@@ -120,7 +120,7 @@ and if you want to have a look at someone else's project, do
 
 	cg-init URL
 
-(your working directory will be by default tracking branch 'origin').
+(the URL will be available as branch "origin" for updating, etc).
 
 Note that we missed out a lot of stuff here. There is already some
 (fundamentally inferior) support for forking branches (cg-fork),
