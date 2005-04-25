@@ -1,11 +1,11 @@
 #!/usr/bin/env bash
 #
-# Pulls changes from "remote" to the local GIT repository.
+# Pulls changes from remote branch to the local GIT repository.
 # Copyright (c) Petr Baudis, 2005
 #
-# See cg-remote-add for some description.
+# See cg-branch-add for some description.
 #
-# Takes the remote's name.
+# Takes the branch' name.
 
 . cg-Xlib
 
@@ -14,7 +14,7 @@ name=$1
 
 [ "$name" ] || die "where to pull from?"
 uri=$(grep $(echo -e "^$name\t" | sed 's/\./\\./g') .git/remotes | cut -f 2)
-[ "$uri" ] || die "unknown remote"
+[ "$uri" ] || die "unknown branch"
 
 rembranch=master
 if echo "$uri" | grep -q '#'; then

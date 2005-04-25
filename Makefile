@@ -31,10 +31,10 @@ PROG=   update-cache show-diff init-db write-tree read-tree commit-tree \
 	check-files ls-tree merge-base merge-cache unpack-file git-export \
 	diff-cache convert-cache http-pull rpush rpull rev-list
 
-SCRIPT=	commit-id tree-id parent-id cg-Xdiffdo cg-Xlntree cg-Xmergefile \
-	cg-add cg-admin-lsobj cg-admin-setopt cg-cancel cg-commit cg-diff \
-	cg-export cg-fork cg-help cg-init cg-log cg-ls cg-merge cg-mkpatch \
-	cg-patch cg-pull cg-remote-add cg-remote-ls cg-rm cg-seek cg-status \
+SCRIPT=	commit-id tree-id parent-id cg-Xdiffdo cg-Xmergefile \
+	cg-add cg-admin-lsobj cg-cancel cg-commit cg-diff \
+	cg-export cg-help cg-init cg-log cg-ls cg-merge cg-mkpatch \
+	cg-patch cg-pull cg-branch-add cg-branch-ls cg-rm cg-seek cg-status \
 	cg-tag cg-update cg-Xlib
 
 COMMON=	read-cache.o

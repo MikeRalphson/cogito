@@ -35,7 +35,7 @@ tarball root, do
 
 in that directory, and
 
-	cg-remote-add pasky rsync://rsync.kernel.org/pub/scm/cogito/cogito.git
+	cg-branch-add pasky rsync://rsync.kernel.org/pub/scm/cogito/cogito.git
 
 (there is already the same branch called "origin" created by cg-init, however
 we expect the branch name to be "pasky" for the result of the tutorial;
@@ -78,7 +78,7 @@ which will show changes between my and your branch.
 Note that you can also access the Linus' official branch, just by specifying
 'linus' instead of 'pasky'. You can of course add more branches by:
 
-	cg-remote-add name rsyncurl
+	cg-branch-add name rsyncurl
 
 (the rsyncurl can have a fragment part identifying a branch inside of the
 repository accessible over rsync).  When you do some local changes, you can do
@@ -122,9 +122,8 @@ and if you want to have a look at someone else's project, do
 
 (the URL will be available as branch "origin" for updating, etc).
 
-Note that we missed out a lot of stuff here. There is already some
-(fundamentally inferior) support for forking branches (cg-fork),
-merging (cg-merge), moving your tree to an older commit (cg-seek), etc.
+Note that we missed out a lot of stuff here. There is already support
+for merging (cg-merge), moving your tree to an older commit (cg-seek), etc.
 
 For quick reference, please see
 

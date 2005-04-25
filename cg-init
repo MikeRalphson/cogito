@@ -26,5 +26,5 @@ if [ "$uri" ]; then
 	checkout-cache -a
 	update-cache --refresh
 
-	echo "Cloned $uri (origin available as branch \"origin\")"
+	echo "Cloned (origin $uri available as branch \"origin\")"
 fi

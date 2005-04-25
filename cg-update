@@ -1,9 +1,9 @@
 #!/usr/bin/env bash
 #
-# Pulls changes from "remote" to the local GIT repository, and merge them.
+# Pulls changes from another branch to the local repository and merge changes.
 # Copyright (c) Petr Baudis, 2005
 #
-# Takes the remote's name; no parameter will cause it to update
+# Takes the branch' name; no parameter will cause it to update
 # against HEAD (only recovers lost files for now).
 
 . cg-Xlib

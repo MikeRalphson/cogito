@@ -1,18 +1,16 @@
 #!/usr/bin/env bash
 #
-# Add new "remote" to the GIT repository.
+# Add new branch to the GIT repository.
 # Copyright (c) Petr Baudis, 2005
 #
-# After you add a remote, you can cg-pull it whenever you want
-# and it will keep your dircache in sync with it. Its latest commit
-# is accessible as .git/heads/remotename (or - more conveniently -
-# as $(commit-id remotename)). For example, to make a diff between
+# After you add a branch, you can cg-pull it whenever you want
+# and it will keep your objects database in sync with it. Its latest
+# commit is accessible as .git/heads/branchname (or - more conveniently
+# - as $(commit-id branchname)). For example, to make a diff between
 # Linus (after you added him) and your current tree, do
 #
 #	cg-pull linus
-#	cg-diff $(commit-id linus)
-#
-# (TODO: cg-diff et al should accept remote names as ids.)
+#	cg-diff linus
 #
 #
 # Only rsync scheme URLs are supported for now. An URL can have a fragment
@@ -20,20 +18,20 @@
 # a repository rsync://kernel.org/pub/scm/linux/kernel/mj/linux.git and
 # you are interested in its 'testing' branch, you can e.g.
 #
-#	cg-remote-add mj-testing \
+#	cg-branch-add mj-testing \
 #		rsync://kernel.org/pub/scm/linux/kernel/mj/linux.git#testing
 #
 # and refer to it as 'mj-testing' anytime later.
 #
 #
-# Takes the remote's name and rsync URL.
+# Takes the branch' name and rsync URL.
 
 . cg-Xlib
 
 name=$1
 uri=$2
 
-([ "$name" ] && [ "$uri" ]) || die "usage: cg-remote-add NAME URI"
+([ "$name" ] && [ "$uri" ]) || die "usage: cg-branch-add NAME RSYNC_URL"
 (echo $name | egrep -qv '[^a-zA-Z0-9_.@!:-]') || \
 	die "name contains invalid characters"
 if [ "$name" = "this" ] || [ "$name" = "HEAD" ]; then

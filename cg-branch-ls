@@ -1,0 +1,12 @@
+#!/usr/bin/env bash
+#
+# List configured GIT branches.
+# Copyright (c) Steven Cole 2005
+#
+# Takes no parameters.
+
+. cg-Xlib
+
+[ -s .git/remotes ] || die "List of branches is empty. See cg-branch-add."
+
+cat .git/remotes

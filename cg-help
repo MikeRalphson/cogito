@@ -12,11 +12,12 @@ Usage: cg-COMMAND [ARG]...
 
 Available commands:
 	cg-add		FILE...
+	cg-branch-add	BNAME RSYNC_URL
+	cg-branch-ls
 	cg-cancel
 	cg-commit	[FILE]...	< log message on stdin
 	cg-diff		[-p] [-r FROM_ID[:TO_ID]] [FILE]...
 	cg-export	DESTDIR [TREE_ID]
-	cg-fork		BNAME BRANCH_DIR [COMMIT_ID]
 	cg-help
 	cg-init		RSYNC_URL
 	cg-log		[-c] [COMMIT_ID | COMMIT_ID:COMMIT_ID]
@@ -24,14 +25,12 @@ Available commands:
 	cg-merge	[-c] [-b BASE_ID] FROM_ID
 	cg-mkpatch	[COMMIT_ID | COMMIT_ID:COMMIT_ID]
 	cg-patch			< patch on stdin
-	cg-pull		[RNAME]
-	cg-remote-add	RNAME RSYNC_URL
-	cg-remote-ls
+	cg-pull		[BNAME]
 	cg-rm		FILE...
 	cg-seek		[COMMIT_ID]
 	cg-status
 	cg-tag		TNAME [COMMIT_ID]
-	cg-update	[RNAME]
+	cg-update	[BNAME]
 	cg-version
 
 Advanced commands:
@@ -39,7 +38,7 @@ Advanced commands:
 
 Note that these expressions can be used interchangably as "ID"s:
 	empty string, "this" or "HEAD" (current HEAD)
-	branch name (as registered with cg-remote-add or cg-fork)
+	branch name (as registered with cg-branch-add)
 	tag name (as registered with cg-tag)
 	shortcut hash (shorted unambiguous hash lead)
 	commit object hash (as returned by commit-id)
