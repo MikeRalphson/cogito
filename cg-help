@@ -29,10 +29,10 @@ Available commands:
 	cg-seek		[COMMIT_ID]
 	cg-status
 	cg-tag		TNAME [COMMIT_ID]
-	cg-track	[RNAME]
 	cg-version
 
 Advanced commands:
+	cg-admin-setopt	update-default [RNAME]
 	cg-admin-lsobj	[OBJTYPE]
 
 Note that these expressions can be used interchangably as "ID"s:
