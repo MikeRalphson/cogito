@@ -39,7 +39,7 @@ Advanced commands:
 
 Note that these expressions can be used interchangably as "ID"s:
 	empty string, "this" or "HEAD" (current HEAD)
-	remote name (as registered with cg-remote-add)
+	branch name (as registered with cg-remote-add or cg-fork)
 	tag name (as registered with cg-tag)
 	shortcut hash (shorted unambiguous hash lead)
 	commit object hash (as returned by commit-id)
