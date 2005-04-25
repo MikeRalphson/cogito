@@ -29,6 +29,7 @@ Available commands:
 	cg-seek		[COMMIT_ID]
 	cg-status
 	cg-tag		TNAME [COMMIT_ID]
+	cg-update	[RNAME]
 	cg-version
 
 Advanced commands:
