@@ -11,46 +11,39 @@
    works for you. Angels sing, and a light suddenly fills the room. 
  - "goddamn idiotic truckload of sh*t": when it breaks
 
-GIT comes in two layers. The bottom layer is merely an extremely fast and
-flexible filesystem-based database designed to store directory trees with
-regard to their history. The top layer is a SCM-like tool which enables human
-beings to work with the database in a manner to a degree similar to other SCM
-tools (like CVS, BitKeeper or Monotone).
+The GIT itself is merely an extremely fast and flexible filesystem-based
+database designed to store directory trees with regard to their history.
+The top layer is a SCM-like tool Cogito which enables human beings to work
+with the database in a manner to a degree similar to other SCM tools (like
+CVS, BitKeeper or Monotone).
 
 
 
-	The "GIT toolkit"
-	~~~~~~~~~~~~~~~~~
+	Cogito
+	~~~~~~
 
 This currently simply describes what should you do when you get a tarball
-of GIT and start to use it and hack upon it. It can give you some guide,
+of Cogito and start to use it and hack upon it. It can give you some guide,
 but the documentation should be certainly consolidated and rewritten.
 
 Build it by make, make sure the scripts are in $PATH.
 
-This mini-HOWTO assumes two facts about the tarball you just got:
-
-	(i)  It is "tracking" some branch
-	(ii) It is "tracking" branch called "pasky"
-
-If this is not the case (most notably when you have no .git subdirectory),
-create a new directory, and do
+If, after unpacking the tarball, you do not have the .git subdirectory in the
+tarball root, do
 
 	cg-init rsync://rsync.kernel.org/pub/scm/cogito/cogito.git
 
-in that directory, and do
+in that directory, and
 
 	cg-remote-add pasky rsync://rsync.kernel.org/pub/scm/cogito/cogito.git
-	cg-track
-	cg-track pasky
 
-(there is already the same branch called "origin" created by git init, however
+(there is already the same branch called "origin" created by cg-init, however
 we expect the branch name to be "pasky" for the result of the tutorial;
 alternatively, just use "origin" everywhere instead of "pasky").
 
 If you already have the .git subdirectory, update it to the latest version by
 
-	cg-pull pasky
+	cg-update pasky
 
 (and repeat that after some time to get the future updates - but see below).
 Then build it again, doing
@@ -59,33 +52,26 @@ Then build it again, doing
 
 and...  well, that's it. Play around with it a bit. ;-)
 
-This tree is tracked. That is, you can get my latest changes by doing:
+You can get my latest changes by doing:
+
+	cg-update pasky
+
+If you did some local commits in the meantime, Cogito will attempt to merge
+them with the pasky branch. You then need to check that the merging went
+correctly and without conflicts, possibly do merge-related fixes, and then
+record the merge with cg-commit (if the merge was clean, Cogito will commit
+automatically).
+
+Sometimes, you will just want to bring the latest stuff from my branch, but not
+merge it (e.g. you might want only to diff against it). Do that by
 
 	cg-pull pasky
 
-(If you are tracking a branch, "git pull" without any arguments will default
-to the tracked branch.) If you did some local commits in the meantime, git will
-attempt to merge them with the pasky branch. You then need to check that
-the merging went correctly and without conflicts, possibly do merge-related
-fixes, and then record the merge with git commit.
+If there are any changes, two IDs will be printed (I mean the line saying
+"Tree change"). Pass those as parameters to cg-diff and you will get a diff
+describing changes from the last time you pulled. You can also
 
-You may want to untrack my tree (to do independent development or re-track to
-e.g. linus), by doing
-
-	cg-track
-
-(passing no arguments will untrack the tree). The branch is still there, though,
-and you can pull the latest updates again with:
-
-	cg-pull pasky
-
-You aren't tracking the branch now, though, so the changes won't be applied to
-your local tree automatically anymore. However, if there are any changes, two
-IDs will be printed (I mean the line saying "Tree change"). Pass those as
-parameters to git diff and you will get a diff describing changes from the last
-time you pulled. You can also
-
-	cg-diff -r pasky:this
+	cg-diff -r pasky:HEAD
 
 which will show changes between my and your branch.
 
@@ -108,7 +94,7 @@ Of course you will want to commit. If you added any new files, do
 
 	cg-add newfile1 newfile2 ...
 
-first. Then examine your changes by git diff or just show what files did you
+first. Then examine your changes by cg-diff or just show what files did you
 change by
 
 	cg-status
@@ -123,7 +109,7 @@ It is nice to be able to examine the commit history. We have tool for that too.
 
 	cg-log pasky
 
-will get you the history of my branch. git log with no arguments will default
+will get you the history of my branch. cg-log with no arguments will default
 to the history of the current branch.
 
 If you want to start out new project, do (IN NEW DIRECTORY)
@@ -137,8 +123,8 @@ and if you want to have a look at someone else's project, do
 (your working directory will be by default tracking branch 'origin').
 
 Note that we missed out a lot of stuff here. There is already some
-(fundamentally inferior) support for forking branches (git fork),
-merging (git merge), moving your tree to an older commit (git seek), etc.
+(fundamentally inferior) support for forking branches (cg-fork),
+merging (cg-merge), moving your tree to an older commit (cg-seek), etc.
 
 For quick reference, please see
 

@@ -27,15 +27,8 @@ if echo "$uri" | grep -q '#'; then
 fi
 
 
-tracking=
-[ -s .git/tracking ] && tracking=$(cat .git/tracking)
-
 orig_head=
-if [ "$tracking" = "$name" ]; then
-	[ -s .git/HEAD.tracked ] && orig_head=$(cat .git/HEAD.tracked)
-else
-	[ -s ".git/heads/$name" ] && orig_head=$(cat ".git/heads/$name")
-fi
+[ -s ".git/heads/$name" ] && orig_head=$(cat ".git/heads/$name")
 
 
 mkdir -p .git/heads
@@ -72,11 +65,4 @@ elif [ "$orig_head" != "$new_head" ]; then
 else
 	echo "Up to date."
 	exit
-fi
-
-
-if [ "$tracking" = "$name" ]; then
-	echo "Tracked branch, applying changes..."
-	cg-merge "$new_head"
-	echo "$new_head" >.git/HEAD.tracked
 fi

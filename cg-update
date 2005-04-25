@@ -1,0 +1,15 @@
+#!/usr/bin/env bash
+#
+# Pulls changes from "remote" to the local GIT repository, and merge them.
+# Copyright (c) Petr Baudis, 2005
+#
+# Takes the remote's name.
+
+name=$1
+
+[ "$name" ] || name=$(cat .git/tracking 2>/dev/null)
+
+cg-pull $name || exit 1
+echo
+echo "Applying changes..."
+cg-merge $name
