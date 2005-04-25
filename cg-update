@@ -18,6 +18,7 @@ if [ ! "$name" ]; then
 		show-files --deleted | sed "s/^/$(echo -e "\t")/"
 		show-files -z --deleted | xargs -0 checkout-cache --
 	fi
+	exit
 fi
 
 cg-pull $name || exit 1
