@@ -23,30 +23,52 @@ if echo "$uri" | grep -q '#'; then
 fi
 
 
+fetch_rsync () {
+	filter="cat"
+	if [ "$1" = "-s" ]; then # subsequent
+		# We already saw the MOTD, thank you very much.
+		filter="grep -v ^MOTD:"
+		shift
+	fi
+
+	rsync_flags_l=
+	if [ "$1" = "-u" ]; then # update
+		rsync_flags_l="--ignore-existing"
+		shift
+	fi
+
+	appenduri=
+	if [ "$1" = "-d" ]; then # directory
+		appenduri="/." # CowboyNeal
+		shift
+	fi
+
+	rsync $RSYNC_FLAGS $rsync_flags_l --whole-file -v -Lr \
+		"$1$appenduri" "$2$appenduri" | $filter
+}
+
+
 orig_head=
 [ -s ".git/heads/$name" ] && orig_head=$(cat ".git/heads/$name")
 
 
 mkdir -p .git/heads
 rsyncerr=
-rsync $RSYNC_FLAGS -Lr "$uri/heads/$rembranch" ".git/heads/$name" 2>/dev/null || rsyncerr=1
+fetch_rsync "$uri/heads/$rembranch" ".git/heads/$name" 2>/dev/null || rsyncerr=1
 if [ "$rsyncerr" ] && [ "$rembranch" = "master" ]; then
 	rsyncerr=
-	rsync $RSYNC_FLAGS -Lr "$uri/HEAD" ".git/heads/$name" | grep -v '^MOTD:' || rsyncerr=1
+	fetch_rsync -s "$uri/HEAD" ".git/heads/$name" || rsyncerr=1
 fi
 [ "$rsyncerr" ] && die "unable to get the head pointer of branch $rembranch"
 
 [ -d .git/objects ] || mkdir -p .git/objects
-# We already saw the MOTD, thank you very much.
-rsync $RSYNC_FLAGS --ignore-existing --whole-file \
-	-v -Lr "$uri/objects/." ".git/objects/." | grep -v '^MOTD:' || die "rsync error"
+fetch_rsync -s -u -d "$uri/objects/." ".git/objects/." || die "rsync error"
 
 # FIXME: Warn about conflicting tag names?
 # XXX: We now throw stderr to /dev/null since not all repositories
 # may have tags/ and users were confused by the harmless errors.
 [ -d .git/tags ] || mkdir -p .git/tags
-rsync $RSYNC_FLAGS --ignore-existing \
-	-v -Lr "$uri/tags/." ".git/tags/." 2>/dev/null | grep -v '^MOTD:' || die "rsync error"
+fetch_rsync -s -u -d "$uri/tags/." ".git/tags/." 2>/dev/null || die "rsync error"
 
 
 new_head=$(cat ".git/heads/$name")
