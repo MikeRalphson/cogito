@@ -97,7 +97,7 @@ X-Git-Parent: $lastparent
 EOF
 		    cat $TMPML
 		    echo
-		    git diff -r $lastparent -r $parent > $TMPCM
+		    cg-diff -r $lastparent -r $parent > $TMPCM
 		    diffstat -p1 $TMPCM 2>/dev/null
 		    echo 
 		    cat $TMPCM
@@ -113,12 +113,12 @@ EOF
 	done
 }
 
-base=$(gitXnormid.sh -c $1)
+base=$(commit-id $1)
 
 if [ -z $2 ]; then
     lastmail=`cat .git/tags/MailDone`
 else
-    lastmail=$(gitXnormid.sh -c $2)
+    lastmail=$(commit-id $2)
 fi
 
 #if [ -z $3 ]; then
@@ -128,7 +128,7 @@ fi
 #    release=$(gitXnormid.sh -c $3)
 #fi    
 
-base=$(gitXnormid.sh -c $1) || exit 1
+base=$(commit-id $1) || exit 1
 
 
 if [ "$base" != "$lastmail" ]; then
@@ -137,7 +137,7 @@ if [ "$base" != "$lastmail" ]; then
     rev-tree --edges $base $lastmail | cut -f2- -d\  |  sed 's/[a-z0-9]*:1//g' >> $TMPCL
 
     createmails $base
-    # No 'git tag -F' -- cheat.
+    # No 'cg-tag -F' -- cheat.
     echo $base > .git/tags/MailDone
     tac $TMPCL | while read commit; do
 	if [ -r "$TMPMD/$commit" ]; then
