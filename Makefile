@@ -31,16 +31,15 @@ PROG=   update-cache show-diff init-db write-tree read-tree commit-tree \
 	check-files ls-tree merge-base merge-cache unpack-file git-export \
 	diff-cache convert-cache http-pull rpush rpull rev-list
 
-SCRIPT=	commit-id tree-id parent-id git gitadd.sh gitaddremote.sh \
-	gitcommit.sh gitdiff-do gitdiff.sh gitlog.sh gitls.sh gitlsobj.sh \
-	gitmerge.sh gitpull.sh gitrm.sh gittag.sh gittrack.sh gitexport.sh \
-	gitapply.sh gitcancel.sh gitXlntree.sh gitlsremote.sh \
-	gitfork.sh gitinit.sh gitseek.sh gitstatus.sh gitpatch.sh \
-	gitmerge-file.sh
+SCRIPT=	commit-id tree-id parent-id cg-Xdiffdo cg-Xlntree cg-Xmergefile \
+	cg-add cg-admin-lsobj cg-admin-setopt cg-cancel cg-commit cg-diff \
+	cg-export cg-fork cg-help cg-init cg-log cg-ls cg-merge cg-mkpatch \
+	cg-patch cg-pull cg-remote-add cg-remote-ls cg-rm cg-seek cg-status \
+	cg-tag cg-update
 
 COMMON=	read-cache.o
 
-GEN_SCRIPT= gitversion.sh
+GEN_SCRIPT= cg-version
 
 VERSION= VERSION
 
@@ -81,8 +80,8 @@ rpull: rsh.c
 http-pull: LIBS += -lcurl
 
 
-gitversion.sh: $(VERSION)
-	@echo Generating gitversion.sh...
+cg-version: $(VERSION)
+	@echo Generating cg-version...
 	@rm -f $@
 	@echo "#!/bin/sh" > $@
 	@PATH=.:$(PATH) echo "echo \"$(shell cat $(VERSION)) ($(shell commit-id))\"" >> $@
