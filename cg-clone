@@ -1,0 +1,23 @@
+#!/usr/bin/env bash
+#
+# Clone a remote GIT repository.
+# Copyright (c) Petr Baudis, 2005
+#
+# This is like cg-init, but works only for remote repositories and
+# will create a new directory where it will do the checkout.
+#
+# Takes an parameter specifying location of the source repository.
+
+. cg-Xlib
+
+uri=$1
+[ "$uri" ] || die "usage: cg-clone RSYNC_URL"
+uri=${uri%/}
+
+dir=${uri##*/}; dir=${dir%.git}
+[ -e "$dir" ] && die "$dir/ already exists"
+mkdir "$dir"
+cd "$dir"
+
+cg-init $uri || exit $?
+echo "Cloned to $dir/ (origin $uri available as branch \"origin\")"

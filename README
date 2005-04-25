@@ -116,11 +116,14 @@ If you want to start out new project, do (IN NEW DIRECTORY)
 
 	cg-init
 
-and if you want to have a look at someone else's project, do
+hack some stuff and then cg-add it.
 
-	cg-init URL
+If you want to get someone else's project, do
+
+	cg-clone URL
 
 (the URL will be available as branch "origin" for updating, etc).
+(You can do also cg-init URL, which won't create the new directory, though.)
 
 Note that we missed out a lot of stuff here. There is already support
 for merging (cg-merge), moving your tree to an older commit (cg-seek), etc.

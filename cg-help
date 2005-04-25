@@ -15,11 +15,12 @@ Available commands:
 	cg-branch-add	BNAME RSYNC_URL
 	cg-branch-ls
 	cg-cancel
+	cg-clone	RSYNC_URL
 	cg-commit	[FILE]...	< log message on stdin
 	cg-diff		[-p] [-r FROM_ID[:TO_ID]] [FILE]...
 	cg-export	DESTDIR [TREE_ID]
 	cg-help
-	cg-init		RSYNC_URL
+	cg-init		[RSYNC_URL]
 	cg-log		[-c] [COMMIT_ID | COMMIT_ID:COMMIT_ID]
 	cg-ls		[TREE_ID]
 	cg-merge	[-c] [-b BASE_ID] FROM_ID
