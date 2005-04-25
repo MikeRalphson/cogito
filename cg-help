@@ -6,7 +6,7 @@
 . cg-Xlib
 
 cat <<__END__
-The Cogito version control system  $(gitversion.sh)
+The Cogito version control system  $(cg-version)
 
 Usage: cg-COMMAND [ARG]...
 
