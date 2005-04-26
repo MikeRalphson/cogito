@@ -60,4 +60,4 @@ if [ -d .git ] && [ ! -d .git/refs ]; then
 fi
 
 export BROKEN_MKTEMP=1
-del=$($(which mktemp) -t) && { rm $del; export BROKEN_MKTEMP=; }
+del=$($(which mktemp) -t 2>/dev/null) && { rm $del; export BROKEN_MKTEMP=; }
