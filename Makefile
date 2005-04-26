@@ -87,12 +87,21 @@ rpull: rsh.c
 http-pull: LIBS += -lcurl
 
 
+ifneq (,$(wildcard .git))
+cg-version: $(VERSION) .git/HEAD
+	@echo Generating cg-version...
+	@rm -f $@
+	@echo "#!/bin/sh" > $@
+	@echo "echo \"$(shell cat $(VERSION)) ($(shell cat .git/HEAD))\"" >> $@
+	@chmod +x $@
+else
 cg-version: $(VERSION)
 	@echo Generating cg-version...
 	@rm -f $@
 	@echo "#!/bin/sh" > $@
-	@PATH=.:$(PATH) echo "echo \"$(shell cat $(VERSION)) ($(shell commit-id))\"" >> $@
+	@echo "echo \"$(shell cat $(VERSION))\"" >> $@
 	@chmod +x $@
+endif
 
 install: $(PROG) $(SCRIPTS) $(SCRIPT) $(GEN_SCRIPT)
 	install -m755 -d $(DESTDIR)$(bindir)
