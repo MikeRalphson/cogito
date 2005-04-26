@@ -13,12 +13,12 @@ if [ ! "$id" ] || [ "$id" = "this" ] || [ "$id" = "HEAD" ]; then
 	id=$(cat .git/HEAD)
 fi
 
-if (echo $id | egrep -vq "$SHA1ONLY") && [ -r ".git/tags/$id" ]; then
-	id=$(cat ".git/tags/$id")
+if (echo $id | egrep -vq "$SHA1ONLY") && [ -r ".git/refs/tags/$id" ]; then
+	id=$(cat ".git/refs/tags/$id")
 fi
 
-if (echo $id | egrep -vq "$SHA1ONLY") && [ -r ".git/heads/$id" ]; then
-	id=$(cat ".git/heads/$id")
+if (echo $id | egrep -vq "$SHA1ONLY") && [ -r ".git/refs/heads/$id" ]; then
+	id=$(cat ".git/refs/heads/$id")
 fi
 
 idpref=$(echo "$id" | cut -c -2)

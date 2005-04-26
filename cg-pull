@@ -76,15 +76,19 @@ fi
 
 
 orig_head=
-[ -s ".git/heads/$name" ] && orig_head=$(cat ".git/heads/$name")
+[ -s ".git/refs/heads/$name" ] && orig_head=$(cat ".git/refs/heads/$name")
 
 
-mkdir -p .git/heads
+mkdir -p .git/refs/heads
 rsyncerr=
-$fetch "$uri/heads/$rembranch" ".git/heads/$name" 2>/dev/null || rsyncerr=1
+$fetch "$uri/refs/heads/$rembranch" ".git/refs/heads/$name" 2>/dev/null || rsyncerr=1
+if [ "$rsyncerr" ]; then
+	rsyncerr=
+	$fetch -s "$uri/heads/$rembranch" ".git/refs/heads/$name" || rsyncerr=1
+fi
 if [ "$rsyncerr" ] && [ "$rembranch" = "master" ]; then
 	rsyncerr=
-	$fetch -s "$uri/HEAD" ".git/heads/$name" || rsyncerr=1
+	$fetch -s "$uri/HEAD" ".git/refs/heads/$name" || rsyncerr=1
 fi
 [ "$rsyncerr" ] && die "unable to get the head pointer of branch $rembranch"
 
@@ -94,11 +98,17 @@ $fetch -s -u -d "$uri/objects" ".git/objects" || die "rsync error"
 # FIXME: Warn about conflicting tag names?
 # XXX: We now throw stderr to /dev/null since not all repositories
 # may have tags/ and users were confused by the harmless errors.
-[ -d .git/tags ] || mkdir -p .git/tags
-$fetch -s -u -d "$uri/tags" ".git/tags" 2>/dev/null || die "rsync error"
+[ -d .git/refs/tags ] || mkdir -p .git/refs/tags
+rsyncerr=
+$fetch -s -u -d "$uri/refs/tags" ".git/refs/tags" 2>/dev/null || rsyncerr=1
+if [ "$rsyncerr" ]; then
+	rsyncerr=
+	$fetch -s -u -d "$uri/tags" ".git/refs/tags" || rsyncerr=1
+fi
+[ "$rsyncerr" ] && die "unable to get tags list (non-fatal)"
 
 
-new_head=$(cat ".git/heads/$name")
+new_head=$(cat ".git/refs/heads/$name")
 
 if [ ! "$orig_head" ]; then
 	echo "New branch: $new_head"

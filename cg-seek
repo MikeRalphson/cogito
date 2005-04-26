@@ -36,7 +36,7 @@ curcommit=$(commit-id)
 
 rm .git/HEAD
 if [ ! "$dstcommit" ] || [ "$dstcommit" = "$branch" ]; then
-	ln -s "heads/$branch" .git/HEAD
+	ln -s "refs/heads/$branch" .git/HEAD
 	rm .git/blocked
 	dstcommit=$(commit-id)
 else

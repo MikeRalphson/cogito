@@ -24,3 +24,17 @@ if [ -s .git/remotes ] && [ ! -e .git/branches ]; then
 	done || stop=1
 	[ "$stop" ] || rm .git/remotes
 fi
+# 2005-04-26
+if [ ! -d .git/refs ]; then
+	stop=
+	mkdir .git/refs || stop=1
+	if [ ! "$stop" ]; then
+		mv .git/heads .git/refs
+		mv .git/tags .git/refs
+		tgt=$(readlink .git/HEAD)
+		if [ "$tgt" ]; then
+			rm .git/HEAD
+			ln -s "refs/$tgt" .git/HEAD
+		fi
+	fi
+fi

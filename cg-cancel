@@ -16,10 +16,10 @@
 branch=
 [ -s .git/blocked ] && branch=$(grep '^seeked from ' .git/blocked | sed 's/^seeked from //')
 if [ "$branch" ]; then
-	echo "Unseeking: $(cat .git/HEAD) -> $(cat ".git/heads/$branch")"
-	if [ -s ".git/heads/$branch" ]; then
+	echo "Unseeking: $(cat .git/HEAD) -> $(cat ".git/refs/heads/$branch")"
+	if [ -s ".git/refs/heads/$branch" ]; then
 		rm .git/HEAD
-		ln -s "heads/$branch" .git/HEAD
+		ln -s "refs/heads/$branch" .git/HEAD
 	else
 		echo "ERROR: Unknown branch $branch! Preserving HEAD." >&2
 	fi
