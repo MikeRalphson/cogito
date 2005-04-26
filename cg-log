@@ -77,7 +77,7 @@ $revls | $revsort | while read time commit parents; do
 			"")
 				echo; sed -re '
 					/ *Signed-off-by:.*/Is//'$colsignoff'&'$coldefault'/
-					s/^/    /
+					s/./    &/
 				'
 				;;
 			*)
