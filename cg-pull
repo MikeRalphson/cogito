@@ -105,9 +105,9 @@ rsyncerr=
 $fetch -s -u -d "$uri/refs/tags" ".git/refs/tags" 2>/dev/null || rsyncerr=1
 if [ "$rsyncerr" ]; then
 	rsyncerr=
-	$fetch -s -u -d "$uri/tags" ".git/refs/tags" || rsyncerr=1
+	$fetch -s -u -d "$uri/tags" ".git/refs/tags" 2>/dev/null || rsyncerr=1
 fi
-[ "$rsyncerr" ] && die "unable to get tags list (non-fatal)"
+[ "$rsyncerr" ] && echo "unable to get tags list (non-fatal)" >&2
 
 
 new_head=$(cat ".git/refs/heads/$name")
