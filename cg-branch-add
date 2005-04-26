@@ -24,14 +24,14 @@
 # and refer to it as 'mj-testing' anytime later.
 #
 #
-# Takes the branch' name and rsync URL.
+# Takes the branch' name and location (local path or rsync URL).
 
 . cg-Xlib
 
 name=$1
-uri=$2
+location=$2
 
-([ "$name" ] && [ "$uri" ]) || die "usage: cg-branch-add NAME RSYNC_URL"
+([ "$name" ] && [ "$location" ]) || die "usage: cg-branch-add NAME SOURCE_LOC"
 (echo $name | egrep -qv '[^a-zA-Z0-9_.@!:-]') || \
 	die "name contains invalid characters"
 if [ "$name" = "this" ] || [ "$name" = "HEAD" ]; then
@@ -42,4 +42,4 @@ if grep -q $(echo -e "^$name\t" | sed 's/\./\\./g') .git/remotes \
 	die "branch already exists"
 fi
 
-echo -e "$name\t$uri" >>.git/remotes
+echo -e "$name\t$location" >>.git/remotes

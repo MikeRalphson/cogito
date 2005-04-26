@@ -47,6 +47,34 @@ fetch_rsync () {
 		"$1$appenduri" "$2$appenduri" | $filter
 }
 
+fetch_local () {
+	[ "$1" = "-s" ] && shift
+
+	cp_flags_l="-va"
+	if [ "$1" = "-u" ]; then
+		cp_flags_l="$cp_flags_l -lu"
+		shift
+	fi
+
+	cut_last=
+	if [ "$1" = "-d" ]; then
+		cut_last=1
+		shift
+	fi
+
+	src="$1"
+	dest="$2"
+	[ "$cut_last" ] && dest=${dest%/*}
+
+	cp $cp_flags_l "$src" "$dest"
+}
+
+if echo "$uri" | grep -q ":"; then
+	fetch=fetch_rsync
+else
+	fetch=fetch_local
+fi
+
 
 orig_head=
 [ -s ".git/heads/$name" ] && orig_head=$(cat ".git/heads/$name")
@@ -54,21 +82,21 @@ orig_head=
 
 mkdir -p .git/heads
 rsyncerr=
-fetch_rsync "$uri/heads/$rembranch" ".git/heads/$name" 2>/dev/null || rsyncerr=1
+$fetch "$uri/heads/$rembranch" ".git/heads/$name" 2>/dev/null || rsyncerr=1
 if [ "$rsyncerr" ] && [ "$rembranch" = "master" ]; then
 	rsyncerr=
-	fetch_rsync -s "$uri/HEAD" ".git/heads/$name" || rsyncerr=1
+	$fetch -s "$uri/HEAD" ".git/heads/$name" || rsyncerr=1
 fi
 [ "$rsyncerr" ] && die "unable to get the head pointer of branch $rembranch"
 
 [ -d .git/objects ] || mkdir -p .git/objects
-fetch_rsync -s -u -d "$uri/objects/." ".git/objects/." || die "rsync error"
+$fetch -s -u -d "$uri/objects" ".git/objects" || die "rsync error"
 
 # FIXME: Warn about conflicting tag names?
 # XXX: We now throw stderr to /dev/null since not all repositories
 # may have tags/ and users were confused by the harmless errors.
 [ -d .git/tags ] || mkdir -p .git/tags
-fetch_rsync -s -u -d "$uri/tags/." ".git/tags/." 2>/dev/null || die "rsync error"
+$fetch -s -u -d "$uri/tags" ".git/tags" 2>/dev/null || die "rsync error"
 
 
 new_head=$(cat ".git/heads/$name")

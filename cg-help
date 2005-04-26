@@ -12,15 +12,15 @@ Usage: cg-COMMAND [ARG]...
 
 Available commands:
 	cg-add		FILE...
-	cg-branch-add	BNAME RSYNC_URL
+	cg-branch-add	BNAME SOURCE_LOC
 	cg-branch-ls
 	cg-cancel
-	cg-clone	RSYNC_URL
+	cg-clone	SOURCE_LOC
 	cg-commit	[FILE]...	< log message on stdin
 	cg-diff		[-p] [-r FROM_ID[:TO_ID]] [FILE]...
 	cg-export	DESTDIR [TREE_ID]
 	cg-help
-	cg-init		[RSYNC_URL]
+	cg-init		[SOURCE_LOC]
 	cg-log		[-c] [COMMIT_ID | COMMIT_ID:COMMIT_ID]
 	cg-ls		[TREE_ID]
 	cg-merge	[-c] [-b BASE_ID] FROM_ID

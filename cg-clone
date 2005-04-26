@@ -10,14 +10,14 @@
 
 . cg-Xlib
 
-uri=$1
-[ "$uri" ] || die "usage: cg-clone RSYNC_URL"
-uri=${uri%/}
+location=$1
+[ "$location" ] || die "usage: cg-clone SOURCE_LOC"
+location=${location%/}
 
-dir=${uri##*/}; dir=${dir%.git}
+dir=${location##*/}; dir=${dir%.git}
 [ -e "$dir" ] && die "$dir/ already exists"
 mkdir "$dir"
 cd "$dir"
 
-cg-init $uri || exit $?
-echo "Cloned to $dir/ (origin $uri available as branch \"origin\")"
+cg-init $location || exit $?
+echo "Cloned to $dir/ (origin $location available as branch \"origin\")"
