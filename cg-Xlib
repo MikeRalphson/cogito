@@ -16,7 +16,7 @@ die () {
 
 # Compatibility hacks:
 # 2005-04-26
-if [ -s .git/remotes ] && [ ! -e .git/branches ]; then
+if [ -d .git ] && [ -s .git/remotes ] && [ ! -e .git/branches ]; then
 	stop=
 	mkdir .git/branches || stop=1
 	[ "$stop" ] || cat .git/remotes | while read branch location; do
@@ -25,7 +25,7 @@ if [ -s .git/remotes ] && [ ! -e .git/branches ]; then
 	[ "$stop" ] || rm .git/remotes
 fi
 # 2005-04-26
-if [ ! -d .git/refs ]; then
+if [ -d .git ] && [ ! -d .git/refs ]; then
 	stop=
 	mkdir .git/refs || stop=1
 	if [ ! "$stop" ]; then
