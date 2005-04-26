@@ -114,6 +114,9 @@ install: $(PROG) $(SCRIPTS) $(SCRIPT) $(GEN_SCRIPT)
 	install -m755 -d $(DESTDIR)$(bindir)
 	install $(PROG) $(SCRIPTS) $(SCRIPT) $(GEN_SCRIPT) $(DESTDIR)$(bindir)
 
+uninstall:
+	cd $(DESTDIR)$(bindir) && rm $(PROG) $(SCRIPTS) $(SCRIPT) $(GEN_SCRIPT)
+
 clean:
 	rm -f *.o mozilla-sha1/*.o ppc/*.o $(PROG) $(GEN_SCRIPT) $(LIB_FILE)
 
