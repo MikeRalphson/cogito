@@ -71,6 +71,7 @@ fetch_local () {
 if echo "$uri" | grep -q ":"; then
 	fetch=fetch_rsync
 else
+	[ ! -s $uri/HEAD ] && [ -d $uri/.git ] && uri=$uri/.git
 	fetch=fetch_local
 fi
 
