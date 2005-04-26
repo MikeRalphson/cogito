@@ -64,7 +64,7 @@ if [ "$merging" ]; then
 	echo -n 'Merge with '
 	[ -s .git/merging-sym ] || cp .git/merging .git/merging-sym
 	for sym in $(cat .git/merging-sym); do
-		uri=$(grep $(echo -e "^$sym\t" | sed 's/\./\\./g') .git/remotes | cut -f 2)
+		uri=$(cat .git/branches/$sym)
 		[ "$uri" ] || uri="$sym"
 		echo "$uri" >>$LOGMSG
 		echo "$uri"

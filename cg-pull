@@ -13,8 +13,7 @@ name=$1
 
 
 [ "$name" ] || die "where to pull from?"
-uri=$(grep $(echo -e "^$name\t" | sed 's/\./\\./g') .git/remotes | cut -f 2)
-[ "$uri" ] || die "unknown branch"
+uri=$(cat ".git/branches/$name" 2>/dev/null) || die "unknown branch"
 
 rembranch=master
 if echo "$uri" | grep -q '#'; then

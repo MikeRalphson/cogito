@@ -13,12 +13,12 @@ uri=$1
 [ -e .git ] && die ".git already exists"
 
 init-db
-mkdir .git/heads .git/tags
+mkdir .git/branches .git/heads .git/tags
 touch .git/heads/master
 ln -s heads/master .git/HEAD
 
 if [ "$uri" ]; then
-	echo -e "origin\t$uri" >.git/remotes
+	echo "$uri" >.git/branches/origin
 	cg-pull origin || die "pull failed"
 
 	cp .git/heads/origin .git/heads/master

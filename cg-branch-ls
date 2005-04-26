@@ -7,6 +7,13 @@
 
 . cg-Xlib
 
-[ -s .git/remotes ] || die "List of branches is empty. See cg-branch-add."
+mkdir -p .git/branches
+[ "$(find .git/branches -follow -type f)" ] \
+	|| die "List of branches is empty. See cg-branch-add."
 
-cat .git/remotes
+cd .git/branches
+for branch in *; do
+	echo -n $branch
+	echo -ne "\t"
+	cat $branch
+done

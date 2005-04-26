@@ -12,3 +12,15 @@ die () {
 	echo $_cg_cmd: $@ >&2
 	exit 1
 }
+
+
+# Compatibility hacks:
+# 2005-04-26
+if [ -s .git/remotes ] && [ ! -e .git/branches ]; then
+	stop=
+	mkdir .git/branches || stop=1
+	[ "$stop" ] || cat .git/remotes | while read branch location; do
+		echo "$location" >.git/branches/$branch
+	done || stop=1
+	[ "$stop" ] || rm .git/remotes
+fi

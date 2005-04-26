@@ -37,9 +37,10 @@ location=$2
 if [ "$name" = "this" ] || [ "$name" = "HEAD" ]; then
 	die "given branch name is reserved"
 fi
-if grep -q $(echo -e "^$name\t" | sed 's/\./\\./g') .git/remotes \
-   || [ -s ".git/heads/$name" ]; then
+
+mkdir -p .git/branches
+if [ -s ".git/branches/$name" ] || [ -s ".git/heads/$name" ]; then
 	die "branch already exists"
 fi
 
-echo -e "$name\t$location" >>.git/remotes
+echo "$location" >.git/branches/$name
