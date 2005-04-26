@@ -25,11 +25,13 @@ bindir=$(prefix)/bin
 CC=gcc
 AR=ar
 
+SCRIPTS=git-merge-one-file-script git-prune-script git-pull-script git-tag-script
 
 PROG=   update-cache show-diff init-db write-tree read-tree commit-tree \
 	cat-file fsck-cache checkout-cache diff-tree rev-tree show-files \
 	check-files ls-tree merge-base merge-cache unpack-file git-export \
-	diff-cache convert-cache http-pull rpush rpull rev-list
+	diff-cache convert-cache http-pull rpush rpull rev-list git-mktag \
+	diff-tree-helper
 
 SCRIPT=	commit-id tree-id parent-id cg-Xdiffdo cg-Xmergefile \
 	cg-add cg-admin-lsobj cg-cancel cg-clone cg-commit cg-diff \
@@ -47,6 +49,11 @@ LIB_OBJS=read-cache.o sha1_file.o usage.o object.o commit.o tree.o blob.o
 LIB_FILE=libgit.a
 LIB_H=cache.h object.h
 
+LIB_H += strbuf.h
+LIB_OBJS += strbuf.o
+
+LIB_H += diff.h
+LIB_OBJS += diff.o
 
 LIBS = -lz
 
@@ -87,9 +94,9 @@ cg-version: $(VERSION)
 	@PATH=.:$(PATH) echo "echo \"$(shell cat $(VERSION)) ($(shell commit-id))\"" >> $@
 	@chmod +x $@
 
-install: $(PROG) $(GEN_SCRIPT)
+install: $(PROG) $(SCRIPTS) $(SCRIPT) $(GEN_SCRIPT)
 	install -m755 -d $(DESTDIR)$(bindir)
-	install $(PROG) $(SCRIPT) $(GEN_SCRIPT) $(DESTDIR)$(bindir)
+	install $(PROG) $(SCRIPTS) $(SCRIPT) $(GEN_SCRIPT) $(DESTDIR)$(bindir)
 
 clean:
 	rm -f *.o mozilla-sha1/*.o ppc/*.o $(PROG) $(GEN_SCRIPT) $(LIB_FILE)
