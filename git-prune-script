@@ -3,4 +3,4 @@
 # [This script is an example script of the Linus' git and not part of
 # git-pasky.]
 #
-fsck-cache --unreachable $(cat .git/HEAD ) | grep unreachable | cut -d' ' -f3 | sed 's:^\(..\):.git/objects/\1/:' | xargs rm
+fsck-cache --unreachable $(cat .git/HEAD .git/refs/heads/*) | grep unreachable | cut -d' ' -f3 | sed 's:^\(..\):.git/objects/\1/:' | xargs rm
