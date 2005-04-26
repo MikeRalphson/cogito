@@ -3,6 +3,7 @@
  *
  * Copyright (C) Linus Torvalds, 2005
  */
+#include <signal.h>
 #include "cache.h"
 
 /*
@@ -35,8 +36,8 @@ static int index_fd(unsigned char *sha1, int fd, struct stat *st)
 	z_stream stream;
 	unsigned long size = st->st_size;
 	int max_out_bytes = size + 200;
-	void *out = malloc(max_out_bytes);
-	void *metadata = malloc(200);
+	void *out = xmalloc(max_out_bytes);
+	void *metadata = xmalloc(200);
 	int metadata_size;
 	void *in;
 	SHA_CTX c;
@@ -127,7 +128,7 @@ static int add_file_to_cache(char *path)
 	}
 	namelen = strlen(path);
 	size = cache_entry_size(namelen);
-	ce = malloc(size);
+	ce = xmalloc(size);
 	memset(ce, 0, size);
 	memcpy(ce->name, path, namelen);
 	fill_stat_cache_info(ce, &st);
@@ -215,7 +216,7 @@ static struct cache_entry *refresh_entry(struct cache_entry *ce)
 		return ERR_PTR(-EINVAL);
 
 	size = ce_size(ce);
-	updated = malloc(size);
+	updated = xmalloc(size);
 	memcpy(updated, ce, size);
 	fill_stat_cache_info(updated, &st);
 	return updated;
@@ -294,7 +295,7 @@ static int add_cacheinfo(char *arg1, char *arg2, char *arg3)
 
 	len = strlen(arg3);
 	size = cache_entry_size(len);
-	ce = malloc(size);
+	ce = xmalloc(size);
 	memset(ce, 0, size);
 
 	memcpy(ce->sha1, sha1, 20);
@@ -312,6 +313,11 @@ static void remove_lock_file(void)
 		unlink(lockfile_name);
 }
 
+static void remove_lock_file_on_signal(int signo)
+{
+	remove_lock_file();
+}
+
 int main(int argc, char **argv)
 {
 	int i, newfd, entries;
@@ -325,6 +331,7 @@ int main(int argc, char **argv)
 	if (newfd < 0)
 		die("unable to create new cachefile");
 
+	signal(SIGINT, remove_lock_file_on_signal);
 	atexit(remove_lock_file);
 	lockfile_name = lockfile;
 
