@@ -13,6 +13,26 @@ die () {
 	exit 1
 }
 
+mktemp () {
+	if [ ! "$BROKEN_MKTEMP" ]; then
+		$(which mktemp) "$@"
+		return
+	fi
+
+	dirarg=
+	if [ x"$1" = x"-d" ]; then
+		dirarg="-d"
+		shift
+	fi
+	prefix=
+	if [ x"$1" = x"-t" ]; then
+		prefix=${TMPDIR:-/tmp}
+		shift
+	fi
+
+	$(which mktemp) $dirarg $prefix"$1"
+}
+
 
 # Compatibility hacks:
 # 2005-04-26
@@ -38,3 +58,6 @@ if [ -d .git ] && [ ! -d .git/refs ]; then
 		fi
 	fi
 fi
+
+export BROKEN_MKTEMP=1
+del=$($(which mktemp) -t) && { rm $del; export BROKEN_MKTEMP=; }
