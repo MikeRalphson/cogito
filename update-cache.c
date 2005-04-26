@@ -114,7 +114,7 @@ static int add_file_to_cache(char *path)
 			if (allow_remove)
 				return remove_file_from_cache(path);
 		}
-		return -1;
+		return error("open(\"%s\"): %s", path, strerror(errno));
 	}
 	if (fstat(fd, &st) < 0) {
 		close(fd);
