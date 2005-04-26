@@ -75,11 +75,13 @@ if [ "$id2" = " " ]; then
 				done
 			' padding
 
-		update-cache --refresh
 		tree=$(tree-id "$id1")
 	else
 		tree=$(tree-id)
 	fi
+
+	# Ensure to only diff modified files
+	update-cache --refresh
 
 	# FIXME: Update ret based on what did we match. And take "$@"
 	# to account after all.
