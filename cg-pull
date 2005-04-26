@@ -44,6 +44,7 @@ fetch_rsync () {
 
 	rsync $RSYNC_FLAGS $rsync_flags_l --whole-file -v -Lr \
 		"$1$appenduri" "$2$appenduri" | $filter
+	return ${PIPESTATUS[0]}
 }
 
 fetch_local () {
