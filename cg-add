@@ -10,4 +10,10 @@
 
 [ "$1" ] || die "usage: cg-add FILE..."
 
+if [ -f "$1" ]; then
+       echo "Adding file $1"
+else
+       die "$1 does not exist"
+fi
+
 update-cache --add -- "$@"
