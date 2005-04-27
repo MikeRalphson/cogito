@@ -17,7 +17,7 @@
 # restores everything to a proper state (including unseeking,
 # cancelling merge in progress and rebuilding indexes).
 
-. cg-Xlib
+. ${COGITO_LIB}cg-Xlib
 
 ret=0
 

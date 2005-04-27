@@ -28,6 +28,7 @@ CFLAGS+=-Wall $(DEFINES)
 prefix?=$(HOME)
 
 bindir?=$(prefix)/bin
+libdir?=$(prefix)/lib/cogito
 
 CC?=gcc
 AR?=ar
@@ -44,17 +45,18 @@ PROG=   git-update-cache git-diff-files git-init-db git-write-tree \
 	git-http-pull git-rpush git-rpull git-rev-list git-mktag \
 	git-diff-tree-helper git-tar-tree git-local-pull git-write-blob
 
-SCRIPT=	commit-id tree-id parent-id cg-Xdiffdo cg-Xmergefile \
-	cg-add cg-admin-lsobj cg-cancel cg-clone cg-commit cg-diff \
-	cg-export cg-help cg-init cg-log cg-ls cg-merge cg-mkpatch \
-	cg-patch cg-pull cg-branch-add cg-branch-ls cg-rm cg-seek cg-status \
-	cg-tag cg-tag-ls cg-admin-uncommit cg-update cg-Xlib cg-restore
+SCRIPT=	commit-id tree-id parent-id cg-add cg-admin-lsobj cg-admin-uncommit \
+	cg-branch-add cg-branch-ls cg-cancel cg-clone cg-commit cg-diff \
+	cg-export cg-help cg-init cg-log cg-ls cg-merge cg-mkpatch cg-patch \
+	cg-pull cg-restore cg-rm cg-seek cg-status cg-tag cg-tag-ls cg-update
 
-COMMON=	read-cache.o
+LIB_SCRIPT=cg-Xlib cg-Xdiffdo cg-Xmergefile
 
 GEN_SCRIPT= cg-version
 
 VERSION= VERSION
+
+COMMON=	read-cache.o
 
 LIB_OBJS=read-cache.o sha1_file.o usage.o object.o commit.o tree.o blob.o \
 	 tag.o date.o
@@ -127,12 +129,27 @@ git.spec: git.spec.in $(VERSION)
 	sed -e 's/@@VERSION@@/$(shell cat $(VERSION) | cut -d"-" -f2)/g' < $< > $@
 
 
-install: $(PROG) $(SCRIPTS) $(SCRIPT) $(GEN_SCRIPT)
+sedlibdir=$(shell echo $(libdir) | sed 's/\//\\\//g')
+
+install: $(PROG) $(SCRIPTS) $(SCRIPT) $(LIB_SCRIPT) $(GEN_SCRIPT)
 	$(INSTALL) -m755 -d $(DESTDIR)$(bindir)
 	$(INSTALL) $(PROG) $(SCRIPTS) $(SCRIPT) $(GEN_SCRIPT) $(DESTDIR)$(bindir)
+	$(INSTALL) -m755 -d $(DESTDIR)$(libdir)
+	$(INSTALL) $(LIB_SCRIPT) $(DESTDIR)$(libdir)
+	cd $(DESTDIR)$(bindir); \
+	for file in $(SCRIPT); do \
+		sed -e 's/\$${COGITO_LIB}/\$${COGITO_LIB:-$(sedlibdir)\/}/g' $$file > $$file.new; \
+		cat $$file.new > $$file; rm $$file.new; \
+	done
+	cd $(DESTDIR)$(libdir); \
+	for file in $(LIB_SCRIPT); do \
+		sed -e 's/\$${COGITO_LIB}/\$${COGITO_LIB:-$(sedlibdir)\/}/g' $$file > $$file.new; \
+		cat $$file.new > $$file; rm $$file.new; \
+	done
 
 uninstall:
 	cd $(DESTDIR)$(bindir) && rm $(PROG) $(SCRIPTS) $(SCRIPT) $(GEN_SCRIPT)
+	cd $(DESTDIR)$(libdir) && rm $(LIB_SCRIPT)
 
 
 clean:

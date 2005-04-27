@@ -8,7 +8,7 @@
 #
 # Takes the tag's name and optionally the associated ID.
 
-. cg-Xlib
+. ${COGITO_LIB}cg-Xlib
 
 name=$1
 id=$2

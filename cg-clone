@@ -11,7 +11,7 @@
 # parameter is omitted, the basename of the source repository is used as the
 # destination.
 
-. cg-Xlib
+. ${COGITO_LIB}cg-Xlib
 
 location=$1
 [ "$location" ] || die "usage: cg-clone SOURCE_LOC [DESTDIR]"

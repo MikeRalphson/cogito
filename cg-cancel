@@ -14,7 +14,7 @@
 # individual files in sync with their state at the time of the
 # last commit.
 
-. cg-Xlib
+. ${COGITO_LIB}cg-Xlib
 
 # Undo seek?
 branch=

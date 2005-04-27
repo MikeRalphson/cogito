@@ -5,7 +5,7 @@
 #
 # Takes the appropriate ID, defaults to HEAD.
 
-. cg-Xlib
+. ${COGITO_LIB}cg-Xlib
 
 SHA1="[A-Za-z0-9]{40}"
 SHA1ONLY="^$SHA1$"

@@ -10,7 +10,7 @@
 # Takes an -r followed with ID defaulting to HEAD, or id1:id2, forming
 # a range (id1;id2]. (Use "id1:" to take just everything from id1 to HEAD.)
 
-. cg-Xlib
+. ${COGITO_LIB}cg-Xlib
 
 omit_header=
 has_diffstat=

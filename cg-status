@@ -5,7 +5,7 @@
 #
 # Takes no arguments.
 
-. cg-Xlib
+. ${COGITO_LIB}cg-Xlib
 
 EXCLUDEFILE=$_git/exclude
 EXCLUDE=

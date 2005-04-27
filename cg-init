@@ -6,7 +6,7 @@
 # Takes an optional parameter which will make it "clone" a specified
 # remote repository.
 
-. cg-Xlib
+. ${COGITO_LIB}cg-Xlib
 
 uri=$1
 

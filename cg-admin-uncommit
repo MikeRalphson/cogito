@@ -8,7 +8,7 @@
 # removed from the repository. If no parameter is passed,
 # it uncommits the latest commit (HEAD).
 
-. cg-Xlib
+. ${COGITO_LIB}cg-Xlib
 
 base=$(commit-id) || exit 1
 

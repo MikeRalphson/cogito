@@ -16,7 +16,7 @@
 #
 # Takes the object type as the first parameter, defaults to all objects.
 
-. cg-Xlib
+. ${COGITO_LIB}cg-Xlib
 
 target=$1
 

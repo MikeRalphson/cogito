@@ -14,7 +14,7 @@
 # -e forces the editor to be brought up even when -m parameters were
 # passed to cg-commit.
 
-. cg-Xlib
+. ${COGITO_LIB}cg-Xlib
 
 
 [ -s $_git/blocked ] && die "committing blocked: $(cat $_git/blocked)"

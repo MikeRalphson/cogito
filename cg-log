@@ -22,7 +22,7 @@
 # The rest of arguments are took as filenames; cg-log then displays
 # only changes in those files.
 
-. cg-Xlib
+. ${COGITO_LIB}cg-Xlib
 # Try to fix the annoying "Broken pipe" output. May not help, but apparently
 # at least somewhere it does. Bash is broken.
 trap exit SIGPIPE

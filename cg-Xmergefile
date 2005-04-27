@@ -21,7 +21,7 @@
 # do any merges that migth change the tree layout
 #
 
-. cg-Xlib
+. ${COGITO_LIB}cg-Xlib
 
 # if the directory is newly added in a branch, it might not exist
 # in the current tree

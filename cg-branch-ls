@@ -5,7 +5,7 @@
 #
 # Takes no parameters.
 
-. cg-Xlib
+. ${COGITO_LIB}cg-Xlib
 
 mkdir -p $_git/branches
 [ "$(find $_git/branches -follow -type f)" ] \

@@ -5,7 +5,7 @@
 #
 # Takes the branch' name, defaulting to "origin".
 
-. cg-Xlib
+. ${COGITO_LIB}cg-Xlib
 
 name=$1
 [ "$name" ] || { [ -s $_git/refs/heads/origin ] && name=origin; }

@@ -5,7 +5,7 @@
 #
 # Takes no parameters.
 
-. cg-Xlib
+. ${COGITO_LIB}cg-Xlib
 
 mkdir -p $_git/refs/tags
 [ "$(find $_git/refs/tags -follow -type f)" ] \

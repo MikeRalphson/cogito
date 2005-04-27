@@ -33,7 +33,7 @@
 #
 # Takes the branch' name and location as parameters.
 
-. cg-Xlib
+. ${COGITO_LIB}cg-Xlib
 
 name=$1
 location=$2

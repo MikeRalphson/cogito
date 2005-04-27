@@ -20,7 +20,7 @@
 #
 # Takes the target commit ID.
 
-. cg-Xlib
+. ${COGITO_LIB}cg-Xlib
 
 dstcommit=$1
 

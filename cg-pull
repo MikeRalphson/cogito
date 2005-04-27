@@ -7,7 +7,7 @@
 #
 # Takes the branch' name, defaulting to "origin".
 
-. cg-Xlib
+. ${COGITO_LIB}cg-Xlib
 
 name=$1
 

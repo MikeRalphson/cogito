@@ -5,7 +5,7 @@
 #
 # Takes an optional argument describing the command to show the help for.
 
-. cg-Xlib
+. ${COGITO_LIB}cg-Xlib
 
 
 if [ "$1" ]; then

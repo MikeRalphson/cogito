@@ -6,7 +6,7 @@
 # Takes a list of file names at the command line, and schedules them
 # for addition to the GIT repository at the next commit.
 
-. cg-Xlib
+. ${COGITO_LIB}cg-Xlib
 
 [ "$1" ] || die "usage: cg-add FILE..."
 
