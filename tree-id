@@ -5,13 +5,10 @@
 #
 # Takes ID of the appropriate commit, defaults to HEAD.
 
-SHA1="[A-Za-z0-9]{40}"
-TREE="^tree $SHA1$"
-
 id="$1"
 
-if [ ! "$id" ] || [ "$(git-cat-file -t "$id")" != "tree" ]; then
-	id=$(git-cat-file commit $(commit-id "$id") | egrep "$TREE" | cut -d ' ' -f 2 | head -n 1)
+if [ ! "$id" ] || [ "$(git-cat-file -t "$id" 2>/dev/null)" != "tree" ]; then
+	id=$(git-cat-file commit $(commit-id "$id") | sed -e 's/tree //;q')
 fi
 
 if [ "$(git-cat-file -t "$id")" != "tree" ]; then
