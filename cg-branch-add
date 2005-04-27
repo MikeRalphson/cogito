@@ -39,8 +39,7 @@ if [ "$name" = "this" ] || [ "$name" = "HEAD" ]; then
 fi
 
 mkdir -p .git/branches
-if [ -s ".git/branches/$name" ] || [ -s ".git/refs/heads/$name" ]; then
-	die "branch already exists"
-fi
+[ -s ".git/branches/$name" ] && die "branch already exists"
+[ -s ".git/refs/heads/$name" ] && echo "warning: I already have head of this branch" >&2
 
 echo "$location" >.git/branches/$name
