@@ -59,6 +59,14 @@ if [ "$head" = "$base" ]; then
 
 	read-tree -m $(tree-id $branch)
 	echo $branch >.git/HEAD
+
+	# Kill gone files
+	diff-tree -z -r $base $branch | grep -z '^-' | xargs -0 bash -c '
+		while [ "$1" ]; do
+			echo "$(echo "$1" | cut -f 4-)"
+			shift
+		done
+	' padding
 	checkout-cache -f -a
 
 	grep -v '^[^ @+-]' $patchfile | cg-patch
