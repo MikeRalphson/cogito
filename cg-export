@@ -3,20 +3,44 @@
 # Exports a particular revision from a GIT repository.
 # Copyright (c) Johannes E. Schindelin, 2005
 #
-# Takes a target directory and optionally an id as a parameter,
+# Takes a destination and optionally an id as a parameter,
 # defaulting to HEAD.
+#
+# The destination can be either a .tar, .tar.gz, .tar.bz2 or .tgz
+# for generating a tarball. Other destination specifiers are assumed
+# to be directory names, and the tree is exported to the given directory.
 
 . cg-Xlib
 
-destdir=$1
+dest=$1
 id=$(tree-id $2)
 
-([ "$destdir" ] && [ "$id" ]) || die "usage: cg-export DESTDIR [TREE_ID]"
+([ "$dest" ] && [ "$id" ]) || die "usage: cg-export DEST [TREE_ID]"
 
-[ -e "$destdir" ] && die "$destdir already exists."
+[ -e "$dest" ] && die "$dest already exists."
 
-mkdir -p $destdir || die "cannot create $destdir"
-export GIT_INDEX_FILE="$destdir/.git-index"
-git-read-tree $id
-git-checkout-cache "--prefix=$destdir/" -a
-rm $GIT_INDEX_FILE
+case $dest in
+	*.tar|*.tar.gz|*.tar.bz2|*.tgz)
+		base=${dest%.tar*}
+		base=${base%.tgz}
+		ext=${dest#$base}
+		case $ext in
+		.tar.gz|.tgz)
+			git-tar-tree $id "$base" | gzip -c9 $tar > $dest
+			;;
+		.tar.bz2)
+			git-tar-tree $id "$base" | bzip2 -c $tar > $dest
+			;;
+		.tar)
+			git-tar-tree $id "$base" > $dest
+			;;
+		esac
+		;;
+	*)
+		mkdir -p $dest || die "cannot create $dest"
+		export GIT_INDEX_FILE="$dest/.git-index"
+		git-read-tree $id
+		git-checkout-cache "--prefix=$dest/" -a
+		rm $GIT_INDEX_FILE
+	;;
+esac
