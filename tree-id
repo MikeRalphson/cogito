@@ -6,14 +6,17 @@
 # Takes ID of the appropriate commit, defaults to HEAD.
 
 id="$1"
+normid=$(cg-Xnormid "$id") || exit 1
+type=$(git-cat-file -t "$normid")
 
-if [ ! "$id" ] || [ "$(git-cat-file -t "$id" 2>/dev/null)" != "tree" ]; then
-	id=$(git-cat-file commit $(commit-id "$id") | sed -e 's/tree //;q')
+if [ "$type" = "commit" ]; then
+	normid=$(git-cat-file commit "$normid" | sed -e 's/tree //;q')
+	type=$(git-cat-file -t "$normid")
 fi
 
-if [ "$(git-cat-file -t "$id")" != "tree" ]; then
-	echo "Invalid id: $id" >&2
+if [ "$type" != "tree" ]; then
+	echo "Invalid tree id: $id" >&2
 	exit 1
 fi
 
-echo $id
+echo $normid
