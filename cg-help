@@ -5,6 +5,15 @@
 
 . cg-Xlib
 
+
+if [ "$1" ]; then
+	cmd=$(echo "$1" | sed 's/^cg-//')
+	which "cg-$cmd" >/dev/null 2>&1 || exit 1
+	cat $(which cg-$cmd) | sed -n '3,/^$/s/^# *//p'
+	exit
+fi
+
+
 cat <<__END__
 The Cogito version control system  $(cg-version)
 
@@ -19,7 +28,7 @@ Available commands:
 	cg-commit	[FILE]...	< log message on stdin
 	cg-diff		[-p] [-r FROM_ID[:TO_ID]] [FILE]...
 	cg-export	DESTDIR [TREE_ID]
-	cg-help
+	cg-help		[COMMAND]
 	cg-init		[SOURCE_LOC]
 	cg-log		[-c] [COMMIT_ID | COMMIT_ID:COMMIT_ID]
 	cg-ls		[TREE_ID]
@@ -44,4 +53,7 @@ Note that these expressions can be used interchangably as "ID"s:
 	shortcut hash (shorted unambiguous hash lead)
 	commit object hash (as returned by commit-id)
 	tree object hash (accepted only by some commands)
+
+For details on individual commands, in example do:
+	cg-help		cg-log
 __END__
