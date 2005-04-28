@@ -2,6 +2,8 @@
 #
 # The help for the Cogito toolkit.
 # Copyright (c) Petr Baudis, 2005
+#
+# Takes an optional argument describing the command to show the help for.
 
 . cg-Xlib
 
@@ -54,6 +56,6 @@ Note that these expressions can be used interchangably as "ID"s:
 	commit object hash (as returned by commit-id)
 	tree object hash (accepted only by some commands)
 
-For details on individual commands, in example do:
-	cg-help		cg-log
+For details on individual commands, do e.g.:
+	cg-help cg-log
 __END__
