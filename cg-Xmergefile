@@ -92,7 +92,9 @@ case "${1:-.}${2:-.}${3:-.}" in
 	fi
 	chmod "$6" "$src2"
 	if ! merge "$src2" "$orig" "$src1"; then
-		error "Auto-merge failed"
+		# The user already gets the warning from merge itself and
+		# from merge-cache too. This is too much.
+		#error "Auto-merge failed"
 		mv -- "$src2" "$4"
 		ret=1
 
