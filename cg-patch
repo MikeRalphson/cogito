@@ -45,7 +45,7 @@ tee $patchfifo | egrep '^[+-]{3}[ \t]' | {
 			mode=$(echo $attrs | sed 's/.*mode:[0-7]*\([0-7]\{3\}\).*/\1/')
 			if [ "$mode" ] && [ "$mode" != "$attrs" ] && [ "$origmode" != "$mode" ]; then
 				tocm=$(echo "$file" | sed 's/[^\/]*\///') #-p1
-				echo -ne "cm\0 $mode\0$tocm\0"
+				echo -ne "cm\0 $mode\000$tocm\0"
 			fi
 			;;
 		*)
@@ -72,7 +72,15 @@ while [ "$1" ]; do
 	case "$op" in
 	"add") cg-add "$1"; shift;;
 	"rm")  rm -- "$1" && cg-rm "$1"; shift;;
-	"cm")  chmod "$1" "$2"; shift; shift;;
+	"cm")
+		mode=$1; shift
+		# $mode contains leading space due to echo braindamage
+		if [ "${mode:1:1}" = "7" ]; then
+			mask=$(printf %o $((8#777&~8#$(umask))))
+		else
+			mask=$(printf %o $((8#666&~8#$(umask))))
+		fi
+		chmod "$mask" "$1"; shift; shift;;
 	esac
 done
 ' padding
