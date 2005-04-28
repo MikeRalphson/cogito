@@ -38,7 +38,7 @@ static int get_stat_data(struct cache_entry *ce, unsigned char **sha1p, unsigned
 	return 0;
 }
 
-static int show_new_file(struct cache_entry *new)
+static void show_new_file(struct cache_entry *new)
 {
 	unsigned char *sha1;
 	unsigned int mode;
