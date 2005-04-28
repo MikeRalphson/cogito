@@ -6,7 +6,12 @@
 #include "cache.h"
 #include "diff.h"
 
-static const char *show_diff_usage = "show-diff [-q] [-s] [-z] [paths...]";
+static const char *show_diff_usage =
+"show-diff [-p] [-q] [-r] [-z] [paths...]";
+
+static int generate_patch = 0;
+static int line_termination = '\n';
+static int silent = 0;
 
 static int matches_pathspec(struct cache_entry *ce, char **spec, int cnt)
 {
@@ -23,24 +28,57 @@ static int matches_pathspec(struct cache_entry *ce, char **spec, int cnt)
 	return 0;
 }
 
+static void show_unmerge(const char *path)
+{
+	if (generate_patch)
+		diff_unmerge(path);
+	else
+		printf("U %s%c", path, line_termination);
+}
+
+static void show_file(int pfx, struct cache_entry *ce)
+{
+	if (generate_patch)
+		diff_addremove(pfx, ntohl(ce->ce_mode), ce->sha1,
+			       ce->name, NULL);
+	else
+		printf("%c%06o\t%s\t%s\t%s%c",
+		       pfx, ntohl(ce->ce_mode), "blob",
+		       sha1_to_hex(ce->sha1), ce->name, line_termination);
+}
+
+static void show_modified(int oldmode, int mode,
+			  const char *old_sha1, const char *sha1,
+			  char *path)
+{
+	char old_sha1_hex[41];
+	strcpy(old_sha1_hex, sha1_to_hex(old_sha1));
+
+	if (generate_patch)
+		diff_change(oldmode, mode, old_sha1, sha1, path, NULL);
+	else
+		printf("*%06o->%06o\tblob\t%s->%s\t%s%c",
+		       oldmode, mode, old_sha1_hex, sha1_to_hex(sha1), path,
+		       line_termination);
+}
+
 int main(int argc, char **argv)
 {
-	int silent = 0;
-	int silent_on_nonexisting_files = 0;
-	int machine_readable = 0;
-	int reverse = 0;
+	static const char null_sha1[20] = { 0, };
 	int entries = read_cache();
 	int i;
 
 	while (1 < argc && argv[1][0] == '-') {
-		if  (!strcmp(argv[1], "-R"))
-			reverse = 1;
-		else if (!strcmp(argv[1], "-s"))
-			silent_on_nonexisting_files = silent = 1;
+		if (!strcmp(argv[1], "-p"))
+			generate_patch = 1;
 		else if (!strcmp(argv[1], "-q"))
-			silent_on_nonexisting_files = 1;
+			silent = 1;
+		else if (!strcmp(argv[1], "-r"))
+			; /* no-op */
+		else if (!strcmp(argv[1], "-s"))
+			; /* no-op */
 		else if (!strcmp(argv[1], "-z"))
-			machine_readable = 1;
+			line_termination = 0;
 		else
 			usage(show_diff_usage);
 		argv++; argc--;
@@ -56,6 +94,7 @@ int main(int argc, char **argv)
 
 	for (i = 0; i < entries; i++) {
 		struct stat st;
+		unsigned int oldmode, mode;
 		struct cache_entry *ce = active_cache[i];
 		int changed;
 
@@ -64,11 +103,7 @@ int main(int argc, char **argv)
 			continue;
 
 		if (ce_stage(ce)) {
-			if (machine_readable)
-				printf("U %s%c", ce->name, 0);
-			else
-				printf("%s: Unmerged\n",
-				       ce->name);
+			show_unmerge(ce->name);
 			while (i < entries &&
 			       !strcmp(ce->name, active_cache[i]->name))
 				i++;
@@ -77,28 +112,24 @@ int main(int argc, char **argv)
 		}
  
 		if (stat(ce->name, &st) < 0) {
-			if (errno == ENOENT && silent_on_nonexisting_files)
+			if (errno != ENOENT) {
+				perror(ce->name);
 				continue;
-			if (machine_readable)
-				printf("X %s%c", ce->name, 0);
-			else {
-				printf("%s: %s\n", ce->name, strerror(errno));
-				if (errno == ENOENT)
-					show_diff_empty(ce, reverse);
-			}
+			}	
+			if (silent)
+				continue;
+			show_file('-', ce);
 			continue;
 		}
 		changed = cache_match_stat(ce, &st);
 		if (!changed)
 			continue;
-		if (!machine_readable)
-			printf("%s: %s\n", ce->name, sha1_to_hex(ce->sha1));
-		else
-			printf("M %s %s%c", sha1_to_hex(ce->sha1), ce->name, 0);
-		if (silent)
-			continue;
 
-		show_differences(ce, reverse);
+		oldmode = ntohl(ce->ce_mode);
+		mode = S_IFREG | ce_permissions(st.st_mode);
+
+		show_modified(oldmode, mode, ce->sha1, null_sha1,
+			      ce->name);
 	}
 
 	return 0;
