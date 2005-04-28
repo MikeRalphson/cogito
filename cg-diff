@@ -60,21 +60,6 @@ fi
 
 if [ "$id2" = " " ]; then
 	if [ "$id1" != " " ]; then
-		export GIT_INDEX_FILE=$(mktemp -t gitdiff.XXXXXX)
-		cp .git/index $GIT_INDEX_FILE
-		read-tree -m $(tree-id "$id1")
-
-		# We need to carry over our adds/removes to this
-		# index file.
-		( export -n GIT_INDEX_FILE; diff-cache -r -z --cached $(tree-id "$id1") ) \
-			| grep -z '^[+-]' \
-			| xargs -0 bash -c '
-				while [ "$1" ]; do
-					update-cache --add --remove -- "$(echo "$1" | cut -f 4-)"
-					shift
-				done
-			' padding
-
 		tree=$(tree-id "$id1")
 	else
 		tree=$(tree-id)
@@ -88,9 +73,6 @@ if [ "$id2" = " " ]; then
 	ret=
 	diff-cache -r -z $tree | xargs -0 cg-Xdiffdo "$tree" uncommitted "$filter"
 
-	if [ "$id1" != " " ]; then
-		rm $GIT_INDEX_FILE
-	fi
 	[ "$filter" ] && rm $filter
 
 	[ "$ret" ] && die "no files matched"
