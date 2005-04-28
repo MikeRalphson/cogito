@@ -7,44 +7,12 @@
 
 . ${COGITO_LIB}cg-Xlib
 
-SHA1="[A-Za-z0-9]{40}"
-SHA1ONLY="^$SHA1$"
+id="$1"
+normid=$(cg-Xnormid "$id") || exit 1
 
-id=$1
-if [ ! "$id" ] || [ "$id" = "this" ] || [ "$id" = "HEAD" ]; then
-	id=$(cat $_git/HEAD)
-fi
-
-if (echo $id | egrep -vq "$SHA1ONLY") && [ -r "$_git/refs/tags/$id" ]; then
-	id=$(cat "$_git/refs/tags/$id")
-fi
-
-if (echo $id | egrep -vq "$SHA1ONLY") && [ -r "$_git/refs/heads/$id" ]; then
-	id=$(cat "$_git/refs/heads/$id")
-fi
-
-idpref=$(echo "$id" | cut -c -2)
-idpost=$(echo "$id" | cut -c 3-)
-if [ $(find "$_git_objects/$idpref" -name "$idpost*" 2>/dev/null | wc -l) -eq 1 ]; then
-	id=$idpref$(basename $(echo $_git_objects/$idpref/$idpost*))
-fi
-
-if echo $id | egrep -vq "$SHA1ONLY"; then
-	echo "Invalid id: $id" >&2
+if [ "$(git-cat-file -t "$normid")" != "commit" ]; then
+	echo "Invalid commit id: $id" >&2
 	exit 1
 fi
 
-type="$(git-cat-file -t "$id")"
-
-if [ "$type" = "tag" ]; then
-	id=$(git-cat-file tag "$id" | head -n 1)
-	id="${id#object }"
-	type="$(git-cat-file -t "$id")"
-fi
-
-if [ "$type" != "commit" ]; then
-	echo "Invalid id: $id" >&2
-	exit 1
-fi
-
-echo $id
+echo $normid
