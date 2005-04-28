@@ -132,11 +132,11 @@ if ! merge-cache cg-Xmergefile -a || [ "$careful" ]; then
 __END__
 	exit 2
 fi
+checkout-cache -f -a
 
 echo
 readtree=
 cg-commit -C || { readtree=1 ; echo "cg-merge: COMMIT FAILED, retry manually" >&2; }
 
-checkout-cache -f -a
 [ "$readtree" ] && read-tree -m $(tree-id)
 update-cache --refresh
