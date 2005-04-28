@@ -4,9 +4,9 @@
 # Copyright (c) Petr Baudis, 2005
 #
 # Takes ID of the current commit, defaults to HEAD.
-
-PARENT="^parent [A-Za-z0-9]{40}$"
+#
+# NOTE: Will return multiple SHA1s if ID is a commit with multiple parents.
 
 id=$(commit-id $1) || exit 1
 
-git-cat-file commit $id | egrep "$PARENT" | cut -d ' ' -f 2
+git-cat-file commit $id | awk '/^parent/{print $2};/^$/{exit}'
