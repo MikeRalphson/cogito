@@ -1,11 +1,8 @@
 #!/usr/bin/env bash
 #
 # Make a log of changes in a GIT branch.
-#
-# This script was originally written by (c) Ross Vandegrift.
-# Adapted to his scripts set by (c) Petr Baudis, 2005.
-# Major optimizations by (c) Phillip Lougher.
-# Rendered trivial by Linus Torvalds.
+# Copyright (c) Petr Baudis, 2005.
+# Copyright (c) David Woodhouse, 2005.
 #
 # Takes a -c option to add color to the output.
 # Currently, the colors are:
