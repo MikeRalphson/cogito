@@ -46,6 +46,11 @@ else
 	[ -s .git/merging ] && merging=$(cat .git/merging | sed 's/^/-p /')
 fi
 
+LOGMSG=$(mktemp -t gitci.XXXXXX)
+LOGMSG2=$(mktemp -t gitci2.XXXXXX)
+echo CG: ---------------------------------------------------------- >>$LOGMSG
+echo CG: Lines beggining with CG: will be automatically removed     >>$LOGMSG
+echo CG:                                                            >>$LOGMSG
 if [ ! "$ignorecache" ]; then
 	if [ ! "${commitfiles[*]}" ]; then
 		echo 'Nothing to commit.' >&2
@@ -54,15 +59,13 @@ if [ ! "$ignorecache" ]; then
 	for file in "${commitfiles[@]}"; do
 		# Prepend a letter describing whether it's addition,
 		# removal or update. Or call git status on those files.
-		echo $file;
+		echo CG: $file >>$LOGMSG
 	done
+	echo CG: >>$LOGMSG
 fi
 
-echo "Enter commit message, terminated by ctrl-D on a separate line:"
-LOGMSG=$(mktemp -t gitci.XXXXXX)
 if [ "$merging" ]; then
 	echo -n 'Merge with ' >>$LOGMSG
-	echo -n 'Merge with '
 	[ -s .git/merging-sym ] || cp .git/merging .git/merging-sym
 	for sym in $(cat .git/merging-sym); do
 		uri=$(cat .git/branches/$sym)
@@ -70,10 +73,13 @@ if [ "$merging" ]; then
 		echo "$uri" >>$LOGMSG
 		echo "$uri"
 	done
-	echo >>$LOGMSG; echo
+	echo >>$LOGMSG
 fi
-cat >>$LOGMSG
-
+cp $LOGMSG $LOGMSG2
+${EDITOR:-vi} $LOGMSG2
+[ $LOGMSG2 -nt $LOGMSG ] || die 'Commit message not modified, commit aborted'
+grep -v ^CG: $LOGMSG2 >$LOGMSG
+rm $LOGMSG2
 
 if [ ! "$ignorecache" ]; then
 	if [ "$customfiles" ]; then
