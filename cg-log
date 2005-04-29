@@ -18,6 +18,9 @@
 # Takes an -r followed with id resolving to a commit to start from
 # (HEAD by default), or id1:id2 representing an (id1;id2] range
 # of commits to show.
+#
+# The rest of arguments are took as filenames; cg-log then displays
+# only changes in those files.
 
 . cg-Xlib
 
@@ -98,6 +101,10 @@ $revls | $revsort | while read time commit parents; do
 	tree1=
 	tree2=
 	[ "$revfmt" = "git-rev-list" ] && commit="$time"
+	if [ $# -ne 0 ]; then
+		parent=$(git-cat-file commit $commit | sed -n '2s/parent //p;2Q')
+		[ "$parent" ] && [ "$(git-diff-tree -r $commit $parent "$@")" ] || continue
+	fi
 	echo $colheader""commit ${commit%:*} $coldefault;
 	git-cat-file commit $commit | \
 		while read key rest; do
