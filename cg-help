@@ -42,6 +42,7 @@ Available commands:
 	cg-seek		[COMMIT_ID]
 	cg-status
 	cg-tag		TNAME [COMMIT_ID]
+	cg-tag-ls
 	cg-update	[BNAME]
 	cg-version
 

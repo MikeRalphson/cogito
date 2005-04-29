@@ -1,0 +1,19 @@
+#!/usr/bin/env bash
+#
+# List stored GIT tags.
+# Copyright (c) Steve Hoelzer 2005
+#
+# Takes no parameters.
+
+. cg-Xlib
+
+mkdir -p .git/refs/tags
+[ "$(find .git/refs/tags -follow -type f)" ] \
+       || die "List of tags is empty. See cg-tag."
+
+cd .git/refs/tags
+for tag in *; do
+       echo -n $tag
+       echo -ne "\t"
+       cat $tag
+done

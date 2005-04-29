@@ -47,7 +47,7 @@ SCRIPT=	commit-id tree-id parent-id cg-Xdiffdo cg-Xmergefile \
 	cg-add cg-admin-lsobj cg-cancel cg-clone cg-commit cg-diff \
 	cg-export cg-help cg-init cg-log cg-ls cg-merge cg-mkpatch \
 	cg-patch cg-pull cg-branch-add cg-branch-ls cg-rm cg-seek cg-status \
-	cg-tag cg-update cg-Xlib
+	cg-tag cg-tag-ls cg-update cg-Xlib
 
 COMMON=	read-cache.o
 
