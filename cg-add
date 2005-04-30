@@ -10,10 +10,12 @@
 
 [ "$1" ] || die "usage: cg-add FILE..."
 
-if [ -f "$1" ]; then
-       echo "Adding file $1"
-else
-       die "$1 does not exist"
-fi
+for file in "$@"; do
+	if [ -f "$file" ]; then
+		echo "Adding file $file"
+	else
+		die "$file does not exist"
+	fi
+done
 
 git-update-cache --add -- "$@"
