@@ -8,7 +8,7 @@
 . cg-Xlib
 
 {
-	show-files -z -t --others --deleted --unmerged
+	git-ls-files -z -t --others --deleted --unmerged
 } | sort -z -k 2 | xargs -0 sh -c '
 while [ "$1" ]; do
 	tag=${1% *};

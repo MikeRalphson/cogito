@@ -1,11 +1,11 @@
-#include "cache.h"
-
 #include <sys/types.h>
 #include <dirent.h>
 
+#include "cache.h"
 #include "commit.h"
 #include "tree.h"
 #include "blob.h"
+#include "tag.h"
 
 #define REACHABLE 0x0001
 
@@ -21,16 +21,31 @@ static void check_connectivity(void)
 	/* Look up all the requirements, warn about missing objects.. */
 	for (i = 0; i < nr_objs; i++) {
 		struct object *obj = objs[i];
+		struct object_list *refs;
+
+		if (!obj->parsed) {
+			printf("missing %s %s\n", obj->type, sha1_to_hex(obj->sha1));
+			continue;
+		}
+
+		for (refs = obj->refs; refs; refs = refs->next) {
+			if (refs->item->parsed)
+				continue;
+			printf("broken link from %7s %s\n",
+			       obj->type, sha1_to_hex(obj->sha1));
+			printf("              to %7s %s\n",
+			       obj->type, sha1_to_hex(refs->item->sha1));
+		}
+
+		/* Don't bother with tag reachability. */
+		if (obj->type == tag_type)
+			continue;
 
 		if (show_unreachable && !(obj->flags & REACHABLE)) {
 			printf("unreachable %s %s\n", obj->type, sha1_to_hex(obj->sha1));
 			continue;
 		}
 
-		if (!obj->parsed) {
-			printf("missing %s %s\n", obj->type, 
-			       sha1_to_hex(obj->sha1));
-		}
 		if (!obj->used) {
 			printf("dangling %s %s\n", obj->type, 
 			       sha1_to_hex(obj->sha1));
@@ -38,121 +53,111 @@ static void check_connectivity(void)
 	}
 }
 
-static int fsck_tree(unsigned char *sha1, void *data, unsigned long size)
+static int fsck_tree(struct tree *item)
 {
-	struct tree *item = lookup_tree(sha1);
-	if (parse_tree(item))
-		return -1;
 	if (item->has_full_path) {
 		fprintf(stderr, "warning: fsck-cache: tree %s "
-			"has full pathnames in it\n", sha1_to_hex(sha1));
+			"has full pathnames in it\n", 
+			sha1_to_hex(item->object.sha1));
 	}
 	return 0;
 }
 
-static int fsck_commit(unsigned char *sha1, void *data, unsigned long size)
+static int fsck_commit(struct commit *commit)
 {
-	struct commit *commit = lookup_commit(sha1);
-	if (parse_commit(commit))
-		return -1;
 	if (!commit->tree)
 		return -1;
 	if (!commit->parents && show_root)
-		printf("root %s\n", sha1_to_hex(sha1));
+		printf("root %s\n", sha1_to_hex(commit->object.sha1));
 	if (!commit->date)
-		printf("bad commit date in %s\n", sha1_to_hex(sha1));
+		printf("bad commit date in %s\n", 
+		       sha1_to_hex(commit->object.sha1));
 	return 0;
 }
 
-static int fsck_blob(unsigned char *sha1, void *data, unsigned long size)
+static int fsck_tag(struct tag *tag)
 {
-	struct blob *blob = lookup_blob(sha1);
-	blob->object.parsed = 1;
-	return 0;
-}
-
-static int fsck_tag(unsigned char *sha1, void *data, unsigned long size)
-{
-	int typelen, taglen;
-	unsigned char object[20];
-	char object_hex[60];
-	const char *type_line, *tag_line, *sig_line;
-
-	if (size < 64)
-		return -1;
-	if (memcmp("object ", data, 7) || get_sha1_hex(data + 7, object))
-		return -1;
-
-	type_line = data + 48;
-	if (memcmp("\ntype ", type_line-1, 6))
-		return -1;
-
-	tag_line = strchr(type_line, '\n');
-	if (!tag_line || memcmp("tag ", ++tag_line, 4))
-		return -1;
-
-	sig_line = strchr(tag_line, '\n');
-	if (!sig_line)
-		return -1;
-	sig_line++;
-
-	typelen = tag_line - type_line - strlen("type \n");
-	if (typelen >= 20)
-		return -1;
-	taglen = sig_line - tag_line - strlen("tag \n");
-
 	if (!show_tags)
 		return 0;
 
-	strcpy(object_hex, sha1_to_hex(object));
-	printf("tagged %.*s %s (%.*s) in %s\n",
-		typelen, type_line + 5,
-		object_hex,
-		taglen, tag_line + 4,
-		sha1_to_hex(sha1));
+	printf("tagged %s %s",
+	       tag->tagged->type,
+	       sha1_to_hex(tag->tagged->sha1));
+	printf(" (%s) in %s\n",
+	       tag->tag, sha1_to_hex(tag->object.sha1));
 	return 0;
 }
 
-static int fsck_entry(unsigned char *sha1, char *tag, void *data, 
-		      unsigned long size)
+static int fsck_sha1(unsigned char *sha1)
 {
-	if (!strcmp(tag, "blob")) {
-		if (fsck_blob(sha1, data, size) < 0)
-			return -1;
-	} else if (!strcmp(tag, "tree")) {
-		if (fsck_tree(sha1, data, size) < 0)
-			return -1;
-	} else if (!strcmp(tag, "commit")) {
-		if (fsck_commit(sha1, data, size) < 0)
-			return -1;
-	} else if (!strcmp(tag, "tag")) {
-		if (fsck_tag(sha1, data, size) < 0)
-			return -1;
-	} else
+	struct object *obj = parse_object(sha1);
+	if (!obj)
 		return -1;
-	return 0;
+	if (obj->type == blob_type)
+		return 0;
+	if (obj->type == tree_type)
+		return fsck_tree((struct tree *) obj);
+	if (obj->type == commit_type)
+		return fsck_commit((struct commit *) obj);
+	if (obj->type == tag_type)
+		return fsck_tag((struct tag *) obj);
+	return -1;
 }
 
-static int fsck_name(char *hex)
-{
+/*
+ * This is the sorting chunk size: make it reasonably
+ * big so that we can sort well..
+ */
+#define MAX_SHA1_ENTRIES (1024)
+
+struct sha1_entry {
+	unsigned long ino;
 	unsigned char sha1[20];
-	if (!get_sha1_hex(hex, sha1)) {
-		unsigned long mapsize;
-		void *map = map_sha1_file(sha1, &mapsize);
-		if (map) {
-			char type[100];
-			unsigned long size;
-			void *buffer = unpack_sha1_file(map, mapsize, type, &size);
-			if (!buffer)
-				return -1;
-			if (check_sha1_signature(sha1, buffer, size, type) < 0)
-				printf("sha1 mismatch %s\n", sha1_to_hex(sha1));
-			munmap(map, mapsize);
-			if (!fsck_entry(sha1, type, buffer, size))
-				return 0;
-		}
+};
+
+static struct {
+	unsigned long nr;
+	struct sha1_entry *entry[MAX_SHA1_ENTRIES];
+} sha1_list;
+
+static int ino_compare(const void *_a, const void *_b)
+{
+	const struct sha1_entry *a = _a, *b = _b;
+	unsigned long ino1 = a->ino, ino2 = b->ino;
+	return ino1 < ino2 ? -1 : ino1 > ino2 ? 1 : 0;
+}
+
+static void fsck_sha1_list(void)
+{
+	int i, nr = sha1_list.nr;
+
+	qsort(sha1_list.entry, nr, sizeof(struct sha1_entry *), ino_compare);
+	for (i = 0; i < nr; i++) {
+		struct sha1_entry *entry = sha1_list.entry[i];
+		unsigned char *sha1 = entry->sha1;
+
+		sha1_list.entry[i] = NULL;
+		if (fsck_sha1(sha1) < 0)
+			fprintf(stderr, "bad sha1 entry '%s'\n", sha1_to_hex(sha1));
+		free(entry);
 	}
-	return -1;
+	sha1_list.nr = 0;
+}
+
+static void add_sha1_list(unsigned char *sha1, unsigned long ino)
+{
+	struct sha1_entry *entry = xmalloc(sizeof(*entry));
+	int nr;
+
+	entry->ino = ino;
+	memcpy(entry->sha1, sha1, 20);
+	nr = sha1_list.nr;
+	if (nr == MAX_SHA1_ENTRIES) {
+		fsck_sha1_list();
+		nr = 0;
+	}
+	sha1_list.entry[nr] = entry;
+	sha1_list.nr = ++nr;
 }
 
 static int fsck_dir(int i, char *path)
@@ -166,6 +171,7 @@ static int fsck_dir(int i, char *path)
 
 	while ((de = readdir(dir)) != NULL) {
 		char name[100];
+		unsigned char sha1[20];
 		int len = strlen(de->d_name);
 
 		switch (len) {
@@ -179,8 +185,10 @@ static int fsck_dir(int i, char *path)
 		case 38:
 			sprintf(name, "%02x", i);
 			memcpy(name+2, de->d_name, len+1);
-			if (!fsck_name(name))
-				continue;
+			if (get_sha1_hex(name, sha1) < 0)
+				break;
+			add_sha1_list(sha1, de->d_ino);
+			continue;
 		}
 		fprintf(stderr, "bad sha1 file: %s/%s\n", path, de->d_name);
 	}
@@ -218,6 +226,7 @@ int main(int argc, char **argv)
 		sprintf(dir, "%s/%02x", sha1_dir, i);
 		fsck_dir(i, dir);
 	}
+	fsck_sha1_list();
 
 	heads = 0;
 	for (i = 1; i < argc; i++) {
@@ -226,8 +235,15 @@ int main(int argc, char **argv)
 		if (*arg == '-')
 			continue;
 
-		if (!get_sha1_hex(arg, head_sha1)) {
-			struct object *obj = &lookup_commit(head_sha1)->object;
+		if (!get_sha1(arg, head_sha1)) {
+			struct commit *commit = lookup_commit(head_sha1);
+			struct object *obj;
+
+			/* Error is printed by lookup_commit(). */
+			if (!commit)
+				continue;
+
+			obj = &commit->object;
 			obj->used = 1;
 			mark_reachable(obj, REACHABLE);
 			heads++;

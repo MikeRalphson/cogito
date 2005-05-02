@@ -12,13 +12,13 @@ void show_commit(struct commit *commit)
 	strcpy(hex, sha1_to_hex(commit->object.sha1));
 	printf("Id: %s\n", hex);
 	fflush(NULL);
-	sprintf(cmdline, "cat-file commit %s", hex);
+	sprintf(cmdline, "git-cat-file commit %s", hex);
 	system(cmdline);
 	if (commit->parents) {
 		char *against = sha1_to_hex(commit->parents->item->object.sha1);
 		printf("\n\n======== diff against %s ========\n", against);
 		fflush(NULL);
-		sprintf(cmdline, "diff-tree -p -r %s %s", against, hex);
+		sprintf(cmdline, "git-diff-tree -p %s %s", against, hex);
 		system(cmdline);
 	}
 	printf("======== end ========\n\n");
@@ -73,8 +73,8 @@ int main(int argc, char **argv)
 	unsigned char top_sha1[20];
 
 	if (argc < 2 || argc > 4 ||
-	    get_sha1_hex(argv[1], top_sha1) ||
-	    (argc == 3 && get_sha1_hex(argv[2], base_sha1)))
+	    get_sha1(argv[1], top_sha1) ||
+	    (argc == 3 && get_sha1(argv[2], base_sha1)))
 		usage("git-export top [base]");
 	export(get_commit(top_sha1), argc==3 ? get_commit(base_sha1) : NULL);
 	return 0;

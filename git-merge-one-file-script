@@ -14,14 +14,14 @@
 #
 #
 # Handle some trivial cases.. The _really_ trivial cases have
-# been handled already by read-tree, but that one doesn't
+# been handled already by git-read-tree, but that one doesn't
 # do any merges that migth change the tree layout
 #
 
 # if the directory is newly added in a branch, it might not exist
 # in the current tree
 dir=$(dirname "$4")
-mkdir -p "$dir"
+mkdir -p "$dir" || exit
 
 case "${1:-.}${2:-.}${3:-.}" in
 #
@@ -36,21 +36,19 @@ case "${1:-.}${2:-.}${3:-.}" in
 # deleted in one and unchanged in the other
 #
 "$1.$1" | "$1$1.")
-	rm -f -- "$4"
 	echo "Removing $4"
-	update-cache --remove -- "$4"
-	exit 0
+	rm -f -- "$4" && exec git-update-cache --remove -- "$4"
 	;;
-
 #
 # added in one
 #
 ".$2." | "..$3" )
-	echo "Adding $4 with perm $6$7"
-	cat-file blob "${2:-$3}" >"$4"
-	chmod "${6:-$7}" "$4"
-	update-cache --add -- $4
-	exit 0
+	case "$6$7" in *7??) mode=+x;; *) mode=-x;; esac
+	echo "Adding $4 with perm $mode"
+	rm -f -- "$4" &&
+		git-cat-file blob "$2$3" >"$4" &&
+		chmod "$mode" -- "$4" &&
+		exec git-update-cache --add -- "$4"
 	;;
 #
 # Added in both (check for same permissions)
@@ -60,32 +58,36 @@ case "${1:-.}${2:-.}${3:-.}" in
 		echo "ERROR: File $4 added in both branches, permissions conflict $6->$7"
 		exit 1
 	fi
-	echo "Adding $4 with perm $6"
-	cat-file blob "${2:-$3}" >"$4"
-	chmod "${6:-$7}" "$4"
-	update-cache --add -- $4
-	exit 0
+	case "$6" in *7??) mode=+x;; *) mode=-x;; esac
+	echo "Adding $4 with perm $mode"
+	rm -f -- "$4" &&
+		git-cat-file blob "$2" >"$4" &&
+		chmod "$mode" -- "$4" &&
+		exec git-update-cache --add -- "$4"
 	;;
 #
 # Modified in both, but differently ;(
 #
 "$1$2$3")
 	echo "Auto-merging $4"
-	orig=$(unpack-file $1)
-	src1=$(unpack-file $2)
-	src2=$(unpack-file $3)
+	orig=$(git-unpack-file $1)
+	src1=$(git-unpack-file $2)
+	src2=$(git-unpack-file $3)
 	ret=0
+
 	if [ "$6" != "$7" ]; then
 		echo "ERROR: Permissions conflict: $5->$6 here but merging $7"
 		ret=1
 	fi
-	chmod "$6" "$src2"
+	case "$6" in *7??) mode=+x;; *) mode=-x;; esac
+	chmod "$mode" "$src2"
+
 	if ! merge "$src2" "$orig" "$src1"; then
 		echo Conflicting merge!
 		mv -- "$src2" "$4"
 		ret=1
 
-	elif ! mv -- "$src2" "$4" && update-cache --add -- "$4"; then
+	elif ! mv -- "$src2" "$4" && git-update-cache --add -- "$4"; then
 		echo "Choosing $src2 -> $4 failed"
 		ret=1
 	fi
@@ -94,7 +96,6 @@ case "${1:-.}${2:-.}${3:-.}" in
 	;;
 
 *)
-	echo "Not handling case $1 -> $2 -> $3"
-	;;
+	echo "Not handling case $4: $1 -> $2 -> $3" ;;
 esac
 exit 1

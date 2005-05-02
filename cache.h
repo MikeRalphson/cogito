@@ -19,7 +19,16 @@
 #include <zlib.h>
 
 #if ZLIB_VERNUM < 0x1200
-#define deflateBound(c,s) ((s) + (((s) + 7) >> 3) + (((s) + 63) >> 6) + 11)
+#define deflateBound(c,s)  ((s) + (((s) + 7) >> 3) + (((s) + 63) >> 6) + 11)
+#endif
+
+#ifdef DT_UNKNOWN
+#define DTYPE(de)	((de)->d_type)
+#else
+#define DT_UNKNOWN	0
+#define DT_DIR		1
+#define DT_REG		2
+#define DTYPE(de)	DT_UNKNOWN
 #endif
 
 /*
@@ -138,6 +147,7 @@ extern int write_sha1_from_fd(const unsigned char *sha1, int fd);
 extern int has_sha1_file(const unsigned char *sha1);
 
 /* Convert to/from hex/sha1 representation */
+extern int get_sha1(const char *str, unsigned char *sha1);
 extern int get_sha1_hex(const char *hex, unsigned char *sha1);
 extern char *sha1_to_hex(const unsigned char *sha1);	/* static buffer result! */
 
@@ -148,9 +158,13 @@ extern int error(const char *err, ...);
 
 extern int cache_name_compare(const char *name1, int len1, const char *name2, int len2);
 
-extern void *read_tree_with_tree_or_commit_sha1(const unsigned char *sha1,
-						unsigned long *size,
-						unsigned char *tree_sha1_ret);
+extern void *read_object_with_reference(const unsigned char *sha1,
+					const unsigned char *required_type,
+					unsigned long *size,
+					unsigned char *sha1_ret);
+
+void parse_date(char *date, char *buf, int bufsize);
+void datestamp(char *buf, int bufsize);
 
 static inline void *xmalloc(int size)
 {

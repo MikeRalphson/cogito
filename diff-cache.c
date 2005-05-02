@@ -38,14 +38,14 @@ static int get_stat_data(struct cache_entry *ce, unsigned char **sha1p, unsigned
 	return 0;
 }
 
-static int show_new_file(struct cache_entry *new)
+static void show_new_file(struct cache_entry *new)
 {
 	unsigned char *sha1;
 	unsigned int mode;
 
 	/* New file in the index: it might actually be different in the working copy */
 	if (get_stat_data(new, &sha1, &mode) < 0)
-		return -1;
+		return;
 
 	show_file("+", new, sha1, mode);
 	return 0;
@@ -176,12 +176,12 @@ int main(int argc, char **argv)
 		usage(diff_cache_usage);
 	}
 
-	if (argc != 2 || get_sha1_hex(argv[1], tree_sha1))
+	if (argc != 2 || get_sha1(argv[1], tree_sha1))
 		usage(diff_cache_usage);
 
 	mark_merge_entries();
 
-	tree = read_tree_with_tree_or_commit_sha1(tree_sha1, &size, 0);
+	tree = read_object_with_reference(tree_sha1, "tree", &size, 0);
 	if (!tree)
 		die("bad tree object %s", argv[1]);
 	if (read_tree(tree, size, 1))

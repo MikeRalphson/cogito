@@ -45,9 +45,9 @@ else
 fi
 
 if [ "$curcommit" != "$dstcommit" ]; then
-	read-tree -m $(tree-id)
+	git-read-tree -m $(tree-id)
 	cg-diff -r $curcommit:$dstcommit | cg-patch
-	update-cache --refresh
+	git-update-cache --refresh
 fi
 
 echo "On commit $dstcommit"

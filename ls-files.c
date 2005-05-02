@@ -6,6 +6,7 @@
  * Copyright (C) Linus Torvalds, 2005
  */
 #include <dirent.h>
+#include <fnmatch.h>
 
 #include "cache.h"
 
@@ -21,6 +22,70 @@ static const char *tag_cached = "";
 static const char *tag_unmerged = "";
 static const char *tag_removed = "";
 static const char *tag_other = "";
+
+static int nr_excludes;
+static const char **excludes;
+static int excludes_alloc;
+
+static void add_exclude(const char *string)
+{
+	if (nr_excludes == excludes_alloc) {
+		excludes_alloc = alloc_nr(excludes_alloc);
+		excludes = realloc(excludes, excludes_alloc*sizeof(char *));
+	}
+	excludes[nr_excludes++] = string;
+}
+
+static void add_excludes_from_file(const char *fname)
+{
+	int fd, i;
+	long size;
+	char *buf, *entry;
+
+	fd = open(fname, O_RDONLY);
+	if (fd < 0)
+		goto err;
+	size = lseek(fd, 0, SEEK_END);
+	if (size < 0)
+		goto err;
+	lseek(fd, 0, SEEK_SET);
+	if (size == 0) {
+		close(fd);
+		return;
+	}
+	buf = xmalloc(size);
+	if (read(fd, buf, size) != size)
+		goto err;
+	close(fd);
+
+	entry = buf;
+	for (i = 0; i < size; i++) {
+		if (buf[i] == '\n') {
+			if (entry != buf + i) {
+				buf[i] = 0;
+				add_exclude(entry);
+			}
+			entry = buf + i + 1;
+		}
+	}
+	return;
+
+err:	perror(fname);
+	exit(1);
+}
+
+static int excluded(const char *pathname)
+{
+	int i;
+	if (nr_excludes) {
+		const char *basename = strrchr(pathname, '/');
+		basename = (basename) ? basename+1 : pathname;
+		for (i = 0; i < nr_excludes; i++)
+			if (fnmatch(excludes[i], basename, 0) == 0)
+				return 1;
+	}
+	return 0;
+}
 
 static const char **dir;
 static int nr_dir;
@@ -64,10 +129,12 @@ static void read_directory(const char *path, const char *base, int baselen)
 
 			if (de->d_name[0] == '.')
 				continue;
+			if (excluded(de->d_name) != show_ignored)
+				continue;
 			len = strlen(de->d_name);
 			memcpy(fullname + baselen, de->d_name, len+1);
 
-			switch (de->d_type) {
+			switch (DTYPE(de)) {
 			struct stat st;
 			default:
 				continue;
@@ -106,17 +173,17 @@ static void show_files(void)
 	int i;
 
 	/* For cached/deleted files we don't need to even do the readdir */
-	if (show_others | show_ignored) {
+	if (show_others) {
 		read_directory(".", "", 0);
 		qsort(dir, nr_dir, sizeof(char *), cmp_name);
-	}
-	if (show_others) {
 		for (i = 0; i < nr_dir; i++)
 			printf("%s%s%c", tag_other, dir[i], line_terminator);
 	}
 	if (show_cached | show_stage) {
 		for (i = 0; i < active_nr; i++) {
 			struct cache_entry *ce = active_cache[i];
+			if (excluded(ce->name) != show_ignored)
+				continue;
 			if (show_unmerged && !ce_stage(ce))
 				continue;
 			if (!show_stage)
@@ -138,15 +205,18 @@ static void show_files(void)
 		for (i = 0; i < active_nr; i++) {
 			struct cache_entry *ce = active_cache[i];
 			struct stat st;
+			if (excluded(ce->name) != show_ignored)
+				continue;
 			if (!stat(ce->name, &st))
 				continue;
 			printf("%s%s%c", tag_removed, ce->name, line_terminator);
 		}
 	}
-	if (show_ignored) {
-		/* We don't have any "ignore" list yet */
-	}
 }
+
+static const char *ls_files_usage =
+	"ls-files [-z] [-t] (--[cached|deleted|others|stage|unmerged])* "
+	"[ --ignored [--exclude=<pattern>] [--exclude-from=<file>) ]";
 
 int main(int argc, char **argv)
 {
@@ -157,48 +227,44 @@ int main(int argc, char **argv)
 
 		if (!strcmp(arg, "-z")) {
 			line_terminator = 0;
-			continue;
-		}
-		if (!strcmp(arg, "-t")) {
+		} else if (!strcmp(arg, "-t")) {
 			tag_cached = "H ";
 			tag_unmerged = "M ";
 			tag_removed = "R ";
 			tag_other = "? ";
-			continue;
-		}
-
-		if (!strcmp(arg, "--cached")) {
+		} else if (!strcmp(arg, "-c") || !strcmp(arg, "--cached")) {
 			show_cached = 1;
-			continue;
-		}
-		if (!strcmp(arg, "--deleted")) {
+		} else if (!strcmp(arg, "-d") || !strcmp(arg, "--deleted")) {
 			show_deleted = 1;
-			continue;
-		}
-		if (!strcmp(arg, "--others")) {
+		} else if (!strcmp(arg, "-o") || !strcmp(arg, "--others")) {
 			show_others = 1;
-			continue;
-		}
-		if (!strcmp(arg, "--ignored")) {
+		} else if (!strcmp(arg, "-i") || !strcmp(arg, "--ignored")) {
 			show_ignored = 1;
-			continue;
-		}
-		if (!strcmp(arg, "--stage")) {
+		} else if (!strcmp(arg, "-s") || !strcmp(arg, "--stage")) {
 			show_stage = 1;
-			continue;
-		}
-		if (!strcmp(arg, "--unmerged")) {
+		} else if (!strcmp(arg, "-u") || !strcmp(arg, "--unmerged")) {
 			// There's no point in showing unmerged unless you also show the stage information
 			show_stage = 1;
 			show_unmerged = 1;
-			continue;
-		}
+		} else if (!strcmp(arg, "-x") && i+1 < argc) {
+			add_exclude(argv[++i]);
+		} else if (!strncmp(arg, "--exclude=", 10)) {
+			add_exclude(arg+10);
+		} else if (!strcmp(arg, "-X") && i+1 < argc) {
+			add_excludes_from_file(argv[++i]);
+		} else if (!strncmp(arg, "--exclude-from=", 15)) {
+			add_excludes_from_file(arg+15);
+		} else
+			usage(ls_files_usage);
+	}
 
-		usage("show-files [-z] [-t] (--[cached|deleted|others|ignored|stage])*");
+	if (show_ignored && !nr_excludes) {
+		fprintf(stderr, "%s: --ignored needs some exclude pattern\n", argv[0]);
+		exit(1);
 	}
 
 	/* With no flags, we default to showing the cached files */
-	if (!(show_stage | show_deleted | show_others | show_ignored | show_unmerged))
+	if (!(show_stage | show_deleted | show_others | show_unmerged))
 		show_cached = 1;
 
 	read_cache();

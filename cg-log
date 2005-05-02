@@ -36,20 +36,20 @@ fi
 if echo "$1" | grep -q ':'; then
 	id1=$(commit-id $(echo "$1" | cut -d : -f 1)) || exit 1
 	id2=$(commit-id $(echo "$1" | cut -d : -f 2)) || exit 1
-	revls="rev-tree $id2 ^$id1"
+	revls="git-rev-tree $id2 ^$id1"
 	revsort="sort -rn"
-	revfmt="rev-tree"
+	revfmt="git-rev-tree"
 else
 	id1="$(commit-id $1)" || exit 1
-	revls="rev-list $id1" || exit 1
+	revls="git-rev-list $id1" || exit 1
 	revsort="cat"
-	revfmt="rev-list"
+	revfmt="git-rev-list"
 fi
 
 $revls | $revsort | while read time commit parents; do
-	[ "$revfmt" = "rev-list" ] && commit="$time"
+	[ "$revfmt" = "git-rev-list" ] && commit="$time"
 	echo $colheader""commit ${commit%:*} $coldefault;
-	cat-file commit $commit | \
+	git-cat-file commit $commit | \
 		while read key rest; do
 			case "$key" in
 			"author"|"committer")

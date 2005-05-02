@@ -17,6 +17,6 @@ id=$(tree-id $2)
 
 mkdir -p $destdir || die "cannot create $destdir"
 export GIT_INDEX_FILE="$destdir/.git-index"
-read-tree $id
-checkout-cache "--prefix=$destdir/" -a
+git-read-tree $id
+git-checkout-cache "--prefix=$destdir/" -a
 rm $GIT_INDEX_FILE

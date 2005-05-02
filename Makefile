@@ -32,13 +32,16 @@ bindir=$(prefix)/bin
 CC=gcc
 AR=ar
 
-SCRIPTS=git-merge-one-file-script git-prune-script git-pull-script git-tag-script
+SCRIPTS=git-apply-patch-script git-merge-one-file-script git-prune-script \
+	git-pull-script git-tag-script
 
-PROG=   update-cache show-diff init-db write-tree read-tree commit-tree \
-	cat-file fsck-cache checkout-cache diff-tree rev-tree show-files \
-	check-files ls-tree merge-base merge-cache unpack-file git-export \
-	diff-cache convert-cache http-pull rpush rpull rev-list git-mktag \
-	diff-tree-helper
+PROG=   git-update-cache git-diff-files git-init-db git-write-tree \
+	git-read-tree git-commit-tree git-cat-file git-fsck-cache \
+	git-checkout-cache git-diff-tree git-rev-tree git-ls-files \
+	git-check-files git-ls-tree git-merge-base git-merge-cache \
+	git-unpack-file git-export git-diff-cache git-convert-cache \
+	git-http-pull git-rpush git-rpull git-rev-list git-mktag \
+	git-diff-tree-helper git-tar-tree git-local-pull
 
 SCRIPT=	commit-id tree-id parent-id cg-Xdiffdo cg-Xmergefile \
 	cg-add cg-admin-lsobj cg-cancel cg-clone cg-commit cg-diff \
@@ -52,9 +55,10 @@ GEN_SCRIPT= cg-version
 
 VERSION= VERSION
 
-LIB_OBJS=read-cache.o sha1_file.o usage.o object.o commit.o tree.o blob.o
+LIB_OBJS=read-cache.o sha1_file.o usage.o object.o commit.o tree.o blob.o \
+	 tag.o date.o
 LIB_FILE=libgit.a
-LIB_H=cache.h object.h
+LIB_H=cache.h object.h blob.h tree.h commit.h tag.h
 
 LIB_H += strbuf.h
 LIB_OBJS += strbuf.o
@@ -82,16 +86,24 @@ CFLAGS += '-DSHA1_HEADER=$(SHA1_HEADER)'
 
 all: $(PROG) $(GEN_SCRIPT)
 
-$(PROG):%: %.c $(LIB_FILE)
-	$(CC) $(CFLAGS) -o $@ $^ $(LIBS)
+
+git-%: %.c $(LIB_FILE)
+	$(CC) $(CFLAGS) -o $@ $(filter %.c,$^) $(LIB_FILE) $(LIBS)
+
+git-http-pull: LIBS += -lcurl
+git-http-pull: pull.c
+git-local-pull: pull.c
+git-rpull: pull.c rsh.c
+git-rpush: rsh.c
+
+test-date: test-date.c date.o
+	$(CC) $(CFLAGS) -o $@ test-date.c date.o
+
+
+$(LIB_OBJS): $(LIB_H)
 
 $(LIB_FILE): $(LIB_OBJS)
 	$(AR) rcs $@ $(LIB_OBJS)
-
-%.o: $(LIB_H)
-rpush: rsh.c
-rpull: rsh.c
-http-pull: LIBS += -lcurl
 
 
 ifneq (,$(wildcard .git))
@@ -110,12 +122,14 @@ cg-version: $(VERSION)
 	@chmod +x $@
 endif
 
+
 install: $(PROG) $(SCRIPTS) $(SCRIPT) $(GEN_SCRIPT)
 	install -m755 -d $(DESTDIR)$(bindir)
 	install $(PROG) $(SCRIPTS) $(SCRIPT) $(GEN_SCRIPT) $(DESTDIR)$(bindir)
 
 uninstall:
 	cd $(DESTDIR)$(bindir) && rm $(PROG) $(SCRIPTS) $(SCRIPT) $(GEN_SCRIPT)
+
 
 clean:
 	rm -f *.o mozilla-sha1/*.o ppc/*.o $(PROG) $(GEN_SCRIPT) $(LIB_FILE)

@@ -3,10 +3,10 @@
  */
 #include <sys/types.h>
 #include <sys/wait.h>
+#include <signal.h>
 #include "cache.h"
 #include "diff.h"
 
-static char *diff_cmd = "diff -L'k/%s' -L'l/%s'";
 static char *diff_opts = "-pu";
 
 static const char *external_diff(void)
@@ -23,14 +23,12 @@ static const char *external_diff(void)
 	 * alternative styles you can specify via environment
 	 * variables are:
 	 *
-	 * GIT_DIFF_CMD="diff -L '%s' -L '%s'"
 	 * GIT_DIFF_OPTS="-c";
 	 */
 	if (getenv("GIT_EXTERNAL_DIFF"))
 		external_diff_cmd = getenv("GIT_EXTERNAL_DIFF");
 
 	/* In case external diff fails... */
-	diff_cmd = getenv("GIT_DIFF_CMD") ? : diff_cmd;
 	diff_opts = getenv("GIT_DIFF_OPTS") ? : diff_opts;
 
 	done_preparing = 1;
@@ -83,31 +81,54 @@ static struct diff_tempfile {
 static void builtin_diff(const char *name,
 			 struct diff_tempfile *temp)
 {
-	static char *diff_arg  = "'%s' '%s'";
-	const char *name_1_sq = sq_expand(temp[0].name);
-	const char *name_2_sq = sq_expand(temp[1].name);
+	int i, next_at;
+	const char *diff_cmd = "diff -L'%s%s' -L'%s%s'";
+	const char *diff_arg  = "'%s' '%s'";
+	const char *input_name_sq[2];
+	const char *path0[2];
+	const char *path1[2];
 	const char *name_sq = sq_expand(name);
-
-	/* diff_cmd and diff_arg have 4 %s in total which makes
-	 * the sum of these strings 8 bytes larger than required.
+	char *cmd;
+	
+	/* diff_cmd and diff_arg have 6 %s in total which makes
+	 * the sum of these strings 12 bytes larger than required.
 	 * we use 2 spaces around diff-opts, and we need to count
-	 * terminating NUL, so we subtract 5 here.
+	 * terminating NUL, so we subtract 9 here.
 	 */
-	int cmd_size = (strlen(diff_cmd) + 
-			strlen(name_sq) * 2 +
-			strlen(diff_opts) +
-			strlen(diff_arg) +
-			strlen(name_1_sq) + strlen(name_2_sq)
-			- 5);
-	char *cmd = xmalloc(cmd_size);
-	int next_at = 0;
+	int cmd_size = (strlen(diff_cmd) + strlen(diff_opts) +
+			strlen(diff_arg) - 9);
+	for (i = 0; i < 2; i++) {
+		input_name_sq[i] = sq_expand(temp[i].name);
+		if (!strcmp(temp[i].name, "/dev/null")) {
+			path0[i] = "/dev/null";
+			path1[i] = "";
+		} else {
+			path0[i] = i ? "b/" : "a/";
+			path1[i] = name_sq;
+		}
+		cmd_size += (strlen(path0[i]) + strlen(path1[i]) +
+			     strlen(input_name_sq[i]));
+	}
 
+	cmd = xmalloc(cmd_size);
+
+	next_at = 0;
 	next_at += snprintf(cmd+next_at, cmd_size-next_at,
-			    diff_cmd, name_sq, name_sq);
+			    diff_cmd,
+			    path0[0], path1[0], path0[1], path1[1]);
 	next_at += snprintf(cmd+next_at, cmd_size-next_at,
 			    " %s ", diff_opts);
 	next_at += snprintf(cmd+next_at, cmd_size-next_at,
-			    diff_arg, name_1_sq, name_2_sq);
+			    diff_arg, input_name_sq[0], input_name_sq[1]);
+
+	if (!path1[0][0])
+		printf("Created: %s (mode:%s)\n", name, temp[1].mode);
+	else if (!path1[1][0])
+		printf("Deleted: %s\n", name);
+	else if (strcmp(temp[0].mode, temp[1].mode))
+		printf("Mode changed: %s (%s->%s)\n", name,
+		       temp[0].mode, temp[1].mode);
+	fflush(NULL);
 	execlp("/bin/sh","sh", "-c", cmd, NULL);
 }
 
@@ -119,6 +140,9 @@ static void prepare_temp_file(const char *name,
 
 	if (!one->file_valid) {
 	not_a_valid_file:
+		/* A '-' entry produces this for file-2, and
+		 * a '+' entry produces this for file-1.
+		 */
 		temp->name = "/dev/null";
 		strcpy(temp->hex, ".");
 		strcpy(temp->mode, ".");
@@ -139,7 +163,7 @@ static void prepare_temp_file(const char *name,
 				goto not_a_valid_file;
 			die("stat(%s): %s", temp->name, strerror(errno));
 		}
-		strcpy(temp->hex, ".");
+		strcpy(temp->hex, sha1_to_hex(null_sha1));
 		sprintf(temp->mode, "%06o",
 			S_IFREG |ce_permissions(st.st_mode));
 	}
@@ -180,6 +204,11 @@ static void remove_tempfile(void)
 		}
 }
 
+static void remove_tempfile_on_signal(int signo)
+{
+	remove_tempfile();
+}
+
 /* An external diff command takes:
  *
  * diff-cmd name infile1 infile1-sha1 infile1-mode \
@@ -191,7 +220,8 @@ void run_external_diff(const char *name,
 		       struct diff_spec *two)
 {
 	struct diff_tempfile *temp = diff_temp;
-	int pid, status;
+	pid_t pid;
+	int status;
 	static int atexit_asked = 0;
 
 	if (one && two) {
@@ -203,6 +233,7 @@ void run_external_diff(const char *name,
 			atexit_asked = 1;
 			atexit(remove_tempfile);
 		}
+		signal(SIGINT, remove_tempfile_on_signal);
 	}
 
 	fflush(NULL);
@@ -230,9 +261,17 @@ void run_external_diff(const char *name,
 			printf("* Unmerged path %s\n", name);
 		exit(0);
 	}
-	if (waitpid(pid, &status, 0) < 0 || !WIFEXITED(status))
-		die("diff program failed");
-
+	if (waitpid(pid, &status, 0) < 0 || !WIFEXITED(status)) {
+		/* We do not check the exit status because typically
+		 * diff exits non-zero if files are different, and
+		 * we are not interested in knowing that.  We *knew*
+		 * they are different and that's why we ran diff
+		 * in the first place!  However if it dies by a signal,
+		 * we stop processing immediately.
+		 */
+		remove_tempfile();
+		die("external diff died unexpectedly.\n");
+	}
 	remove_tempfile();
 }
 

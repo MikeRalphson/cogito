@@ -16,4 +16,4 @@ else
        die "$1 does not exist"
 fi
 
-update-cache --add -- "$@"
+git-update-cache --add -- "$@"

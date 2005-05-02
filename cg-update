@@ -13,12 +13,12 @@ name=$1
 if [ ! "$name" ]; then
 	# Update working tree against HEAD. Fair enough. We just
 	# reintroduce the missing files for now.
-	if [ "$(show-files --deleted)" ]; then
+	if [ "$(git-ls-files --deleted)" ]; then
 		echo "Recovering files:"
-		show-files --deleted | sed "s/^/$(echo -e "\t")/"
-		show-files -z --deleted | xargs -0 checkout-cache --
+		git-ls-files --deleted | sed "s/^/$(echo -e "\t")/"
+		git-ls-files -z --deleted | xargs -0 git-checkout-cache --
 	fi
-	update-cache --refresh
+	git-update-cache --refresh
 	exit
 fi
 

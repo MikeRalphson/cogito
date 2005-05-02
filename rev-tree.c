@@ -1,8 +1,3 @@
-#define _XOPEN_SOURCE /* glibc2 needs this */
-#define _BSD_SOURCE /* for tm.tm_gmtoff */
-#include <time.h>
-#include <ctype.h>
-
 #include "cache.h"
 #include "commit.h"
 
@@ -102,7 +97,7 @@ int main(int argc, char **argv)
 			arg++;
 			basemask |= 1<<nr;
 		}
-		if (nr >= MAX_COMMITS || get_sha1_hex(arg, sha1[nr]))
+		if (nr >= MAX_COMMITS || get_sha1(arg, sha1[nr]))
 			usage("rev-tree [--edges] [--cache <cache-file>] <commit-id> [<commit-id>]");
 		process_commit(sha1[nr]);
 		nr++;

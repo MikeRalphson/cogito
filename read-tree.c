@@ -13,7 +13,7 @@ static int unpack_tree(unsigned char *sha1)
 	unsigned long size;
 	int ret;
 
-	buffer = read_tree_with_tree_or_commit_sha1(sha1, &size, 0);
+	buffer = read_object_with_reference(sha1, "tree", &size, 0);
 	if (!buffer)
 		return -1;
 	ret = read_tree(buffer, size, stage);
@@ -194,7 +194,7 @@ int main(int argc, char **argv)
 			merge = 1;
 			continue;
 		}
-		if (get_sha1_hex(arg, sha1) < 0)
+		if (get_sha1(arg, sha1) < 0)
 			usage(read_tree_usage);
 		if (stage > 3)
 			usage(read_tree_usage);

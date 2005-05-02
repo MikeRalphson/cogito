@@ -11,4 +11,4 @@
 [ "$1" ] || die "usage: cg-rm FILE..."
 
 rm -f "$@"
-update-cache --remove -- "$@"
+git-update-cache --remove -- "$@"

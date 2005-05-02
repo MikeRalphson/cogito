@@ -15,7 +15,7 @@ todo=$(mktemp -t gitapply.XXXXXX)
 patchfifo=$(mktemp -t gitapply.XXXXXX)
 rm $patchfifo && mkfifo -m 600 $patchfifo
 
-show-files --deleted >$gonefile
+git-ls-files --deleted >$gonefile
 
 # patch file removal behaviour cannot be sensibly controlled, so we
 # just handle it all ourselves.
@@ -36,11 +36,11 @@ tee $patchfifo | egrep '^[+-]{3}[ \t]' | {
 		"+++")
 			if [ "$file" = "/dev/null" ]; then
 				torm=$(echo "$victim" | sed 's/[^\/]*\///') #-p1
-				(show-files | fgrep -qx "$torm") && echo -ne "rm\0$torm\0"
+				(git-ls-files | fgrep -qx "$torm") && echo -ne "rm\0$torm\0"
 				continue
 			elif [ "$victim" = "/dev/null" ]; then
 				toadd=$(echo "$file" | sed 's/^[^\/]*\///') #-p1
-				(show-files | fgrep -qx "$toadd") || echo -ne "add\0$toadd\0"
+				(git-ls-files | fgrep -qx "$toadd") || echo -ne "add\0$toadd\0"
 			fi
 			mode=$(echo $attrs | sed 's/.*mode:[0-7]*\([0-7]\{3\}\).*/\1/')
 			if [ "$mode" ] && [ "$mode" != "$attrs" ] && [ "$origmode" != "$mode" ]; then
@@ -63,7 +63,7 @@ wait
 # This is done on the assumption that we are never going to have
 # too many files deleted in the first place anyway.
 
-touchfiles="$(show-files --deleted | join -v 2 $gonefile -)"
+touchfiles="$(git-ls-files --deleted | join -v 2 $gonefile -)"
 [ "$touchfiles" ] && touch $touchfiles
 
 cat $todo | xargs -0 sh -c '

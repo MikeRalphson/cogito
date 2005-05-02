@@ -24,7 +24,7 @@ mkbanner () {
 	loc=$1; treeid=$2; fname=$3; mode=$4; sha1=$5;
 
 	if [ "$sha1" != "0000000000000000000000000000000000000000" ]; then
-		cat-file blob $sha1 >$loc
+		git-cat-file blob $sha1 >$loc
 	else
 		ln -s "$(pwd)/$fname" "$loc"
 		sha1="!"

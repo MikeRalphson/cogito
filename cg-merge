@@ -35,7 +35,7 @@ fi
 branchname="$1"
 branch=$(commit-id "$branchname") || exit 1
 
-[ "$base" ] || base=$(merge-base "$head" "$branch")
+[ "$base" ] || base=$(git-merge-base "$head" "$branch")
 [ "$base" ] || die "unable to automatically determine merge base"
 
 
@@ -57,29 +57,29 @@ if [ "$head" = "$base" ]; then
 	patchfile=$(mktemp -t gitmerge.XXXXXX)
 	cg-diff >$patchfile
 
-	read-tree -m $(tree-id $branch)
+	git-read-tree -m $(tree-id $branch)
 	echo $branch >.git/HEAD
 
 	# Kill gone files
-	diff-tree -z -r $base $branch | grep -z '^-' | xargs -0 bash -c '
+	git-diff-tree -z -r $base $branch | grep -z '^-' | xargs -0 bash -c '
 		while [ "$1" ]; do
 			rm -- "$(echo "$1" | cut -f 4-)"
 			shift
 		done
 	' padding
-	checkout-cache -f -a
+	git-checkout-cache -f -a
 
 	grep -v '^[^ @+-]' $patchfile | cg-patch
 	rm $patchfile
 
-	update-cache --refresh
+	git-update-cache --refresh
 
 	exit 0
 fi
 
 
-[ "$(show-diff -s)" ] && update-cache --refresh
-if [ "$(show-diff -s)" ] || [ "$(diff-cache $(tree-id))" ]; then
+[ "$(git-diff-files -s)" ] && git-update-cache --refresh
+if [ "$(git-diff-files -s)" ] || [ "$(git-diff-cache $(tree-id))" ]; then
 	die "merge blocked: local changes"
 fi
 
@@ -91,15 +91,16 @@ echo $branch >>.git/merging
 echo $branchname >>.git/merging-sym
 
 
-read-tree -m $(tree-id $base) $(tree-id $head) $(tree-id $branch) || die "read-tree failed"
-if ! merge-cache cg-Xmergefile -a || [ "$careful" ]; then
-	checkout-cache -f -a
+git-read-tree -m $(tree-id $base) $(tree-id $head) $(tree-id $branch) ||
+	die "git-read-tree failed"
+if ! git-merge-cache cg-Xmergefile -a || [ "$careful" ]; then
+	git-checkout-cache -f -a
 
 	# "Resolve" merges still in the cache (conflicts).
 	# We will resolve only those caught by merge-cache;
 	# that is "three-way conflicts". Others should still
 	# be resolved manually on the lower level by the user.
-	show-files --unmerged | {
+	git-ls-files --unmerged | {
 		stage1mode=
 		stage1hash=
 		stage1name=
@@ -122,7 +123,7 @@ if ! merge-cache cg-Xmergefile -a || [ "$careful" ]; then
 				[ "$stage2seen" ] || continue
 				stage2seen=
 			esac
-			update-cache --cacheinfo $stage1mode $stage1hash $stage1name
+			git-update-cache --cacheinfo $stage1mode $stage1hash $stage1name
 		done
 	}
 
@@ -132,11 +133,11 @@ if ! merge-cache cg-Xmergefile -a || [ "$careful" ]; then
 __END__
 	exit 2
 fi
-checkout-cache -f -a
+git-checkout-cache -f -a
 
 echo
 readtree=
 cg-commit -C || { readtree=1 ; echo "cg-merge: COMMIT FAILED, retry manually" >&2; }
 
-[ "$readtree" ] && read-tree -m $(tree-id)
-update-cache --refresh
+[ "$readtree" ] && git-read-tree -m $(tree-id)
+git-update-cache --refresh

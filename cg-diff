@@ -66,12 +66,12 @@ if [ "$id2" = " " ]; then
 	fi
 
 	# Ensure to only diff modified files
-	update-cache --refresh
+	git-update-cache --refresh
 
 	# FIXME: Update ret based on what did we match. And take "$@"
 	# to account after all.
 	ret=
-	diff-cache -r -z $tree | xargs -0 cg-Xdiffdo "$tree" uncommitted "$filter"
+	git-diff-cache -r -z $tree | xargs -0 cg-Xdiffdo "$tree" uncommitted "$filter"
 
 	[ "$filter" ] && rm $filter
 
@@ -85,6 +85,6 @@ id2=$(tree-id "$id2") || exit 1
 
 [ "$id1" = "$id2" ] && die "trying to diff $id1 against itself"
 
-diff-tree -r -z $id1 $id2 | xargs -0 cg-Xdiffdo $id1 $id2 "$filter"
+git-diff-tree -r -z $id1 $id2 | xargs -0 cg-Xdiffdo $id1 $id2 "$filter"
 
 [ "$filter" ] && rm $filter

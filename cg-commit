@@ -37,7 +37,7 @@ else
 	# be committed along automagically as well.
 
 	if [ ! "$ignorecache" ]; then
-		changedfiles=$(diff-cache $(tree-id) | cut -f 4-)
+		changedfiles=$(git-diff-cache $(tree-id) | cut -f 4-)
 		commitfiles="$addedfiles $remfiles $changedfiles"
 	fi
 
@@ -76,13 +76,13 @@ cat >>$LOGMSG
 
 if [ ! "$ignorecache" ]; then
 	if [ "$customfiles" ]; then
-		echo $commitfiles | xargs update-cache --add --remove \
+		echo $commitfiles | xargs git-update-cache --add --remove \
 			|| die "update-cache failed"
 		export GIT_INDEX_FILE=$(mktemp -t gitci.XXXXXX)
-		read-tree $(tree-id)
+		git-read-tree $(tree-id)
 	fi
 	# TODO: Do the proper separation of adds, removes, and changes.
-	echo $commitfiles | xargs update-cache --add --remove \
+	echo $commitfiles | xargs git-update-cache --add --remove \
 		|| die "update-cache failed"
 fi
 
@@ -93,8 +93,8 @@ if [ -s ".git/HEAD" ]; then
 	oldheadstr="-p $oldhead"
 fi
 
-treeid=$(write-tree)
-[ "$treeid" ] || die "write-tree failed"
+treeid=$(git-write-tree)
+[ "$treeid" ] || die "git-write-tree failed"
 if [ ! "$merging" ] && [ "$oldhead" ] && [ "$treeid" = "$(tree-id)" ]; then
 	echo "Refusing to make an empty commit - the tree was not modified" >&2
 	echo "since the previous commit. If you really want to make the" >&2
@@ -102,7 +102,7 @@ if [ ! "$merging" ] && [ "$oldhead" ] && [ "$treeid" = "$(tree-id)" ]; then
 	exit 2;
 fi
 
-newhead=$(commit-tree $treeid $oldheadstr $merging <$LOGMSG)
+newhead=$(git-commit-tree $treeid $oldheadstr $merging <$LOGMSG)
 rm $LOGMSG
 
 if [ "$customfiles" ]; then

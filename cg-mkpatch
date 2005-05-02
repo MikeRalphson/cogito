@@ -12,7 +12,7 @@
 showpatch () {
 	header=$(mktemp -t gitpatch.XXXXXX)
 	id=$1
-	cat-file commit $id | while read line; do
+	git-cat-file commit $id | while read line; do
 		if [ ! "$line" ]; then
 			cat
 			echo
@@ -32,7 +32,7 @@ if echo "$1" | grep -q ':'; then
 	id1=$(commit-id $(echo "$1" | cut -d : -f 1)) || exit 1
 	id2=$(commit-id $(echo "$1" | cut -d : -f 2)) || exit 1
 
-	rev-tree $id2 ^$id1 | sort -n | while read time commit rest; do
+	git-rev-tree $id2 ^$id1 | sort -n | while read time commit rest; do
 		id=$(echo $commit | cut -d : -f 1)
 		showpatch $id
 		echo

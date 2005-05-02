@@ -238,10 +238,10 @@ static int diff_tree_sha1(const unsigned char *old, const unsigned char *new, co
 	unsigned long size1, size2;
 	int retval;
 
-	tree1 = read_tree_with_tree_or_commit_sha1(old, &size1, 0);
+	tree1 = read_object_with_reference(old, "tree", &size1, 0);
 	if (!tree1)
 		die("unable to read source tree (%s)", sha1_to_hex(old));
-	tree2 = read_tree_with_tree_or_commit_sha1(new, &size2, 0);
+	tree2 = read_object_with_reference(new, "tree", &size2, 0);
 	if (!tree2)
 		die("unable to read destination tree (%s)", sha1_to_hex(new));
 	retval = diff_tree(tree1, size1, tree2, size2, base);
@@ -279,7 +279,7 @@ int main(int argc, char **argv)
 		usage(diff_tree_usage);
 	}
 
-	if (argc < 3 || get_sha1_hex(argv[1], old) || get_sha1_hex(argv[2], new))
+	if (argc < 3 || get_sha1(argv[1], old) || get_sha1(argv[2], new))
 		usage(diff_tree_usage);
 
 	if (argc > 3) {

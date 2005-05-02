@@ -17,7 +17,7 @@
 #
 #
 # Handle some trivial cases.. The _really_ trivial cases have
-# been handled already by read-tree, but that one doesn't
+# been handled already by git-read-tree, but that one doesn't
 # do any merges that migth change the tree layout
 #
 
@@ -26,7 +26,7 @@
 # if the directory is newly added in a branch, it might not exist
 # in the current tree
 dir=$(dirname "$4")
-mkdir -p "$dir"
+mkdir -p "$dir" || exit
 
 
 error () {
@@ -48,33 +48,36 @@ case "${1:-.}${2:-.}${3:-.}" in
 #
 "$1.$1" | "$1$1.")
 	#echo "Removing $4"
-	rm -f -- "$4"; update-cache --remove -- "$4"
-	exit 0
+	rm -f -- "$4" && exec git-update-cache --remove -- "$4"
 	;;
 
 #
 # added in one
 #
 ".$2." | "..$3" )
-	#echo "Adding $4 with perm $6$7"
-	cat-file blob "${2:-$3}" >"$4"
-	chmod "${6:-$7}" "$4"
-	update-cache --add -- $4
-	exit 0
+	case "$6$7" in *7??) mode=+x;; *) mode=-x;; esac
+	#echo "Adding $4 with perm $mode"
+	rm -f -- "$4" &&
+		git-cat-file blob "$2$3" >"$4" &&
+		chmod "$mode" -- "$4" &&
+		exec git-update-cache --add -- "$4"
 	;;
 #
 # Added in both (check for same permissions)
 #
 ".$2$2")
-	#echo "Adding $4 with perm $6"
-	cat-file blob "${2:-$3}" >"$4"
-	chmod "${6:-$7}" "$4"
-	update-cache --add -- $4
+	case "$6" in *7??) mode=+x;; *) mode=-x;; esac
+	#echo "Adding $4 with perm $mode"
+	rm -f -- "$4" &&
+		git-cat-file blob "$2" >"$4" &&
+		chmod "$mode" -- "$4" &&
+		git-update-cache --add -- "$4"
+	ret=$?
 	if [ "$6" != "$7" ]; then
 		error "Added in both branches, permissions conflict $6->$7"
-		exit 1
+		[ "$ret" ] || ret=1
 	fi
-	exit 0
+	exit $ret
 	;;
 
 #
@@ -82,15 +85,17 @@ case "${1:-.}${2:-.}${3:-.}" in
 #
 "$1$2$3")
 	echo "... Auto-merging $4"
-	orig=$(unpack-file $1)
-	src1=$(unpack-file $2)
-	src2=$(unpack-file $3)
+	orig=$(git-unpack-file $1)
+	src1=$(git-unpack-file $2)
+	src2=$(git-unpack-file $3)
 	ret=0
 	if [ "$6" != "$7" ]; then
 		error "Permissions conflict: $5->$6 here but merging $7"
 		ret=1
 	fi
-	chmod "$6" "$src2"
+	case "$6" in *7??) mode=+x;; *) mode=-x;; esac
+	chmod "$mode" "$src2"
+
 	if ! merge "$src2" "$orig" "$src1"; then
 		# The user already gets the warning from merge itself and
 		# from merge-cache too. This is too much.
@@ -98,7 +103,7 @@ case "${1:-.}${2:-.}${3:-.}" in
 		mv -- "$src2" "$4"
 		ret=1
 
-	elif ! mv -- "$src2" "$4" || ! update-cache --add -- "$4"; then
+	elif ! mv -- "$src2" "$4" || ! git-update-cache --add -- "$4"; then
 		error "Choosing $src2 -> $4 failed"
 		ret=1
 	fi
@@ -107,7 +112,7 @@ case "${1:-.}${2:-.}${3:-.}" in
 	;;
 
 *)
-	error "Not handling case $1 -> $2 -> $3"
+	error "$4: Not handling case $1 -> $2 -> $3"
 	;;
 esac
 exit 1

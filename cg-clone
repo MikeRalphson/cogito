@@ -19,5 +19,5 @@ dir=${location##*/}; dir=${dir%.git}
 mkdir "$dir"
 cd "$dir"
 
-cg-init $location || exit $?
+git-cg-init $location || exit $?
 echo "Cloned to $dir/ (origin $location available as branch \"origin\")"

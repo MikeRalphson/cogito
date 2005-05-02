@@ -32,7 +32,7 @@ if echo $id | egrep -vq "$SHA1ONLY"; then
 	exit 1
 fi
 
-if [ "$(cat-file -t "$id")" != "commit" ]; then
+if [ "$(git-cat-file -t "$id")" != "commit" ]; then
 	echo "Invalid id: $id" >&2
 	exit 1
 fi

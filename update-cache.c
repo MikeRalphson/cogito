@@ -111,7 +111,7 @@ static int add_file_to_cache(char *path)
 
 	fd = open(path, O_RDONLY);
 	if (fd < 0) {
-		if (errno == ENOENT) {
+		if (errno == ENOENT || errno == ENOTDIR) {
 			if (allow_remove)
 				return remove_file_from_cache(path);
 		}
@@ -222,15 +222,17 @@ static struct cache_entry *refresh_entry(struct cache_entry *ce)
 	return updated;
 }
 
-static void refresh_cache(void)
+static int refresh_cache(void)
 {
 	int i;
+	int has_errors = 0;
 
 	for (i = 0; i < active_nr; i++) {
 		struct cache_entry *ce, *new;
 		ce = active_cache[i];
 		if (ce_stage(ce)) {
 			printf("%s: needs merge\n", ce->name);
+			has_errors = 1;
 			while ((i < active_nr) &&
 			       ! strcmp(active_cache[i]->name, ce->name))
 				i++;
@@ -240,8 +242,10 @@ static void refresh_cache(void)
 
 		new = refresh_entry(ce);
 		if (IS_ERR(new)) {
-			if (!(not_new && PTR_ERR(new) == -ENOENT))
+			if (!(not_new && PTR_ERR(new) == -ENOENT)) {
 				printf("%s: needs update\n", ce->name);
+				has_errors = 1;
+			}
 			continue;
 		}
 		/* You can NOT just free active_cache[i] here, since it
@@ -249,6 +253,7 @@ static void refresh_cache(void)
 		 * from mmap(). */
 		active_cache[i] = new;
 	}
+	return has_errors;
 }
 
 /*
@@ -320,7 +325,7 @@ static void remove_lock_file_on_signal(int signo)
 
 int main(int argc, char **argv)
 {
-	int i, newfd, entries;
+	int i, newfd, entries, has_errors = 0;
 	int allow_options = 1;
 	static char lockfile[MAXPATHLEN+1];
 	const char *indexfile = get_index_file();
@@ -356,7 +361,7 @@ int main(int argc, char **argv)
 				continue;
 			}
 			if (!strcmp(path, "--refresh")) {
-				refresh_cache();
+				has_errors |= refresh_cache();
 				continue;
 			}
 			if (!strcmp(path, "--cacheinfo")) {
@@ -382,5 +387,5 @@ int main(int argc, char **argv)
 		die("Unable to write new cachefile");
 
 	lockfile_name = NULL;
-	return 0;
+	return has_errors;
 }

@@ -41,7 +41,7 @@ createmails () {
 		lastparent=
 		SUBJECT=
 
-		cat-file commit $parent > $TMPCM
+		git-cat-file commit $parent > $TMPCM
 
 		while read key rest; do
 		    case "$key" in
@@ -134,7 +134,7 @@ base=$(commit-id $1) || exit 1
 if [ "$base" != "$lastmail" ]; then
     # List the commits at which we should stop following the tree, because
     # we've come back to commits which were already in $lastmail.
-    rev-tree --edges $base $lastmail | cut -f2- -d\  |  sed 's/[a-z0-9]*:1//g' >> $TMPCL
+    git-rev-tree --edges $base $lastmail | cut -f2- -d\  |  sed 's/[a-z0-9]*:1//g' >> $TMPCL
 
     createmails $base
     # No 'cg-tag -F' -- cheat.
