@@ -28,3 +28,4 @@ if [ "$uri" ]; then
 
 	echo "Cloned (origin $uri available as branch \"origin\")"
 fi
+exit 0

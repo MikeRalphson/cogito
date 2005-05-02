@@ -88,3 +88,4 @@ id2=$(tree-id "$id2") || exit 1
 git-diff-tree -r -z $id1 $id2 | xargs -0 cg-Xdiffdo $id1 $id2 "$filter"
 
 [ "$filter" ] && rm $filter
+exit 0

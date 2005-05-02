@@ -114,6 +114,7 @@ if [ "$newhead" ]; then
 	echo "Committed as $newhead."
 	echo $newhead >.git/HEAD
 	[ "$merging" ] && rm .git/merging .git/merging-sym .git/merge-base
+	exit 0
 else
 	die "error during commit (oldhead $oldhead, treeid $treeid)"
 fi
