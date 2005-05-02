@@ -10,9 +10,7 @@
 
 if [ "$1" ]; then
 	cmd=$(echo "$1" | sed 's/^cg-//')
-	which "cg-$cmd" >/dev/null 2>&1 || exit 1
-	cat $(which cg-$cmd) | sed -n '3,/^$/s/^# *//p'
-	exit
+	print_help $cmd
 fi
 
 
@@ -59,4 +57,6 @@ Note that these expressions can be used interchangably as "ID"s:
 
 For details on individual commands, do e.g.:
 	cg-help cg-log
+	cg-log --help
+(both variants are equivalent)
 __END__
