@@ -41,7 +41,7 @@ if echo "$1" | grep -q ':'; then
 	revfmt="git-rev-tree"
 else
 	id1="$(commit-id $1)" || exit 1
-	revls="git-rev-list $id1" || exit 1
+	revls="git-rev-list $id1"
 	revsort="cat"
 	revfmt="git-rev-list"
 fi
