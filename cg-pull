@@ -95,7 +95,7 @@ fi
 [ "$rsyncerr" ] && die "unable to get the head pointer of branch $rembranch"
 
 [ -d .git/objects ] || mkdir -p .git/objects
-$fetch -s -u -d "$uri/objects" ".git/objects" || die "rsync error"
+$fetch -s -u -d "$uri/objects" ".git/objects" || die "objects pull failed"
 
 # FIXME: Warn about conflicting tag names?
 # XXX: We now throw stderr to /dev/null since not all repositories
