@@ -7,8 +7,14 @@
 
 . cg-Xlib
 
+EXCLUDEFILE=.git/exclude
+EXCLUDE=
+if [ -f $EXCLUDEFILE ]; then
+	EXCLUDE="--exclude-from=$EXCLUDEFILE"
+fi
+
 {
-	git-ls-files -z -t --others --deleted --unmerged
+	git-ls-files -z -t --others --deleted --unmerged $EXCLUDE
 } | sort -z -k 2 | xargs -0 sh -c '
 while [ "$1" ]; do
 	tag=${1% *};
