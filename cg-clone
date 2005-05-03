@@ -17,12 +17,19 @@ location=$1
 [ "$location" ] || die "usage: cg-clone SOURCE_LOC [DESTDIR]"
 location=${location%/}
 
-destination=$2
-if [ "$destination" ]; then
-	dir=$destination
+destdir=$2
+if [ "$destdir" ]; then
+	dir=$destdir
 else
 	dir=${location%/.git}; dir=${dir##*/}
 fi
+
+if ! echo "$location" | grep -q ":" ; then
+	location=$(echo "$location" | sed -e "s#^[^/]#$(pwd)\/&#")
+else
+	location="$location"
+fi
+
 [ -e "$dir" ] && die "$dir/ already exists"
 mkdir "$dir" || exit $?
 cd "$dir" || exit $?
