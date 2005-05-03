@@ -23,6 +23,12 @@ fi
 
 
 fetch_rsync () {
+	redir=
+	if [ "$1" = "-i" ]; then # ignore-errors
+		redir="2>/dev/null"
+		shift
+	fi
+
 	filter="cat"
 	if [ "$1" = "-s" ]; then # subsequent
 		# We already saw the MOTD, thank you very much.
@@ -42,8 +48,8 @@ fetch_rsync () {
 		shift
 	fi
 
-	rsync $RSYNC_FLAGS $rsync_flags_l --whole-file -v -Lr \
-		"$1$appenduri" "$2$appenduri" | $filter
+	eval rsync $RSYNC_FLAGS $rsync_flags_l --whole-file -v -Lr \
+		"$1$appenduri" "$2$appenduri" $redir | $filter
 	return ${PIPESTATUS[0]}
 }
 
@@ -52,7 +58,88 @@ pull_rsync () {
 }
 
 
+fetch_http () {
+	[ "$1" = "-i" ] && shift
+	[ "$1" = "-s" ] && shift
+
+	wget_flags="-nv"
+
+	update=
+	if [ "$1" = "-u" ]; then
+		wget_flags="$wget_flags -nc"
+		update=1
+		shift
+	fi
+
+	directory=
+	if [ "$1" = "-d" ]; then
+		wget_flags="$wget_flags -r -l 1 -np -nd -P"
+		directory=1
+		shift
+	else
+		wget_flags="$wget_flags -O"
+	fi
+
+	src="$1"
+	dest="$2"
+
+	[ "$update" ] && ! [ "$directory" ] && [ -e "$dest" ] && return 1
+
+	if echo "$dest" | grep -q '^\.git/'; then
+		# wget is idiotic and convers . to _
+		dest=$(echo "$dest" | sed 's#^.git/##')
+		pushd .git >/dev/null
+	else
+		pushd . >/dev/null
+	fi
+
+	wget $wget_flags "$dest" "$src" 2>&1 | grep -vF 'robots.txt' | grep -vF 'index.html'
+	[ -d "$dest" ] && rm -f "$dest"/robots.txt "$dest"/index.html*
+	popd >/dev/null
+}
+
+pull_http () {
+	git-http-pull -a "$(cat ".git/refs/heads/$1")" "$2/"
+}
+
+
+fetch_ssh () {
+	[ "$1" = "-i" ] && shift
+	[ "$1" = "-s" ] && shift
+
+	scp_flags=
+
+	update=
+	if [ "$1" = "-u" ]; then
+		update=1
+		shift
+	fi
+
+	directory=
+	if [ "$1" = "-d" ]; then
+		scp_flags="$scp_flags -r"
+		directory=1
+		shift
+	fi
+
+	src=$(echo "$1" | sed 's#^git+ssh://\([^/]*\)\(/.*\)$#\1:\2#')
+	dest="$2"
+
+	[ "$update" ] && ! [ "$directory" ] && [ -e "$dest" ] && return 1
+	[ "$update" ] && [ "$directory" ] &&
+		echo "Warning: Unable to protect against overwriting $dest" 2>/dev/null
+
+	echo scp $scp_flags "$dest" "$src"
+	scp $scp_flags "$src" "$dest"
+}
+
+pull_ssh () {
+	git-rpull -a "$(cat ".git/refs/heads/$1")" "$2"
+}
+
+
 fetch_local () {
+	[ "$1" = "-i" ] && shift
 	[ "$1" = "-s" ] && shift
 
 	cp_flags_l="-va"
@@ -78,7 +165,13 @@ pull_local () {
 	git-local-pull -a -l -v "$(cat ".git/refs/heads/$1")" "$2"
 }
 
-if echo "$uri" | grep -q ":"; then
+if echo "$uri" | grep -q "^http://"; then
+	fetch=fetch_http
+	pull=pull_http
+elif echo "$uri" | grep -q "^git+ssh://"; then
+	fetch=fetch_ssh
+	pull=pull_ssh
+elif echo "$uri" | grep -q ":"; then
 	fetch=fetch_rsync
 	pull=pull_rsync
 else
@@ -94,7 +187,7 @@ orig_head=
 
 mkdir -p .git/refs/heads
 rsyncerr=
-$fetch "$uri/refs/heads/$rembranch" ".git/refs/heads/$name" 2>/dev/null || rsyncerr=1
+$fetch -i "$uri/refs/heads/$rembranch" ".git/refs/heads/$name" || rsyncerr=1
 if [ "$rsyncerr" ]; then
 	rsyncerr=
 	$fetch -s "$uri/heads/$rembranch" ".git/refs/heads/$name" || rsyncerr=1
@@ -113,10 +206,10 @@ $pull "$name" "$uri" || die "objects pull failed"
 # may have tags/ and users were confused by the harmless errors.
 [ -d .git/refs/tags ] || mkdir -p .git/refs/tags
 rsyncerr=
-$fetch -s -u -d "$uri/refs/tags" ".git/refs/tags" 2>/dev/null || rsyncerr=1
+$fetch -i -s -u -d "$uri/refs/tags" ".git/refs/tags" || rsyncerr=1
 if [ "$rsyncerr" ]; then
 	rsyncerr=
-	$fetch -s -u -d "$uri/tags" ".git/refs/tags" 2>/dev/null || rsyncerr=1
+	$fetch -i -s -u -d "$uri/tags" ".git/refs/tags" || rsyncerr=1
 fi
 [ "$rsyncerr" ] && echo "unable to get tags list (non-fatal)" >&2
 
