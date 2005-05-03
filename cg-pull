@@ -47,6 +47,11 @@ fetch_rsync () {
 	return ${PIPESTATUS[0]}
 }
 
+pull_rsync () {
+	fetch_rsync -s -u -d "$1/objects" ".git/objects"
+}
+
+
 fetch_local () {
 	[ "$1" = "-s" ] && shift
 
@@ -69,11 +74,17 @@ fetch_local () {
 	cp $cp_flags_l "$src" "$dest"
 }
 
+pull_local () {
+	git-local-pull -a -l -v "$(cat ".git/refs/heads/$1")" "$2"
+}
+
 if echo "$uri" | grep -q ":"; then
 	fetch=fetch_rsync
+	pull=pull_rsync
 else
 	[ -d $uri/.git ] && uri=$uri/.git
 	fetch=fetch_local
+	pull=pull_local
 fi
 
 
@@ -95,7 +106,7 @@ fi
 [ "$rsyncerr" ] && die "unable to get the head pointer of branch $rembranch"
 
 [ -d .git/objects ] || mkdir -p .git/objects
-$fetch -s -u -d "$uri/objects" ".git/objects" || die "objects pull failed"
+$pull "$name" "$uri" || die "objects pull failed"
 
 # FIXME: Warn about conflicting tag names?
 # XXX: We now throw stderr to /dev/null since not all repositories
