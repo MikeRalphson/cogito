@@ -48,7 +48,7 @@ fetch_rsync () {
 }
 
 pull_rsync () {
-	fetch_rsync -s -u -d "$1/objects" ".git/objects"
+	fetch_rsync -s -u -d "$2/objects" ".git/objects"
 }
 
 
