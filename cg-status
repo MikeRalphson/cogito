@@ -20,3 +20,14 @@ while [ "$1" ]; do
 	shift
 done
 ' padding
+
+{
+	git-update-cache --refresh
+} | cut -f 1 -d ":" | xargs sh -c '
+while [ "$1" ]; do
+	tag="M";
+	filename=${1%: *};
+	echo "$tag $filename";
+	shift
+done
+' padding
