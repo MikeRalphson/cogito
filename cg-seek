@@ -29,24 +29,32 @@ dstcommit=$1
 if [ -s .git/blocked ]; then
 	branch=$(grep '^seeked from ' .git/blocked | sed 's/^seeked from //')
 else
-	branch=$(basename $(readlink .git/HEAD)) || die "HEAD is not on branch"
+	tmp=$(readlink .git/HEAD)
+	[ "$tmp" ] || die "HEAD is not on branch"
+	branch=$(basename "$tmp")
 fi
 
 curcommit=$(commit-id)
 
-rm .git/HEAD
 if [ ! "$dstcommit" ] || [ "$dstcommit" = "$branch" ]; then
+	rm .git/HEAD
 	ln -s "refs/heads/$branch" .git/HEAD
-	rm .git/blocked
+	rm -f .git/blocked
 	dstcommit=$(commit-id)
 else
-	echo $(commit-id "$dstcommit") >.git/HEAD
+	tmp=$(commit-id "$dstcommit")
+	[ "$tmp" ] || die "branch $dstcommit not found"
+	rm .git/HEAD
+	echo "$tmp" >.git/HEAD
 	[ -s .git/blocked ] || echo "seeked from $branch" >.git/blocked
 fi
 
 if [ "$curcommit" != "$dstcommit" ]; then
+	echo l
 	git-read-tree -m HEAD
+	echo m
 	cg-diff -r $curcommit:$dstcommit | cg-patch
+	echo n
 	git-update-cache --refresh
 fi
 
