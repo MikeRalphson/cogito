@@ -26,7 +26,7 @@ Available commands:
 	cg-branch-add	BNAME SOURCE_LOC
 	cg-branch-ls
 	cg-cancel
-	cg-clone	SOURCE_LOC
+	cg-clone	SOURCE_LOC [DESTDIR]
 	cg-commit	[FILE]...	< log message on stdin
 	cg-diff		[-p] [-r FROM_ID[:TO_ID]] [FILE]...
 	cg-export	DESTDIR [TREE_ID]

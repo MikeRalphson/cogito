@@ -3,18 +3,26 @@
 # Clone a remote GIT repository.
 # Copyright (c) Petr Baudis, 2005
 #
-# This is like cg-init, but works only for remote repositories and
-# will create a new directory where it will do the checkout.
+# This is like cg-init, but it will create a new directory where it will do
+# the checkout.
 #
-# Takes an parameter specifying location of the source repository.
+# Takes a parameter specifying the location of the source repository and an
+# optional second parameter specifying the destination.  If the second
+# parameter is omitted, the basename of the source repository is used as the
+# destination.
 
 . cg-Xlib
 
 location=$1
-[ "$location" ] || die "usage: cg-clone SOURCE_LOC"
+[ "$location" ] || die "usage: cg-clone SOURCE_LOC [DESTDIR]"
 location=${location%/}
 
-dir=${location%/.git}; dir=${dir##*/}
+destination=$2
+if [ "$destination" ]; then
+	dir=$destination
+else
+	dir=${location%/.git}; dir=${dir##*/}
+fi
 [ -e "$dir" ] && die "$dir/ already exists"
 mkdir "$dir" || exit $?
 cd "$dir" || exit $?
