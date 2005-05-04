@@ -79,7 +79,7 @@ fi
 
 
 [ "$(git-diff-files -s)" ] && git-update-cache --refresh
-if [ "$(git-diff-files -s)" ] || [ "$(git-diff-cache $(tree-id))" ]; then
+if [ "$(git-diff-files -s)" ] || [ "$(git-diff-cache HEAD)" ]; then
 	die "merge blocked: local changes"
 fi
 
@@ -139,5 +139,5 @@ echo
 readtree=
 cg-commit -C || { readtree=1 ; echo "cg-merge: COMMIT FAILED, retry manually" >&2; }
 
-[ "$readtree" ] && git-read-tree -m $(tree-id)
+[ "$readtree" ] && git-read-tree -m HEAD
 git-update-cache --refresh

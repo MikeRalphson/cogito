@@ -22,7 +22,7 @@ if [ "$uri" ]; then
 	cg-pull origin || die "pull failed"
 
 	cp .git/refs/heads/origin .git/refs/heads/master
-	git-read-tree $(tree-id)
+	git-read-tree HEAD
 	git-checkout-cache -a
 	git-update-cache --refresh
 
