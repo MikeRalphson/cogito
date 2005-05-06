@@ -91,22 +91,14 @@ struct tree *lookup_tree(unsigned char *sha1)
 	return (struct tree *) obj;
 }
 
-int parse_tree(struct tree *item)
+int parse_tree_buffer(struct tree *item, void *buffer, unsigned long size)
 {
-	char type[20];
-	void *buffer, *bufptr;
-	unsigned long size;
+	void *bufptr = buffer;
 	struct tree_entry_list **list_p;
+
 	if (item->object.parsed)
 		return 0;
 	item->object.parsed = 1;
-	buffer = bufptr = read_sha1_file(item->object.sha1, type, &size);
-	if (!buffer)
-		return error("Could not read %s",
-			     sha1_to_hex(item->object.sha1));
-	if (strcmp(type, tree_type))
-		return error("Object %s not a tree",
-			     sha1_to_hex(item->object.sha1));
 	list_p = &item->entries;
 	while (size) {
 		struct object *obj;
@@ -121,14 +113,11 @@ int parse_tree(struct tree *item)
 
 		entry = xmalloc(sizeof(struct tree_entry_list));
 		entry->name = strdup(path + 1);
-		entry->directory = S_ISDIR(mode);
-		entry->executable = mode & S_IXUSR;
+		entry->directory = S_ISDIR(mode) != 0;
+		entry->executable = (mode & S_IXUSR) != 0;
+		entry->symlink = S_ISLNK(mode) != 0;
+		entry->mode = mode;
 		entry->next = NULL;
-
-		/* Warn about trees that don't do the recursive thing.. */
-		if (strchr(path, '/')) {
-			item->has_full_path = 1;
-		}
 
 		bufptr += len + 20;
 		size -= len + 20;
@@ -147,4 +136,27 @@ int parse_tree(struct tree *item)
 		list_p = &entry->next;
 	}
 	return 0;
+}
+
+int parse_tree(struct tree *item)
+{
+	 char type[20];
+	 void *buffer;
+	 unsigned long size;
+	 int ret;
+
+	if (item->object.parsed)
+		return 0;
+	buffer = read_sha1_file(item->object.sha1, type, &size);
+	if (!buffer)
+		return error("Could not read %s",
+			     sha1_to_hex(item->object.sha1));
+	if (strcmp(type, tree_type)) {
+		free(buffer);
+		return error("Object %s not a tree",
+			     sha1_to_hex(item->object.sha1));
+	}
+	ret = parse_tree_buffer(item, buffer, size);
+	free(buffer);
+	return ret;
 }

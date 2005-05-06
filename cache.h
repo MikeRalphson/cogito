@@ -88,7 +88,12 @@ struct cache_entry {
 #define ce_stage(ce) ((CE_STAGEMASK & ntohs((ce)->ce_flags)) >> CE_STAGESHIFT)
 
 #define ce_permissions(mode) (((mode) & 0100) ? 0755 : 0644)
-#define create_ce_mode(mode) htonl(S_IFREG | ce_permissions(mode))
+static inline unsigned int create_ce_mode(unsigned int mode)
+{
+	if (S_ISLNK(mode))
+		return htonl(S_IFLNK);
+	return htonl(S_IFREG | ce_permissions(mode));
+}
 
 #define cache_entry_size(len) ((offsetof(struct cache_entry,name) + (len) + 8) & ~7)
 
@@ -117,6 +122,7 @@ extern int remove_entry_at(int pos);
 extern int remove_file_from_cache(char *path);
 extern int same_name(struct cache_entry *a, struct cache_entry *b);
 extern int cache_match_stat(struct cache_entry *ce, struct stat *st);
+extern int index_fd(unsigned char *sha1, int fd, struct stat *st);
 
 #define MTIME_CHANGED	0x0001
 #define CTIME_CHANGED	0x0002
@@ -124,12 +130,10 @@ extern int cache_match_stat(struct cache_entry *ce, struct stat *st);
 #define MODE_CHANGED    0x0008
 #define INODE_CHANGED   0x0010
 #define DATA_CHANGED    0x0020
+#define TYPE_CHANGED    0x0040
 
 /* Return a statically allocated filename matching the sha1 signature */
 extern char *sha1_file_name(const unsigned char *sha1);
-
-/* Write a memory buffer out to the sha file */
-extern int write_sha1_buffer(const unsigned char *sha1, void *buf, unsigned int size);
 
 /* Read and unpack a sha1 file into memory, write memory to a sha1 file */
 extern void * map_sha1_file(const unsigned char *sha1, unsigned long *size);

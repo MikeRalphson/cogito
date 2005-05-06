@@ -21,11 +21,8 @@ struct tag *lookup_tag(unsigned char *sha1)
         return (struct tag *) obj;
 }
 
-int parse_tag(struct tag *item)
+int parse_tag_buffer(struct tag *item, void *data, unsigned long size)
 {
-        char type[20];
-        void *data, *bufptr;
-        unsigned long size;
 	int typelen, taglen;
 	unsigned char object[20];
 	const char *type_line, *tag_line, *sig_line;
@@ -33,13 +30,6 @@ int parse_tag(struct tag *item)
         if (item->object.parsed)
                 return 0;
         item->object.parsed = 1;
-        data = bufptr = read_sha1_file(item->object.sha1, type, &size);
-        if (!data)
-                return error("Could not read %s",
-                             sha1_to_hex(item->object.sha1));
-        if (strcmp(type, tag_type))
-                return error("Object %s not a tag",
-                             sha1_to_hex(item->object.sha1));
 
 	if (size < 64)
 		return -1;
@@ -47,6 +37,8 @@ int parse_tag(struct tag *item)
 		return -1;
 
 	item->tagged = parse_object(object);
+	if (item->tagged)
+		add_ref(&item->object, item->tagged);
 
 	type_line = data + 48;
 	if (memcmp("\ntype ", type_line-1, 6))
@@ -70,4 +62,27 @@ int parse_tag(struct tag *item)
 	item->tag[taglen] = '\0';
 
 	return 0;
+}
+
+int parse_tag(struct tag *item)
+{
+	char type[20];
+	void *data;
+	unsigned long size;
+	int ret;
+
+	if (item->object.parsed)
+		return 0;
+	data = read_sha1_file(item->object.sha1, type, &size);
+	if (!data)
+		return error("Could not read %s",
+			     sha1_to_hex(item->object.sha1));
+	if (strcmp(type, tag_type)) {
+		free(data);
+		return error("Object %s not a tag",
+			     sha1_to_hex(item->object.sha1));
+	}
+	ret = parse_tag_buffer(item, data, size);
+	free(data);
+	return ret;
 }

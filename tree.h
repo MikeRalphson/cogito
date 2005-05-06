@@ -9,6 +9,8 @@ struct tree_entry_list {
 	struct tree_entry_list *next;
 	unsigned directory : 1;
 	unsigned executable : 1;
+	unsigned symlink : 1;
+	unsigned int mode;
 	char *name;
 	union {
 		struct tree *tree;
@@ -18,11 +20,12 @@ struct tree_entry_list {
 
 struct tree {
 	struct object object;
-	unsigned has_full_path : 1;
 	struct tree_entry_list *entries;
 };
 
 struct tree *lookup_tree(unsigned char *sha1);
+
+int parse_tree_buffer(struct tree *item, void *buffer, unsigned long size);
 
 int parse_tree(struct tree *tree);
 

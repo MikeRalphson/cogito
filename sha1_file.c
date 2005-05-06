@@ -284,8 +284,9 @@ int write_sha1_file(char *buf, unsigned long len, const char *type, unsigned cha
 	unsigned char sha1[20];
 	SHA_CTX c;
 	char *filename;
+	static char tmpfile[PATH_MAX];
 	char hdr[50];
-	int fd, hdrlen;
+	int fd, hdrlen, ret;
 
 	/* Generate the header */
 	hdrlen = sprintf(hdr, "%s %lu", type, len)+1;
@@ -300,16 +301,26 @@ int write_sha1_file(char *buf, unsigned long len, const char *type, unsigned cha
 		memcpy(returnsha1, sha1, 20);
 
 	filename = sha1_file_name(sha1);
-	fd = open(filename, O_WRONLY | O_CREAT | O_EXCL, 0666);
-	if (fd < 0) {
-		if (errno != EEXIST)
-			return -1;
-
+	fd = open(filename, O_RDONLY);
+	if (fd >= 0) {
 		/*
-		 * We might do collision checking here, but we'd need to
-		 * uncompress the old file and check it. Later.
+		 * FIXME!!! We might do collision checking here, but we'd
+		 * need to uncompress the old file and check it. Later.
 		 */
+		close(fd);
 		return 0;
+	}
+
+	if (errno != ENOENT) {
+		fprintf(stderr, "sha1 file %s: %s", filename, strerror(errno));
+		return -1;
+	}
+
+	snprintf(tmpfile, sizeof(tmpfile), "%s/obj_XXXXXX", get_object_directory());
+	fd = mkstemp(tmpfile);
+	if (fd < 0) {
+		fprintf(stderr, "unable to create temporary sha1 filename %s: %s", tmpfile, strerror(errno));
+		return -1;
 	}
 
 	/* Set it up */
@@ -339,63 +350,35 @@ int write_sha1_file(char *buf, unsigned long len, const char *type, unsigned cha
 	if (write(fd, compressed, size) != size)
 		die("unable to write file");
 	free(compressed);
+	fchmod(fd, 0444);
 	close(fd);
-		
-	return 0;
-}
 
-static inline int collision_check(char *filename, void *buf, unsigned int size)
-{
-#ifdef COLLISION_CHECK
-	void *map;
-	int fd = open(filename, O_RDONLY);
-	struct stat st;
-	int cmp;
+	ret = link(tmpfile, filename);
+	if (ret < 0) {
+		ret = errno;
 
-	/* Unreadable object, or object went away? Strange. */
-	if (fd < 0)
-		return -1;
-
-	if (fstat(fd, &st) < 0 || size != st.st_size) {
-		close(fd);
-		return -1;
+		/*
+		 * Coda hack - coda doesn't like cross-directory links,
+		 * so we fall back to a rename, which will mean that it
+		 * won't be able to check collisions, but that's not a
+		 * big deal.
+		 *
+		 * When this succeeds, we just return 0. We have nothing
+		 * left to unlink.
+		 */
+		if (ret == EXDEV && !rename(tmpfile, filename))
+			return 0;
 	}
-
-	map = mmap(NULL, size, PROT_READ, MAP_PRIVATE, fd, 0);
-	close(fd);
-	if (map == MAP_FAILED)
-		return -1;
-	cmp = memcmp(buf, map, size);
-	munmap(map, size);
-	if (cmp)
-		return -1;
-#endif
-	return 0;
-}
-
-int write_sha1_buffer(const unsigned char *sha1, void *buf, unsigned int size)
-{
-	char *filename = sha1_file_name(sha1);
-	int fd;
-
-	/* TODO: Write to a temporary fail and then rename() it. */
-
-	fd = open(filename, O_WRONLY | O_CREAT | O_EXCL, 0666);
-	if (fd < 0) {
-		if (errno != EEXIST)
+	unlink(tmpfile);
+	if (ret) {
+		if (ret != EEXIST) {
+			fprintf(stderr, "unable to write sha1 filename %s: %s", filename, strerror(ret));
 			return -1;
-		if (collision_check(filename, buf, size))
-			return error("SHA1 collision detected!"
-					" This is bad, bad, BAD!\a\n");
-		return 0;
+		}
+		/* FIXME!!! Collision check here ? */
 	}
 
-	if (write(fd, buf, size) != size) {
-		close(fd);
-		unlink(filename);
-		return error("Failed to write file %s\n", filename);
-	}
-	return close(fd);
+	return 0;
 }
 
 int write_sha1_from_fd(const unsigned char *sha1, int fd)
@@ -468,4 +451,23 @@ int has_sha1_file(const unsigned char *sha1)
 	if (!stat(filename, &st))
 		return 1;
 	return 0;
+}
+
+int index_fd(unsigned char *sha1, int fd, struct stat *st)
+{
+	unsigned long size = st->st_size;
+	void *buf;
+	int ret;
+
+	buf = "";
+	if (size)
+		buf = mmap(NULL, size, PROT_READ, MAP_PRIVATE, fd, 0);
+	close(fd);
+	if ((int)(long)buf == -1)
+		return -1;
+
+	ret = write_sha1_file(buf, size, "blob", sha1);
+	if (size)
+		munmap(buf, size);
+	return ret;
 }

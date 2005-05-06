@@ -33,7 +33,7 @@ CC=gcc
 AR=ar
 
 SCRIPTS=git-apply-patch-script git-merge-one-file-script git-prune-script \
-	git-pull-script git-tag-script
+	git-pull-script git-tag-script git-resolve-script
 
 PROG=   git-update-cache git-diff-files git-init-db git-write-tree \
 	git-read-tree git-commit-tree git-cat-file git-fsck-cache \
@@ -41,7 +41,7 @@ PROG=   git-update-cache git-diff-files git-init-db git-write-tree \
 	git-check-files git-ls-tree git-merge-base git-merge-cache \
 	git-unpack-file git-export git-diff-cache git-convert-cache \
 	git-http-pull git-rpush git-rpull git-rev-list git-mktag \
-	git-diff-tree-helper git-tar-tree git-local-pull
+	git-diff-tree-helper git-tar-tree git-local-pull git-write-blob
 
 SCRIPT=	commit-id tree-id parent-id cg-Xdiffdo cg-Xmergefile \
 	cg-add cg-admin-lsobj cg-cancel cg-clone cg-commit cg-diff \

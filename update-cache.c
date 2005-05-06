@@ -15,6 +15,12 @@
  */
 static int allow_add = 0, allow_remove = 0, not_new = 0;
 
+/*
+ * update-cache --refresh may not touch anything at all, in which case
+ * writing 1.6MB of the same thing is a waste.
+ */
+static int cache_changed = 0;
+
 /* Three functions to allow overloaded pointer return; see linux/err.h */
 static inline void *ERR_PTR(long error)
 {
@@ -29,57 +35,6 @@ static inline long PTR_ERR(const void *ptr)
 static inline long IS_ERR(const void *ptr)
 {
 	return (unsigned long)ptr > (unsigned long)-1000L;
-}
-
-static int index_fd(unsigned char *sha1, int fd, struct stat *st)
-{
-	z_stream stream;
-	unsigned long size = st->st_size;
-	int max_out_bytes = size + 200;
-	void *out = xmalloc(max_out_bytes);
-	void *metadata = xmalloc(200);
-	int metadata_size;
-	void *in;
-	SHA_CTX c;
-
-	in = "";
-	if (size)
-		in = mmap(NULL, size, PROT_READ, MAP_PRIVATE, fd, 0);
-	close(fd);
-	if (!out || (int)(long)in == -1)
-		return -1;
-
-	metadata_size = 1+sprintf(metadata, "blob %lu", size);
-
-	SHA1_Init(&c);
-	SHA1_Update(&c, metadata, metadata_size);
-	SHA1_Update(&c, in, size);
-	SHA1_Final(sha1, &c);
-
-	memset(&stream, 0, sizeof(stream));
-	deflateInit(&stream, Z_BEST_COMPRESSION);
-
-	/*
-	 * ASCII size + nul byte
-	 */	
-	stream.next_in = metadata;
-	stream.avail_in = metadata_size;
-	stream.next_out = out;
-	stream.avail_out = max_out_bytes;
-	while (deflate(&stream, 0) == Z_OK)
-		/* nothing */;
-
-	/*
-	 * File content
-	 */
-	stream.next_in = in;
-	stream.avail_in = size;
-	while (deflate(&stream, Z_FINISH) == Z_OK)
-		/*nothing */;
-
-	deflateEnd(&stream);
-	
-	return write_sha1_buffer(sha1, out, stream.total_out);
 }
 
 /*
@@ -102,29 +57,20 @@ static void fill_stat_cache_info(struct cache_entry *ce, struct stat *st)
 	ce->ce_size = htonl(st->st_size);
 }
 
-static int add_file_to_cache(char *path)
+static int add_file_to_cache_1(char *path)
 {
 	int size, namelen;
 	struct cache_entry *ce;
 	struct stat st;
 	int fd;
+	char *target;
 
-	fd = open(path, O_RDONLY);
-	if (fd < 0) {
+	if (lstat(path, &st) < 0) {
 		if (errno == ENOENT || errno == ENOTDIR) {
 			if (allow_remove)
 				return remove_file_from_cache(path);
 		}
 		return error("open(\"%s\"): %s", path, strerror(errno));
-	}
-	if (fstat(fd, &st) < 0) {
-		close(fd);
-		return -1;
-	}
-	if (S_ISDIR(st.st_mode)) {
-		fprintf(stderr, "'%s' is a directory, ignoring\n", path);
-		close(fd);
-		return 0;
 	}
 	namelen = strlen(path);
 	size = cache_entry_size(namelen);
@@ -134,16 +80,54 @@ static int add_file_to_cache(char *path)
 	fill_stat_cache_info(ce, &st);
 	ce->ce_mode = create_ce_mode(st.st_mode);
 	ce->ce_flags = htons(namelen);
+	switch (st.st_mode & S_IFMT) {
+	case S_IFREG:
+		fd = open(path, O_RDONLY);
+		if (fd < 0)
+			return -1;
+		if (index_fd(ce->sha1, fd, &st) < 0)
+			return -1;
+		break;
+	case S_IFLNK:
+		target = xmalloc(st.st_size+1);
+		if (readlink(path, target, st.st_size+1) != st.st_size) {
+			free(target);
+			return -1;
+		}
+		if (write_sha1_file(target, st.st_size, "blob", ce->sha1))
+			return -1;
+		free(target);
+		break;
+	default:
+		return -1;
+	}
+	if (!cache_changed) {
+		/* If we have not smudged the cache, be careful
+		 * to keep it clean.  Find out if we have a matching
+		 * cache entry that add_cache_entry would replace with,
+		 * and if it matches then do not bother calling it.
+		 */
+		int pos = cache_name_pos(ce->name, namelen);
+		if ((0 <= pos) &&
+		    !memcmp(active_cache[pos], ce, sizeof(*ce))) {
+			free(ce);
+			/* magic to tell add_file_to_cache that
+			 * we have not updated anything.
+			 */
+			return 999;
+		}
+	}
+	return add_cache_entry(ce, allow_add);
+}
 
-	if (index_fd(ce->sha1, fd, &st) < 0) {
-		free(ce);
-		return -1;
-	}
-	if (add_cache_entry(ce, allow_add)) {
-		free(ce);
-		return -1;
-	}
-	return 0;
+static int add_file_to_cache(char *path)
+{
+	int ret = add_file_to_cache_1(path);
+	if (ret == 0)
+		cache_changed = 1;
+	else if (ret == 999)
+		ret = 0;
+	return ret;
 }
 
 static int match_data(int fd, void *buffer, unsigned long size)
@@ -181,6 +165,33 @@ static int compare_data(struct cache_entry *ce, unsigned long expected_size)
 	return match;
 }
 
+static int compare_link(struct cache_entry *ce, unsigned long expected_size)
+{
+	int match = -1;
+	char *target;
+	void *buffer;
+	unsigned long size;
+	char type[10];
+	int len;
+
+	target = xmalloc(expected_size);
+	len = readlink(ce->name, target, expected_size);
+	if (len != expected_size) {
+		free(target);
+		return -1;
+	}
+	buffer = read_sha1_file(ce->sha1, type, &size);
+	if (!buffer) {
+		free(target);
+		return -1;
+	}
+	if (size == expected_size)
+		match = memcmp(buffer, target, size);
+	free(buffer);
+	free(target);
+	return match;
+}
+
 /*
  * "refresh" does not calculate a new sha1 file or bring the
  * cache up-to-date for mode/content changes. But what it
@@ -198,7 +209,7 @@ static struct cache_entry *refresh_entry(struct cache_entry *ce)
 	struct cache_entry *updated;
 	int changed, size;
 
-	if (stat(ce->name, &st) < 0)
+	if (lstat(ce->name, &st) < 0)
 		return ERR_PTR(-errno);
 
 	changed = cache_match_stat(ce, &st);
@@ -206,15 +217,26 @@ static struct cache_entry *refresh_entry(struct cache_entry *ce)
 		return ce;
 
 	/*
-	 * If the mode has changed, there's no point in trying
+	 * If the mode or type has changed, there's no point in trying
 	 * to refresh the entry - it's not going to match
 	 */
-	if (changed & MODE_CHANGED)
+	if (changed & (MODE_CHANGED | TYPE_CHANGED))
 		return ERR_PTR(-EINVAL);
 
-	if (compare_data(ce, st.st_size))
+	switch (st.st_mode & S_IFMT) {
+	case S_IFREG:
+		if (compare_data(ce, st.st_size))
+			return ERR_PTR(-EINVAL);
+		break;
+	case S_IFLNK:
+		if (compare_link(ce, st.st_size))
+			return ERR_PTR(-EINVAL);
+		break;
+	default:
 		return ERR_PTR(-EINVAL);
+	}
 
+	cache_changed = 1;
 	size = ce_size(ce);
 	updated = xmalloc(size);
 	memcpy(updated, ce, size);
@@ -298,6 +320,7 @@ static int add_cacheinfo(char *arg1, char *arg2, char *arg3)
 	if (!verify_path(arg3))
 		return -1;
 
+	cache_changed = 1;
 	len = strlen(arg3);
 	size = cache_entry_size(len);
 	ce = xmalloc(size);
@@ -370,6 +393,15 @@ int main(int argc, char **argv)
 				i += 3;
 				continue;
 			}
+			if (!strcmp(path, "--force-remove")) {
+				if (argc <= i + 1)
+					die("update-cache: --force-remove <path>");
+				if (remove_file_from_cache(argv[i+1]))
+					die("update-cache: --force-remove cannot remove %s", argv[i+1]);
+				i++;
+				continue;
+			}
+
 			if (!strcmp(path, "--ignore-missing")) {
 				not_new = 1;
 				continue;
@@ -383,9 +415,13 @@ int main(int argc, char **argv)
 		if (add_file_to_cache(path))
 			die("Unable to add %s to database", path);
 	}
-	if (write_cache(newfd, active_cache, active_nr) || rename(lockfile, indexfile))
+
+	if (!cache_changed)
+		unlink(lockfile);
+	else if (write_cache(newfd, active_cache, active_nr) ||
+		 rename(lockfile, indexfile))
 		die("Unable to write new cachefile");
 
 	lockfile_name = NULL;
-	return has_errors;
+	return has_errors ? 1 : 0;
 }

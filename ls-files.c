@@ -148,7 +148,8 @@ static void read_directory(const char *path, const char *base, int baselen)
 				/* fallthrough */
 			case DT_DIR:
 				memcpy(fullname + baselen + len, "/", 2);
-				read_directory(fullname, fullname, baselen + len + 1);
+				read_directory(fullname, fullname,
+					       baselen + len + 1);
 				continue;
 			case DT_REG:
 				break;
@@ -197,7 +198,6 @@ static void show_files(void)
 				       ntohl(ce->ce_mode),
 				       sha1_to_hex(ce->sha1),
 				       ce_stage(ce),
-				       /* ntohl(ce->ce_size), */
 				       ce->name, line_terminator); 
 		}
 	}
@@ -207,9 +207,10 @@ static void show_files(void)
 			struct stat st;
 			if (excluded(ce->name) != show_ignored)
 				continue;
-			if (!stat(ce->name, &st))
+			if (!lstat(ce->name, &st))
 				continue;
-			printf("%s%s%c", tag_removed, ce->name, line_terminator);
+			printf("%s%s%c", tag_removed, ce->name,
+			       line_terminator);
 		}
 	}
 }
@@ -243,7 +244,9 @@ int main(int argc, char **argv)
 		} else if (!strcmp(arg, "-s") || !strcmp(arg, "--stage")) {
 			show_stage = 1;
 		} else if (!strcmp(arg, "-u") || !strcmp(arg, "--unmerged")) {
-			// There's no point in showing unmerged unless you also show the stage information
+			/* There's no point in showing unmerged unless
+			 * you also show the stage information.
+			 */
 			show_stage = 1;
 			show_unmerged = 1;
 		} else if (!strcmp(arg, "-x") && i+1 < argc) {
@@ -259,7 +262,8 @@ int main(int argc, char **argv)
 	}
 
 	if (show_ignored && !nr_excludes) {
-		fprintf(stderr, "%s: --ignored needs some exclude pattern\n", argv[0]);
+		fprintf(stderr, "%s: --ignored needs some exclude pattern\n",
+			argv[0]);
 		exit(1);
 	}
 
