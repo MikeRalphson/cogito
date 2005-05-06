@@ -55,7 +55,6 @@ static void show_new_file(struct cache_entry *new)
 		return;
 
 	show_file("+", new, sha1, mode);
-	return 0;
 }
 
 static int show_modified(struct cache_entry *old,
