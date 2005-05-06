@@ -97,14 +97,14 @@ case "${1:-.}${2:-.}${3:-.}" in
 	chmod "$mode" "$src2"
 
 	if ! merge "$src2" "$orig" "$src1"; then
-		ret=$?
+		ret=1
 		# The user already gets the warning from merge itself and
 		# from merge-cache too. This is too much.
 		#error "Auto-merge failed"
 		mv -- "$src2" "$4"
 
 	elif ! mv -- "$src2" "$4" || ! git-update-cache --add -- "$4"; then
-		ret=$?
+		ret=1
 		error "Choosing $src2 -> $4 failed"
 	fi
 	rm "$orig" "$src1"
