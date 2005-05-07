@@ -5,8 +5,12 @@
 # Based on an example script fragment sent to LKML by Linus Torvalds.
 #
 # Ignores any parameters for now, excepts changelog entry on stdin.
-# -C makes git commit ignore cache and just commit the thing as-is;
+# -C makes cg-commit ignore cache and just commit the thing as-is;
 # this is for internal purposes (merging).
+# -m"log message" specifies the commit message, which is used instead
+# of starting up an editor (if the input is not stdin, the input is
+# appended after all the -m messages). Multiple -m parameters are
+# appended to a single commit message, each as separate paragraph.
 
 . cg-Xlib
 
@@ -18,6 +22,17 @@ if [ "$1" = "-C" ]; then
 	ignorecache=1
 	shift
 fi
+
+msgs=()
+while [ "$1" ]; do
+	case "$1" in
+	-m*)
+		msgs=("${msgs[@]}" "${1#-m}")
+		shift
+		;;
+	*)	break;;
+	esac
+done
 
 if [ "$1" ]; then
 	commitfiles=("$@")
@@ -73,10 +88,21 @@ if [ "$merging" ]; then
 	done
 	echo >>$LOGMSG
 fi
+first=1
+for msg in "${msgs[@]}"; do
+	if [ "$first" ]; then
+		first=
+	else
+		echo >>$LOGMSG
+	fi
+	echo $msg | fmt >>$LOGMSG
+done
 if tty -s; then
 	cp $LOGMSG $LOGMSG2
-	${EDITOR:-vi} $LOGMSG2
-	[ $LOGMSG2 -nt $LOGMSG ] || die 'Commit message not modified, commit aborted'
+	if ! [ "$msgs" ]; then
+		${EDITOR:-vi} $LOGMSG2
+		[ $LOGMSG2 -nt $LOGMSG ] || die 'Commit message not modified, commit aborted'
+	fi
 	grep -v ^CG: $LOGMSG2 >$LOGMSG
 else
 	cat >>$LOGMSG

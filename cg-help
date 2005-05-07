@@ -27,7 +27,7 @@ Available commands:
 	cg-branch-ls
 	cg-cancel
 	cg-clone	SOURCE_LOC [DESTDIR]
-	cg-commit	[FILE]...	< log message on stdin
+	cg-commit	[-m"Commit message"]... [FILE]... < log message
 	cg-diff		[-p] [-r FROM_ID[:TO_ID]] [FILE]...
 	cg-export	DESTDIR [TREE_ID]
 	cg-help		[COMMAND]
