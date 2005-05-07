@@ -7,8 +7,6 @@
 # Ignores any parameters for now, excepts changelog entry on stdin.
 # -C makes git commit ignore cache and just commit the thing as-is;
 # this is for internal purposes (merging).
-#
-# FIXME: Gets it wrong for filenames containing spaces.
 
 . cg-Xlib
 
