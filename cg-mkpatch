@@ -13,14 +13,19 @@
 . cg-Xlib
 
 omit_header=
+has_diffstat=
 if [ "$1" = "-s" ]; then
 	shift
 	omit_header=1
+else
+	which diffstat >/dev/null 2>&1 && has_diffstat=1
 fi
 
 showpatch () {
 	header=$(mktemp -t gitpatch.XXXXXX)
+	patch=$(mktemp -t gitpatch.XXXXXX)
 	id=$1
+	cg-diff -p -r $id >$patch
 	git-cat-file commit $id | while read key rest; do
 		case "$key" in
 		"author"|"committer")
@@ -37,8 +42,14 @@ showpatch () {
 			if [ ! "$omit_header" ]; then
 				echo
 				echo ---
+
 				echo commit $id
 				cat $header
+
+				if [ "$has_diffstat" ]; then
+					echo
+					cat $patch | diffstat -p1
+				fi
 			fi
 			;;
 		*)
@@ -47,8 +58,8 @@ showpatch () {
 		esac
 	done
 	echo
-	cg-diff -p -r $id
-	rm $header
+	cat $patch
+	rm $header $patch
 }
 
 
