@@ -3,11 +3,20 @@
 # Make a patch from a given commit.
 # Copyright (c) Petr Baudis, 2005
 #
+# Takes an -s option which specifies whether to print a short
+# version of the patch without a patch header with meta info such
+# as author and committer.
+#
 # Takes commit ID, defaulting to HEAD, or id1:id2, forming a range
 # (id1;id2]. (Use "id1:" to take just everything from id1 to HEAD.)
 
 . cg-Xlib
 
+omit_header=
+if [ "$1" = "-s" ]; then
+	shift
+	omit_header=1
+fi
 
 showpatch () {
 	header=$(mktemp -t gitpatch.XXXXXX)
@@ -25,10 +34,12 @@ showpatch () {
 			;;
 		"")
 			cat
-			echo
-			echo ---
-			echo commit $id
-			cat $header
+			if [ ! "$omit_header" ]; then
+				echo
+				echo ---
+				echo commit $id
+				cat $header
+			fi
 			;;
 		*)
 			echo $key $rest >>$header

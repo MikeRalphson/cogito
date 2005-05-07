@@ -35,7 +35,7 @@ Available commands:
 	cg-log		[-c] [COMMIT_ID | COMMIT_ID:COMMIT_ID]
 	cg-ls		[TREE_ID]
 	cg-merge	[-c] [-b BASE_ID] FROM_ID
-	cg-mkpatch	[COMMIT_ID | COMMIT_ID:COMMIT_ID]
+	cg-mkpatch	[-s] [COMMIT_ID | COMMIT_ID:COMMIT_ID]
 	cg-patch			< patch on stdin
 	cg-pull		[BNAME]
 	cg-rm		FILE...
