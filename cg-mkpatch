@@ -12,15 +12,28 @@
 showpatch () {
 	header=$(mktemp -t gitpatch.XXXXXX)
 	id=$1
-	git-cat-file commit $id | while read line; do
-		if [ ! "$line" ]; then
+	git-cat-file commit $id | while read key rest; do
+		case "$key" in
+		"author"|"committer")
+			date=(${rest#*> })
+			pdate="$(showdate $date)"
+			if [ "$pdate" ]; then
+				echo $key $rest | sed "s/>.*/> $pdate/" >>$header
+			else
+				echo $key $rest >>$header
+			fi
+			;;
+		"")
 			cat
 			echo
 			echo ---
 			echo commit $id
 			cat $header
-		fi
-		echo $line >>$header
+			;;
+		*)
+			echo $key $rest >>$header
+			;;
+		esac
 	done
 	echo
 	cg-diff -p -r $id
