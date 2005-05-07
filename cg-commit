@@ -97,16 +97,16 @@ for msg in "${msgs[@]}"; do
 	fi
 	echo $msg | fmt >>$LOGMSG
 done
+cp $LOGMSG $LOGMSG2
 if tty -s; then
-	cp $LOGMSG $LOGMSG2
 	if ! [ "$msgs" ]; then
 		${EDITOR:-vi} $LOGMSG2
 		[ $LOGMSG2 -nt $LOGMSG ] || die 'Commit message not modified, commit aborted'
 	fi
-	grep -v ^CG: $LOGMSG2 >$LOGMSG
 else
-	cat >>$LOGMSG
+	cat >>$LOGMSG2
 fi
+grep -v ^CG: $LOGMSG2 >$LOGMSG
 rm $LOGMSG2
 
 if [ ! "$ignorecache" ]; then
