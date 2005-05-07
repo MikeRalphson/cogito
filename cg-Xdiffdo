@@ -34,7 +34,8 @@ mkbanner () {
 
 	labelapp=""
 	[ x"$mode" != x"!" ] && labelapp="$labelapp mode:$mode"
-	[ x"$sha1" != x"!" ] && labelapp="$labelapp sha1:$sha1"
+	# The sha1 attribute serves no purpose and gets annoying.
+	# [ x"$sha1" != x"!" ] && labelapp="$labelapp sha1:$sha1"
 	labelapp=${labelapp:1}
 
 	[ "$labelapp" ] && label="$label  ($labelapp)"
