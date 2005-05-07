@@ -73,10 +73,14 @@ if [ "$merging" ]; then
 	done
 	echo >>$LOGMSG
 fi
-cp $LOGMSG $LOGMSG2
-${EDITOR:-vi} $LOGMSG2
-[ $LOGMSG2 -nt $LOGMSG ] || die 'Commit message not modified, commit aborted'
-grep -v ^CG: $LOGMSG2 >$LOGMSG
+if tty -s; then
+	cp $LOGMSG $LOGMSG2
+	${EDITOR:-vi} $LOGMSG2
+	[ $LOGMSG2 -nt $LOGMSG ] || die 'Commit message not modified, commit aborted'
+	grep -v ^CG: $LOGMSG2 >$LOGMSG
+else
+	cat >>$LOGMSG
+fi
 rm $LOGMSG2
 
 if [ ! "$ignorecache" ]; then
