@@ -32,7 +32,7 @@ Available commands:
 	cg-export	DESTDIR [TREE_ID]
 	cg-help		[COMMAND]
 	cg-init		[SOURCE_LOC]
-	cg-log		[-c] [COMMIT_ID | COMMIT_ID:COMMIT_ID]
+	cg-log		[-c] [-f] [COMMIT_ID | COMMIT_ID:COMMIT_ID]
 	cg-ls		[TREE_ID]
 	cg-merge	[-c] [-b BASE_ID] FROM_ID
 	cg-mkpatch	[-s] [COMMIT_ID | COMMIT_ID:COMMIT_ID]

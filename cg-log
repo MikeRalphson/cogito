@@ -10,7 +10,10 @@
 #	header		Green	
 #	author 		Cyan
 #	committer	Magenta
+#	files		Blue
 #	signoff		Yellow
+#
+# Takes an -f option to list which files was changed.
 #
 # Takes an id resolving to a commit to start from (HEAD by default),
 # or id1:id2 representing an (id1;id2] range of commits to show.
@@ -23,15 +26,42 @@ if [ "$1" = "-c" ]; then
 	colheader="$(tput setaf 2)"    # Green
 	colauthor="$(tput setaf 6)"    # Cyan
 	colcommitter="$(tput setaf 5)" # Magenta
+	colfiles="$(tput setaf 4)"     # Blue
 	colsignoff="$(tput setaf 3)"   # Yellow
 	coldefault="$(tput op)"        # Restore default
 else
 	colheader=
 	colauthor=
 	colcommitter=
+	colfiles=
 	colsignoff=
 	coldefault=
 fi
+
+list_files=
+if [ "$1" = "-f" ]; then
+	shift
+	list_files=1
+fi
+
+list_commit_files()
+{
+	tree1="$1"
+	tree2="$2"
+	sep="    * $colfiles"
+	# List all files for for the initial commit
+	if [ -z $tree2 ]; then
+		list_cmd="git-ls-tree $tree1"
+	else
+		list_cmd="git-diff-tree -r $tree1 $tree2"
+	fi
+	echo
+	$list_cmd | while read modes type sha1s file; do
+		echo -n "$sep$file"
+		sep=", "
+	done
+	echo "$coldefault:"
+}
 
 if echo "$1" | grep -q ':'; then
 	id1=$(commit-id $(echo "$1" | cut -d : -f 1)) || exit 1
@@ -47,6 +77,8 @@ else
 fi
 
 $revls | $revsort | while read time commit parents; do
+	tree1=
+	tree2=
 	[ "$revfmt" = "git-rev-list" ] && commit="$time"
 	echo $colheader""commit ${commit%:*} $coldefault;
 	git-cat-file commit $commit | \
@@ -68,7 +100,18 @@ $revls | $revsort | while read time commit parents; do
 					echo $color$key $rest $coldefault
 				fi
 				;;
+			"tree"|"parent")
+				if [ -z $tree1 ]; then
+					tree1=$rest
+				elif [ -z $tree2 ]; then
+					tree2=$rest
+				fi
+				echo $colheader$key $rest $coldefault
+				;;
 			"")
+				if [ -n "$list_files" ]; then
+					list_commit_files "$tree1" "$tree2"
+				fi
 				echo; sed -re '
 					/ *Signed-off-by:.*/Is//'$colsignoff'&'$coldefault'/
 					/ *Acked-by:.*/Is//'$colsignoff'&'$coldefault'/
