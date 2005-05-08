@@ -27,5 +27,9 @@ if [ "$uri" ]; then
 	git-update-cache --refresh
 
 	echo "Cloned (origin $uri available as branch \"origin\")"
+else
+	git-read-tree # Seed the dircache
+	find * | xargs cg-add
+	cg-commit -C -m"Initial commit" -e
 fi
 exit 0
