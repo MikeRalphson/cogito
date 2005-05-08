@@ -73,18 +73,20 @@ if [ ! "$ignorecache" ]; then
 		# Prepend a letter describing whether it's addition,
 		# removal or update. Or call git status on those files.
 		echo CG: $file >>$LOGMSG
+		[ "$msgs" ] && echo $file
 	done
 	echo CG: >>$LOGMSG
 fi
 
 if [ "$merging" ]; then
 	echo -n 'Merge with ' >>$LOGMSG
+	[ "$msgs" ] && echo -n 'Merge with '
 	[ -s .git/merging-sym ] || cp .git/merging .git/merging-sym
 	for sym in $(cat .git/merging-sym); do
 		uri=$(cat .git/branches/$sym)
 		[ "$uri" ] || uri="$sym"
 		echo "$uri" >>$LOGMSG
-		echo "$uri"
+		[ "$msgs" ] && echo "$uri"
 	done
 	echo >>$LOGMSG
 fi
