@@ -112,6 +112,7 @@ $revls | $revsort | while read time commit parents; do
 	echo $colheader""commit ${commit%:*} $coldefault;
 	git-cat-file commit $commit | \
 		while read key rest; do
+			trap exit SIGPIPE
 			case "$key" in
 			"author"|"committer")
 				if [ "$key" = "author" ]; then
