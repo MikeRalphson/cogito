@@ -12,9 +12,9 @@
 name=$1
 
 
-[ "$name" ] || [ -s .git/refs/heads/origin ] && name=origin
+[ "$name" ] || { [ -s .git/refs/heads/origin ] && name=origin; }
 [ "$name" ] || die "where to pull from?"
-uri=$(cat ".git/branches/$name" 2>/dev/null) || die "unknown branch"
+uri=$(cat ".git/branches/$name" 2>/dev/null) || die "unknown branch: $name"
 
 rembranch=master
 if echo "$uri" | grep -q '#'; then
