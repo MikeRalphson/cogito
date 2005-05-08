@@ -117,7 +117,7 @@ if [ ! "$ignorecache" ]; then
 		# TODO: Prepend a letter describing whether it's addition,
 		# removal or update. Or call git status on those files.
 		echo "CG:    $file" >>$LOGMSG
-		[ "$msgs" ] && echo $file
+		[ "$msgs" ] && ! [ "$forceeditor" ] && echo $file
 	done
 fi
 echo "CG: -----------------------------------------------------------------------" >>$LOGMSG
