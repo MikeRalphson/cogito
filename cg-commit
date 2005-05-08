@@ -18,14 +18,13 @@
 [ -s .git/blocked ] && die "committing blocked: $(cat .git/blocked)"
 
 ignorecache=
-if [ "$1" = "-C" ]; then
-	ignorecache=1
-	shift
-fi
-
 msgs=()
 while [ "$1" ]; do
 	case "$1" in
+	-C)
+		ignorecache=1
+		shift
+		;;
 	-m*)
 		msgs=("${msgs[@]}" "${1#-m}")
 		shift
