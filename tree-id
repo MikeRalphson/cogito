@@ -8,7 +8,11 @@
 SHA1="[A-Za-z0-9]{40}"
 TREE="^tree $SHA1$"
 
-id=$(git-cat-file commit $(commit-id "$1") | egrep "$TREE" | cut -d ' ' -f 2 | head -n 1)
+id="$1"
+
+if [ ! "$id" ] || [ "$(git-cat-file -t "$id")" != "tree" ]; then
+	id=$(git-cat-file commit $(commit-id "$id") | egrep "$TREE" | cut -d ' ' -f 2 | head -n 1)
+fi
 
 if [ "$(git-cat-file -t "$id")" != "tree" ]; then
 	echo "Invalid id: $id" >&2
