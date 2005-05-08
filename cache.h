@@ -97,9 +97,8 @@ static inline unsigned int create_ce_mode(unsigned int mode)
 
 #define cache_entry_size(len) ((offsetof(struct cache_entry,name) + (len) + 8) & ~7)
 
-const char *sha1_file_directory;
 struct cache_entry **active_cache;
-unsigned int active_nr, active_alloc;
+unsigned int active_nr, active_alloc, active_cache_changed;
 
 #define DB_ENVIRONMENT "SHA1_FILE_DIRECTORY"
 #define DEFAULT_DB_ENVIRONMENT ".git/objects"
@@ -167,6 +166,7 @@ extern void *read_object_with_reference(const unsigned char *sha1,
 					unsigned long *size,
 					unsigned char *sha1_ret);
 
+const char *show_date(unsigned long time, int timezone);
 void parse_date(char *date, char *buf, int bufsize);
 void datestamp(char *buf, int bufsize);
 

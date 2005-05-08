@@ -4,6 +4,16 @@
 #define RECORDSIZE	(512)
 #define BLOCKSIZE	(RECORDSIZE * 20)
 
+#define TYPEFLAG_AUTO		'\0'
+#define TYPEFLAG_REG		'0'
+#define TYPEFLAG_LNK		'2'
+#define TYPEFLAG_DIR		'5'
+#define TYPEFLAG_GLOBAL_HEADER	'g'
+#define TYPEFLAG_EXT_HEADER	'x'
+
+#define EXT_HEADER_PATH		1
+#define EXT_HEADER_LINKPATH	2
+
 static const char *tar_tree_usage = "tar-tree <key> [basedir]";
 
 static char block[BLOCKSIZE];
@@ -43,6 +53,15 @@ static void write_if_needed(void)
 		reliable_write(block, BLOCKSIZE);
 		offset = 0;
 	}
+}
+
+/* acquire the next record from the buffer; user must call write_if_needed() */
+static char *get_record(void)
+{
+	char *p = block + offset;
+	memset(p, 0, RECORDSIZE);
+	offset += RECORDSIZE;
+	return p;
 }
 
 /*
@@ -113,12 +132,6 @@ static void append_char(char **p, char c)
 	*p += 1;
 }
 
-static void append_long(char **p, long n)
-{
-	int len = sprintf(*p, "%ld", n);
-	*p += len;
-}
-
 static void append_path_prefix(char **buffer, struct path_prefix *prefix)
 {
 	if (!prefix)
@@ -160,83 +173,140 @@ static unsigned int path_len(int is_dir, const char *basepath,
 	return len;
 }
 
+static void append_extended_header_prefix(char **p, unsigned int size,
+                                          const char *keyword)
+{
+	int len = sprintf(*p, "%u %s=", size, keyword);
+	*p += len;
+}
+
+static unsigned int extended_header_len(const char *keyword,
+                                        unsigned int valuelen)
+{
+	/* "%u %s=%s\n" */
+	unsigned int len = 1 + 1 + strlen(keyword) + 1 + valuelen + 1;
+	if (len > 9)
+		len++;
+	if (len > 99)
+		len++;
+	return len;
+}
+
+static void append_extended_header(char **p, const char *keyword,
+                                   const char *value, unsigned int len)
+{
+	unsigned int size = extended_header_len(keyword, len);
+	append_extended_header_prefix(p, size, keyword);
+	memcpy(*p, value, len);
+	*p += len;
+	append_char(p, '\n');
+}
+
 static void write_header(const char *, char, const char *, struct path_prefix *,
-                         const char *, unsigned int, unsigned long);
+                         const char *, unsigned int, void *, unsigned long);
 
 /* stores a pax extended header directly in the block buffer */
 static void write_extended_header(const char *headerfilename, int is_dir,
-                                  const char *basepath,
+                                  unsigned int flags, const char *basepath,
                                   struct path_prefix *prefix,
-                                  const char *path, unsigned int namelen)
+                                  const char *path, unsigned int namelen,
+                                  void *content, unsigned int contentsize)
 {
-	char *p;
-	unsigned int size = 1 + 6 + namelen + 1;
-	if (size > 9)
-		size++;
-	if (size > 99)
-		size++;
-	if (size > RECORDSIZE)
-		die("tar-tree: extended header too big, wtf?");
-	write_header(NULL, 'x', NULL, NULL, headerfilename, 0100600, size);
-	p = block + offset;
-	memset(p, 0, RECORDSIZE);
-	offset += RECORDSIZE;
-	append_long(&p, size);
-	append_string(&p, " path=");
+	char *buffer, *p;
+	unsigned int pathlen, size, linkpathlen = 0;
+
+	size = pathlen = extended_header_len("path", namelen);
+	if (flags & EXT_HEADER_LINKPATH) {
+		linkpathlen = extended_header_len("linkpath", contentsize);
+		size += linkpathlen;
+	}
+	write_header(NULL, TYPEFLAG_EXT_HEADER, NULL, NULL, headerfilename,
+	             0100600, NULL, size);
+
+	buffer = p = malloc(size);
+	if (!buffer)
+		die("git-tar-tree: %s", strerror(errno));
+	append_extended_header_prefix(&p, pathlen, "path");
 	append_path(&p, is_dir, basepath, prefix, path);
 	append_char(&p, '\n');
-	write_if_needed();
+	if (flags & EXT_HEADER_LINKPATH)
+		append_extended_header(&p, "linkpath", content, contentsize);
+	write_blocked(buffer, size);
+	free(buffer);
 }
 
 static void write_global_extended_header(const char *sha1)
 {
 	char *p;
-	write_header(NULL, 'g', NULL, NULL, "pax_global_header", 0, 52);
-	p = block + offset;
-	memset(p, 0, RECORDSIZE);
-	offset += RECORDSIZE;
-	append_long(&p, 52);	/* 2 + 9 + 40 + 1 */
-	append_string(&p, " comment=");
-	append_string(&p, sha1_to_hex(sha1));
-	append_char(&p, '\n');
+	unsigned int size;
+
+	size = extended_header_len("comment", 40);
+	write_header(NULL, TYPEFLAG_GLOBAL_HEADER, NULL, NULL,
+	             "pax_global_header", 0100600, NULL, size);
+
+	p = get_record();
+	append_extended_header(&p, "comment", sha1_to_hex(sha1), 40);
 	write_if_needed();
 }
 
 /* stores a ustar header directly in the block buffer */
 static void write_header(const char *sha1, char typeflag, const char *basepath,
                          struct path_prefix *prefix, const char *path,
-                         unsigned int mode, unsigned long size)
+                         unsigned int mode, void *buffer, unsigned long size)
 {
 	unsigned int namelen; 
-	char *p, *header = NULL;
+	char *header = NULL;
 	unsigned int checksum = 0;
 	int i;
+	unsigned int ext_header = 0;
+
+	if (typeflag == TYPEFLAG_AUTO) {
+		if (S_ISDIR(mode))
+			typeflag = TYPEFLAG_DIR;
+		else if (S_ISLNK(mode))
+			typeflag = TYPEFLAG_LNK;
+		else
+			typeflag = TYPEFLAG_REG;
+	}
 
 	namelen = path_len(S_ISDIR(mode), basepath, prefix, path);
-	if (namelen > 500) {
-		die("tar-tree: name too log of object %s\n", sha1_to_hex(sha1));
-	} else if (namelen > 100) {
-		char *sha1_hex = sha1_to_hex(sha1);
-		char headerfilename[51];
-		sprintf(headerfilename, "%s.paxheader", sha1_hex);
-		/* the extended header must be written before the normal one */
-		write_extended_header(headerfilename, S_ISDIR(mode), basepath,
-				      prefix, path, namelen);
+	if (namelen > 100)
+		ext_header |= EXT_HEADER_PATH;
+	if (typeflag == TYPEFLAG_LNK && size > 100)
+		ext_header |= EXT_HEADER_LINKPATH;
 
-		header = block + offset;
-		memset(header, 0, RECORDSIZE);
-		offset += RECORDSIZE;
-		sprintf(header, "%s.data", sha1_hex);
+	/* the extended header must be written before the normal one */
+	if (ext_header) {
+		char headerfilename[51];
+		sprintf(headerfilename, "%s.paxheader", sha1_to_hex(sha1));
+		write_extended_header(headerfilename, S_ISDIR(mode),
+		                      ext_header, basepath, prefix, path,
+		                      namelen, buffer, size);
+	}
+
+	header = get_record();
+
+	if (ext_header) {
+		sprintf(header, "%s.data", sha1_to_hex(sha1));
 	} else {
-		header = block + offset;
-		memset(header, 0, RECORDSIZE);
-		offset += RECORDSIZE;
-		p = header;
+		char *p = header;
 		append_path(&p, S_ISDIR(mode), basepath, prefix, path);
+	}
+
+	if (typeflag == TYPEFLAG_LNK) {
+		if (ext_header & EXT_HEADER_LINKPATH) {
+			sprintf(&header[157], "see %s.paxheader",
+			        sha1_to_hex(sha1));
+		} else {
+			if (buffer)
+				strncpy(&header[157], buffer, size);
+		}
 	}
 
 	if (S_ISDIR(mode))
 		mode |= 0755;	/* GIT doesn't store permissions of dirs */
+	if (S_ISLNK(mode))
+		mode |= 0777;   /* ... nor of symlinks */
 	sprintf(&header[100], "%07o", mode & 07777);
 
 	/* XXX: should we provide more meaningful info here? */
@@ -245,7 +315,9 @@ static void write_header(const char *sha1, char typeflag, const char *basepath,
 	strncpy(&header[265], "git", 31);	/* uname */
 	strncpy(&header[297], "git", 31);	/* gname */
 
-	sprintf(&header[124], "%011lo", S_ISDIR(mode) ? 0 : size);
+	if (S_ISDIR(mode) || S_ISLNK(mode))
+		size = 0;
+	sprintf(&header[124], "%011lo", size);
 	sprintf(&header[136], "%011lo", archive_time);
 
 	header[156] = typeflag;
@@ -287,12 +359,12 @@ static void traverse_tree(void *buffer, unsigned long size,
 		eltbuf = read_sha1_file(sha1, elttype, &eltsize);
 		if (!eltbuf)
 			die("cannot read %s", sha1_to_hex(sha1));
-		write_header(sha1, S_ISDIR(mode) ? '5' : '0', basedir,
-		             prefix, path, mode, eltsize);
+		write_header(sha1, TYPEFLAG_AUTO, basedir, prefix, path,
+		             mode, eltbuf, eltsize);
 		if (!strcmp(elttype, "tree")) {
 			this_prefix.name = path;
 			traverse_tree(eltbuf, eltsize, &this_prefix);
-		} else if (!strcmp(elttype, "blob")) {
+		} else if (!strcmp(elttype, "blob") && !S_ISLNK(mode)) {
 			write_blocked(eltbuf, eltsize);
 		}
 		free(eltbuf);
@@ -345,10 +417,6 @@ int main(int argc, char **argv)
 		usage(tar_tree_usage);
 	}
 
-	sha1_file_directory = getenv(DB_ENVIRONMENT);
-	if (!sha1_file_directory)
-		sha1_file_directory = DEFAULT_DB_ENVIRONMENT;
-
 	buffer = read_object_with_reference(sha1, "commit", &size, commit_sha1);
 	if (buffer) {
 		write_global_extended_header(commit_sha1);
@@ -362,7 +430,8 @@ int main(int argc, char **argv)
 	if (!archive_time)
 		archive_time = time(NULL);
 	if (basedir)
-		write_header("0", '5', NULL, NULL, basedir, 040755, 0);
+		write_header("0", TYPEFLAG_DIR, NULL, NULL, basedir, 040755,
+		             NULL, 0);
 	traverse_tree(buffer, size, NULL);
 	free(buffer);
 	write_trailer();

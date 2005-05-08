@@ -7,7 +7,7 @@
 #include "cache.h"
 
 struct cache_entry **active_cache = NULL;
-unsigned int active_nr = 0, active_alloc = 0;
+unsigned int active_nr = 0, active_alloc = 0, active_cache_changed = 0;
 
 int cache_match_stat(struct cache_entry *ce, struct stat *st)
 {
@@ -99,6 +99,7 @@ int cache_name_pos(const char *name, int namelen)
 /* Remove entry, return true if there are more entries to go.. */
 int remove_entry_at(int pos)
 {
+	active_cache_changed = 1;
 	active_nr--;
 	if (pos >= active_nr)
 		return 0;
@@ -130,6 +131,7 @@ int add_cache_entry(struct cache_entry *ce, int ok_to_add)
 
 	/* existing match? Just replace it */
 	if (pos >= 0) {
+		active_cache_changed = 1;
 		active_cache[pos] = ce;
 		return 0;
 	}
@@ -161,6 +163,7 @@ int add_cache_entry(struct cache_entry *ce, int ok_to_add)
 	if (active_nr > pos)
 		memmove(active_cache + pos + 1, active_cache + pos, (active_nr - pos - 1) * sizeof(ce));
 	active_cache[pos] = ce;
+	active_cache_changed = 1;
 	return 0;
 }
 
@@ -193,11 +196,6 @@ int read_cache(void)
 	if (active_cache)
 		return error("more than one cachefile");
 	errno = ENOENT;
-	sha1_file_directory = getenv(DB_ENVIRONMENT);
-	if (!sha1_file_directory)
-		sha1_file_directory = DEFAULT_DB_ENVIRONMENT;
-	if (access(sha1_file_directory, X_OK) < 0)
-		return error("no access to SHA1 file directory");
 	fd = open(get_index_file(), O_RDONLY);
 	if (fd < 0)
 		return (errno == ENOENT) ? 0 : error("open failed");

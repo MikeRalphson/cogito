@@ -26,7 +26,7 @@ static void run_program(void)
 		die("unable to execute '%s'", pgm);
 	}
 	if (waitpid(pid, &status, 0) < 0 || !WIFEXITED(status) || WEXITSTATUS(status))
-		err = 1;
+		err++;
 }
 
 static int merge_entry(int pos, const char *path)
