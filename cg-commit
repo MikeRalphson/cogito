@@ -73,8 +73,8 @@ CG: Lines beginning with the CG: prefix are removed automatically
 EOT
 if [ ! "$ignorecache" ]; then
 	if [ ! "${commitfiles[*]}" ]; then
-		echo 'Nothing to commit.' >&2
-		exit 2
+		rm $LOGMSG $LOGMSG2
+		die 'Nothing to commit'
 	fi
 	echo "CG:" >>$LOGMSG
 	echo "CG: Modified files:" >>$LOGMSG
@@ -115,6 +115,7 @@ if tty -s; then
 		${EDITOR:-vi} $LOGMSG2
 	fi
 	if ! [ "$msgs" ] && ! [ $LOGMSG2 -nt $LOGMSG ]; then
+		rm $LOGMSG $LOGMSG2
 		die 'Commit message not modified, commit aborted'
 	fi
 else
