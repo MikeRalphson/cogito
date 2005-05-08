@@ -67,22 +67,26 @@ fi
 
 LOGMSG=$(mktemp -t gitci.XXXXXX)
 LOGMSG2=$(mktemp -t gitci2.XXXXXX)
-echo CG: ---------------------------------------------------------- >>$LOGMSG
-echo CG: Lines beggining with CG: will be automatically removed     >>$LOGMSG
-echo CG:                                                            >>$LOGMSG
+cat >>$LOGMSG <<EOT
+CG: -----------------------------------------------------------------------
+CG: Lines beginning with the CG: prefix are removed automatically
+EOT
 if [ ! "$ignorecache" ]; then
 	if [ ! "${commitfiles[*]}" ]; then
 		echo 'Nothing to commit.' >&2
 		exit 2
 	fi
+	echo "CG:" >>$LOGMSG
+	echo "CG: Modified files:" >>$LOGMSG
 	for file in "${commitfiles[@]}"; do
 		# Prepend a letter describing whether it's addition,
 		# removal or update. Or call git status on those files.
-		echo CG: $file >>$LOGMSG
+		echo "CG:    $file" >>$LOGMSG
 		[ "$msgs" ] && echo $file
 	done
-	echo CG: >>$LOGMSG
+	echo "CG:" >>$LOGMSG
 fi
+echo "CG: -----------------------------------------------------------------------" >>$LOGMSG
 
 if [ "$merging" ]; then
 	echo -n 'Merge with ' >>$LOGMSG
