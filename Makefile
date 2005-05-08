@@ -21,17 +21,17 @@
 
 # DEFINES += -DNSEC
 
-CFLAGS=-g -O2 -Wall
-CFLAGS+=$(DEFINES)
+CFLAGS?=-g -O2
+CFLAGS+=-Wall $(DEFINES)
 
 # Should be changed to /usr/local
-prefix=$(HOME)
+prefix?=$(HOME)
 
-bindir=$(prefix)/bin
+bindir?=$(prefix)/bin
 
-CC=gcc
-AR=ar
-INSTALL=install
+CC?=gcc
+AR?=ar
+INSTALL?=install
 
 SCRIPTS=git-apply-patch-script git-merge-one-file-script git-prune-script \
 	git-pull-script git-tag-script git-resolve-script
