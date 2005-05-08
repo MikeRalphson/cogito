@@ -55,7 +55,7 @@ fetch_rsync () {
 }
 
 pull_rsync () {
-	fetch_rsync -s -u -d "$2/objects" "$_git/objects"
+	fetch_rsync -s -u -d "$2/objects" "$_git_objects"
 }
 
 
@@ -199,7 +199,7 @@ if [ "$rsyncerr" ] && [ "$rembranch" = "master" ]; then
 fi
 [ "$rsyncerr" ] && die "unable to get the head pointer of branch $rembranch"
 
-[ -d $_git/objects ] || mkdir -p $_git/objects
+[ -d $_git_objects ] || mkdir -p $_git_objects
 $pull "$name" "$uri" || die "objects pull failed"
 
 # FIXME: Warn about conflicting tag names?

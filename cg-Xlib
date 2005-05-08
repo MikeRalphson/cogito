@@ -9,6 +9,7 @@
 _cg_cmd=${0##*/}
 
 _git=.git
+_git_objects=${SHA1_FILE_DIRECTORY:-$_git/objects}
 
 
 die () {

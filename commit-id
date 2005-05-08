@@ -25,8 +25,8 @@ fi
 
 idpref=$(echo "$id" | cut -c -2)
 idpost=$(echo "$id" | cut -c 3-)
-if [ $(find "$_git/objects/$idpref" -name "$idpost*" 2>/dev/null | wc -l) -eq 1 ]; then
-	id=$idpref$(basename $(echo $_git/objects/$idpref/$idpost*))
+if [ $(find "$_git_objects/$idpref" -name "$idpost*" 2>/dev/null | wc -l) -eq 1 ]; then
+	id=$idpref$(basename $(echo $_git_objects/$idpref/$idpost*))
 fi
 
 if echo $id | egrep -vq "$SHA1ONLY"; then
