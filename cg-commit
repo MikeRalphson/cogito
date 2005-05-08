@@ -108,7 +108,6 @@ if [ ! "$ignorecache" ]; then
 		echo "CG:    $file" >>$LOGMSG
 		[ "$msgs" ] && echo $file
 	done
-	echo "CG:" >>$LOGMSG
 fi
 echo "CG: -----------------------------------------------------------------------" >>$LOGMSG
 
