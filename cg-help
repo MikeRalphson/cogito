@@ -36,6 +36,7 @@ Available commands:
 	cg-mkpatch	[-s] [-r FROM_ID[:TO_ID]]
 	cg-patch			< patch on stdin
 	cg-pull		[BNAME]
+	cg-restore	[FILE]...
 	cg-rm		FILE...
 	cg-seek		[COMMIT_ID]
 	cg-status
