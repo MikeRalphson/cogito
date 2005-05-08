@@ -107,7 +107,7 @@ which expects the commit message on stdin.
 
 It is nice to be able to examine the commit history. We have tool for that too.
 
-	cg-log pasky
+	cg-log -r pasky
 
 will get you the history of my branch. cg-log with no arguments will default
 to the history of the current branch.
@@ -116,7 +116,8 @@ If you want to start out new project, do (IN NEW DIRECTORY)
 
 	cg-init
 
-hack some stuff and then cg-add it.
+which will also do the initial commit, importing the content of the current
+directory if there is anything in it yet.
 
 If you want to get someone else's project, do
 
