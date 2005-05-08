@@ -69,6 +69,7 @@ fi
 LOGMSG=$(mktemp -t gitci.XXXXXX)
 LOGMSG2=$(mktemp -t gitci.XXXXXX)
 
+written=
 if [ "$merging" ]; then
 	echo -n 'Merge with ' >>$LOGMSG
 	[ "$msgs" ] && echo -n 'Merge with '
@@ -80,6 +81,7 @@ if [ "$merging" ]; then
 		[ "$msgs" ] && echo "$uri"
 	done
 	echo >>$LOGMSG
+	written=1
 fi
 first=1
 for msg in "${msgs[@]}"; do
@@ -89,7 +91,12 @@ for msg in "${msgs[@]}"; do
 		echo >>$LOGMSG
 	fi
 	echo $msg | fmt -s >>$LOGMSG
+	written=1
 done
+
+# Always have at least one blank line, to ease the editing for the poor people
+# whose text editor has no 'O' command.
+[ "$written" ] || echo >>$LOGMSG
 
 cat >>$LOGMSG <<EOT
 CG: -----------------------------------------------------------------------
