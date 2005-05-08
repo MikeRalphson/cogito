@@ -23,6 +23,9 @@
 # only changes in those files.
 
 . cg-Xlib
+# Try to fix the annoying "Broken pipe" output. May not help, but apparently
+# at least somewhere it does. Bash is broken.
+trap exit SIGPIPE
 
 if [ "$1" = "-c" ]; then
 	shift
@@ -98,6 +101,7 @@ else
 fi
 
 $revls | $revsort | while read time commit parents; do
+	trap exit SIGPIPE
 	tree1=
 	tree2=
 	[ "$revfmt" = "git-rev-list" ] && commit="$time"
