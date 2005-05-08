@@ -65,28 +65,9 @@ else
 	[ -s .git/merging ] && merging=$(cat .git/merging | sed 's/^/-p /')
 fi
 
+
 LOGMSG=$(mktemp -t gitci.XXXXXX)
 LOGMSG2=$(mktemp -t gitci.XXXXXX)
-cat >>$LOGMSG <<EOT
-CG: -----------------------------------------------------------------------
-CG: Lines beginning with the CG: prefix are removed automatically
-EOT
-if [ ! "$ignorecache" ]; then
-	if [ ! "${commitfiles[*]}" ]; then
-		rm $LOGMSG $LOGMSG2
-		die 'Nothing to commit'
-	fi
-	echo "CG:" >>$LOGMSG
-	echo "CG: Modified files:" >>$LOGMSG
-	for file in "${commitfiles[@]}"; do
-		# Prepend a letter describing whether it's addition,
-		# removal or update. Or call git status on those files.
-		echo "CG:    $file" >>$LOGMSG
-		[ "$msgs" ] && echo $file
-	done
-	echo "CG:" >>$LOGMSG
-fi
-echo "CG: -----------------------------------------------------------------------" >>$LOGMSG
 
 if [ "$merging" ]; then
 	echo -n 'Merge with ' >>$LOGMSG
@@ -109,6 +90,28 @@ for msg in "${msgs[@]}"; do
 	fi
 	echo $msg | fmt >>$LOGMSG
 done
+
+cat >>$LOGMSG <<EOT
+CG: -----------------------------------------------------------------------
+CG: Lines beginning with the CG: prefix are removed automatically
+EOT
+if [ ! "$ignorecache" ]; then
+	if [ ! "${commitfiles[*]}" ]; then
+		rm $LOGMSG $LOGMSG2
+		die 'Nothing to commit'
+	fi
+	echo "CG:" >>$LOGMSG
+	echo "CG: Modified files:" >>$LOGMSG
+	for file in "${commitfiles[@]}"; do
+		# TODO: Prepend a letter describing whether it's addition,
+		# removal or update. Or call git status on those files.
+		echo "CG:    $file" >>$LOGMSG
+		[ "$msgs" ] && echo $file
+	done
+	echo "CG:" >>$LOGMSG
+fi
+echo "CG: -----------------------------------------------------------------------" >>$LOGMSG
+
 cp $LOGMSG $LOGMSG2
 if tty -s; then
 	if ! [ "$msgs" ] || [ "$forceeditor" ]; then
@@ -123,6 +126,7 @@ else
 fi
 grep -v ^CG: $LOGMSG2 >$LOGMSG
 rm $LOGMSG2
+
 
 if [ ! "$ignorecache" ]; then
 	if [ "$customfiles" ]; then
