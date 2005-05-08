@@ -5,13 +5,14 @@
 #
 # See cg-branch-add for some description.
 #
-# Takes the branch' name.
+# Takes the branch' name, defaulting to "origin".
 
 . cg-Xlib
 
 name=$1
 
 
+[ "$name" ] || [ -s .git/refs/heads/origin ] && name=origin
 [ "$name" ] || die "where to pull from?"
 uri=$(cat ".git/branches/$name" 2>/dev/null) || die "unknown branch"
 

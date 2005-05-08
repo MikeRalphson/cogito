@@ -3,12 +3,12 @@
 # Pulls changes from another branch to the local repository and merge changes.
 # Copyright (c) Petr Baudis, 2005
 #
-# Takes the branch' name; no parameter will cause it to update
-# against HEAD (only recovers lost files for now).
+# Takes the branch' name, defaulting to "origin".
 
 . cg-Xlib
 
 name=$1
+[ "$name" ] || [ -s .git/refs/heads/origin ] && name=origin
 [ "$name" ] || die "where to update from?"
 
 cg-pull $name || exit 1
