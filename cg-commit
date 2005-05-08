@@ -93,15 +93,19 @@ for msg in "${msgs[@]}"; do
 	echo $msg | fmt -s >>$LOGMSG
 	written=1
 done
-
-# Always have at least one blank line, to ease the editing for the poor people
-# whose text editor has no 'O' command.
+# Always have at least one blank line, to ease the editing for
+# the poor people whose text editor has no 'O' command.
 [ "$written" ] || echo >>$LOGMSG
 
-cat >>$LOGMSG <<EOT
+if [ -e ".git/commit-template" ]; then
+	cat .git/commit-template >>$LOGMSG
+else
+	cat >>$LOGMSG <<EOT
 CG: -----------------------------------------------------------------------
 CG: Lines beginning with the CG: prefix are removed automatically
 EOT
+fi
+
 if [ ! "$ignorecache" ]; then
 	if [ ! "${commitfiles[*]}" ]; then
 		rm $LOGMSG $LOGMSG2
