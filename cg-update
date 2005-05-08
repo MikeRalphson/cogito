@@ -8,7 +8,7 @@
 . cg-Xlib
 
 name=$1
-[ "$name" ] || { [ -s .git/refs/heads/origin ] && name=origin; }
+[ "$name" ] || { [ -s $_git/refs/heads/origin ] && name=origin; }
 [ "$name" ] || die "where to update from?"
 
 cg-pull $name || exit 1

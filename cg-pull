@@ -12,9 +12,9 @@
 name=$1
 
 
-[ "$name" ] || { [ -s .git/refs/heads/origin ] && name=origin; }
+[ "$name" ] || { [ -s $_git/refs/heads/origin ] && name=origin; }
 [ "$name" ] || die "where to pull from?"
-uri=$(cat ".git/branches/$name" 2>/dev/null) || die "unknown branch: $name"
+uri=$(cat "$_git/branches/$name" 2>/dev/null) || die "unknown branch: $name"
 
 rembranch=master
 if echo "$uri" | grep -q '#'; then
@@ -55,7 +55,7 @@ fetch_rsync () {
 }
 
 pull_rsync () {
-	fetch_rsync -s -u -d "$2/objects" ".git/objects"
+	fetch_rsync -s -u -d "$2/objects" "$_git/objects"
 }
 
 
@@ -89,7 +89,7 @@ fetch_http () {
 	if echo "$dest" | grep -q '^\.git/'; then
 		# wget is idiotic and convers . to _
 		dest=$(echo "$dest" | sed 's#^.git/##')
-		pushd .git >/dev/null
+		pushd $_git >/dev/null
 	else
 		pushd . >/dev/null
 	fi
@@ -100,7 +100,7 @@ fetch_http () {
 }
 
 pull_http () {
-	git-http-pull -a "$(cat ".git/refs/heads/$1")" "$2/"
+	git-http-pull -a "$(cat "$_git/refs/heads/$1")" "$2/"
 }
 
 
@@ -135,7 +135,7 @@ fetch_ssh () {
 }
 
 pull_ssh () {
-	git-rpull -a "$(cat ".git/refs/heads/$1")" "$2"
+	git-rpull -a "$(cat "$_git/refs/heads/$1")" "$2"
 }
 
 
@@ -163,7 +163,7 @@ fetch_local () {
 }
 
 pull_local () {
-	git-local-pull -a -l -v "$(cat ".git/refs/heads/$1")" "$2"
+	git-local-pull -a -l -v "$(cat "$_git/refs/heads/$1")" "$2"
 }
 
 if echo "$uri" | grep -q "^http://"; then
@@ -183,39 +183,39 @@ fi
 
 
 orig_head=
-[ -s ".git/refs/heads/$name" ] && orig_head=$(cat ".git/refs/heads/$name")
+[ -s "$_git/refs/heads/$name" ] && orig_head=$(cat "$_git/refs/heads/$name")
 
 
-mkdir -p .git/refs/heads
+mkdir -p $_git/refs/heads
 rsyncerr=
-$fetch -i "$uri/refs/heads/$rembranch" ".git/refs/heads/$name" || rsyncerr=1
+$fetch -i "$uri/refs/heads/$rembranch" "$_git/refs/heads/$name" || rsyncerr=1
 if [ "$rsyncerr" ]; then
 	rsyncerr=
-	$fetch -s "$uri/heads/$rembranch" ".git/refs/heads/$name" || rsyncerr=1
+	$fetch -s "$uri/heads/$rembranch" "$_git/refs/heads/$name" || rsyncerr=1
 fi
 if [ "$rsyncerr" ] && [ "$rembranch" = "master" ]; then
 	rsyncerr=
-	$fetch -s "$uri/HEAD" ".git/refs/heads/$name" || rsyncerr=1
+	$fetch -s "$uri/HEAD" "$_git/refs/heads/$name" || rsyncerr=1
 fi
 [ "$rsyncerr" ] && die "unable to get the head pointer of branch $rembranch"
 
-[ -d .git/objects ] || mkdir -p .git/objects
+[ -d $_git/objects ] || mkdir -p $_git/objects
 $pull "$name" "$uri" || die "objects pull failed"
 
 # FIXME: Warn about conflicting tag names?
 # XXX: We now throw stderr to /dev/null since not all repositories
 # may have tags/ and users were confused by the harmless errors.
-[ -d .git/refs/tags ] || mkdir -p .git/refs/tags
+[ -d $_git/refs/tags ] || mkdir -p $_git/refs/tags
 rsyncerr=
-$fetch -i -s -u -d "$uri/refs/tags" ".git/refs/tags" || rsyncerr=1
+$fetch -i -s -u -d "$uri/refs/tags" "$_git/refs/tags" || rsyncerr=1
 if [ "$rsyncerr" ]; then
 	rsyncerr=
-	$fetch -i -s -u -d "$uri/tags" ".git/refs/tags" || rsyncerr=1
+	$fetch -i -s -u -d "$uri/tags" "$_git/refs/tags" || rsyncerr=1
 fi
 [ "$rsyncerr" ] && echo "unable to get tags list (non-fatal)" >&2
 
 
-new_head=$(cat ".git/refs/heads/$name")
+new_head=$(cat "$_git/refs/heads/$name")
 
 if [ ! "$orig_head" ]; then
 	echo "New branch: $new_head"

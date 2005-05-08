@@ -7,11 +7,11 @@
 
 . cg-Xlib
 
-mkdir -p .git/refs/tags
-[ "$(find .git/refs/tags -follow -type f)" ] \
+mkdir -p $_git/refs/tags
+[ "$(find $_git/refs/tags -follow -type f)" ] \
        || die "List of tags is empty. See cg-tag."
 
-cd .git/refs/tags
+cd $_git/refs/tags
 for tag in *; do
        echo -n $tag
        echo -ne "\t"

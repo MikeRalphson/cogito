@@ -39,7 +39,7 @@ branch=$(commit-id "$branchname") || exit 1
 [ "$base" ] || die "unable to automatically determine merge base"
 
 
-[ -s .git/blocked ] && die "merge blocked: $(cat .git/blocked)"
+[ -s $_git/blocked ] && die "merge blocked: $(cat $_git/blocked)"
 
 
 if [ "$base" = "$branch" ]; then
@@ -62,7 +62,7 @@ if [ "$head" = "$base" ]; then
 		echo "Warning: uncommitted local changes, trying to bring them forward" >&2
 
 	git-read-tree -m $(tree-id $branch)
-	echo $branch >.git/HEAD
+	echo $branch >$_git/HEAD
 
 	# Kill gone files
 	git-diff-tree -z -r $base $branch | grep -z '^-' | xargs -0 bash -c '
@@ -90,9 +90,9 @@ fi
 echo "Merging $base -> $branch" >&2
 echo -e "\tto $head..." >&2
 
-echo $base >>.git/merge-base
-echo $branch >>.git/merging
-echo $branchname >>.git/merging-sym
+echo $base >>$_git/merge-base
+echo $branch >>$_git/merging
+echo $branchname >>$_git/merging-sym
 
 
 git-read-tree -m $(tree-id $base) $(tree-id $head) $(tree-id $branch) ||

@@ -8,10 +8,14 @@
 
 _cg_cmd=${0##*/}
 
+_git=.git
+
+
 die () {
 	echo $_cg_cmd: $@ >&2
 	exit 1
 }
+
 
 mktemp () {
 	if [ ! "$BROKEN_MKTEMP" ]; then
@@ -33,6 +37,7 @@ mktemp () {
 	$(which mktemp) $dirarg $prefix"$1"
 }
 
+
 showdate () {
 	date="$1"
 	sec=${date[0]}; tz=${date[1]}
@@ -42,6 +47,7 @@ showdate () {
 
 	echo "${pdate/+0000/$tz}"
 }
+
 
 print_help () {
 	which "cg-$1" >/dev/null 2>&1 || exit 1
@@ -55,30 +61,32 @@ for option in "$@"; do
 	fi
 done
 
+
 # Compatibility hacks:
 # 2005-04-26
-if [ -d .git ] && [ -s .git/remotes ] && [ ! -e .git/branches ]; then
+if [ -d $_git ] && [ -s $_git/remotes ] && [ ! -e $_git/branches ]; then
 	stop=
-	mkdir .git/branches || stop=1
-	[ "$stop" ] || cat .git/remotes | while read branch location; do
-		echo "$location" >.git/branches/$branch
+	mkdir $_git/branches || stop=1
+	[ "$stop" ] || cat $_git/remotes | while read branch location; do
+		echo "$location" >$_git/branches/$branch
 	done || stop=1
-	[ "$stop" ] || rm .git/remotes
+	[ "$stop" ] || rm $_git/remotes
 fi
 # 2005-04-26
-if [ -d .git ] && [ ! -d .git/refs ]; then
+if [ -d $_git ] && [ ! -d $_git/refs ]; then
 	stop=
-	mkdir .git/refs || stop=1
+	mkdir $_git/refs || stop=1
 	if [ ! "$stop" ]; then
-		mv .git/heads .git/refs
-		mv .git/tags .git/refs
-		tgt=$(readlink .git/HEAD)
+		mv $_git/heads $_git/refs
+		mv $_git/tags $_git/refs
+		tgt=$(readlink $_git/HEAD)
 		if [ "$tgt" ]; then
-			rm .git/HEAD
-			ln -s "refs/$tgt" .git/HEAD
+			rm $_git/HEAD
+			ln -s "refs/$tgt" $_git/HEAD
 		fi
 	fi
 fi
+
 
 export BROKEN_MKTEMP=1
 del=$($(which mktemp) -t 2>/dev/null) && { rm $del; export BROKEN_MKTEMP=; }

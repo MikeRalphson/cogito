@@ -10,18 +10,18 @@
 
 uri=$1
 
-[ -e .git ] && die ".git already exists"
+[ -e $_git ] && die "$_git already exists"
 
 git-init-db
-mkdir .git/branches .git/refs .git/refs/heads .git/refs/tags
-touch .git/refs/heads/master
-ln -s refs/heads/master .git/HEAD
+mkdir $_git/branches $_git/refs $_git/refs/heads $_git/refs/tags
+touch $_git/refs/heads/master
+ln -s refs/heads/master $_git/HEAD
 
 if [ "$uri" ]; then
-	echo "$uri" >.git/branches/origin
+	echo "$uri" >$_git/branches/origin
 	cg-pull origin || die "pull failed"
 
-	cp .git/refs/heads/origin .git/refs/heads/master
+	cp $_git/refs/heads/origin $_git/refs/heads/master
 	git-read-tree HEAD
 	git-checkout-cache -a
 	git-update-cache --refresh

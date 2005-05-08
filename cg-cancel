@@ -18,18 +18,18 @@
 
 # Undo seek?
 branch=
-[ -s .git/blocked ] && branch=$(grep '^seeked from ' .git/blocked | sed 's/^seeked from //')
+[ -s $_git/blocked ] && branch=$(grep '^seeked from ' $_git/blocked | sed 's/^seeked from //')
 if [ "$branch" ]; then
-	echo "Unseeking: $(cat .git/HEAD) -> $(cat ".git/refs/heads/$branch")"
-	if [ -s ".git/refs/heads/$branch" ]; then
-		rm .git/HEAD
-		ln -s "refs/heads/$branch" .git/HEAD
+	echo "Unseeking: $(cat $_git/HEAD) -> $(cat "$_git/refs/heads/$branch")"
+	if [ -s "$_git/refs/heads/$branch" ]; then
+		rm $_git/HEAD
+		ln -s "refs/heads/$branch" $_git/HEAD
 	else
 		echo "ERROR: Unknown branch $branch! Preserving HEAD." >&2
 	fi
 fi
 
-rm -f .git/blocked .git/merging .git/merging-sym .git/merge-base
+rm -f $_git/blocked $_git/merging $_git/merging-sym $_git/merge-base
 git-read-tree -m HEAD || git-read-tree HEAD
 
 git-checkout-cache -f -a

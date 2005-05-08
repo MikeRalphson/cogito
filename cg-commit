@@ -17,7 +17,7 @@
 . cg-Xlib
 
 
-[ -s .git/blocked ] && die "committing blocked: $(cat .git/blocked)"
+[ -s $_git/blocked ] && die "committing blocked: $(cat $_git/blocked)"
 
 forceeditor=
 ignorecache=
@@ -45,7 +45,7 @@ if [ "$1" ]; then
 	customfiles="${commitfiles[*]}"
 
 	[ "$ignorecache" ] && die "-C and listing files to commit does not make sense"
-	[ -s .git/merging ] && die "cannot commit individual files when merging"
+	[ -s $_git/merging ] && die "cannot commit individual files when merging"
 
 else
 	# We bother with added/removed files here instead of updating
@@ -62,7 +62,7 @@ else
 	fi
 
 	merging=
-	[ -s .git/merging ] && merging=$(cat .git/merging | sed 's/^/-p /')
+	[ -s $_git/merging ] && merging=$(cat $_git/merging | sed 's/^/-p /')
 fi
 
 
@@ -73,9 +73,9 @@ written=
 if [ "$merging" ]; then
 	echo -n 'Merge with ' >>$LOGMSG
 	[ "$msgs" ] && echo -n 'Merge with '
-	[ -s .git/merging-sym ] || cp .git/merging .git/merging-sym
-	for sym in $(cat .git/merging-sym); do
-		uri=$(cat .git/branches/$sym)
+	[ -s $_git/merging-sym ] || cp $_git/merging $_git/merging-sym
+	for sym in $(cat $_git/merging-sym); do
+		uri=$(cat $_git/branches/$sym)
 		[ "$uri" ] || uri="$sym"
 		echo "$uri" >>$LOGMSG
 		[ "$msgs" ] && echo "$uri"
@@ -97,8 +97,8 @@ done
 # the poor people whose text editor has no 'O' command.
 [ "$written" ] || echo >>$LOGMSG
 
-if [ -e ".git/commit-template" ]; then
-	cat .git/commit-template >>$LOGMSG
+if [ -e "$_git/commit-template" ]; then
+	cat $_git/commit-template >>$LOGMSG
 else
 	cat >>$LOGMSG <<EOT
 CG: -----------------------------------------------------------------------
@@ -152,8 +152,8 @@ fi
 
 
 oldhead=
-if [ -s ".git/HEAD" ]; then
-	oldhead=$(cat .git/HEAD)
+if [ -s "$_git/HEAD" ]; then
+	oldhead=$(cat $_git/HEAD)
 	oldheadstr="-p $oldhead"
 fi
 
@@ -176,8 +176,8 @@ fi
 
 if [ "$newhead" ]; then
 	echo "Committed as $newhead."
-	echo $newhead >.git/HEAD
-	[ "$merging" ] && rm .git/merging .git/merging-sym .git/merge-base
+	echo $newhead >$_git/HEAD
+	[ "$merging" ] && rm $_git/merging $_git/merging-sym $_git/merge-base
 	exit 0
 else
 	die "error during commit (oldhead $oldhead, treeid $treeid)"

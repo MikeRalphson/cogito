@@ -7,7 +7,7 @@
 
 . cg-Xlib
 
-EXCLUDEFILE=.git/exclude
+EXCLUDEFILE=$_git/exclude
 EXCLUDE=
 if [ -f $EXCLUDEFILE ]; then
 	EXCLUDE="--exclude-from=$EXCLUDEFILE"

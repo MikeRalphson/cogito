@@ -45,8 +45,8 @@ if [ "$name" = "this" ] || [ "$name" = "HEAD" ]; then
 	die "given branch name is reserved"
 fi
 
-mkdir -p .git/branches
-[ -s ".git/branches/$name" ] && die "branch already exists"
-[ -s ".git/refs/heads/$name" ] && echo "warning: I already have head of this branch" >&2
+mkdir -p $_git/branches
+[ -s "$_git/branches/$name" ] && die "branch already exists"
+[ -s "$_git/refs/heads/$name" ] && echo "warning: I already have head of this branch" >&2
 
-echo "$location" >.git/branches/$name
+echo "$location" >$_git/branches/$name

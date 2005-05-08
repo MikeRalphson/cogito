@@ -7,11 +7,11 @@
 
 . cg-Xlib
 
-mkdir -p .git/branches
-[ "$(find .git/branches -follow -type f)" ] \
+mkdir -p $_git/branches
+[ "$(find $_git/branches -follow -type f)" ] \
 	|| die "List of branches is empty. See cg-branch-add."
 
-cd .git/branches
+cd $_git/branches
 for branch in *; do
 	echo -n $branch
 	echo -ne "\t"

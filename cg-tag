@@ -19,9 +19,9 @@ id=$2
 (echo $name | egrep -qv '[^a-zA-Z0-9_.@!:-]') || \
 	die "name contains invalid characters"
 
-mkdir -p .git/refs/tags
+mkdir -p $_git/refs/tags
 
-[ -s ".git/refs/tags/$name" ] && die "tag already exists ($name)"
-[ "$id" ] || id=$(cat .git/HEAD)
+[ -s "$_git/refs/tags/$name" ] && die "tag already exists ($name)"
+[ "$id" ] || id=$(cat $_git/HEAD)
 
-echo $id >.git/refs/tags/$name
+echo $id >$_git/refs/tags/$name
