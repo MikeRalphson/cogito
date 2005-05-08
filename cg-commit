@@ -88,7 +88,7 @@ for msg in "${msgs[@]}"; do
 	else
 		echo >>$LOGMSG
 	fi
-	echo $msg | fmt >>$LOGMSG
+	echo $msg | fmt -s >>$LOGMSG
 done
 
 cat >>$LOGMSG <<EOT
