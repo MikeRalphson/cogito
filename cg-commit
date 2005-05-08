@@ -11,18 +11,25 @@
 # of starting up an editor (if the input is not stdin, the input is
 # appended after all the -m messages). Multiple -m parameters are
 # appended to a single commit message, each as separate paragraph.
+# -e forces the editor to be brought up even when -m parameters were
+# passed to cg-commit.
 
 . cg-Xlib
 
 
 [ -s .git/blocked ] && die "committing blocked: $(cat .git/blocked)"
 
+forceeditor=
 ignorecache=
 msgs=()
 while [ "$1" ]; do
 	case "$1" in
 	-C)
 		ignorecache=1
+		shift
+		;;
+	-e)
+		forceeditor=1
 		shift
 		;;
 	-m*)
@@ -100,7 +107,7 @@ for msg in "${msgs[@]}"; do
 done
 cp $LOGMSG $LOGMSG2
 if tty -s; then
-	if ! [ "$msgs" ]; then
+	if ! [ "$msgs" ] || [ "$forceeditor" ]; then
 		${EDITOR:-vi} $LOGMSG2
 		[ $LOGMSG2 -nt $LOGMSG ] || die 'Commit message not modified, commit aborted'
 	fi
