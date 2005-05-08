@@ -29,7 +29,7 @@ Available commands:
 	cg-diff		[-p] [-r FROM_ID[:TO_ID]] [FILE]...
 	cg-export	DEST [TREE_ID]
 	cg-help		[COMMAND]
-	cg-init		[SOURCE_LOC]
+	cg-init
 	cg-log		[-c] [-f] [-r FROM_ID[:TO_ID]] [FILE]...
 	cg-ls		[TREE_ID]
 	cg-merge	[-c] [-b BASE_ID] FROM_ID

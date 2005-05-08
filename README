@@ -29,15 +29,15 @@ but the documentation should be certainly consolidated and rewritten.
 Build it by make, make sure the scripts are in $PATH.
 
 If, after unpacking the tarball, you do not have the .git subdirectory in the
-tarball root, do
+tarball root, you
 
-	cg-init rsync://rsync.kernel.org/pub/scm/cogito/cogito.git
+	cg-clone -s rsync://rsync.kernel.org/pub/scm/cogito/cogito.git
 
 in that directory, and
 
 	cg-branch-add pasky rsync://rsync.kernel.org/pub/scm/cogito/cogito.git
 
-(there is already the same branch called "origin" created by cg-init, however
+(there is already the same branch called "origin" created by cg-clone, however
 we expect the branch name to be "pasky" for the result of the tutorial;
 alternatively, just use "origin" everywhere instead of "pasky").
 
@@ -123,8 +123,10 @@ If you want to get someone else's project, do
 
 	cg-clone URL
 
-(the URL will be available as branch "origin" for updating, etc).
-(You can do also cg-init URL, which won't create the new directory, though.)
+(the URL will be available as branch "origin" for updating, etc).  cg-clone
+will create new repository for its work - if you want it to work in the current
+directory (like cg-init), pass it the '-s' argument first (like in our first
+cg-clone in this tutorial).
 
 Note that we missed out a lot of stuff here. There is already support
 for merging (cg-merge), moving your tree to an older commit (cg-seek), etc.
