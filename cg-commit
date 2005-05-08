@@ -109,7 +109,9 @@ cp $LOGMSG $LOGMSG2
 if tty -s; then
 	if ! [ "$msgs" ] || [ "$forceeditor" ]; then
 		${EDITOR:-vi} $LOGMSG2
-		[ $LOGMSG2 -nt $LOGMSG ] || die 'Commit message not modified, commit aborted'
+	fi
+	if ! [ "$msgs" ] && ! [ $LOGMSG2 -nt $LOGMSG ]; then
+		die 'Commit message not modified, commit aborted'
 	fi
 else
 	cat >>$LOGMSG2
