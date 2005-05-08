@@ -51,6 +51,8 @@ if [ "$head" = "$base" ]; then
 	# No need to do explicit merge with a merge commit; just bring
 	# the HEAD forward.
 
+	# XXX: Code duplication with cg-admin-uncommit's rewind
+
 	echo "Fast-forwarding $base -> $branch" >&2
 	echo -e "\ton top of $head..." >&2
 
