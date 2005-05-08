@@ -6,6 +6,9 @@
 # This is like cg-init, but it will create a new directory where it will do
 # the checkout.
 #
+# If you pass it an optional -s parameter, it does the clone in the current
+# directory instead of creating a new one.
+#
 # Takes a parameter specifying the location of the source repository and an
 # optional second parameter specifying the destination.  If the second
 # parameter is omitted, the basename of the source repository is used as the
@@ -13,12 +16,19 @@
 
 . ${COGITO_LIB}cg-Xlib
 
+same_dir=
+if [ "$1" = "-s" ]; then
+	shift
+	same_dir=1
+fi
+
 location=$1
-[ "$location" ] || die "usage: cg-clone SOURCE_LOC [DESTDIR]"
+[ "$location" ] || die "usage: cg-clone [-s] SOURCE_LOC [DESTDIR]"
 location=${location%/}
 
 destdir=$2
 if [ "$destdir" ]; then
+	[ ! "$samedir" ] || die "specifying both -s and DESTDIR makes no sense"
 	dir=$destdir
 else
 	dir=${location%/.git}; dir=${dir##*/}
@@ -30,9 +40,13 @@ else
 	location="$location"
 fi
 
-[ -e "$dir" ] && die "$dir/ already exists"
-mkdir "$dir" || exit $?
-cd "$dir" || exit $?
+if [ ! "$same_dir" ]; then
+	[ -e "$dir" ] && die "$dir/ already exists"
+	mkdir "$dir" || exit $?
+	cd "$dir" || exit $?
+else
+	dir=.
+fi
 
 cg-init $location || exit $?
 echo "Cloned to $dir/ (origin $location available as branch \"origin\")"
