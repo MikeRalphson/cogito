@@ -56,6 +56,8 @@ if [ "$head" = "$base" ]; then
 
 	patchfile=$(mktemp -t gitmerge.XXXXXX)
 	cg-diff >$patchfile
+	[ -s "$patchfile" ] &&
+		echo "Warning: uncommitted local changes, trying to bring them forward" >&2
 
 	git-read-tree -m $(tree-id $branch)
 	echo $branch >.git/HEAD
