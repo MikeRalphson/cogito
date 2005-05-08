@@ -1,5 +1,5 @@
 Name: 		cogito
-Version: 	0.8
+Version: 	@@VERSION@@
 Release: 	2
 Vendor: 	Petr Baudis <pasky@ucw.cz>
 Summary:  	Git core and tools

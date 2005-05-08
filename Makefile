@@ -123,6 +123,9 @@ cg-version: $(VERSION)
 	@chmod +x $@
 endif
 
+git.spec: git.spec.in $(VERSION)
+	sed -e 's/@@VERSION@@/$(shell cat $(VERSION) | cut -d"-" -f2)/g' < $< > $@
+
 
 install: $(PROG) $(SCRIPTS) $(SCRIPT) $(GEN_SCRIPT)
 	$(INSTALL) -m755 -d $(DESTDIR)$(bindir)
