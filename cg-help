@@ -45,11 +45,11 @@ Available commands:
 	cg-update	[BNAME]
 	cg-version
 
-Advanced commands:
+Advanced (low-level or dangerous) commands:
 	cg-admin-lsobj	[OBJTYPE]
 	cg-admin-uncommit [COMMIT_ID]
 
-Note that these expressions can be used interchangably as "ID"s:
+These expressions can be used interchangably as "ID"s:
 	empty string, "this" or "HEAD" (current HEAD)
 	branch name (as registered with cg-branch-add)
 	tag name (as registered with cg-tag)
