@@ -15,8 +15,9 @@
 #
 # Takes an -f option to list which files was changed.
 #
-# Takes an id resolving to a commit to start from (HEAD by default),
-# or id1:id2 representing an (id1;id2] range of commits to show.
+# Takes an -r followed with id resolving to a commit to start from
+# (HEAD by default), or id1:id2 representing an (id1;id2] range
+# of commits to show.
 
 . cg-Xlib
 
@@ -63,14 +64,31 @@ list_commit_files()
 	echo "$coldefault:"
 }
 
-if echo "$1" | grep -q ':'; then
-	id1=$(commit-id $(echo "$1" | cut -d : -f 1)) || exit 1
-	id2=$(commit-id $(echo "$1" | cut -d : -f 2)) || exit 1
+log_start=
+log_end=
+if [ "$1" = "-r" ]; then
+	shift
+	log_start="$1"
+	shift
+	if echo "$log_start" | grep -q ':'; then
+		log_end=$(echo "$log_start" | cut -d : -f 2)
+		log_start=$(echo "$log_start" | cut -d : -f 1)
+	fi
+fi
+if [ "$1" = "-r" ]; then
+	shift
+	log_end="$1"
+	shift
+fi
+
+if [ "$log_end" ]; then
+	id1="$(commit-id $log_start)" || exit 1
+	id2="$(commit-id $log_end)" || exit 1
 	revls="git-rev-tree $id2 ^$id1"
 	revsort="sort -rn"
 	revfmt="git-rev-tree"
 else
-	id1="$(commit-id $1)" || exit 1
+	id1="$(commit-id $log_start)" || exit 1
 	revls="git-rev-list $id1"
 	revsort="cat"
 	revfmt="git-rev-list"
