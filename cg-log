@@ -64,8 +64,16 @@ list_commit_files()
 	fi
 	echo
 	$list_cmd | while read modes type sha1s file; do
-		echo -n "$sep$file"
+		echo -n "$sep"
 		sep=", "
+		if [ $(echo "$line$sep$file" | wc -c) -le 75 ]; then
+			line="$line$sep$file"
+			echo -n "$file"
+		else
+			line="$file"
+			echo "$coldefault"
+			echo -n "    $colfiles$file"
+		fi
 	done
 	echo "$coldefault:"
 }
