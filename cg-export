@@ -24,6 +24,7 @@ case $dest in
 		base=${dest%.tar*}
 		base=${base%.tgz}
 		ext=${dest#$base}
+		base=${base##*/}
 		case $ext in
 		.tar.gz|.tgz)
 			git-tar-tree $id "$base" | gzip -c9 $tar > $dest
