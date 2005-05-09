@@ -166,7 +166,8 @@ if tty -s; then
 else
 	cat >>$LOGMSG2
 fi
-grep -v ^CG: $LOGMSG2 >$LOGMSG
+# Remove heading and trailing blank lines.
+grep -v ^CG: $LOGMSG2 | sed '/./,${/./b;:a;$d;N;/\n$/ba;b;};d' >$LOGMSG
 rm $LOGMSG2
 
 
