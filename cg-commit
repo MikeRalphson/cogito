@@ -111,7 +111,7 @@ if [ -e "$_git/commit-template" ]; then
 else
 	cat >>$LOGMSG <<EOT
 CG: -----------------------------------------------------------------------
-CG: Lines beginning with the CG: prefix are removed automatically
+CG: Lines beginning with the CG: prefix are removed automatically.
 EOT
 fi
 
@@ -120,12 +120,16 @@ if [ ! "$ignorecache" ]; then
 		rm $LOGMSG $LOGMSG2
 		die 'Nothing to commit'
 	fi
+	if [ ! "$merging" ]; then
+		echo "CG: By deleting lines beginning with CG:F, the associated file" >>$LOGMSG
+		echo "CG: will be removed from the commit list." >>$LOGMSG
+	fi	
 	echo "CG:" >>$LOGMSG
 	echo "CG: Modified files:" >>$LOGMSG
 	for file in "${commitfiles[@]}"; do
 		# TODO: Prepend a letter describing whether it's addition,
 		# removal or update. Or call git status on those files.
-		echo "CG:    $file" >>$LOGMSG
+		echo "CG:F   $file" >>$LOGMSG
 		[ "$msgs" ] && ! [ "$forceeditor" ] && echo $file
 	done
 fi
@@ -139,6 +143,17 @@ if tty -s; then
 	if ! [ "$msgs" ] && ! [ $LOGMSG2 -nt $LOGMSG ]; then
 		rm $LOGMSG $LOGMSG2
 		die 'Commit message not modified, commit aborted'
+	fi
+	if [ ! "$ignorecache" ] && [ ! "$merging" ]; then
+		eval newcommitfiles=($(grep ^CG:F $LOGMSG2 | sed 's/^CG:F//'))
+		if [ ! "${newcommitfiles[*]}" ]; then
+			rm $LOGMSG $LOGMSG2
+			die 'Nothing to commit'
+		fi
+		if [ "${commitfiles[*]}" != "${newcommitfiles[*]}" ]; then
+			commitfiles=("${newcommitfiles[@]}")
+			customfiles="${newcommitfiles[*]}"
+		fi
 	fi
 else
 	cat >>$LOGMSG2
