@@ -148,7 +148,7 @@ cg-version: $(VERSION) $(GIT_HEAD) Makefile
 	@echo "echo \"$(shell cat $(VERSION))$(GIT_HEAD_ID)\"" >> $@
 	@chmod +x $@
 
-git.spec: git.spec.in $(VERSION)
+cogito.spec: cogito.spec.in $(VERSION)
 	sed -e 's/@@VERSION@@/$(shell cat $(VERSION) | cut -d"-" -f2)/g' < $< > $@
 
 

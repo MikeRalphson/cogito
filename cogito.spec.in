@@ -1,13 +1,12 @@
 Name: 		cogito
 Version: 	@@VERSION@@
-Release: 	2
+Release: 	1
 Vendor: 	Petr Baudis <pasky@ucw.cz>
 Summary:  	Git core and tools
 License: 	GPL
 Group: 		Development/Tools
 URL: 		http://kernel.org/pub/software/scm/cogito/
 Source: 	http://kernel.org/pub/software/scm/cogito/%{name}-%{version}.tar.bz2
-Provides: 	cogito = %{version}
 Obsoletes:	git
 BuildRequires:	zlib-devel, openssl-devel, curl-devel
 BuildRoot:	%{_tmppath}/%{name}-%{version}-root
@@ -37,12 +36,18 @@ rm -rf $RPM_BUILD_ROOT
 %files
 %defattr(-,root,root)
 /usr/bin/*
-%doc README README.reference COPYING Changelog
+/usr/lib/cogito
+%doc README COPYING Documentation/*
 
 %changelog
+* Mon May 9 2005 H. Peter Anvin <hpa@zytor.com> 0.10-1
+- New upstream revision
+- Rename spec file to cogito.spec
+
 * Wed Apr 27 2005 Terje Rosten <terje.rosten@ntnu.no> 0.8-2
 - Doc files
 - Use %%{_prefix} macro
+- Rename spec file
 - Drop -n option to %%setup macro
 
 * Mon Apr 25 2005 Chris Wright <chrisw@osdl.org> 0.8-1
