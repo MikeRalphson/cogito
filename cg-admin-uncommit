@@ -10,6 +10,9 @@
 
 . ${COGITO_LIB}cg-Xlib
 
+[ -s $_git/blocked ] && die "uncommitting blocked: $(cat $_git/blocked)"
+
+
 base=$(commit-id) || exit 1
 
 commit=$(commit-id "$1") || exit 1
