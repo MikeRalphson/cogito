@@ -34,7 +34,7 @@ if [ "$uri" ]; then
 else
 	git-read-tree # Seed the dircache
 	find * \( -type f -o -type l \) -print0 | xargs -0r cg-add
-	cg-commit -C -m"Initial commit" -e
+	cg-commit -C -m"Initial commit" -E
 fi
 
 trap "" SIGTERM EXIT

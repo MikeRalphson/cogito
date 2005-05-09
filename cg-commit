@@ -13,6 +13,8 @@
 # appended to a single commit message, each as separate paragraph.
 # -e forces the editor to be brought up even when -m parameters were
 # passed to cg-commit.
+# -E forces the editor to be brought up and it will do the commit
+# even if the default commit message is not changed.
 #
 # These git environment variables are used in case values other than
 # that returned by getpwuid(getuid()) are desired when performing a commit:
@@ -30,6 +32,7 @@
 
 forceeditor=
 ignorecache=
+commitalways=
 msgs=()
 while [ "$1" ]; do
 	case "$1" in
@@ -39,6 +42,11 @@ while [ "$1" ]; do
 		;;
 	-e)
 		forceeditor=1
+		shift
+		;;
+	-E)
+		forceeditor=1
+		commitalways=1
 		shift
 		;;
 	-m*)
@@ -139,10 +147,10 @@ cp $LOGMSG $LOGMSG2
 if tty -s; then
 	if ! [ "$msgs" ] || [ "$forceeditor" ]; then
 		${EDITOR:-vi} $LOGMSG2
-	fi
-	if ! [ "$msgs" ] && ! [ $LOGMSG2 -nt $LOGMSG ]; then
-		rm $LOGMSG $LOGMSG2
-		die 'Commit message not modified, commit aborted'
+		if ! [ "$commitalways" ] && ! [ $LOGMSG2 -nt $LOGMSG ]; then
+			rm $LOGMSG $LOGMSG2
+			die 'Commit message not modified, commit aborted'
+		fi
 	fi
 	if [ ! "$ignorecache" ] && [ ! "$merging" ]; then
 		eval newcommitfiles=($(grep ^CG:F $LOGMSG2 | sed 's/^CG:F//'))
