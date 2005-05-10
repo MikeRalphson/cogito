@@ -47,7 +47,7 @@ Available commands:
 
 Advanced (low-level or dangerous) commands:
 	cg-admin-lsobj	[OBJTYPE]
-	cg-admin-uncommit [COMMIT_ID]
+	cg-admin-uncommit [-t] [COMMIT_ID]
 
 These expressions can be used interchangably as "ID"s:
 	empty string, "this" or "HEAD" (current HEAD)

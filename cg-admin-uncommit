@@ -4,6 +4,12 @@
 # Copyright (c) Matt Porter, 2005
 # Copyright (c) Petr Baudis, 2005
 #
+# Optional -t parameter makes cg-admin-uncommit to roll back the tree
+# as well to the previous commit. Without this option (by default)
+# Cogito keeps the tree in its current state, therefore generating
+# tree with local changes against the target commit, consisting of the
+# changes in the rolled back commits.
+#
 # Takes a commit ID which is the earliest commit to be
 # removed from the repository. If no parameter is passed,
 # it uncommits the latest commit (HEAD).
@@ -11,6 +17,12 @@
 . ${COGITO_LIB}cg-Xlib
 
 [ -s $_git/blocked ] && die "uncommitting blocked: $(cat $_git/blocked)"
+
+rollback_tree=
+if [ "$1" = "-t" ]; then
+	shift
+	rollback_tree=1
+fi
 
 
 base=$(commit-id) || exit 1
@@ -28,9 +40,16 @@ parent=$(parent-id "$commit") || exit 1
 echo "Rewinding $base (HEAD) -> $parent" >&2
 
 patchfile=$(mktemp -t gituncommit.XXXXXX)
-cg-diff >$patchfile
-[ -s "$patchfile" ] &&
-	echo "Warning: uncommitted local changes, trying to bring them backwards" >&2
+if [ "$rollback_tree" ]; then
+	cg-diff >$patchfile
+	[ -s "$patchfile" ] &&
+		echo "Warning: uncommitted local changes, trying to bring them backwards" >&2
+else
+	# XXX: This may be suboptimal, but it is also non-trivial to keep
+	# the adds/removes properly.  So this is just a quick hack to get it
+	# working without much fuss.
+	cg-diff -r $parent >$patchfile
+fi
 
 git-read-tree -m "$parent" || die "$parent: bad commit"
 echo "$parent" > $_git/HEAD
