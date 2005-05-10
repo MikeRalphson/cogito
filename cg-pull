@@ -100,7 +100,7 @@ fetch_http () {
 }
 
 pull_http () {
-	git-http-pull -a "$(cat "$_git/refs/heads/$1")" "$2/"
+	git-http-pull -a -v "$(cat "$_git/refs/heads/$1")" "$2/"
 }
 
 
@@ -135,7 +135,7 @@ fetch_ssh () {
 }
 
 pull_ssh () {
-	git-rpull -a "$(cat "$_git/refs/heads/$1")" "$2"
+	git-rpull -a -v "$(cat "$_git/refs/heads/$1")" "$2"
 }
 
 
