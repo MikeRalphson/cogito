@@ -182,7 +182,13 @@ if [ "$newhead" ]; then
 	# Trigger the postcommit hook
 	branchname=
 	[ -s $_git/branch-name ] && branchname=$(cat $_git/branch-name)
-	[ -x $_git/hooks/commit-post ] && $_git/hooks/commit-post $newhead $branchname
+	if [ -x $_git/hooks/commit-post ]; then
+		# We just hope that for the initial commit, the user didn't
+		# manage to install the hook yet.
+		for merged in $(git-rev-tree $newhead ^$oldhead | sort -n | cut -d ' ' -f 2 | cut -d : -f 1); do
+			$_git/hooks/commit-post $merged $branchname
+		done
+	fi
 
 	exit 0
 else
