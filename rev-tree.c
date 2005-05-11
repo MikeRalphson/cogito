@@ -55,7 +55,7 @@ void process_commit(unsigned char *sha1)
 		return;
 	if (!obj || parse_commit(obj))
 		die("unable to parse commit (%s)", sha1_to_hex(sha1));
-	
+
 	parents = obj->parents;
 	while (parents) {
 		process_commit(parents->item->object.sha1);
