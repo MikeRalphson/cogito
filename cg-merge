@@ -97,7 +97,7 @@ echo $branchname >>$_git/merging-sym
 
 git-read-tree -m $(tree-id $base) $(tree-id $head) $(tree-id $branch) ||
 	die "git-read-tree failed"
-if ! git-merge-cache ${COGITO_LIB}cg-Xmergefile -a || [ "$careful" ]; then
+if ! git-merge-cache -o ${COGITO_LIB}cg-Xmergefile -a || [ "$careful" ]; then
 	git-checkout-cache -f -a
 
 	# "Resolve" merges still in the cache (conflicts).
