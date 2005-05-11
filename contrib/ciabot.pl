@@ -25,7 +25,7 @@
 # below.
 
 use strict;
-use vars qw ($project $from_email $dest_email $rpc_uri $sendmail
+use vars qw ($project $from_email $dest_email $noisy $rpc_uri $sendmail
 		$xml_rpc $ignore_regexp $alt_local_message_target);
 
 
@@ -48,6 +48,10 @@ $rpc_uri = 'http://cia.navi.cx/RPC2';
 # Path to your USCD sendmail compatible binary (your mailer daemon created this
 # program somewhere).
 $sendmail = '/usr/sbin/sendmail';
+
+# If set, the script will send CIA the full commit message. If unset, only the
+# first line of the commit message will be sent.
+$noisy = 0;
 
 # This script can communicate with CIA either by mail or by an XML-RPC
 # interface. The XML-RPC interface is faster and more efficient, however you
@@ -98,6 +102,9 @@ $logmsg = '';
 while (defined ($line = <COMMIT>)) {
   if ($state == 1) {
     $logmsg .= $line;
+    $noisy or $state++;
+    next;
+  } elsif ($state > 1) {
     next;
   }
 
