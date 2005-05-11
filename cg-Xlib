@@ -8,8 +8,8 @@
 
 _cg_cmd=${0##*/}
 
-_git=.git
-_git_objects=${SHA1_FILE_DIRECTORY:-$_git/objects}
+_git=${GIT_DIR:-.git}
+_git_objects=${GIT_OBJECT_DIRECTORY:-$_git/objects}
 
 
 die () {
