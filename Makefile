@@ -43,7 +43,8 @@ PROG=   git-update-cache git-diff-files git-init-db git-write-tree \
 	git-check-files git-ls-tree git-merge-base git-merge-cache \
 	git-unpack-file git-export git-diff-cache git-convert-cache \
 	git-http-pull git-rpush git-rpull git-rev-list git-mktag \
-	git-diff-tree-helper git-tar-tree git-local-pull git-write-blob
+	git-diff-tree-helper git-tar-tree git-local-pull git-write-blob \
+	git-get-tar-commit-id
 
 SCRIPT=	commit-id tree-id parent-id cg-add cg-admin-lsobj cg-admin-uncommit \
 	cg-branch-add cg-branch-ls cg-cancel cg-clone cg-commit cg-diff \
@@ -69,7 +70,10 @@ LIB_OBJS += strbuf.o
 LIB_H += diff.h
 LIB_OBJS += diff.o
 
-LIBS = -lz
+LIB_OBJS += gitenv.o
+
+LIBS = $(LIB_FILE)
+LIBS += -lz
 
 ifdef MOZILLA_SHA1
 	SHA1_HEADER="mozilla-sha1/sha1.h"
@@ -80,7 +84,7 @@ ifdef PPC_SHA1
 	LIB_OBJS += ppc/sha1.o ppc/sha1ppc.o
 else
 	SHA1_HEADER=<openssl/sha.h>
-	LIBS += -lssl
+	LIBS += -lcrypto
 endif
 endif
 
@@ -91,7 +95,7 @@ all: $(PROG) $(GEN_SCRIPT)
 
 
 git-%: %.c $(LIB_FILE)
-	$(CC) $(CFLAGS) -o $@ $(filter %.c,$^) $(LIB_FILE) $(LIBS)
+	$(CC) $(CFLAGS) -o $@ $(filter %.c,$^) $(LIBS)
 
 git-http-pull: LIBS += -lcurl
 git-http-pull: pull.c
