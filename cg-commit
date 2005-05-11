@@ -178,6 +178,12 @@ if [ "$newhead" ]; then
 	echo "Committed as $newhead."
 	echo $newhead >$_git/HEAD
 	[ "$merging" ] && rm $_git/merging $_git/merging-sym $_git/merge-base
+
+	# Trigger the postcommit hook
+	branchname=
+	[ -s $_git/branch-name ] && branchname=$(cat $_git/branch-name)
+	[ -x $_git/hooks/commit-post ] && $_git/hooks/commit-post $newhead $branchname
+
 	exit 0
 else
 	die "error during commit (oldhead $oldhead, treeid $treeid)"
