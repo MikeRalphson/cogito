@@ -140,13 +140,13 @@ rm $LOGMSG2
 
 if [ ! "$ignorecache" ]; then
 	if [ "$customfiles" ]; then
-		git-update-cache --add --remove "${commitfiles[@]}" \
+		git-update-cache --add --remove -- "${commitfiles[@]}" \
 			|| die "update-cache failed"
 		export GIT_INDEX_FILE=$(mktemp -t gitci.XXXXXX)
 		git-read-tree HEAD
 	fi
 	# TODO: Do the proper separation of adds, removes, and changes.
-	git-update-cache --add --remove "${commitfiles[@]}" \
+	git-update-cache --add --remove -- "${commitfiles[@]}" \
 		|| die "update-cache failed"
 fi
 
