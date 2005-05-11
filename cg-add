@@ -11,7 +11,7 @@
 [ "$1" ] || die "usage: cg-add FILE..."
 
 for file in "$@"; do
-	if [ -f "$file" ]; then
+	if [ -f "$file" ] || [ -h "$file" ]; then
 		echo "Adding file $file"
 	else
 		die "$file does not exist"
