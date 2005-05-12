@@ -14,7 +14,7 @@
 #	cg-diff this master # will do the correct thing
 #	cg-seek # will restore what we had before
 #
-# For intiutiveness, specifying the branch name (cg-seek master) will do
+# For intuitiveness, specifying the branch name (cg-seek master) will do
 # the right thing too. If you want to migrate your working tree to another
 # branch, use cg-fork.
 #
