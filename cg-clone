@@ -28,7 +28,7 @@ location=${location%/}
 
 destdir=$2
 if [ "$destdir" ]; then
-	[ ! "$samedir" ] || die "specifying both -s and DESTDIR makes no sense"
+	[ ! "$same_dir" ] || die "specifying both -s and DESTDIR makes no sense"
 	dir=$destdir
 else
 	dir=${location%/.git}; dir=${dir##*/}
