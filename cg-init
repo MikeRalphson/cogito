@@ -36,4 +36,6 @@ else
 	find * \( -type f -o -type l \) -print0 | xargs -0r cg-add
 	cg-commit -C -m"Initial commit" -e
 fi
+
+trap "" SIGTERM EXIT
 exit 0

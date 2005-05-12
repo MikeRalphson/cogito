@@ -50,4 +50,5 @@ fi
 
 trap "rm -rf $dir" SIGTERM EXIT
 cg-init $location || exit $?
+trap "" SIGTERM EXIT
 echo "Cloned to $dir/ (origin $location available as branch \"origin\")"
