@@ -27,29 +27,35 @@
 # at least somewhere it does. Bash is broken.
 trap exit SIGPIPE
 
-if [ "$1" = "-c" ]; then
-	shift
-	# See terminfo(5), "Color Handling"
-	colheader="$(tput setaf 2)"    # Green
-	colauthor="$(tput setaf 6)"    # Cyan
-	colcommitter="$(tput setaf 5)" # Magenta
-	colfiles="$(tput setaf 4)"     # Blue
-	colsignoff="$(tput setaf 3)"   # Yellow
-	coldefault="$(tput op)"        # Restore default
-else
-	colheader=
-	colauthor=
-	colcommitter=
-	colfiles=
-	colsignoff=
-	coldefault=
-fi
-
+colheader=
+colauthor=
+colcommitter=
+colfiles=
+colsignoff=
+coldefault=
 list_files=
-if [ "$1" = "-f" ]; then
-	shift
-	list_files=1
-fi
+while [ "$1" ]; do
+	# TODO: Parse -r here too.
+	case "$1" in
+	-c)
+		# See terminfo(5), "Color Handling"
+		colheader="$(tput setaf 2)"    # Green
+		colauthor="$(tput setaf 6)"    # Cyan
+		colcommitter="$(tput setaf 5)" # Magenta
+		colfiles="$(tput setaf 4)"     # Blue
+		colsignoff="$(tput setaf 3)"   # Yellow
+		coldefault="$(tput op)"        # Restore default
+		shift
+		;;
+	-f)
+		list_files=1
+		shift
+		;;
+	*)
+		break
+		;;
+	esac
+done
 
 list_commit_files()
 {
