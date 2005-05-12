@@ -14,6 +14,8 @@ uri=$1
 
 [ -e $_git ] && die "$_git already exists"
 
+trap "rm -rf $_git" SIGTERM EXIT
+
 git-init-db
 mkdir $_git/branches $_git/refs $_git/refs/heads $_git/refs/tags
 touch $_git/refs/heads/master
