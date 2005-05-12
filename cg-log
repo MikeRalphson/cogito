@@ -15,6 +15,9 @@
 #
 # Takes an -f option to list which files was changed.
 #
+# Takes -u"username" to list only commits where author or
+# committer contains username.
+#
 # Takes an -r followed with id resolving to a commit to start from
 # (HEAD by default), or id1:id2 representing an (id1;id2] range
 # of commits to show.
@@ -34,6 +37,7 @@ colfiles=
 colsignoff=
 coldefault=
 list_files=
+user=
 while [ "$1" ]; do
 	# TODO: Parse -r here too.
 	case "$1" in
@@ -49,6 +53,10 @@ while [ "$1" ]; do
 		;;
 	-f)
 		list_files=1
+		shift
+		;;
+	-u*)
+		user="${1#-u}"
 		shift
 		;;
 	*)
@@ -122,6 +130,9 @@ $revls | $revsort | while read time commit parents; do
 	if [ $# -ne 0 ]; then
 		parent=$(git-cat-file commit $commit | sed -n '2s/parent //p;2Q')
 		[ "$parent" ] && [ "$(git-diff-tree -r $commit $parent "$@")" ] || continue
+	fi
+	if [ "$user" ]; then
+		git-cat-file commit $commit | grep -e '^author ' -e '^committer ' | grep -qi "$user" || continue
 	fi
 	echo $colheader""commit ${commit%:*} $coldefault;
 	git-cat-file commit $commit | \
