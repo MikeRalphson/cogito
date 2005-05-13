@@ -69,6 +69,7 @@ list_commit_files()
 {
 	tree1="$1"
 	tree2="$2"
+	line=
 	sep="    * $colfiles"
 	# List all files for for the initial commit
 	if [ -z $tree2 ]; then
@@ -84,9 +85,9 @@ list_commit_files()
 			line="$line$sep$file"
 			echo -n "$file"
 		else
-			line="$file"
+			line="      $file"
 			echo "$coldefault"
-			echo -n "    $colfiles$file"
+			echo -n "      $colfiles$file"
 		fi
 	done
 	echo "$coldefault:"
