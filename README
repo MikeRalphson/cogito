@@ -1,3 +1,242 @@
+	Cogito and GIT: Quick Introduction
+	~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+This document describes the Cogito VCS as well as GIT.  The GIT itself is
+merely an extremely fast and flexible filesystem-based database designed to
+store directory trees with regard to their history.  The top layer is a
+SCM-like tool Cogito which enables human beings to work with the database in a
+manner to a degree similar to other SCM tools (like CVS, BitKeeper or
+Monotone).
+
+
+	The Cogito Version Control System
+	~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+Cogito is a version control system layered on top of the git tree history
+storage system.  We shall first describe some quick ways to get started using
+Cogito, then go over each available command one by one.  Quickstart
+
+
+	Downloading Cogito From Scratch
+
+Cogito can be obtained as a tarball from
+
+	http://www.kernel.org/pub/software/scm/cogito/
+
+Download and unpack the latest version, build with make, put the executables
+somewhere in your $PATH (or add your Cogito directory itself to your $PATH),
+and you're ready to go!
+
+The following tools are required by Cogito:
+
+	bash, basic shell environment (sed, grep, textutils, mktemp, ...)
+	diff, patch
+	merge (e.g. from the RCS package)
+	libcrypto (OpenSSL)
+	rsync
+	libcurl
+
+
+        Starting a Fresh GIT Repository
+
+If you want to start your own project using Cogito, there are two basic ways
+to do this. You may start a fresh repository with no files in it, or you may
+take an existing directory tree and turn it into a GIT repository.
+
+	Starting an Empty Repository
+
+To create a new repository with no files in it, cd into an empty directory,
+and give the following command:
+
+	$ cg-init
+
+Your editor will start up, and you will be asked to type in the initial
+commit description. Type something cute, and exit your editor.
+
+That's it! You're now in your own GIT repository. Notice there is now a .git
+directory. Go into it and look around, but don't change anything in there.
+That's what Cogito commands are for.
+
+	Turning an Existing Directory Into a Repository
+
+If you have a directory full of files, you can easily turn this into a
+GIT repository. In fact, it is virtually the same as starting an empty
+repository. Just cd into the directory you want converted into a GIT
+repository, and give the following command:
+
+	$ cg-init
+
+Your editor starts up, you type in an initial commit message, exit your
+editor, and you're good to go. All of the files and directories within that
+directory are now part of a GIT archive.
+
+
+	Accessing Someone Else's GIT Repository
+
+	Creating the Repository
+
+If you want to get started tracking an outside GIT repository, you first
+must have Cogito's executables on your $PATH. Next, you need the URL (or
+local directory path) of the repository you want to track. You can't just
+use the URL of a tarball, like the one given above for the Cogito source.
+The URL must point specifically to a .git directory somewhere. For instance,
+the URL for Cogito's self-hosting repository is
+
+	rsync://rsync.kernel.org/pub/scm/cogito/cogito.git
+
+Notice that the final directory, 'cogito.git', is not called '.git'. That is
+fine. It still has the same content as your .git directory.
+
+To clone the repository to your local filesystem, use the cg-clone command.
+cg-clone can be told to create a new directory for your repository, or to
+drop the repository into the current directory.
+
+To have a new directory created, just invoke cg-clone with the URL.  You can
+also include the directory in the command to specify exactly how should the
+new directory be called, as follows:
+
+	$ cg-clone rsync://rsync.kernel.org/pub/scm/cogito/cogito.git cogitodir
+
+You will see a whole bunch of output, and when it is over there will be a
+new directory called 'cogitodir' (or whatever name you chose) in the current
+directory. cd into it. Because we used the Cogito URL, you will see the
+Cogito source tree, with its own .git directory keeping track of everything.
+
+If, instead, you want to clone the repository to the current directory,
+first make sure you are in an empty directory. Then give the following
+command:
+
+	$ cg-clone -s rsync://rsync.kernel.org/pub/scm/cogito/cogito.git cogitodir
+
+When you get your prompt back, do an ls to see the source tree and .git
+directory.
+
+
+    Tracking Others' Work
+
+Of course, once you have cloned a repository, you don't just want to leave
+it at that. The upstream sources are constantly being updated, and you want
+to follow these updates. To do this, cd into the working tree directory (not
+the .git directory, but the directory that contains the .git directory), and
+give the following command:
+
+	$ cg-update
+
+You don't use a URL anymore. Cogito knows which tree you're tracking, because
+this information is stored in the .git directory. The above command will track
+the 'origin' branch, which represents the repository you originally cloned.
+But cg-update can also be used to track specific branches. See below for more
+discussion of branches, and how to track them.
+
+When you give the above cg-update command, this performed two actions.
+First, it pulled all new changes from the upstream repository into your
+local repository. At that point, the changes exist in your local repository
+as part of the project history. The changes themselves are not actually
+visible in the files you see, but reside in the .git directory's awareness,
+just downloaded and ready to be merged somewhere.  The second thing cg-update
+does is to merge these changes into the files you see and work with. The end
+result is that, when the cg-update has finished, you will see all the upstream
+changes reflected in your local files, and the .git directory will be aware
+of the history of those changes as well.
+
+It may be that you want to be aware of the history of the upstream work, but
+you don't yet want those changes merged with your own local files. To do
+this, give the following command:
+
+	$ cg-pull
+
+This does the first part of cg-update's job, but skips the second part.
+Now your local files have not been changed, but your .git directory has been
+updated with the history of all the changes that have occurred in the
+upstream sources.
+
+Using cg-pull is useful for a variety of purposes, for instance if you want
+to construct a diff against the latest version of the upstream sources, but
+don't want those changes to disturb your ongoing work. cg-pull will update
+your .git directory with the history you need to construct your diff,
+without merging that history into your tree, potentially breaking your
+changes.
+
+Typically, if you are not making changes to the project yourself, but just
+want the latest version of a given project for your own use, you would use
+cg-update. cg-pull is strictly for development work.
+
+Once you've done a cg-pull, you may decide you want to merge after all. In
+this case a cg-update command will do the trick, however you will also
+update your local files with any further upstream changes that have occurred
+since your cg-pull. The alternative and much more powerful way is using
+the cg-merge command, which we shall describe later.
+
+
+	Other Stuff
+
+If there are any changes, two IDs will be printed (I mean the line saying
+"Tree change"). Pass those as parameters to cg-diff and you will get a diff
+describing changes from the last time you pulled. You can also
+
+	$ cg-diff -r origin:HEAD
+
+which will show changes between the cloned branch and your current branch
+(shall you do any modifications).
+
+Note that you can also access the Linus' official branch, by adding it with
+the command
+
+	$ cg-branch-add name rsyncurl
+
+(the rsyncurl can have a fragment part identifying a branch inside of the
+repository accessible over rsync). Then you can specify the name to cg-update
+and cg-pull, or use it anywhere where you could use the "origin" name.
+
+When you do some local changes, you can do
+
+	$ cg-diff
+
+to display them.  Of course you will want to commit. If you added any new
+files, do
+
+	$ cg-add newfile1 newfile2 ...
+
+first. Then examine your changes by cg-diff or just show what files did you
+change by
+
+	$ cg-status
+
+and feel free to commit by the
+
+	$ cg-commit
+
+command, which will present you with the editor of your choice for composing
+the commit message.
+
+It is nice to be able to examine the commit history. We have tool for that too.
+
+	$ cg-log -r origin
+
+will get you the history of my branch. cg-log with no arguments will default
+to the history of the current branch. Try prepending the "-c" and "-f" options.
+
+Note that we missed out a lot of stuff here. There is already support
+for merging (cg-merge), moving your tree to an older commit (cg-seek), etc.
+
+
+	Getting Help
+
+Cogito commands come with their own helpful documentation. To get help on
+cg-update, for example, give this command:
+
+	$ cg-pull --help
+
+or, for the same information, try this:
+
+	$ cg-help cg-pull
+
+
+
+
+	The "core GIT"
+	~~~~~~~~~~~~~~
+
 	GIT - the stupid content tracker
 
 "git" can mean anything, depending on your mood.
@@ -11,154 +250,7 @@
    works for you. Angels sing, and a light suddenly fills the room. 
  - "goddamn idiotic truckload of sh*t": when it breaks
 
-The GIT itself is merely an extremely fast and flexible filesystem-based
-database designed to store directory trees with regard to their history.
-The top layer is a SCM-like tool Cogito which enables human beings to work
-with the database in a manner to a degree similar to other SCM tools (like
-CVS, BitKeeper or Monotone).
-
-
-
-	Cogito
-	~~~~~~
-
-This currently simply describes what should you do when you get a tarball
-of Cogito and start to use it and hack upon it. It can give you some guide,
-but the documentation should be certainly consolidated and rewritten.
-
-Build it by make, make sure the scripts are in $PATH.
-
-If, after unpacking the tarball, you do not have the .git subdirectory in the
-tarball root, you
-
-	cg-clone -s rsync://rsync.kernel.org/pub/scm/cogito/cogito.git
-
-in that directory, and
-
-	cg-branch-add pasky rsync://rsync.kernel.org/pub/scm/cogito/cogito.git
-
-(there is already the same branch called "origin" created by cg-clone, however
-we expect the branch name to be "pasky" for the result of the tutorial;
-alternatively, just use "origin" everywhere instead of "pasky").
-
-If you already have the .git subdirectory, update it to the latest version by
-
-	cg-update pasky
-
-(and repeat that after some time to get the future updates - but see below).
-Then build it again, doing
-
-	make
-
-and...  well, that's it. Play around with it a bit. ;-)
-
-You can get my latest changes by doing:
-
-	cg-update pasky
-
-If you did some local commits in the meantime, Cogito will attempt to merge
-them with the pasky branch. You then need to check that the merging went
-correctly and without conflicts, possibly do merge-related fixes, and then
-record the merge with cg-commit (if the merge was clean, Cogito will commit
-automatically).
-
-Sometimes, you will just want to bring the latest stuff from my branch, but not
-merge it (e.g. you might want only to diff against it). Do that by
-
-	cg-pull pasky
-
-If there are any changes, two IDs will be printed (I mean the line saying
-"Tree change"). Pass those as parameters to cg-diff and you will get a diff
-describing changes from the last time you pulled. You can also
-
-	cg-diff -r pasky:HEAD
-
-which will show changes between my and your branch.
-
-Note that you can also access the Linus' official branch, just by specifying
-'linus' instead of 'pasky'. You can of course add more branches by:
-
-	cg-branch-add name rsyncurl
-
-(the rsyncurl can have a fragment part identifying a branch inside of the
-repository accessible over rsync).  When you do some local changes, you can do
-
-	cg-diff
-
-to display them. "ok" means it's identical, while hash printed means that there
-is some difference. This is a little troublesome so far, since it doesn't like
-even things like ctime or inode number (!) changed. Actual diff is printed out
-when you changed the file contents.
-
-Of course you will want to commit. If you added any new files, do
-
-	cg-add newfile1 newfile2 ...
-
-first. Then examine your changes by cg-diff or just show what files did you
-change by
-
-	cg-status
-
-and feel free to commit by
-
-	cg-commit
-
-which expects the commit message on stdin.
-
-It is nice to be able to examine the commit history. We have tool for that too.
-
-	cg-log -r pasky
-
-will get you the history of my branch. cg-log with no arguments will default
-to the history of the current branch.
-
-If you want to start out new project, do (IN NEW DIRECTORY)
-
-	cg-init
-
-which will also do the initial commit, importing the content of the current
-directory if there is anything in it yet.
-
-If you want to get someone else's project, do
-
-	cg-clone URL
-
-(the URL will be available as branch "origin" for updating, etc).  cg-clone
-will create new repository for its work - if you want it to work in the current
-directory (like cg-init), pass it the '-s' argument first (like in our first
-cg-clone in this tutorial).
-
-Note that we missed out a lot of stuff here. There is already support
-for merging (cg-merge), moving your tree to an older commit (cg-seek), etc.
-
-For quick reference, please see
-
-	cg-help
-
-
-And for reference, my branch URL is:
-
-	rsync://rsync.kernel.org/pub/scm/cogito/cogito.git
-
-Note that this all is highly experimental and is likely break frequently. You
-are advised to track LKML and/or the git mailing list.
-
-
-Software requirements:
-
-	bash, basic shell environment (sed, grep, textutils, ...)
-	diff, patch, RCS (the merge program from this package)
-	mktemp 1.5+ (Mandrake users beware!)
-	libssl
-	rsync
-	libcurl
-
-
-
-	The "core GIT"
-	~~~~~~~~~~~~~~
-
-This is a stupid (but extremely fast) directory content manager.  It
+Git is a stupid (but extremely fast) directory content manager.  It
 doesn't do a whole lot, but what it _does_ do is track directory
 contents efficiently.
 
