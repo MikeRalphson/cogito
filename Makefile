@@ -43,7 +43,7 @@ PROG=   git-update-cache git-diff-files git-init-db git-write-tree \
 	git-check-files git-ls-tree git-merge-base git-merge-cache \
 	git-unpack-file git-export git-diff-cache git-convert-cache \
 	git-http-pull git-rpush git-rpull git-rev-list git-mktag \
-	git-diff-tree-helper git-tar-tree git-local-pull git-write-blob \
+	git-diff-helper git-tar-tree git-local-pull git-write-blob \
 	git-get-tar-commit-id
 
 SCRIPT=	commit-id tree-id parent-id cg-add cg-admin-lsobj cg-admin-uncommit \
@@ -155,6 +155,9 @@ uninstall:
 	cd $(DESTDIR)$(bindir) && rm $(PROG) $(SCRIPTS) $(SCRIPT) $(GEN_SCRIPT)
 	cd $(DESTDIR)$(libdir) && rm $(LIB_SCRIPT)
 
+
+test:
+	make -C t/ all
 
 clean:
 	rm -f *.o mozilla-sha1/*.o ppc/*.o $(PROG) $(GEN_SCRIPT) $(LIB_FILE)
