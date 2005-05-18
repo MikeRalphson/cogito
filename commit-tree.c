@@ -98,7 +98,7 @@ static void check_valid(unsigned char *sha1, const char *expect)
  */
 #define MAXPARENT (16)
 
-static char *commit_tree_usage = "commit-tree <sha1> [-p <sha1>]* < changelog";
+static const char *commit_tree_usage = "commit-tree <sha1> [-p <sha1>]* < changelog";
 
 int main(int argc, char **argv)
 {

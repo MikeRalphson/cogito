@@ -35,7 +35,7 @@ AR?=ar
 INSTALL?=install
 
 SCRIPTS=git-apply-patch-script git-merge-one-file-script git-prune-script \
-	git-pull-script git-tag-script git-resolve-script
+	git-pull-script git-tag-script git-resolve-script git-whatchanged
 
 PROG=   git-update-cache git-diff-files git-init-db git-write-tree \
 	git-read-tree git-commit-tree git-cat-file git-fsck-cache \
@@ -60,7 +60,7 @@ VERSION= VERSION
 COMMON=	read-cache.o
 
 LIB_OBJS=read-cache.o sha1_file.o usage.o object.o commit.o tree.o blob.o \
-	 tag.o date.o
+	 tag.o date.o index.o
 LIB_FILE=libgit.a
 LIB_H=cache.h object.h blob.h tree.h commit.h tag.h
 
@@ -156,7 +156,7 @@ uninstall:
 	cd $(DESTDIR)$(libdir) && rm $(LIB_SCRIPT)
 
 
-test:
+test: all
 	make -C t/ all
 
 clean:

@@ -79,19 +79,22 @@ static struct diff_tempfile {
 	char tmp_path[50];
 } diff_temp[2];
 
-static void builtin_diff(const char *name,
+static void builtin_diff(const char *name_a,
+			 const char *name_b,
 			 struct diff_tempfile *temp)
 {
 	int i, next_at;
-	const char *git_prefix = "# mode: ";
 	const char *diff_cmd = "diff -L'%s%s' -L'%s%s'";
 	const char *diff_arg  = "'%s' '%s'||:"; /* "||:" is to return 0 */
 	const char *input_name_sq[2];
 	const char *path0[2];
 	const char *path1[2];
-	const char *name_sq = sq_expand(name);
+	const char *name_sq[2];
 	char *cmd;
-	
+
+	name_sq[0] = sq_expand(name_a);
+	name_sq[1] = sq_expand(name_b);
+
 	/* diff_cmd and diff_arg have 6 %s in total which makes
 	 * the sum of these strings 12 bytes larger than required.
 	 * we use 2 spaces around diff-opts, and we need to count
@@ -106,7 +109,7 @@ static void builtin_diff(const char *name,
 			path1[i] = "";
 		} else {
 			path0[i] = i ? "b/" : "a/";
-			path1[i] = name_sq;
+			path1[i] = name_sq[i];
 		}
 		cmd_size += (strlen(path0[i]) + strlen(path1[i]) +
 			     strlen(input_name_sq[i]));
@@ -123,15 +126,20 @@ static void builtin_diff(const char *name,
 	next_at += snprintf(cmd+next_at, cmd_size-next_at,
 			    diff_arg, input_name_sq[0], input_name_sq[1]);
 
+	printf("diff --git a/%s b/%s\n", name_a, name_b);
 	if (!path1[0][0])
-		printf("%s. %s %s\n", git_prefix, temp[1].mode, name);
+		printf("new file mode %s\n", temp[1].mode);
 	else if (!path1[1][0])
-		printf("%s%s . %s\n", git_prefix, temp[0].mode, name);
+		printf("deleted file mode %s\n", temp[0].mode);
 	else {
-		if (strcmp(temp[0].mode, temp[1].mode))
-			printf("%s%s %s %s\n", git_prefix,
-			       temp[0].mode, temp[1].mode, name);
-
+		if (strcmp(temp[0].mode, temp[1].mode)) {
+			printf("old mode %s\n", temp[0].mode);
+			printf("new mode %s\n", temp[1].mode);
+		}
+		if (strcmp(name_a, name_b)) {
+			printf("rename old %s\n", name_a);
+			printf("rename new %s\n", name_b);
+		}
 		if (strncmp(temp[0].mode, temp[1].mode, 3))
 			/* we do not run diff between different kind
 			 * of objects.
@@ -157,7 +165,7 @@ static int work_tree_matches(const char *name, const unsigned char *sha1)
 	 * benchmark with my previous version that always reads cache
 	 * shows that it makes things worse for diff-tree comparing
 	 * two linux-2.6 kernel trees in an already checked out work
-	 * tree.  This is because most diff-tree comparison deals with
+	 * tree.  This is because most diff-tree comparisons deal with
 	 * only a small number of files, while reading the cache is
 	 * expensive for a large project, and its cost outweighs the
 	 * savings we get by not inflating the object to a temporary
@@ -175,7 +183,7 @@ static int work_tree_matches(const char *name, const unsigned char *sha1)
 	ce = active_cache[pos];
 	if ((lstat(name, &st) < 0) ||
 	    !S_ISREG(st.st_mode) ||
-	    cache_match_stat(ce, &st) ||
+	    ce_match_stat(ce, &st) ||
 	    memcmp(sha1, ce->sha1, 20))
 		return 0;
 	return 1;
@@ -294,6 +302,7 @@ static void remove_tempfile_on_signal(int signo)
  *
  */
 void run_external_diff(const char *name,
+		       const char *other,
 		       struct diff_spec *one,
 		       struct diff_spec *two)
 {
@@ -304,7 +313,7 @@ void run_external_diff(const char *name,
 
 	if (one && two) {
 		prepare_temp_file(name, &temp[0], one);
-		prepare_temp_file(name, &temp[1], two);
+		prepare_temp_file(other ? : name, &temp[1], two);
 		if (! atexit_asked &&
 		    (temp[0].name == temp[0].tmp_path ||
 		     temp[1].name == temp[1].tmp_path)) {
@@ -320,7 +329,8 @@ void run_external_diff(const char *name,
 		die("unable to fork");
 	if (!pid) {
 		const char *pgm = external_diff();
-		if (pgm) {
+		/* not passing rename patch to external ones */
+		if (!other && pgm) {
 			if (one && two)
 				execlp(pgm, pgm,
 				       name,
@@ -334,7 +344,7 @@ void run_external_diff(const char *name,
 		 * otherwise we use the built-in one.
 		 */
 		if (one && two)
-			builtin_diff(name, temp);
+			builtin_diff(name, other ? : name, temp);
 		else
 			printf("* Unmerged path %s\n", name);
 		exit(0);
@@ -379,7 +389,7 @@ void diff_addremove(int addremove, unsigned mode,
 		strcpy(concatpath, base);
 		strcat(concatpath, path);
 	}
-	run_external_diff(path ? concatpath : base, one, two);
+	run_external_diff(path ? concatpath : base, NULL, one, two);
 }
 
 void diff_change(unsigned old_mode, unsigned new_mode,
@@ -400,10 +410,10 @@ void diff_change(unsigned old_mode, unsigned new_mode,
 		strcpy(concatpath, base);
 		strcat(concatpath, path);
 	}
-	run_external_diff(path ? concatpath : base, &spec[0], &spec[1]);
+	run_external_diff(path ? concatpath : base, NULL, &spec[0], &spec[1]);
 }
 
 void diff_unmerge(const char *path)
 {
-	run_external_diff(path, NULL, NULL);
+	run_external_diff(path, NULL, NULL, NULL);
 }

@@ -159,7 +159,7 @@ static void merge_stat_info(struct cache_entry **src, int nr)
 	}
 }
 
-static char *read_tree_usage = "read-tree (<sha> | -m <sha1> [<sha2> <sha3>])";
+static const char *read_tree_usage = "read-tree (<sha> | -m <sha1> [<sha2> <sha3>])";
 
 int main(int argc, char **argv)
 {

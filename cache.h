@@ -41,10 +41,6 @@ extern char *gitenv_bc(const char *);
 
 /*
  * Basic data structures for the directory cache
- *
- * NOTE NOTE NOTE! This is all in the native CPU byte format. It's
- * not even trying to be portable. It's trying to be efficient. It's
- * just a cache, after all.
  */
 
 #define CACHE_SIGNATURE 0x44495243	/* "DIRC" */
@@ -127,11 +123,20 @@ extern int cache_name_pos(const char *name, int namelen);
 #define ADD_CACHE_OK_TO_ADD 1		/* Ok to add */
 #define ADD_CACHE_OK_TO_REPLACE 2	/* Ok to replace file/directory */
 extern int add_cache_entry(struct cache_entry *ce, int option);
-extern int remove_entry_at(int pos);
+extern int remove_cache_entry_at(int pos);
 extern int remove_file_from_cache(char *path);
-extern int same_name(struct cache_entry *a, struct cache_entry *b);
-extern int cache_match_stat(struct cache_entry *ce, struct stat *st);
+extern int ce_same_name(struct cache_entry *a, struct cache_entry *b);
+extern int ce_match_stat(struct cache_entry *ce, struct stat *st);
 extern int index_fd(unsigned char *sha1, int fd, struct stat *st);
+extern void fill_stat_cache_info(struct cache_entry *ce, struct stat *st);
+
+struct cache_file {
+	struct cache_file *next;
+	char lockfile[PATH_MAX];
+};
+extern int hold_index_file_for_update(struct cache_file *, const char *path);
+extern int commit_index_file(struct cache_file *);
+extern void rollback_index_file(struct cache_file *);
 
 #define MTIME_CHANGED	0x0001
 #define CTIME_CHANGED	0x0002
@@ -148,7 +153,7 @@ extern char *sha1_file_name(const unsigned char *sha1);
 extern void * map_sha1_file(const unsigned char *sha1, unsigned long *size);
 extern void * unpack_sha1_file(void *map, unsigned long mapsize, char *type, unsigned long *size);
 extern void * read_sha1_file(const unsigned char *sha1, char *type, unsigned long *size);
-extern int write_sha1_file(char *buf, unsigned long len, const char *type, unsigned char *return_sha1);
+extern int write_sha1_file(void *buf, unsigned long len, const char *type, unsigned char *return_sha1);
 
 extern int check_sha1_signature(unsigned char *sha1, void *buf, unsigned long size, const char *type);
 
@@ -172,7 +177,7 @@ extern int error(const char *err, ...);
 extern int cache_name_compare(const char *name1, int len1, const char *name2, int len2);
 
 extern void *read_object_with_reference(const unsigned char *sha1,
-					const unsigned char *required_type,
+					const char *required_type,
 					unsigned long *size,
 					unsigned char *sha1_ret);
 
@@ -180,7 +185,7 @@ const char *show_date(unsigned long time, int timezone);
 void parse_date(char *date, char *buf, int bufsize);
 void datestamp(char *buf, int bufsize);
 
-static inline void *xmalloc(int size)
+static inline void *xmalloc(size_t size)
 {
 	void *ret = malloc(size);
 	if (!ret)
@@ -188,11 +193,19 @@ static inline void *xmalloc(int size)
 	return ret;
 }
 
-static inline void *xrealloc(void *ptr, int size)
+static inline void *xrealloc(void *ptr, size_t size)
 {
 	void *ret = realloc(ptr, size);
 	if (!ret)
 		die("Out of memory, realloc failed");
+	return ret;
+}
+
+static inline void *xcalloc(size_t nmemb, size_t size)
+{
+	void *ret = calloc(nmemb, size);
+	if (!ret)
+		die("Out of memory, calloc failed");
 	return ret;
 }
 

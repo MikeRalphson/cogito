@@ -33,7 +33,7 @@ static int get_stat_data(struct cache_entry *ce, unsigned char **sha1p, unsigned
 			}
 			return -1;
 		}
-		changed = cache_match_stat(ce, &st);
+		changed = ce_match_stat(ce, &st);
 		if (changed) {
 			mode = create_ce_mode(st.st_mode);
 			sha1 = no_sha1;
@@ -63,7 +63,7 @@ static int show_modified(struct cache_entry *old,
 {
 	unsigned int mode, oldmode;
 	unsigned char *sha1;
-	unsigned char old_sha1_hex[60];
+	char old_sha1_hex[60];
 
 	if (get_stat_data(new, &sha1, &mode) < 0) {
 		if (report_missing)
@@ -94,7 +94,7 @@ static int diff_cache(struct cache_entry **ac, int entries)
 {
 	while (entries) {
 		struct cache_entry *ce = *ac;
-		int same = (entries > 1) && same_name(ce, ac[1]);
+		int same = (entries > 1) && ce_same_name(ce, ac[1]);
 
 		switch (ce_stage(ce)) {
 		case 0:
@@ -143,7 +143,7 @@ static int diff_cache(struct cache_entry **ac, int entries)
 		do {
 			ac++;
 			entries--;
-		} while (entries && same_name(ce, ac[0]));
+		} while (entries && ce_same_name(ce, ac[0]));
 	}
 	return 0;
 }
@@ -164,7 +164,7 @@ static void mark_merge_entries(void)
 	}
 }
 
-static char *diff_cache_usage =
+static const char *diff_cache_usage =
 "git-diff-cache [-p] [-r] [-z] [-m] [--cached] <tree sha1>";
 
 int main(int argc, char **argv)
