@@ -122,7 +122,7 @@ static void builtin_diff(const char *name,
 	next_at += snprintf(cmd+next_at, cmd_size-next_at,
 			    diff_arg, input_name_sq[0], input_name_sq[1]);
 
-	printf("diff -git a/%s b/%s\n", name, name);
+	printf("diff --git a/%s b/%s\n", name, name);
 	if (!path1[0][0])
 		printf("new file mode %s\n", temp[1].mode);
 	else if (!path1[1][0])
