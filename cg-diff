@@ -11,6 +11,8 @@
 # compares between rev and HEAD, while -r rev compares between rev
 # and working tree).
 #
+# -c colorizes the diff output
+#
 # -p instead of one ID denotes a parent commit to the specified ID
 # (which must not be a tree, obviously).
 #
@@ -22,9 +24,27 @@
 id1=" "
 id2=" "
 parent=
+opt_color=
 
+# TODO: Make cg-log use this too.
+setup_colors()
+{
+	local C="diffhdr=1;36:diffadd=32:diffmod=35:diffrem=31:diffhunk=36:diffctx=34:diffcctx=33:default=0"
+	[ -n "$COGITO_COLORS" ] && C="$C:$COGITO_COLORS"
+
+	C=${C//=/=\'$'\e'[}
+	C=col${C//:/m\'; col}m\'
+	#coldefault=$(tput op)
+	eval $C
+}
 
 # FIXME: The commandline parsing is awful.
+
+if [ "$1" = "-c" ]; then
+	shift
+	opt_color=1
+	setup_colors
+fi
 
 if [ "$1" = "-p" ]; then
 	shift
@@ -43,6 +63,34 @@ if [ "$1" = "-r" ]; then
 	id2="$1"
 	shift
 fi
+
+colorize() {
+	if [ "$opt_color" ]; then
+		gawk '
+		{ if (/^(Index:|\-\-\-|\+\+\+|\*\*\*|diff --git) /)
+		    print "'$coldiffhdr'" $0 "'$coldefault'"
+		  else if (/^======*$/)
+		    print "'$coldiffhdr'" $0 "'$coldefault'"
+		  else if (/^\+/)
+		    print "'$coldiffadd'" $0 "'$coldefault'"
+		  else if (/^-/)
+		    print "'$coldiffrem'" $0 "'$coldefault'"
+		  else if (/^!/)
+		    print "'$coldiffmod'" $0 "'$coldefault'"
+		  else if (/^@@ \-[0-9]+(,[0-9]+)? \+[0-9]+(,[0-9]+)? @@/)
+		    print gensub(/^(@@[^@]*@@)([ \t]*)(.*)/,
+		         "'$coldiffhunk'" "\\1" "'$coldefault'" \
+			 "\\2" \
+			 "'$coldiffctx'" "\\3" "'$coldefault'", "")
+		  else if (/^\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*/)
+		    print "'$coldiffcctx'" $0 "'$coldefault'"
+		  else
+		    print
+		}'
+	else
+		cat
+	fi
+}
 
 if [ "$parent" ]; then
 	id2="$id1"
@@ -71,7 +119,7 @@ if [ "$id2" = " " ]; then
 	# FIXME: Update ret based on what did we match. And take "$@"
 	# to account after all.
 	ret=
-	git-diff-cache -r -z $tree | xargs -0 ${COGITO_LIB}cg-Xdiffdo "$tree" uncommitted "$filter"
+	git-diff-cache -r -z $tree | xargs -0 ${COGITO_LIB}cg-Xdiffdo "$tree" uncommitted "$filter" | colorize
 
 	[ "$filter" ] && rm $filter
 
@@ -85,7 +133,7 @@ id2=$(tree-id "$id2") || exit 1
 
 [ "$id1" = "$id2" ] && die "trying to diff $id1 against itself"
 
-git-diff-tree -r -z $id1 $id2 | xargs -0 ${COGITO_LIB}cg-Xdiffdo $id1 $id2 "$filter"
+git-diff-tree -r -z $id1 $id2 | xargs -0 ${COGITO_LIB}cg-Xdiffdo $id1 $id2 "$filter" | colorize
 
 [ "$filter" ] && rm $filter
 exit 0
