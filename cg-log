@@ -220,4 +220,4 @@ $revls | $revsort | while read time commit parents; do
 
 		done
 	echo
-done | LESS="R$LESS" ${PAGER:-less} ${PAGER_FLAGS}
+done | pager

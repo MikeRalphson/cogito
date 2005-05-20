@@ -21,6 +21,10 @@ usage() {
 	die "usage: $USAGE"
 }
 
+pager () {
+	LESS="R$LESS" ${PAGER:-less} $PAGER_FLAGS
+}
+
 mktemp () {
 	if [ ! "$BROKEN_MKTEMP" ]; then
 		$(which mktemp) "$@"
