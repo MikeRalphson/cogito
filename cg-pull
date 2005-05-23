@@ -3,13 +3,24 @@
 # Pull changes from a remote branch to the local GIT repository.
 # Copyright (c) Petr Baudis, 2005.
 #
+# See `cg-branch-add` for some description.
+#
 # Takes the branch name as an argument, defaulting to "origin".
 #
-# See `cg-branch-add` for some description.
+# OPTIONS
+# -------
+# -f::
+#	Force the complete pull even if the heads are the same.
 
-USAGE="cg-pull [BRANCH_NAME]"
+USAGE="cg-pull [-f] [BRANCH_NAME]"
 
 . ${COGITO_LIB}cg-Xlib
+
+force=
+if [ "$1" = "-f" ]; then
+	force=1
+	shift
+fi
 
 name=$1
 
@@ -250,6 +261,12 @@ if [ "$rsyncerr" ] && [ "$rembranch" = "master" ]; then
 fi
 [ "$rsyncerr" ] && die "unable to get the head pointer of branch $rembranch"
 
+new_head=$(cat "$_git/refs/heads/$name")
+if [ ! "$force" ] && [ "$orig_head" = "$new_head" ]; then
+	echo "Up to date."
+	exit
+fi
+
 [ -d $_git_objects ] || mkdir -p $_git_objects
 $pull "$name" "$uri" || die "objects pull failed"
 
@@ -284,8 +301,6 @@ fi
 	done
 )
 
-
-new_head=$(cat "$_git/refs/heads/$name")
 
 if [ ! "$orig_head" ]; then
 	echo "New branch: $new_head"
