@@ -48,13 +48,13 @@ mkdir "$diffdir1" "$diffdir2"
 
 while [ "$1" ]; do
 	declare -a param
-	param=($1);
-	op=${param[0]:0:1}
-	mode=${param[0]:1}
-	type=${param[1]}
-	sha=${param[2]}
-	name=${param[3]}
+	param=($1 $2);
+	mode=${param[0]:1}"->"${param[1]}
+	sha=${param[2]}"->"${param[3]}
+	op=${param[4]}
+	name=${param[5]}
 
+	type=`git-cat-file -t $sha`
 	if [ "$filter" ] && (echo "$name" | grep -vqxFf $filter); then
 		shift; continue
 	fi
@@ -72,15 +72,15 @@ while [ "$1" ]; do
 	([ -d "$dir1" ] && [ -d "$dir2" ]) || mkdir -p "$dir1" "$dir2"
 
 	case $op in
-	"+")
+	"A")
 		mkbanner "$loc2" $id2 "$name" $mode $sha
 		diff -L "/dev/null  (tree:$id1)" -L "$label" -u /dev/null "$loc2"
 		;;
-	"-")
+	"D")
 		mkbanner "$loc1" $id1 "$name" $mode $sha
 		diff -L "$label" -L "/dev/null  (tree:$id2)" -u "$loc1" /dev/null
 		;;
-	"*")
+	"M")
 		modes=(${mode/->/ });
 		mode1=${modes[0]}; mode2=${modes[1]}
 		shas=(${sha/->/ });
@@ -94,7 +94,7 @@ while [ "$1" ]; do
 	esac
 
 	#rm -f "$loc1" "$loc2"
-	shift
+	shift 2
 done
 
 rm -rf "$diffdir"

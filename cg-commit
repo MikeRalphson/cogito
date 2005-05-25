@@ -73,7 +73,7 @@ else
 	# be committed along automagically as well.
 
 	if [ ! "$ignorecache" ]; then
-		eval changedfiles=($(git-diff-cache HEAD | cut -f 4- | \
+		eval changedfiles=($(git-diff-cache HEAD | cut -f 2 | \
 			sed -e 's/^/"/' -e 's/$/"/'))
 		commitfiles=($addedfiles $remfiles "${changedfiles[@]}")
 	fi
