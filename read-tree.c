@@ -13,7 +13,7 @@ static int unpack_tree(unsigned char *sha1)
 	unsigned long size;
 	int ret;
 
-	buffer = read_object_with_reference(sha1, "tree", &size, 0);
+	buffer = read_object_with_reference(sha1, "tree", &size, NULL);
 	if (!buffer)
 		return -1;
 	ret = read_tree(buffer, size, stage);
@@ -159,7 +159,7 @@ static void merge_stat_info(struct cache_entry **src, int nr)
 	}
 }
 
-static const char *read_tree_usage = "read-tree (<sha> | -m <sha1> [<sha2> <sha3>])";
+static const char *read_tree_usage = "git-read-tree (<sha> | -m <sha1> [<sha2> <sha3>])";
 
 int main(int argc, char **argv)
 {

@@ -5,8 +5,8 @@
  */
 #include "cache.h"
 
-int line_termination = '\n';
-int recursive = 0;
+static int line_termination = '\n';
+static int recursive = 0;
 
 struct path_prefix {
 	struct path_prefix *prev;
@@ -73,7 +73,7 @@ static int list(unsigned char *sha1)
 	void *buffer;
 	unsigned long size;
 
-	buffer = read_object_with_reference(sha1, "tree", &size, 0);
+	buffer = read_object_with_reference(sha1, "tree", &size, NULL);
 	if (!buffer)
 		die("unable to read sha1 file");
 	list_recursive(buffer, "tree", size, NULL);
@@ -81,7 +81,7 @@ static int list(unsigned char *sha1)
 	return 0;
 }
 
-static const char *ls_tree_usage = "ls-tree [-r] [-z] <key>";
+static const char *ls_tree_usage = "git-ls-tree [-r] [-z] <key>";
 
 int main(int argc, char **argv)
 {

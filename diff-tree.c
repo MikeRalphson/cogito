@@ -2,19 +2,23 @@
 #include "cache.h"
 #include "diff.h"
 
-static int silent = 0;
+static int show_root_diff = 0;
 static int verbose_header = 0;
 static int ignore_merges = 1;
 static int recursive = 0;
+static int show_tree_entry_in_recursive = 0;
 static int read_stdin = 0;
-static int line_termination = '\n';
-static int generate_patch = 0;
+static int diff_output_format = DIFF_FORMAT_HUMAN;
+static int detect_rename = 0;
+static int reverse_diff = 0;
+static int diff_score_opt = 0;
+static const char *pickaxe = NULL;
 static const char *header = NULL;
 static const char *header_prefix = "";
 
 // What paths are we interested in?
 static int nr_paths = 0;
-static char **paths = NULL;
+static const char **paths = NULL;
 static int *pathlens = NULL;
 
 static int diff_tree_sha1(const unsigned char *old, const unsigned char *new, const char *base);
@@ -63,14 +67,6 @@ static void show_file(const char *prefix, void *tree, unsigned long size, const 
 	const char *path;
 	const unsigned char *sha1 = extract(tree, size, &path, &mode);
 
-	if (header) {
-		printf("%s", header);
-		header = NULL;
-	}
-
-	if (silent)
-		return;
-
 	if (recursive && S_ISDIR(mode)) {
 		char type[20];
 		unsigned long size;
@@ -82,21 +78,13 @@ static void show_file(const char *prefix, void *tree, unsigned long size, const 
 			die("corrupt tree sha %s", sha1_to_hex(sha1));
 
 		show_tree(prefix, tree, size, newbase);
-		
+
 		free(tree);
 		free(newbase);
 		return;
 	}
 
-	if (generate_patch) {
-		if (!S_ISDIR(mode))
-			diff_addremove(prefix[0], mode, sha1, base, path);
-	}
-	else
-		printf("%s%06o\t%s\t%s\t%s%s%c", prefix, mode,
-		       S_ISDIR(mode) ? "tree" : "blob",
-		       sha1_to_hex(sha1), base, path,
-		       line_termination);
+	diff_addremove(prefix[0], mode, sha1, base, path);
 }
 
 static int compare_tree_entry(void *tree1, unsigned long size1, void *tree2, unsigned long size2, const char *base)
@@ -105,14 +93,13 @@ static int compare_tree_entry(void *tree1, unsigned long size1, void *tree2, uns
 	const char *path1, *path2;
 	const unsigned char *sha1, *sha2;
 	int cmp, pathlen1, pathlen2;
-	char old_sha1_hex[50];
 
 	sha1 = extract(tree1, size1, &path1, &mode1);
 	sha2 = extract(tree2, size2, &path2, &mode2);
 
 	pathlen1 = strlen(path1);
 	pathlen2 = strlen(path2);
-	cmp = cache_name_compare(path1, pathlen1, path2, pathlen2);
+	cmp = base_name_compare(path1, pathlen1, mode1, path2, pathlen2, mode2);
 	if (cmp < 0) {
 		show_file("-", tree1, size1, base);
 		return -1;
@@ -137,29 +124,14 @@ static int compare_tree_entry(void *tree1, unsigned long size1, void *tree2, uns
 	if (recursive && S_ISDIR(mode1)) {
 		int retval;
 		char *newbase = malloc_base(base, path1, pathlen1);
+		if (show_tree_entry_in_recursive)
+			diff_change(mode1, mode2, sha1, sha2, base, path1);
 		retval = diff_tree_sha1(sha1, sha2, newbase);
 		free(newbase);
 		return retval;
 	}
 
-	if (header) {
-		printf("%s", header);
-		header = NULL;
-	}
-	if (silent)
-		return 0;
-
-	if (generate_patch) {
-		if (!S_ISDIR(mode1))
-			diff_change(mode1, mode2, sha1, sha2, base, path1);
-	}
-	else {
-		strcpy(old_sha1_hex, sha1_to_hex(sha1));
-		printf("*%06o->%06o\t%s\t%s->%s\t%s%s%c", mode1, mode2,
-		       S_ISDIR(mode1) ? "tree" : "blob",
-		       old_sha1_hex, sha1_to_hex(sha2), base, path1,
-		       line_termination);
-	}
+	diff_change(mode1, mode2, sha1, sha2, base, path1);
 	return 0;
 }
 
@@ -203,6 +175,8 @@ static int interesting(void *tree, unsigned long size, const char *base)
 
 		if (matchlen > pathlen) {
 			if (match[pathlen] != '/')
+				continue;
+			if (!S_ISDIR(mode))
 				continue;
 		}
 
@@ -256,7 +230,7 @@ static int diff_tree(void *tree1, unsigned long size1, void *tree2, unsigned lon
 			update_tree_entry(&tree2, &size2);
 			continue;
 		}
-		die("diff-tree: internal error");
+		die("git-diff-tree: internal error");
 	}
 	return 0;
 }
@@ -267,15 +241,78 @@ static int diff_tree_sha1(const unsigned char *old, const unsigned char *new, co
 	unsigned long size1, size2;
 	int retval;
 
-	tree1 = read_object_with_reference(old, "tree", &size1, 0);
+	tree1 = read_object_with_reference(old, "tree", &size1, NULL);
 	if (!tree1)
 		die("unable to read source tree (%s)", sha1_to_hex(old));
-	tree2 = read_object_with_reference(new, "tree", &size2, 0);
+	tree2 = read_object_with_reference(new, "tree", &size2, NULL);
 	if (!tree2)
 		die("unable to read destination tree (%s)", sha1_to_hex(new));
 	retval = diff_tree(tree1, size1, tree2, size2, base);
 	free(tree1);
 	free(tree2);
+	return retval;
+}
+
+static void call_diff_setup(void)
+{
+	diff_setup(reverse_diff);
+}
+
+static int call_diff_flush(void)
+{
+	if (detect_rename)
+		diffcore_rename(detect_rename, diff_score_opt);
+	if (pickaxe)
+		diffcore_pickaxe(pickaxe);
+	if (diff_queue_is_empty()) {
+		diff_flush(DIFF_FORMAT_NO_OUTPUT, 0);
+		return 0;
+	}
+	if (nr_paths)
+		diffcore_pathspec(paths);
+	if (header) {
+		if (diff_output_format == DIFF_FORMAT_MACHINE) {
+			const char *ep, *cp;
+			for (cp = header; *cp; cp = ep) {
+				ep = strchr(cp, '\n');
+				if (ep == 0) ep = cp + strlen(cp);
+				printf("%.*s%c", ep-cp, cp, 0);
+				if (*ep) ep++;
+			}
+		}
+		else {
+			printf("%s", header);
+		}
+		header = NULL;
+	}
+	diff_flush(diff_output_format, 1);
+	return 1;
+}
+
+static int diff_tree_sha1_top(const unsigned char *old,
+			      const unsigned char *new, const char *base)
+{
+	int ret;
+
+	call_diff_setup();
+	ret = diff_tree_sha1(old, new, base);
+	call_diff_flush();
+	return ret;
+}
+
+static int diff_root_tree(const unsigned char *new, const char *base)
+{
+	int retval;
+	void *tree;
+	unsigned long size;
+
+	call_diff_setup();
+	tree = read_object_with_reference(new, "tree", &size, NULL);
+	if (!tree)
+		die("unable to read root tree (%s)", sha1_to_hex(new));
+	retval = diff_tree("", 0, tree, size, base);
+	free(tree);
+	call_diff_flush();
 	return retval;
 }
 
@@ -313,7 +350,7 @@ static int add_author_info(char *buf, const char *line, int len)
 
 static char *generate_header(const char *commit, const char *parent, const char *msg, unsigned long len)
 {
-	static char this_header[1000];
+	static char this_header[16384];
 	int offset;
 
 	offset = sprintf(this_header, "%s%s (from %s)\n", header_prefix, commit, parent);
@@ -326,8 +363,16 @@ static char *generate_header(const char *commit, const char *parent, const char 
 
 			if (!linelen)
 				break;
-			if (offset + linelen + 10 > sizeof(this_header))
+
+			/*
+			 * We want some slop for indentation and a possible
+			 * final "...". Thus the "+ 20".
+			 */
+			if (offset + linelen + 20 > sizeof(this_header)) {
+				memcpy(this_header + offset, "    ...\n", 8);
+				offset += 8;
 				break;
+			}
 
 			msg += linelen;
 			len -= linelen;
@@ -342,6 +387,10 @@ static char *generate_header(const char *commit, const char *parent, const char 
 			memcpy(this_header + offset + 4, line, linelen);
 			offset += linelen + 4;
 		}
+		/* Make sure there is an EOLN */
+		if (this_header[offset-1] != '\n')
+			this_header[offset++] = '\n';
+		/* Add _another_ EOLN if we are doing diff output */
 		this_header[offset++] = '\n';
 		this_header[offset] = 0;
 	}
@@ -357,16 +406,22 @@ static int diff_tree_commit(const unsigned char *commit, const char *name)
 	if (!buf)
 		return -1;
 
-	/* More than one parent? */
-	if (ignore_merges) {
-		if (!memcmp(buf + 46 + 48, "parent ", 7))
-			return 0;
-	}
-
 	if (!name) {
 		static char commit_name[60];
 		strcpy(commit_name, sha1_to_hex(commit));
 		name = commit_name;
+	}
+
+	/* Root commit? */
+	if (show_root_diff && memcmp(buf + 46, "parent ", 7)) {
+		header = generate_header(name, "root", buf, size);
+		diff_root_tree(commit, "");
+	}
+
+	/* More than one parent? */
+	if (ignore_merges) {
+		if (!memcmp(buf + 46 + 48, "parent ", 7))
+			return 0;
 	}
 
 	offset = 46;
@@ -375,9 +430,14 @@ static int diff_tree_commit(const unsigned char *commit, const char *name)
 		if (get_sha1_hex(buf + offset + 7, parent))
 			return -1;
 		header = generate_header(name, sha1_to_hex(parent), buf, size);
-		diff_tree_sha1(parent, commit, "");
-		if (!header && verbose_header)
+		diff_tree_sha1_top(parent, commit, "");
+		if (!header && verbose_header) {
 			header_prefix = "\ndiff-tree ";
+			/*
+			 * Don't print multiple merge entries if we
+			 * don't print the diffs.
+			 */
+		}
 		offset += 48;
 	}
 	return 0;
@@ -399,16 +459,16 @@ static int diff_tree_stdin(char *line)
 		line[81] = 0;
 		sprintf(this_header, "%s (from %s)\n", line, line+41);
 		header = this_header;
-		return diff_tree_sha1(parent, commit, "");
+		return diff_tree_sha1_top(parent, commit, "");
 	}
 	line[40] = 0;
 	return diff_tree_commit(commit, line);
 }
 
 static char *diff_tree_usage =
-"diff-tree [-p] [-r] [-z] [--stdin] [-m] [-s] [-v] <tree sha1> <tree sha1>";
+"git-diff-tree [-p] [-r] [-z] [--stdin] [-M] [-C] [-R] [-S<string>] [-m] [-s] [-v] [-t] <tree-ish> <tree-ish>";
 
-int main(int argc, char **argv)
+int main(int argc, const char **argv)
 {
 	int nr_sha1;
 	char line[1000];
@@ -416,7 +476,7 @@ int main(int argc, char **argv)
 
 	nr_sha1 = 0;
 	for (;;) {
-		char *arg;
+		const char *arg;
 
 		argv++;
 		argc--;
@@ -441,12 +501,35 @@ int main(int argc, char **argv)
 			recursive = 1;
 			continue;
 		}
+		if (!strcmp(arg, "-t")) {
+			recursive = show_tree_entry_in_recursive = 1;
+			continue;
+		}
+		if (!strcmp(arg, "-R")) {
+			reverse_diff = 1;
+			continue;
+		}
 		if (!strcmp(arg, "-p")) {
-			recursive = generate_patch = 1;
+			diff_output_format = DIFF_FORMAT_PATCH;
+			recursive = 1;
+			continue;
+		}
+		if (!strncmp(arg, "-S", 2)) {
+			pickaxe = arg + 2;
+			continue;
+		}
+		if (!strncmp(arg, "-M", 2)) {
+			detect_rename = DIFF_DETECT_RENAME;
+			diff_score_opt = diff_scoreopt_parse(arg);
+			continue;
+		}
+		if (!strncmp(arg, "-C", 2)) {
+			detect_rename = DIFF_DETECT_COPY;
+			diff_score_opt = diff_scoreopt_parse(arg);
 			continue;
 		}
 		if (!strcmp(arg, "-z")) {
-			line_termination = '\0';
+			diff_output_format = DIFF_FORMAT_MACHINE;
 			continue;
 		}
 		if (!strcmp(arg, "-m")) {
@@ -454,7 +537,7 @@ int main(int argc, char **argv)
 			continue;
 		}
 		if (!strcmp(arg, "-s")) {
-			silent = 1;
+			diff_output_format = DIFF_FORMAT_NO_OUTPUT;
 			continue;
 		}
 		if (!strcmp(arg, "-v")) {
@@ -464,6 +547,10 @@ int main(int argc, char **argv)
 		}
 		if (!strcmp(arg, "--stdin")) {
 			read_stdin = 1;
+			continue;
+		}
+		if (!strcmp(arg, "--root")) {
+			show_root_diff = 1;
 			continue;
 		}
 		usage(diff_tree_usage);
@@ -488,7 +575,7 @@ int main(int argc, char **argv)
 		diff_tree_commit(sha1[0], NULL);
 		break;
 	case 2:
-		diff_tree_sha1(sha1[0], sha1[1], "");
+		diff_tree_sha1_top(sha1[0], sha1[1], "");
 		break;
 	}
 

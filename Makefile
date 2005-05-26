@@ -13,13 +13,18 @@
 
 # DEFINES += -DCOLLISION_CHECK
 
-# Define NSEC below if you want git to care about sub-second file mtimes and
-# ctimes. Note that you need recent glibc (at least 2.2.4) for this, and it
-# will BREAK YOUR LOCAL DIFFS! show-diff and anything using it will likely
+# Define USE_NSEC below if you want git to care about sub-second file mtimes
+# and ctimes. Note that you need recent glibc (at least 2.2.4) for this, and
+# it will BREAK YOUR LOCAL DIFFS! show-diff and anything using it will likely
 # randomly break unless your underlying filesystem supports those sub-second
 # times (my ext3 doesn't).
 
-# DEFINES += -DNSEC
+# DEFINES += -DUSE_NSEC
+
+# Define USE_STDEV below if you want git to care about the underlying device
+# change being considered an inode change from the update-cache perspective.
+
+# DEFINES += -DUSE_STDEV
 
 CFLAGS?=-g -O2
 CFLAGS+=-Wall $(DEFINES)
@@ -35,7 +40,8 @@ AR?=ar
 INSTALL?=install
 
 SCRIPTS=git-apply-patch-script git-merge-one-file-script git-prune-script \
-	git-pull-script git-tag-script git-resolve-script git-whatchanged
+	git-pull-script git-tag-script git-resolve-script git-whatchanged \
+	git-deltafy-script git-fetch-script
 
 PROG=   git-update-cache git-diff-files git-init-db git-write-tree \
 	git-read-tree git-commit-tree git-cat-file git-fsck-cache \
@@ -44,7 +50,7 @@ PROG=   git-update-cache git-diff-files git-init-db git-write-tree \
 	git-unpack-file git-export git-diff-cache git-convert-cache \
 	git-http-pull git-rpush git-rpull git-rev-list git-mktag \
 	git-diff-helper git-tar-tree git-local-pull git-write-blob \
-	git-get-tar-commit-id
+	git-get-tar-commit-id git-mkdelta git-apply
 
 SCRIPT=	commit-id tree-id parent-id cg-add cg-admin-lsobj cg-admin-uncommit \
 	cg-branch-add cg-branch-ls cg-cancel cg-clone cg-commit cg-diff \
@@ -60,15 +66,16 @@ VERSION= VERSION
 COMMON=	read-cache.o
 
 LIB_OBJS=read-cache.o sha1_file.o usage.o object.o commit.o tree.o blob.o \
-	 tag.o date.o index.o
+	 tag.o delta.o date.o index.o diff-delta.o patch-delta.o
 LIB_FILE=libgit.a
-LIB_H=cache.h object.h blob.h tree.h commit.h tag.h
+LIB_H=cache.h object.h blob.h tree.h commit.h tag.h delta.h
 
 LIB_H += strbuf.h
 LIB_OBJS += strbuf.o
 
-LIB_H += diff.h
-LIB_OBJS += diff.o
+LIB_H += diff.h count-delta.h
+DIFF_OBJS = diff.o diffcore-rename.o diffcore-pickaxe.o diffcore-pathspec.o
+LIB_OBJS += $(DIFF_OBJS) count-delta.o
 
 LIB_OBJS += gitenv.o
 
@@ -94,6 +101,9 @@ CFLAGS += '-DSHA1_HEADER=$(SHA1_HEADER)'
 all: $(PROG) $(GEN_SCRIPT)
 
 
+test-delta: test-delta.c diff-delta.o patch-delta.o
+	$(CC) $(CFLAGS) -o $@ $^
+
 git-%: %.c $(LIB_FILE)
 	$(CC) $(CFLAGS) -o $@ $(filter %.c,$^) $(LIBS)
 
@@ -108,6 +118,7 @@ test-date: test-date.c date.o
 
 
 $(LIB_OBJS): $(LIB_H)
+$(DIFF_OBJS): diffcore.h
 
 $(LIB_FILE): $(LIB_OBJS)
 	$(AR) rcs $@ $(LIB_OBJS)
@@ -155,12 +166,12 @@ uninstall:
 	cd $(DESTDIR)$(bindir) && rm $(PROG) $(SCRIPTS) $(SCRIPT) $(GEN_SCRIPT)
 	cd $(DESTDIR)$(libdir) && rm $(LIB_SCRIPT)
 
-
 test: all
-	make -C t/ all
+	$(MAKE) -C t/ all
 
 clean:
 	rm -f *.o mozilla-sha1/*.o ppc/*.o $(PROG) $(GEN_SCRIPT) $(LIB_FILE)
+	$(MAKE) -C Documentation/ clean
 
 backup: clean
 	cd .. ; tar czvf dircache.tar.gz dir-cache

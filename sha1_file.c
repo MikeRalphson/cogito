@@ -6,9 +6,8 @@
  * This handles basic git sha1 object files - packing, unpacking,
  * creation etc.
  */
-#include <stdarg.h>
-#include <limits.h>
 #include "cache.h"
+#include "delta.h"
 
 #ifndef O_NOATIME
 #if defined(__linux__) && (defined(__i386__) || defined(__PPC__))
@@ -44,7 +43,7 @@ int get_sha1_hex(const char *hex, unsigned char *sha1)
 	return 0;
 }
 
-int get_sha1_file(const char *path, unsigned char *result)
+static int get_sha1_file(const char *path, unsigned char *result)
 {
 	char buffer[60];
 	int fd = open(path, O_RDONLY);
@@ -199,7 +198,7 @@ static void prepare_alt_odb(void)
 {
 	int pass, totlen, i;
 	const char *cp, *last;
-	char *op = 0;
+	char *op = NULL;
 	const char *alt = gitenv(ALTERNATE_DB_ENVIRONMENT) ? : "";
 
 	/* The first pass counts how large an area to allocate to
@@ -236,7 +235,7 @@ static void prepare_alt_odb(void)
 		if (pass)
 			break;
 		alt_odb = xmalloc(sizeof(*alt_odb) * (i + 1) + totlen);
-		alt_odb[i].base = alt_odb[i].name = 0;
+		alt_odb[i].base = alt_odb[i].name = NULL;
 		op = (char*)(&alt_odb[i+1]);
 	}
 }
@@ -330,7 +329,7 @@ void * unpack_sha1_file(void *map, unsigned long mapsize, char *type, unsigned l
 		return NULL;
 
 	bytes = strlen(buffer) + 1;
-	buf = xmalloc(*size);
+	buf = xmalloc(1+*size);
 
 	memcpy(buf, buffer + bytes, stream.total_out - bytes);
 	bytes = stream.total_out - bytes;
@@ -340,6 +339,7 @@ void * unpack_sha1_file(void *map, unsigned long mapsize, char *type, unsigned l
 		while (inflate(&stream, Z_FINISH) == Z_OK)
 			/* nothing */;
 	}
+	buf[*size] = 0;
 	inflateEnd(&stream);
 	return buf;
 }
@@ -353,6 +353,19 @@ void * read_sha1_file(const unsigned char *sha1, char *type, unsigned long *size
 	if (map) {
 		buf = unpack_sha1_file(map, mapsize, type, size);
 		munmap(map, mapsize);
+		if (buf && !strcmp(type, "delta")) {
+			void *ref = NULL, *delta = buf;
+			unsigned long ref_size, delta_size = *size;
+			buf = NULL;
+			if (delta_size > 20)
+				ref = read_sha1_file(delta, type, &ref_size);
+			if (ref)
+				buf = patch_delta(ref, ref_size,
+						  delta+20, delta_size-20, 
+						  size);
+			free(delta);
+			free(ref);
+		}
 		return buf;
 	}
 	return NULL;
