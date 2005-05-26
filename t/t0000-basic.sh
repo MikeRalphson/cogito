@@ -32,7 +32,7 @@ test_expect_success \
 find .git/objects -type d -print >full-of-directories
 test_expect_success \
     '.git/objects should have 256 subdirectories.' \
-    'test "$(wc -l full-of-directories | sed -e "s/ .*//")" = 257'
+    'test $(wc -l < full-of-directories) = 257'
 
 ################################################################
 # Basics of the basics
@@ -84,7 +84,7 @@ do
 done
 test_expect_success \
     'adding various types of objects with git-update-cache --add.' \
-    'find path* ! -type d -print0 | xargs -0 -r git-update-cache --add'
+    'find path* ! -type d -print0 | xargs -0 git-update-cache --add'
 
 # Show them and see that matches what we expect.
 test_expect_success \
@@ -155,18 +155,18 @@ test_expect_success \
      test "$newtree" = "$tree"'
 
 cat >expected <<\EOF
-*100644->100644	blob	f87290f8eb2cbbea7857214459a0739927eab154->0000000000000000000000000000000000000000	path0
-*120000->120000	blob	15a98433ae33114b085f3eb3bb03b832b3180a01->0000000000000000000000000000000000000000	path0sym
-*100644->100644	blob	3feff949ed00a62d9f7af97c15cd8a30595e7ac7->0000000000000000000000000000000000000000	path2/file2
-*120000->120000	blob	d8ce161addc5173867a3c3c730924388daedbc38->0000000000000000000000000000000000000000	path2/file2sym
-*100644->100644	blob	0aa34cae68d0878578ad119c86ca2b5ed5b28376->0000000000000000000000000000000000000000	path3/file3
-*120000->120000	blob	8599103969b43aff7e430efea79ca4636466794f->0000000000000000000000000000000000000000	path3/file3sym
-*100644->100644	blob	00fb5908cb97c2564a9783c0c64087333b3b464f->0000000000000000000000000000000000000000	path3/subp3/file3
-*120000->120000	blob	6649a1ebe9e9f1c553b66f5a6e74136a07ccc57c->0000000000000000000000000000000000000000	path3/subp3/file3sym
+:100644 100644 f87290f8eb2cbbea7857214459a0739927eab154 0000000000000000000000000000000000000000 M	path0
+:120000 120000 15a98433ae33114b085f3eb3bb03b832b3180a01 0000000000000000000000000000000000000000 M	path0sym
+:100644 100644 3feff949ed00a62d9f7af97c15cd8a30595e7ac7 0000000000000000000000000000000000000000 M	path2/file2
+:120000 120000 d8ce161addc5173867a3c3c730924388daedbc38 0000000000000000000000000000000000000000 M	path2/file2sym
+:100644 100644 0aa34cae68d0878578ad119c86ca2b5ed5b28376 0000000000000000000000000000000000000000 M	path3/file3
+:120000 120000 8599103969b43aff7e430efea79ca4636466794f 0000000000000000000000000000000000000000 M	path3/file3sym
+:100644 100644 00fb5908cb97c2564a9783c0c64087333b3b464f 0000000000000000000000000000000000000000 M	path3/subp3/file3
+:120000 120000 6649a1ebe9e9f1c553b66f5a6e74136a07ccc57c 0000000000000000000000000000000000000000 M	path3/subp3/file3sym
 EOF
 test_expect_success \
     'validate git-diff-files output for a know cache/work tree state.' \
-    'git-diff-files >current && cmp -s current expected'
+    'git-diff-files >current && diff >/dev/null -b current expected'
 
 test_expect_success \
     'git-update-cache --refresh should succeed.' \

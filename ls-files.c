@@ -136,7 +136,10 @@ static void read_directory(const char *path, const char *base, int baselen)
 		while ((de = readdir(dir)) != NULL) {
 			int len;
 
-			if (de->d_name[0] == '.')
+			if ((de->d_name[0] == '.') &&
+			    (de->d_name[1] == 0 ||
+			     !strcmp(de->d_name + 1, ".") ||
+			     !strcmp(de->d_name + 1, "git")))
 				continue;
 			if (excluded(de->d_name) != show_ignored)
 				continue;
@@ -179,7 +182,7 @@ static int cmp_name(const void *p1, const void *p2)
 				  e2->name, e2->len);
 }
 
-static void show_killed_files()
+static void show_killed_files(void)
 {
 	int i;
 	for (i = 0; i < nr_dir; i++) {
@@ -283,7 +286,7 @@ static void show_files(void)
 }
 
 static const char *ls_files_usage =
-	"ls-files [-z] [-t] (--[cached|deleted|others|stage|unmerged|killed])* "
+	"git-ls-files [-z] [-t] (--[cached|deleted|others|stage|unmerged|killed])* "
 	"[ --ignored [--exclude=<pattern>] [--exclude-from=<file>) ]";
 
 int main(int argc, char **argv)

@@ -10,6 +10,7 @@
 #include <stdarg.h>
 #include <string.h>
 #include <errno.h>
+#include <limits.h>
 #include <sys/mman.h>
 #include <sys/param.h>
 #include <netinet/in.h>
@@ -173,6 +174,7 @@ extern void usage(const char *err);
 extern void die(const char *err, ...);
 extern int error(const char *err, ...);
 
+extern int base_name_compare(const char *name1, int len1, int mode1, const char *name2, int len2, int mode2);
 extern int cache_name_compare(const char *name1, int len1, const char *name2, int len2);
 
 extern void *read_object_with_reference(const unsigned char *sha1,

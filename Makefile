@@ -2,7 +2,9 @@
 # 1461501637330902918203684832716283019655932542976 hashes do not give you
 # enough guarantees about no collisions between objects ever hapenning.
 #
-# -DNSEC if you want git to care about sub-second file mtimes and ctimes.
+# -DUSE_NSEC if you want git to care about sub-second file mtimes and ctimes.
+# -DUSE_STDEV if you want git to care about st_dev changing
+#
 # Note that you need some new glibc (at least >2.2.4) for this, and it will
 # BREAK YOUR LOCAL DIFFS! show-diff and anything using it will likely randomly
 # break unless your underlying filesystem supports those sub-second times
@@ -19,7 +21,8 @@ AR=ar
 INSTALL=install
 
 SCRIPTS=git-apply-patch-script git-merge-one-file-script git-prune-script \
-	git-pull-script git-tag-script git-resolve-script git-whatchanged
+	git-pull-script git-tag-script git-resolve-script git-whatchanged \
+	git-deltafy-script git-fetch-script
 
 PROG=   git-update-cache git-diff-files git-init-db git-write-tree \
 	git-read-tree git-commit-tree git-cat-file git-fsck-cache \
@@ -28,7 +31,7 @@ PROG=   git-update-cache git-diff-files git-init-db git-write-tree \
 	git-unpack-file git-export git-diff-cache git-convert-cache \
 	git-http-pull git-rpush git-rpull git-rev-list git-mktag \
 	git-diff-helper git-tar-tree git-local-pull git-write-blob \
-	git-get-tar-commit-id
+	git-get-tar-commit-id git-mkdelta git-apply
 
 all: $(PROG)
 
@@ -36,15 +39,16 @@ install: $(PROG) $(SCRIPTS)
 	$(INSTALL) $(PROG) $(SCRIPTS) $(dest)$(bin)
 
 LIB_OBJS=read-cache.o sha1_file.o usage.o object.o commit.o tree.o blob.o \
-	 tag.o date.o index.o
+	 tag.o delta.o date.o index.o diff-delta.o patch-delta.o
 LIB_FILE=libgit.a
-LIB_H=cache.h object.h blob.h tree.h commit.h tag.h
+LIB_H=cache.h object.h blob.h tree.h commit.h tag.h delta.h
 
 LIB_H += strbuf.h
 LIB_OBJS += strbuf.o
 
-LIB_H += diff.h
-LIB_OBJS += diff.o
+LIB_H += diff.h count-delta.h
+LIB_OBJS += diff.o diffcore-rename.o diffcore-pickaxe.o diffcore-pathspec.o \
+	count-delta.o
 
 LIB_OBJS += gitenv.o
 
@@ -71,6 +75,9 @@ $(LIB_FILE): $(LIB_OBJS)
 
 test-date: test-date.c date.o
 	$(CC) $(CFLAGS) -o $@ test-date.c date.o
+
+test-delta: test-delta.c diff-delta.o patch-delta.o
+	$(CC) $(CFLAGS) -o $@ $^
 
 git-%: %.c $(LIB_FILE)
 	$(CC) $(CFLAGS) -o $@ $(filter %.c,$^) $(LIBS)
@@ -104,6 +111,7 @@ git-mktag: mktag.c
 git-diff-helper: diff-helper.c
 git-tar-tree: tar-tree.c
 git-write-blob: write-blob.c
+git-mkdelta: mkdelta.c
 
 git-http-pull: LIBS += -lcurl
 
@@ -116,15 +124,19 @@ object.o: $(LIB_H)
 read-cache.o: $(LIB_H)
 sha1_file.o: $(LIB_H)
 usage.o: $(LIB_H)
-diff.o: $(LIB_H)
 strbuf.o: $(LIB_H)
 gitenv.o: $(LIB_H)
+diff.o: $(LIB_H) diffcore.h
+diffcore-rename.o : $(LIB_H) diffcore.h
+diffcore-pathspec.o : $(LIB_H) diffcore.h
+diffcore-pickaxe.o : $(LIB_H) diffcore.h
 
 test: all
-	make -C t/ all
+	$(MAKE) -C t/ all
 
 clean:
 	rm -f *.o mozilla-sha1/*.o ppc/*.o $(PROG) $(LIB_FILE)
+	$(MAKE) -C Documentation/ clean
 
 backup: clean
 	cd .. ; tar czvf dircache.tar.gz dir-cache

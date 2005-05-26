@@ -15,7 +15,7 @@ static struct commit *process_list(struct commit_list **list_p, int this_mark,
 	return NULL;
 }
 
-struct commit *common_ancestor(struct commit *rev1, struct commit *rev2)
+static struct commit *common_ancestor(struct commit *rev1, struct commit *rev2)
 {
 	struct commit_list *rev1list = NULL;
 	struct commit_list *rev2list = NULL;
@@ -60,10 +60,10 @@ int main(int argc, char **argv)
 	if (argc != 3 ||
 	    get_sha1(argv[1], rev1key) ||
 	    get_sha1(argv[2], rev2key)) {
-		usage("merge-base <commit-id> <commit-id>");
+		usage("git-merge-base <commit-id> <commit-id>");
 	}
-	rev1 = lookup_commit(rev1key);
-	rev2 = lookup_commit(rev2key);
+	rev1 = lookup_commit_reference(rev1key);
+	rev2 = lookup_commit_reference(rev2key);
 	ret = common_ancestor(rev1, rev2);
 	if (!ret)
 		return 1;

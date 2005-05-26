@@ -4,11 +4,10 @@
  * Copyright (C) Linus Torvalds, 2005
  */
 
-#include <stdio.h>
-#include <stdlib.h>
-#include <string.h>
 #include <ctype.h>
 #include <time.h>
+
+#include "cache.h"
 
 static time_t my_mktime(struct tm *tm)
 {

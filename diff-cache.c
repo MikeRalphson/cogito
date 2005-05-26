@@ -2,18 +2,17 @@
 #include "diff.h"
 
 static int cached_only = 0;
-static int generate_patch = 0;
+static int diff_output_format = DIFF_FORMAT_HUMAN;
 static int match_nonexisting = 0;
-static int line_termination = '\n';
+static int detect_rename = 0;
+static int reverse_diff = 0;
+static int diff_score_opt = 0;
+static const char *pickaxe = NULL;
 
 /* A file entry went away or appeared */
 static void show_file(const char *prefix, struct cache_entry *ce, unsigned char *sha1, unsigned int mode)
 {
-	if (generate_patch)
-		diff_addremove(prefix[0], ntohl(mode), sha1, ce->name, NULL);
-	else
-		printf("%s%06o\tblob\t%s\t%s%c", prefix, ntohl(mode),
-		       sha1_to_hex(sha1), ce->name, line_termination);
+	diff_addremove(prefix[0], ntohl(mode), sha1, ce->name, NULL);
 }
 
 static int get_stat_data(struct cache_entry *ce, unsigned char **sha1p, unsigned int *modep)
@@ -63,7 +62,6 @@ static int show_modified(struct cache_entry *old,
 {
 	unsigned int mode, oldmode;
 	unsigned char *sha1;
-	char old_sha1_hex[60];
 
 	if (get_stat_data(new, &sha1, &mode) < 0) {
 		if (report_missing)
@@ -72,21 +70,15 @@ static int show_modified(struct cache_entry *old,
 	}
 
 	oldmode = old->ce_mode;
-	if (mode == oldmode && !memcmp(sha1, old->sha1, 20))
+	if (mode == oldmode && !memcmp(sha1, old->sha1, 20) &&
+	    detect_rename < DIFF_DETECT_COPY)
 		return 0;
 
 	mode = ntohl(mode);
 	oldmode = ntohl(oldmode);
 
-	if (generate_patch)
-		diff_change(oldmode, mode,
-			    old->sha1, sha1, old->name, NULL);
-	else {
-		strcpy(old_sha1_hex, sha1_to_hex(old->sha1));
-		printf("*%06o->%06o\tblob\t%s->%s\t%s%c", oldmode, mode,
-		       old_sha1_hex, sha1_to_hex(sha1),
-		       old->name, line_termination);
-	}
+	diff_change(oldmode, mode,
+		    old->sha1, sha1, old->name, NULL);
 	return 0;
 }
 
@@ -126,10 +118,7 @@ static int diff_cache(struct cache_entry **ac, int entries)
 				break;
 			/* fallthru */
 		case 3:
-			if (generate_patch)
-				diff_unmerge(ce->name);
-			else
-				printf("U %s%c", ce->name, line_termination);
+			diff_unmerge(ce->name);
 			break;
 
 		default:
@@ -165,29 +154,59 @@ static void mark_merge_entries(void)
 }
 
 static const char *diff_cache_usage =
-"git-diff-cache [-p] [-r] [-z] [-m] [--cached] <tree sha1>";
+"git-diff-cache [-p] [-r] [-z] [-m] [-M] [-C] [-R] [-S<string>] [--cached] <tree-ish> [<path>...]";
 
-int main(int argc, char **argv)
+int main(int argc, const char **argv)
 {
-	unsigned char tree_sha1[20];
+	const char *tree_name = NULL;
+	unsigned char sha1[20];
+	const char **pathspec = NULL;
 	void *tree;
 	unsigned long size;
+	int ret;
+	int i;
 
 	read_cache();
-	while (argc > 2) {
-		char *arg = argv[1];
-		argv++;
-		argc--;
+	for (i = 1; i < argc; i++) {
+		const char *arg = argv[i];
+
+		if (*arg != '-') {
+			if (tree_name) {
+				pathspec = argv + i;
+				break;
+			}
+			tree_name = arg;
+			continue;
+		}
+			
 		if (!strcmp(arg, "-r")) {
-			/* We accept the -r flag just to look like diff-tree */
+			/* We accept the -r flag just to look like git-diff-tree */
 			continue;
 		}
 		if (!strcmp(arg, "-p")) {
-			generate_patch = 1;
+			diff_output_format = DIFF_FORMAT_PATCH;
+			continue;
+		}
+		if (!strncmp(arg, "-M", 2)) {
+			detect_rename = DIFF_DETECT_RENAME;
+			diff_score_opt = diff_scoreopt_parse(arg);
+			continue;
+		}
+		if (!strncmp(arg, "-C", 2)) {
+			detect_rename = DIFF_DETECT_COPY;
+			diff_score_opt = diff_scoreopt_parse(arg);
 			continue;
 		}
 		if (!strcmp(arg, "-z")) {
-			line_termination = '\0';
+			diff_output_format = DIFF_FORMAT_MACHINE;
+			continue;
+		}
+		if (!strcmp(arg, "-R")) {
+			reverse_diff = 1;
+			continue;
+		}
+		if (!strcmp(arg, "-S")) {
+			pickaxe = arg + 2;
 			continue;
 		}
 		if (!strcmp(arg, "-m")) {
@@ -201,16 +220,27 @@ int main(int argc, char **argv)
 		usage(diff_cache_usage);
 	}
 
-	if (argc != 2 || get_sha1(argv[1], tree_sha1))
+	if (!tree_name || get_sha1(tree_name, sha1))
 		usage(diff_cache_usage);
+
+	/* The rest is for paths restriction. */
+	diff_setup(reverse_diff);
 
 	mark_merge_entries();
 
-	tree = read_object_with_reference(tree_sha1, "tree", &size, 0);
+	tree = read_object_with_reference(sha1, "tree", &size, NULL);
 	if (!tree)
-		die("bad tree object %s", argv[1]);
+		die("bad tree object %s", tree_name);
 	if (read_tree(tree, size, 1))
-		die("unable to read tree object %s", argv[1]);
+		die("unable to read tree object %s", tree_name);
 
-	return diff_cache(active_cache, active_nr);
+	ret = diff_cache(active_cache, active_nr);
+	if (detect_rename)
+		diffcore_rename(detect_rename, diff_score_opt);
+	if (pickaxe)
+		diffcore_pickaxe(pickaxe);
+	if (pathspec)
+		diffcore_pathspec(pathspec);
+	diff_flush(diff_output_format, 1);
+	return ret;
 }

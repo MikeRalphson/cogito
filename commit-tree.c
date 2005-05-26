@@ -7,9 +7,7 @@
 
 #include <pwd.h>
 #include <time.h>
-#include <string.h>
 #include <ctype.h>
-#include <time.h>
 
 #define BLOCKING (1ul << 14)
 
@@ -98,7 +96,7 @@ static void check_valid(unsigned char *sha1, const char *expect)
  */
 #define MAXPARENT (16)
 
-static const char *commit_tree_usage = "commit-tree <sha1> [-p <sha1>]* < changelog";
+static const char *commit_tree_usage = "git-commit-tree <sha1> [-p <sha1>]* < changelog";
 
 int main(int argc, char **argv)
 {
@@ -109,8 +107,8 @@ int main(int argc, char **argv)
 	unsigned char commit_sha1[20];
 	char *gecos, *realgecos, *commitgecos;
 	char *email, *commitemail, realemail[1000];
-	char date[20], realdate[20];
-	char *audate;
+	char date[50], realdate[50];
+	char *audate, *cmdate;
 	char comment[1000];
 	struct passwd *pw;
 	char *buffer;
@@ -153,6 +151,9 @@ int main(int argc, char **argv)
 	audate = gitenv("GIT_AUTHOR_DATE");
 	if (audate)
 		parse_date(audate, date, sizeof(date));
+	cmdate = gitenv("GIT_COMMITTER_DATE");
+	if (cmdate)
+		parse_date(audate, realdate, sizeof(realdate));
 
 	remove_special(gecos); remove_special(realgecos); remove_special(commitgecos);
 	remove_special(email); remove_special(realemail); remove_special(commitemail);

@@ -6,15 +6,46 @@
 #include "tree.h"
 #include "blob.h"
 #include "tag.h"
+#include "delta.h"
 
 #define REACHABLE 0x0001
 
 static int show_root = 0;
 static int show_tags = 0;
 static int show_unreachable = 0;
+static int show_max_delta_depth = 0;
 static int keep_cache_objects = 0; 
 static unsigned char head_sha1[20];
 
+static void expand_deltas(void)
+{
+	int i, max_depth = 0;
+
+	/*
+	 * To be as efficient as possible we look for delta heads and
+	 * recursively process them going backward, and parsing
+	 * resulting objects along the way.  This allows for processing
+	 * each delta objects only once regardless of the delta depth.
+	 */
+	for (i = 0; i < nr_objs; i++) {
+		struct object *obj = objs[i];
+		if (obj->parsed && !obj->delta && obj->attached_deltas) {
+			int depth = 0;
+			char type[10];
+			unsigned long size;
+			void *buf = read_sha1_file(obj->sha1, type, &size);
+			if (!buf)
+				continue;
+			depth = process_deltas(buf, size, obj->type,
+					       obj->attached_deltas);
+			if (max_depth < depth)
+				max_depth = depth;
+		}
+	}
+	if (show_max_delta_depth)
+		printf("maximum delta depth = %d\n", max_depth);
+}
+															
 static void check_connectivity(void)
 {
 	int i;
@@ -25,7 +56,12 @@ static void check_connectivity(void)
 		struct object_list *refs;
 
 		if (!obj->parsed) {
-			printf("missing %s %s\n", obj->type, sha1_to_hex(obj->sha1));
+			if (obj->delta)
+				printf("unresolved delta %s\n",
+				       sha1_to_hex(obj->sha1));
+			else
+				printf("missing %s %s\n",
+				       obj->type, sha1_to_hex(obj->sha1));
 			continue;
 		}
 
@@ -43,7 +79,12 @@ static void check_connectivity(void)
 			continue;
 
 		if (show_unreachable && !(obj->flags & REACHABLE)) {
-			printf("unreachable %s %s\n", obj->type, sha1_to_hex(obj->sha1));
+			if (obj->attached_deltas)
+				printf("foreign delta reference %s\n", 
+				       sha1_to_hex(obj->sha1));
+			else
+				printf("unreachable %s %s\n",
+				       obj->type, sha1_to_hex(obj->sha1));
 			continue;
 		}
 
@@ -152,7 +193,7 @@ static int fsck_tree(struct tree *item)
 	}
 
 	if (has_full_path) {
-		fprintf(stderr, "warning: fsck-cache: tree %s "
+		fprintf(stderr, "warning: git-fsck-cache: tree %s "
 			"has full pathnames in it\n", 
 			sha1_to_hex(item->object.sha1));
 	}
@@ -162,6 +203,8 @@ static int fsck_tree(struct tree *item)
 
 static int fsck_commit(struct commit *commit)
 {
+	free(commit->buffer);
+	commit->buffer = NULL;
 	if (!commit->tree)
 		return -1;
 	if (!commit->parents && show_root)
@@ -201,6 +244,8 @@ static int fsck_sha1(unsigned char *sha1)
 		return fsck_commit((struct commit *) obj);
 	if (obj->type == tag_type)
 		return fsck_tag((struct tag *) obj);
+	if (!obj->type && obj->delta)
+		return 0;
 	return -1;
 }
 
@@ -296,7 +341,7 @@ static int fsck_dir(int i, char *path)
 	return 0;
 }
 
-static void read_sha1_reference(const char *path)
+static int read_sha1_reference(const char *path)
 {
 	char hexname[60];
 	unsigned char sha1[20];
@@ -304,19 +349,23 @@ static void read_sha1_reference(const char *path)
 	struct object *obj;
 
 	if (fd < 0)
-		return;
+		return -1;
 
 	len = read(fd, hexname, sizeof(hexname));
 	close(fd);
 	if (len < 40)
-		return;
+		return -1;
 
 	if (get_sha1_hex(hexname, sha1) < 0)
-		return;
+		return -1;
 
 	obj = lookup_object(sha1);
+	if (!obj)
+		return error("%s: invalid sha1 pointer %.40s", path, hexname);
+
 	obj->used = 1;
 	mark_reachable(obj, REACHABLE);
+	return 0;
 }
 
 static void find_file_objects(const char *base, const char *name)
@@ -380,12 +429,16 @@ int main(int argc, char **argv)
 			show_root = 1;
 			continue;
 		}
+		if (!strcmp(arg, "--delta-depth")) {
+			show_max_delta_depth = 1;
+			continue;
+		}
 		if (!strcmp(arg, "--cache")) {
 			keep_cache_objects = 1;
 			continue;
 		}
 		if (*arg == '-')
-			usage("fsck-cache [--tags] [[--unreachable] [--cache] <head-sha1>*]");
+			usage("git-fsck-cache [--tags] [[--unreachable] [--cache] <head-sha1>*]");
 	}
 
 	sha1_dir = get_object_directory();
@@ -395,6 +448,8 @@ int main(int argc, char **argv)
 		fsck_dir(i, dir);
 	}
 	fsck_sha1_list();
+
+	expand_deltas();
 
 	heads = 0;
 	for (i = 1; i < argc; i++) {
@@ -419,7 +474,7 @@ int main(int argc, char **argv)
 	}
 
 	/*
-	 * If we've not been gived any explicit head information, do the
+	 * If we've not been given any explicit head information, do the
 	 * default ones from .git/refs. We also consider the index file
 	 * in this case (ie this implies --cache).
 	 */

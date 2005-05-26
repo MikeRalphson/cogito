@@ -5,22 +5,22 @@
  *
  * Careful: order of argument flags does matter. For example,
  *
- *	checkout-cache -a -f file.c
+ *	git-checkout-cache -a -f file.c
  *
  * Will first check out all files listed in the cache (but not
  * overwrite any old ones), and then force-checkout "file.c" a
  * second time (ie that one _will_ overwrite any old contents
  * with the same filename).
  *
- * Also, just doing "checkout-cache" does nothing. You probably
- * meant "checkout-cache -a". And if you want to force it, you
- * want "checkout-cache -f -a".
+ * Also, just doing "git-checkout-cache" does nothing. You probably
+ * meant "git-checkout-cache -a". And if you want to force it, you
+ * want "git-checkout-cache -f -a".
  *
  * Intuitiveness is not the goal here. Repeatability is. The
  * reason for the "no arguments means no work" thing is that
  * from scripts you are supposed to be able to do things like
  *
- *	find . -name '*.h' -print0 | xargs -0 checkout-cache -f --
+ *	find . -name '*.h' -print0 | xargs -0 git-checkout-cache -f --
  *
  * which will force all existing *.h files to be replaced with
  * their cached copies. If an empty command line implied "all",
@@ -38,6 +38,8 @@
 #include "cache.h"
 
 static int force = 0, quiet = 0, not_new = 0, refresh_cache = 0;
+static const char *base_dir = "";
+static int base_dir_len = 0;
 
 static void create_directories(const char *path)
 {
@@ -52,10 +54,10 @@ static void create_directories(const char *path)
 		if (mkdir(buf, 0755)) {
 			if (errno == EEXIST) {
 				struct stat st;
-				if (!lstat(buf, &st) && S_ISDIR(st.st_mode))
-					continue; /* ok */
-				if (force && !unlink(buf) && !mkdir(buf, 0755))
+				if (len > base_dir_len && force && !unlink(buf) && !mkdir(buf, 0755))
 					continue;
+				if (!stat(buf, &st) && S_ISDIR(st.st_mode))
+					continue; /* ok */
 			}
 			die("cannot create directory at %s", buf);
 		}
@@ -123,7 +125,7 @@ static int write_entry(struct cache_entry *ce, const char *path)
 	if (!new || strcmp(type, "blob")) {
 		if (new)
 			free(new);
-		return error("checkout-cache: unable to read sha1 file of %s (%s)",
+		return error("git-checkout-cache: unable to read sha1 file of %s (%s)",
 			path, sha1_to_hex(ce->sha1));
 	}
 	switch (ntohl(ce->ce_mode) & S_IFMT) {
@@ -131,14 +133,14 @@ static int write_entry(struct cache_entry *ce, const char *path)
 		fd = create_file(path, ntohl(ce->ce_mode));
 		if (fd < 0) {
 			free(new);
-			return error("checkout-cache: unable to create file %s (%s)",
+			return error("git-checkout-cache: unable to create file %s (%s)",
 				path, strerror(errno));
 		}
 		wrote = write(fd, new, size);
 		close(fd);
 		free(new);
 		if (wrote != size)
-			return error("checkout-cache: unable to write file %s", path);
+			return error("git-checkout-cache: unable to write file %s", path);
 		break;
 	case S_IFLNK:
 		memcpy(target, new, size);
@@ -146,14 +148,20 @@ static int write_entry(struct cache_entry *ce, const char *path)
 		create_directories(path);
 		if (symlink(target, path)) {
 			free(new);
-			return error("checkout-cache: unable to create symlink %s (%s)",
+			return error("git-checkout-cache: unable to create symlink %s (%s)",
 				path, strerror(errno));
 		}
 		free(new);
 		break;
 	default:
 		free(new);
-		return error("checkout-cache: unknown file mode for %s", path);
+		return error("git-checkout-cache: unknown file mode for %s", path);
+	}
+
+	if (refresh_cache) {
+		struct stat st;
+		lstat(ce->name, &st);
+		fill_stat_cache_info(ce, &st);
 	}
 
 	if (refresh_cache) {
@@ -164,11 +172,11 @@ static int write_entry(struct cache_entry *ce, const char *path)
 	return 0;
 }
 
-static int checkout_entry(struct cache_entry *ce, const char *base_dir)
+static int checkout_entry(struct cache_entry *ce)
 {
 	struct stat st;
 	static char path[MAXPATHLEN+1];
-	int len = strlen(base_dir);
+	int len = base_dir_len;
 
 	memcpy(path, base_dir, len);
 	strcpy(path + len, ce->name);
@@ -179,7 +187,7 @@ static int checkout_entry(struct cache_entry *ce, const char *base_dir)
 			return 0;
 		if (!force) {
 			if (!quiet)
-				fprintf(stderr, "checkout-cache: %s already exists\n", path);
+				fprintf(stderr, "git-checkout-cache: %s already exists\n", path);
 			return 0;
 		}
 
@@ -195,14 +203,14 @@ static int checkout_entry(struct cache_entry *ce, const char *base_dir)
 	return write_entry(ce, path);
 }
 
-static int checkout_file(const char *name, const char *base_dir)
+static int checkout_file(const char *name)
 {
 	int pos = cache_name_pos(name, strlen(name));
 	if (pos < 0) {
 		if (!quiet) {
 			pos = -pos - 1;
 			fprintf(stderr,
-				"checkout-cache: %s is %s.\n",
+				"git-checkout-cache: %s is %s.\n",
 				name,
 				(pos < active_nr &&
 				 !strcmp(active_cache[pos]->name, name)) ?
@@ -210,10 +218,10 @@ static int checkout_file(const char *name, const char *base_dir)
 		}
 		return -1;
 	}
-	return checkout_entry(active_cache[pos], base_dir);
+	return checkout_entry(active_cache[pos]);
 }
 
-static int checkout_all(const char *base_dir)
+static int checkout_all(void)
 {
 	int i;
 
@@ -221,7 +229,7 @@ static int checkout_all(const char *base_dir)
 		struct cache_entry *ce = active_cache[i];
 		if (ce_stage(ce))
 			continue;
-		if (checkout_entry(ce, base_dir) < 0)
+		if (checkout_entry(ce) < 0)
 			return -1;
 	}
 	return 0;
@@ -230,7 +238,6 @@ static int checkout_all(const char *base_dir)
 int main(int argc, char **argv)
 {
 	int i, force_filename = 0;
-	const char *base_dir = "";
 	struct cache_file cache_file;
 	int newfd = -1;
 
@@ -242,7 +249,7 @@ int main(int argc, char **argv)
 		const char *arg = argv[i];
 		if (!force_filename) {
 			if (!strcmp(arg, "-a")) {
-				checkout_all(base_dir);
+				checkout_all();
 				continue;
 			}
 			if (!strcmp(arg, "--")) {
@@ -273,10 +280,11 @@ int main(int argc, char **argv)
 			}
 			if (!memcmp(arg, "--prefix=", 9)) {
 				base_dir = arg+9;
+				base_dir_len = strlen(base_dir);
 				continue;
 			}
 		}
-		if (base_dir[0]) {
+		if (base_dir_len) {
 			/* when --prefix is specified we do not
 			 * want to update cache.
 			 */
@@ -286,7 +294,7 @@ int main(int argc, char **argv)
 			}
 			refresh_cache = 0;
 		}
-		checkout_file(arg, base_dir);
+		checkout_file(arg);
 	}
 
 	if (0 <= newfd &&

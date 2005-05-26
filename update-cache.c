@@ -9,7 +9,7 @@
  * Default to not allowing changes to the list of files. The
  * tool doesn't actually care, but this makes it harder to add
  * files to the revision control by mistake by doing something
- * like "update-cache *" and suddenly having all the object
+ * like "git-update-cache *" and suddenly having all the object
  * files be revision controlled.
  */
 static int allow_add = 0, allow_remove = 0, allow_replace = 0, not_new = 0;
@@ -158,7 +158,7 @@ static int compare_link(struct cache_entry *ce, unsigned long expected_size)
  * file that hasn't been changed but where the stat entry is
  * out of date.
  *
- * For example, you'd want to do this after doing a "read-tree",
+ * For example, you'd want to do this after doing a "git-read-tree",
  * to link up the stat cache details with the proper files.
  */
 static struct cache_entry *refresh_entry(struct cache_entry *ce)
@@ -238,13 +238,42 @@ static int refresh_cache(void)
 
 /*
  * We fundamentally don't like some paths: we don't want
- * dot or dot-dot anywhere, and in fact, we don't even want
- * any other dot-files (.git or anything else). They
- * are hidden, for chist sake.
+ * dot or dot-dot anywhere, and for obvious reasons don't
+ * want to recurse into ".git" either.
  *
  * Also, we don't want double slashes or slashes at the
  * end that can make pathnames ambiguous.
  */
+static int verify_dotfile(const char *rest)
+{
+	/*
+	 * The first character was '.', but that
+	 * has already been discarded, we now test
+	 * the rest.
+	 */
+	switch (*rest) {
+	/* "." is not allowed */
+	case '\0': case '/':
+		return 0;
+
+	/*
+	 * ".git" followed by  NUL or slash is bad. This
+	 * shares the path end test with the ".." case.
+	 */
+	case 'g':
+		if (rest[1] != 'i')
+			break;
+		if (rest[2] != 't')
+			break;
+		rest += 2;
+	/* fallthrough */
+	case '.':
+		if (rest[1] == '\0' || rest[1] == '/')
+			return 0;
+	}
+	return 1;
+}
+
 static int verify_path(char *path)
 {
 	char c;
@@ -256,8 +285,15 @@ static int verify_path(char *path)
 		if (c == '/') {
 inside:
 			c = *path++;
-			if (c != '/' && c != '.' && c != '\0')
+			switch (c) {
+			default:
 				continue;
+			case '/': case '\0':
+				break;
+			case '.':
+				if (verify_dotfile(path))
+					continue;
+			}
 			return 0;
 		}
 		c = *path++;
@@ -292,7 +328,7 @@ static int add_cacheinfo(char *arg1, char *arg2, char *arg3)
 	return add_cache_entry(ce, option);
 }
 
-struct cache_file cache_file;
+static struct cache_file cache_file;
 
 int main(int argc, char **argv)
 {
@@ -333,17 +369,17 @@ int main(int argc, char **argv)
 			}
 			if (!strcmp(path, "--cacheinfo")) {
 				if (i+3 >= argc)
-					die("update-cache: --cacheinfo <mode> <sha1> <path>");
+					die("git-update-cache: --cacheinfo <mode> <sha1> <path>");
 				if (add_cacheinfo(argv[i+1], argv[i+2], argv[i+3]))
-					die("update-cache: --cacheinfo cannot add %s", argv[i+3]);
+					die("git-update-cache: --cacheinfo cannot add %s", argv[i+3]);
 				i += 3;
 				continue;
 			}
 			if (!strcmp(path, "--force-remove")) {
 				if (argc <= i + 1)
-					die("update-cache: --force-remove <path>");
+					die("git-update-cache: --force-remove <path>");
 				if (remove_file_from_cache(argv[i+1]))
-					die("update-cache: --force-remove cannot remove %s", argv[i+1]);
+					die("git-update-cache: --force-remove cannot remove %s", argv[i+1]);
 				i++;
 				continue;
 			}

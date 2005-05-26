@@ -16,26 +16,37 @@ git-diff-tree [-r] <tree-ish-1> <tree-ish-2> [<pattern>...]::
 git-diff-files [<pattern>...]::
         compares the cache and the files on the filesystem.
 
-The following desription uses "old" and "new" to mean those
-compared entities.
 
-For files in old but not in new (i.e. removed):
+An output line is formatted this way:
 
-    -<mode> \t <type> \t <object> \t <path>
+in-place edit  :100644 100644 bcd1234... 0123456... M file0
+copy-edit      :100644 100644 abcd123... 1234567... C68 file1 file2
+rename-edit    :100644 100644 abcd123... 1234567... R86 file1 file3
+create         :000000 100644 0000000... 1234567... N file4
+delete         :100644 000000 1234567... 0000000... D file5
+unmerged       :000000 000000 0000000... 0000000... U file6
 
-For files not in old but in new (i.e. added):
+That is, from the left to the right:
 
-    +<mode> \t <type> \t <object> \t <path>
+  (1) a colon.
+  (2) mode for "src"; 000000 if creation or unmerged.
+  (3) a space.
+  (4) mode for "dst"; 000000 if deletion or unmerged.
+  (5) a space.
+  (6) sha1 for "src"; 0{40} if creation or unmerged.
+  (7) a space.
+  (8) sha1 for "dst"; 0{40} if creation, unmerged or "look at work tree".
+  (9) status, followed by similarlity index number only for C and R.
+ (10) a tab or a NUL when '-z' option is used.
+ (11) path for "src"
+ (12) a tab or a NUL when '-z' option is used; only exists for C or R.
+ (13) path for "dst"; only exists for C or R.
+ (14) an LF or a NUL when '-z' option is used, to terminate the record.
 
-For files that differ:
+<sha1> is shown as all 0's if new is a file on the filesystem
+and it is out of sync with the cache.  Example:
 
-    *<old-mode>-><new-mode> \t <type> \t <old-sha1>-><new-sha1> \t <path>
-
-<new-sha1> is shown as all 0's if new is a file on the
-filesystem and it is out of sync with the cache.  Example:
-
-  *100644->100644 blob    5be4a4.......->000000.......      file.c
-
+  :100644 100644 5be4a4...... 000000...... M file.c
 
 Generating patches with -p
 --------------------------
