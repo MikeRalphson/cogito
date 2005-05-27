@@ -78,7 +78,7 @@ list_commit_files()
 		list_cmd="git-diff-tree -r $tree1 $tree2"
 	fi
 	echo
-	$list_cmd | while read modes type sha1s file; do
+	$list_cmd | cut -f 2- | while read file; do
 		echo -n "$sep"
 		sep=", "
 		if [ $(echo "$line$sep$file" | wc -c) -le 75 ]; then
