@@ -131,7 +131,9 @@ close COMMIT;
 open DIFF, "git-diff-tree -r $parent[0] $tree|" or die "git-diff-tree $parent[0] $tree: $!";
 while (defined ($line = <DIFF>)) {
   chomp $line;
-  push(@files, (split(/\s/, $line, 4))[3]);
+  my @f;
+  (undef, @f) = split(/\t/, $line, 2);
+  push (@files, @f);
 }
 close DIFF;
 
