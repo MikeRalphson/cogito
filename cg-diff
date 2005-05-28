@@ -46,7 +46,7 @@ fi
 
 if [ "$parent" ]; then
 	id2="$id1"
-	id1=$(parent-id "$id2" | head -n 1)
+	id1=$(parent-id "$id2" | head -n 1) || exit 1
 fi
 
 
@@ -60,9 +60,9 @@ fi
 
 if [ "$id2" = " " ]; then
 	if [ "$id1" != " " ]; then
-		tree=$(tree-id "$id1")
+		tree=$(tree-id "$id1") || exit 1
 	else
-		tree=$(tree-id)
+		tree=$(tree-id) || exit 1
 	fi
 
 	# Ensure to only diff modified files
