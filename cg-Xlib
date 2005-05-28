@@ -50,6 +50,44 @@ showdate () {
 }
 
 
+# Usage: tree_timewarp DIRECTION_STR ROLLBACK_BOOL BASE BRANCH
+tree_timewarp () {
+	dirstr=$1; shift
+	rollback=$1; shift
+	base=$1; shift
+	branch=$1; shift
+
+	patchfile=$(mktemp -t gituncommit.XXXXXX)
+	if [ "$rollback" ]; then
+		cg-diff >$patchfile
+		[ -s "$patchfile" ] &&
+			echo "Warning: uncommitted local changes, trying to bring them $dirstr" >&2
+	else
+		# XXX: This may be suboptimal, but it is also non-trivial to keep
+		# the adds/removes properly.  So this is just a quick hack to get it
+		# working without much fuss.
+		cg-diff -r $branch >$patchfile
+	fi
+
+	git-read-tree -m "$branch" || die "$branch: bad commit"
+	echo "$branch" > $_git/HEAD
+
+	# Kill gone files
+	git-diff-tree -z -r $base $branch | grep -z '^-' | xargs -0 bash -c '
+		while [ "$1" ]; do
+			rm -- "$(echo "$1" | cut -f 4-)"
+			shift
+		done
+	' padding
+	git-checkout-cache -f -a
+
+	grep -v '^[^ @+-]' $patchfile | cg-patch
+	rm $patchfile
+
+	git-update-cache --refresh
+}
+
+
 print_help () {
 	which "cg-$1" >/dev/null 2>&1 || exit 1
 	cat $(which cg-$1) | sed -n '3,/^$/s/^# *//p'

@@ -35,35 +35,6 @@ parent=$(parent-id "$commit") || exit 1
 [ "$parent" ] || die "cannot rewind behind the initial commit"
 
 
-# XXX: Code duplication with cg-merge's fast-forward
-
 echo "Rewinding $base (HEAD) -> $parent" >&2
 
-patchfile=$(mktemp -t gituncommit.XXXXXX)
-if [ "$rollback_tree" ]; then
-	cg-diff >$patchfile
-	[ -s "$patchfile" ] &&
-		echo "Warning: uncommitted local changes, trying to bring them backwards" >&2
-else
-	# XXX: This may be suboptimal, but it is also non-trivial to keep
-	# the adds/removes properly.  So this is just a quick hack to get it
-	# working without much fuss.
-	cg-diff -r $parent >$patchfile
-fi
-
-git-read-tree -m "$parent" || die "$parent: bad commit"
-echo "$parent" > $_git/HEAD
-
-# Kill gone files
-git-diff-tree -z -r $base $parent | grep -z '^-' | xargs -0 bash -c '
-	while [ "$1" ]; do
-		rm -- "$(echo "$1" | cut -f 4-)"
-		shift
-	done
-' padding
-git-checkout-cache -f -a
-
-grep -v '^[^ @+-]' $patchfile | cg-patch
-rm $patchfile
-
-git-update-cache --refresh
+tree_timewarp "backwards" "$rollback_tree" $base $parent
