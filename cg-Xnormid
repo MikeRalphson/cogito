@@ -46,4 +46,9 @@ if [ ${#id} -ne 40 ] || [ ! -f .git/objects/${id:0:2}/${id:2} ]; then
 	exit 1
 fi
 
+if [ "$(git-cat-file -t "$id")" = "tag" ]; then
+	id=$(git-cat-file tag "$id" | head -n 1)
+	id="${id#object }"
+fi
+
 echo $id
