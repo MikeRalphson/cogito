@@ -49,14 +49,18 @@ mkdir "$diffdir1" "$diffdir2"
 while [ "$1" ]; do
 	declare -a param
 	param=($1 $2);
-	mode=${param[0]:1}"->"${param[1]}
-	sha=${param[2]}"->"${param[3]}
+	mode1=${param[0]:1}; mode2=${param[1]}
+	sha1=${param[2]}; sha2=${param[3]}
 	op=${param[4]}
 	name=${param[5]}
 
-	type=`git-cat-file -t $sha`
+	if [ "$sha1" != "0000000000000000000000000000000000000000" ]; then
+		type=$(git-cat-file -t $sha1)
+	else
+		type=blob
+	fi
 	if [ "$filter" ] && (echo "$name" | grep -vqxFf $filter); then
-		shift; continue
+		shift 2; continue
 	fi
 
 	echo -e "Index: $name\n==================================================================="
@@ -64,7 +68,7 @@ while [ "$1" ]; do
 	if [ "$type" = "tree" ]; then
 		# diff-tree will kindly diff the subdirs for us
 		# XXX: What about modes?
-		shift; continue
+		shift 2; continue
 	fi
 
 	loc1="$diffdir1/$name"; dir1="${loc1%/*}"
@@ -72,19 +76,15 @@ while [ "$1" ]; do
 	([ -d "$dir1" ] && [ -d "$dir2" ]) || mkdir -p "$dir1" "$dir2"
 
 	case $op in
-	"A")
-		mkbanner "$loc2" $id2 "$name" $mode $sha
+	"N")
+		mkbanner "$loc2" $id2 "$name" $mode2 $sha2
 		diff -L "/dev/null  (tree:$id1)" -L "$label" -u /dev/null "$loc2"
 		;;
 	"D")
-		mkbanner "$loc1" $id1 "$name" $mode $sha
+		mkbanner "$loc1" $id1 "$name" $mode1 $sha1
 		diff -L "$label" -L "/dev/null  (tree:$id2)" -u "$loc1" /dev/null
 		;;
 	"M")
-		modes=(${mode/->/ });
-		mode1=${modes[0]}; mode2=${modes[1]}
-		shas=(${sha/->/ });
-		sha1=${shas[0]}; sha2=${shas[1]}
 		mkbanner "$loc1" $id1 "$name" $mode1 $sha1; label1=$label
 		mkbanner "$loc2" $id2 "$name" $mode2 $sha2; label2=$label
 		diff -L "$label1" -L "$label2" -u "$loc1" "$loc2"
