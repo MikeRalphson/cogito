@@ -10,6 +10,8 @@
 # 	<tags>
 # 	<heads>
 # 	short SHA1 (4 or more hex digits)
+#
+# Takes the ID to normalize and returns the normalized ID.
 
 id="$1"
 
@@ -37,8 +39,6 @@ elif [[ "$id" == [0-9a-z][0-9a-z][0-9a-z][0-9a-z]* ]]; then
 		exit 1
 	fi
 fi
-
-# FIXME? Should we verify the existance of the ID in the object cache?
 
 # If we don't have a 40-char ID by now, it's an error
 if [ ${#id} -ne 40 ] || [ ! -f .git/objects/${id:0:2}/${id:2} ]; then
