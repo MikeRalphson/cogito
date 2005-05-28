@@ -73,7 +73,7 @@ tree_timewarp () {
 	echo "$branch" > $_git/HEAD
 
 	# Kill gone files
-	git-diff-tree -z -r $base $branch | grep -z '^-' | xargs -0 bash -c '
+	git-diff-tree -z -r $base $branch | egrep -z '^:([^ ][^ ]* ){4}D' | xargs -0 bash -c '
 		while [ "$1" ]; do
 			rm -- "$(echo "$1" | cut -f 4-)"
 			shift
