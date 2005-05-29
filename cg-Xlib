@@ -81,7 +81,8 @@ tree_timewarp () {
 	' padding
 	git-checkout-cache -f -a
 
-	grep -v '^[^ @+-]' $patchfile | cg-patch
+	# FIXME: Can produce bogus "contains only garbage" messages.
+	cat $patchfile | cg-patch
 	rm $patchfile
 
 	git-update-cache --refresh

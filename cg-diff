@@ -71,9 +71,9 @@ colorize() {
 		    print "'$coldiffhdr'" $0 "'$coldefault'"
 		  else if (/^======*$/)
 		    print "'$coldiffhdr'" $0 "'$coldefault'"
-		  else if (/^\+/)
+		  else if (/^(\+|new( file)? mode )/)
 		    print "'$coldiffadd'" $0 "'$coldefault'"
-		  else if (/^-/)
+		  else if (/^(-|(deleted file|old) mode )/)
 		    print "'$coldiffrem'" $0 "'$coldefault'"
 		  else if (/^!/)
 		    print "'$coldiffmod'" $0 "'$coldefault'"
@@ -119,7 +119,7 @@ if [ "$id2" = " " ]; then
 	# FIXME: Update ret based on what did we match. And take "$@"
 	# to account after all.
 	ret=
-	git-diff-cache -r -z $tree | xargs -0 ${COGITO_LIB}cg-Xdiffdo "$tree" uncommitted "$filter" | colorize
+	git-diff-cache -r -p $tree | colorize
 
 	[ "$filter" ] && rm $filter
 
@@ -133,7 +133,7 @@ id2=$(tree-id "$id2") || exit 1
 
 [ "$id1" = "$id2" ] && die "trying to diff $id1 against itself"
 
-git-diff-tree -r -z $id1 $id2 | xargs -0 ${COGITO_LIB}cg-Xdiffdo $id1 $id2 "$filter" | colorize
+git-diff-tree -r -p $id1 $id2 | colorize
 
 [ "$filter" ] && rm $filter
 exit 0
