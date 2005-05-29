@@ -64,13 +64,12 @@ showpatch () {
 
 
 while [ "$1" ]; do
-	arg="$1"
-	shift
-	case "$arg" in
+	case "$1" in
 	-s)
 		omit_header=1
 		;;
 	-r)
+		shift
 		if echo "$1" | grep -q ':'; then
 			log_end=$(echo "$1" | cut -d : -f 2)
 			[ "$log_end" ] || log_end="HEAD"
@@ -80,7 +79,6 @@ while [ "$1" ]; do
 		else
 			log_end="$1"
 		fi
-		shift
 		;;
 	-m)
 		mergebase=1
@@ -89,6 +87,7 @@ while [ "$1" ]; do
 		break
 		;;
 	esac
+	shift
 done
 
 if ! [ "$omit_header" ]; then

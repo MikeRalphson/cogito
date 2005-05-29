@@ -43,9 +43,7 @@ setup_colors()
 }
 
 while [ "$1" ]; do
-	arg="$1"
-	shift
-	case "$arg" in
+	case "$1" in
 	-c)
 		opt_color=1
 		setup_colors
@@ -54,6 +52,7 @@ while [ "$1" ]; do
 		parent=1
 		;;
 	-r)
+		shift
 		if echo "$1" | grep -q ':'; then
 			id2=$(echo "$1" | cut -d : -f 2)
 			[ "$id2" ] || log_end="HEAD"
@@ -63,7 +62,6 @@ while [ "$1" ]; do
 		else
 			id2="$1"
 		fi
-		shift
 		;;
 	-m)
 		mergebase=1
@@ -72,6 +70,7 @@ while [ "$1" ]; do
 		break
 		;;
 	esac
+	shift
 done
 
 colorize() {
@@ -120,13 +119,10 @@ if [ "$mergebase" ]; then
 fi
 
 
-filter=
-if [ "$*" ]; then
-	filter=$(mktemp -t gitdiff.XXXXXX)
-	for file in "$@"; do
-		echo "$file" >>$filter
-	done
-fi
+filter=$(mktemp -t gitdiff.XXXXXX)
+for file in "$@"; do
+	echo "$file" >>$filter
+done
 
 if [ "$id2" = " " ]; then
 	if [ "$id1" != " " ]; then
@@ -141,9 +137,9 @@ if [ "$id2" = " " ]; then
 	# FIXME: Update ret based on what did we match. And take "$@"
 	# to account after all.
 	ret=
-	git-diff-cache -r -p $tree | colorize
+	cat $filter | xargs git-diff-cache -r -p $tree | colorize
 
-	[ "$filter" ] && rm $filter
+	rm $filter
 
 	[ "$ret" ] && die "no files matched"
 	exit $ret
@@ -155,7 +151,7 @@ id2=$(tree-id "$id2") || exit 1
 
 [ "$id1" = "$id2" ] && die "trying to diff $id1 against itself"
 
-git-diff-tree -r -p $id1 $id2 | colorize
+cat $filter | xargs git-diff-tree -r -p $id1 $id2 | colorize
 
-[ "$filter" ] && rm $filter
+rm $filter
 exit 0

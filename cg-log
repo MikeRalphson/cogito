@@ -46,9 +46,7 @@ user=
 mergebase=
 
 while [ "$1" ]; do
-	arg="$1"
-	shift
-	case "$arg" in
+	case "$1" in
 	-c)
 		# See terminfo(5), "Color Handling"
 		colheader="$(tput setaf 2)"    # Green
@@ -62,9 +60,10 @@ while [ "$1" ]; do
 		list_files=1
 		;;
 	-u*)
-		user="${arg#-u}"
+		user="${1#-u}"
 		;;
 	-r)
+		shift
 		if echo "$1" | grep -q ':'; then
 			log_end=$(echo "$1" | cut -d : -f 2)
 			[ "$log_end" ] || log_end="HEAD"
@@ -74,7 +73,6 @@ while [ "$1" ]; do
 		else
 			log_end="$1"
 		fi
-		shift
 		;;
 	-m)
 		mergebase=1
@@ -83,6 +81,7 @@ while [ "$1" ]; do
 		break
 		;;
 	esac
+	shift
 done
 
 list_commit_files()
