@@ -75,7 +75,7 @@ tree_timewarp () {
 	# Kill gone files
 	git-diff-tree -z -r $base $branch | egrep -z '^:([^ ][^ ]* ){4}D' | xargs -0 bash -c '
 		while [ "$1" ]; do
-			rm -- "$(echo "$1" | cut -f 4-)"
+			rm -- "$(echo "$1" | cut -f 2)"
 			shift
 		done
 	' padding
