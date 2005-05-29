@@ -5,9 +5,10 @@ static int cached_only = 0;
 static int diff_output_format = DIFF_FORMAT_HUMAN;
 static int match_nonexisting = 0;
 static int detect_rename = 0;
-static int reverse_diff = 0;
+static int diff_setup_opt = 0;
 static int diff_score_opt = 0;
 static const char *pickaxe = NULL;
+static int pickaxe_opts = 0;
 
 /* A file entry went away or appeared */
 static void show_file(const char *prefix, struct cache_entry *ce, unsigned char *sha1, unsigned int mode)
@@ -202,11 +203,15 @@ int main(int argc, const char **argv)
 			continue;
 		}
 		if (!strcmp(arg, "-R")) {
-			reverse_diff = 1;
+			diff_setup_opt |= DIFF_SETUP_REVERSE;
 			continue;
 		}
-		if (!strcmp(arg, "-S")) {
+		if (!strncmp(arg, "-S", 2)) {
 			pickaxe = arg + 2;
+			continue;
+		}
+		if (!strcmp(arg, "--pickaxe-all")) {
+			pickaxe_opts = DIFF_PICKAXE_ALL;
 			continue;
 		}
 		if (!strcmp(arg, "-m")) {
@@ -224,7 +229,7 @@ int main(int argc, const char **argv)
 		usage(diff_cache_usage);
 
 	/* The rest is for paths restriction. */
-	diff_setup(reverse_diff);
+	diff_setup(diff_setup_opt);
 
 	mark_merge_entries();
 
@@ -235,12 +240,12 @@ int main(int argc, const char **argv)
 		die("unable to read tree object %s", tree_name);
 
 	ret = diff_cache(active_cache, active_nr);
+	if (pathspec)
+		diffcore_pathspec(pathspec);
 	if (detect_rename)
 		diffcore_rename(detect_rename, diff_score_opt);
 	if (pickaxe)
-		diffcore_pickaxe(pickaxe);
-	if (pathspec)
-		diffcore_pathspec(pathspec);
+		diffcore_pickaxe(pickaxe, pickaxe_opts);
 	diff_flush(diff_output_format, 1);
 	return ret;
 }

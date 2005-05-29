@@ -52,14 +52,15 @@ static struct diff_rename_dst *locate_rename_dst(struct diff_filespec *two,
 	return &(rename_dst[first]);
 }
 
+/* Table of rename/copy src files */
 static struct diff_rename_src {
 	struct diff_filespec *one;
-	unsigned src_used : 1;
+	unsigned src_stays : 1;
 } *rename_src;
 static int rename_src_nr, rename_src_alloc;
 
-static struct diff_rename_src *locate_rename_src(struct diff_filespec *one,
-						 int insert_ok)
+static struct diff_rename_src *register_rename_src(struct diff_filespec *one,
+						   int src_stays)
 {
 	int first, last;
 
@@ -77,9 +78,7 @@ static struct diff_rename_src *locate_rename_src(struct diff_filespec *one,
 		}
 		first = next+1;
 	}
-	/* not found */
-	if (!insert_ok)
-		return NULL;
+
 	/* insert to make it at "first" */
 	if (rename_src_alloc <= rename_src_nr) {
 		rename_src_alloc = alloc_nr(rename_src_alloc);
@@ -91,7 +90,7 @@ static struct diff_rename_src *locate_rename_src(struct diff_filespec *one,
 		memmove(rename_src + first + 1, rename_src + first,
 			(rename_src_nr - first - 1) * sizeof(*rename_src));
 	rename_src[first].one = one;
-	rename_src[first].src_used = 0;
+	rename_src[first].src_stays = src_stays;
 	return &(rename_src[first]);
 }
 
@@ -100,8 +99,11 @@ static int is_exact_match(struct diff_filespec *src, struct diff_filespec *dst)
 	if (src->sha1_valid && dst->sha1_valid &&
 	    !memcmp(src->sha1, dst->sha1, 20))
 		return 1;
-	if (diff_populate_filespec(src) || diff_populate_filespec(dst))
-		/* this is an error but will be caught downstream */
+	if (diff_populate_filespec(src, 1) || diff_populate_filespec(dst, 1))
+		return 0;
+	if (src->size != dst->size)
+		return 0;
+	if (diff_populate_filespec(src, 0) || diff_populate_filespec(dst, 0))
 		return 0;
 	if (src->size == dst->size &&
 	    !memcmp(src->data, dst->data, src->size))
@@ -113,7 +115,6 @@ struct diff_score {
 	int src; /* index in rename_src */
 	int dst; /* index in rename_dst */
 	int score;
-	int rank;
 };
 
 static int estimate_similarity(struct diff_filespec *src,
@@ -127,9 +128,11 @@ static int estimate_similarity(struct diff_filespec *src,
 	 * dst, and then some edit has been applied to dst.
 	 *
 	 * Compare them and return how similar they are, representing
-	 * the score as an integer between 0 and 10000, except
-	 * where they match exactly it is considered better than anything
-	 * else.
+	 * the score as an integer between 0 and MAX_SCORE.
+	 *
+	 * When there is an exact match, it is considered a better
+	 * match than anything else; the destination does not even
+	 * call into this function in that case.
 	 */
 	void *delta;
 	unsigned long delta_size, base_size;
@@ -149,12 +152,16 @@ static int estimate_similarity(struct diff_filespec *src,
 	/* We would not consider edits that change the file size so
 	 * drastically.  delta_size must be smaller than
 	 * (MAX_SCORE-minimum_score)/MAX_SCORE * min(src->size, dst->size).
+	 *
 	 * Note that base_size == 0 case is handled here already
 	 * and the final score computation below would not have a
 	 * divide-by-zero issue.
 	 */
 	if (base_size * (MAX_SCORE-minimum_score) < delta_size * MAX_SCORE)
 		return 0;
+
+	if (diff_populate_filespec(src, 0) || diff_populate_filespec(dst, 0))
+		return 0; /* error but caught downstream */
 
 	delta = diff_delta(src->data, src->size,
 			   dst->data, dst->size,
@@ -163,7 +170,7 @@ static int estimate_similarity(struct diff_filespec *src,
 	/* A delta that has a lot of literal additions would have
 	 * big delta_size no matter what else it does.
 	 */
-	if (minimum_score < MAX_SCORE * delta_size / base_size)
+	if (base_size * (MAX_SCORE-minimum_score) < delta_size * MAX_SCORE)
 		return 0;
 
 	/* Estimate the edit size by interpreting delta. */
@@ -200,15 +207,14 @@ static void record_rename_pair(struct diff_queue_struct *renq,
 	fill_filespec(two, dst->sha1, dst->mode);
 
 	dp = diff_queue(renq, one, two);
-	dp->score = score;
-
-	rename_src[src_index].src_used = 1;
+	dp->score = score ? : 1; /* make sure it is at least 1 */
+	dp->source_stays = rename_src[src_index].src_stays;
 	rename_dst[dst_index].pair = dp;
 }
 
 /*
  * We sort the rename similarity matrix with the score, in descending
- * order (more similar first).
+ * order (the most similar first).
  */
 static int score_compare(const void *a_, const void *b_)
 {
@@ -255,9 +261,9 @@ void diffcore_rename(int detect_rename, int minimum_score)
 			else
 				locate_rename_dst(p->two, 1);
 		else if (!DIFF_FILE_VALID(p->two))
-			locate_rename_src(p->one, 1);
-		else if (1 < detect_rename) /* find copy, too */
-			locate_rename_src(p->one, 1);
+			register_rename_src(p->one, 0);
+		else if (detect_rename == DIFF_DETECT_COPY)
+			register_rename_src(p->one, 1);
 	}
 	if (rename_dst_nr == 0)
 		goto cleanup; /* nothing to do */
@@ -281,7 +287,7 @@ void diffcore_rename(int detect_rename, int minimum_score)
 	 * doing the delta matrix altogether.
 	 */
 	if (renq.nr == rename_dst_nr)
-		goto flush_rest;
+		goto cleanup;
 
 	num_create = (rename_dst_nr - renq.nr);
 	num_src = rename_src_nr;
@@ -308,37 +314,30 @@ void diffcore_rename(int detect_rename, int minimum_score)
 		if (dst->pair)
 			continue; /* already done, either exact or fuzzy. */
 		if (mx[i].score < minimum_score)
-			break; /* there is not any more diffs applicable. */
+			break; /* there is no more usable pair. */
 		record_rename_pair(&renq, mx[i].dst, mx[i].src, mx[i].score);
 	}
 	free(mx);
 	diff_debug_queue("done detecting fuzzy", &renq);
 
- flush_rest:
+ cleanup:
 	/* At this point, we have found some renames and copies and they
 	 * are kept in renq.  The original list is still in *q.
-	 *
-	 * Scan the original list and move them into the outq; we will sort
-	 * outq and swap it into the queue supplied to pass that to
-	 * downstream, so we assign the sort keys in this loop.
-	 *
-	 * See comments at the top of record_rename_pair for numbers used
-	 * to assign rename_rank.
 	 */
 	outq.queue = NULL;
 	outq.nr = outq.alloc = 0;
 	for (i = 0; i < q->nr; i++) {
 		struct diff_filepair *p = q->queue[i];
-		struct diff_rename_src *src = locate_rename_src(p->one, 0);
 		struct diff_rename_dst *dst = locate_rename_dst(p->two, 0);
 		struct diff_filepair *pair_to_free = NULL;
 
 		if (dst) {
 			/* creation */
 			if (dst->pair) {
-				/* renq has rename/copy already to produce
-				 * this file, so we do not emit the creation
-				 * record in the output.
+				/* renq has rename/copy to produce
+				 * this file already, so we do not
+				 * emit the creation record in the
+				 * output.
 				 */
 				diff_q(&outq, dst->pair);
 				pair_to_free = p;
@@ -350,22 +349,14 @@ void diffcore_rename(int detect_rename, int minimum_score)
 				diff_q(&outq, p);
 		}
 		else if (!diff_unmodified_pair(p))
-			/* all the other cases need to be recorded as is */
+			/* all the usual ones need to be kept */
 			diff_q(&outq, p);
-		else {
-			/* unmodified pair needs to be recorded only if
-			 * it is used as the source of rename/copy
-			 */
-			if (src && src->src_used)
-				diff_q(&outq, p);
-			else
-				pair_to_free = p;
-		}
-		if (pair_to_free) {
-			diff_free_filespec_data(pair_to_free->one);
-			diff_free_filespec_data(pair_to_free->two);
-			free(pair_to_free);
-		}
+		else
+			/* no need to keep unmodified pairs */
+			pair_to_free = p;
+
+		if (pair_to_free)
+			diff_free_filepair(pair_to_free);
 	}
 	diff_debug_queue("done copying original", &outq);
 
@@ -374,7 +365,6 @@ void diffcore_rename(int detect_rename, int minimum_score)
 	*q = outq;
 	diff_debug_queue("done collapsing", q);
 
- cleanup:
 	free(rename_dst);
 	rename_dst = NULL;
 	rename_dst_nr = rename_dst_alloc = 0;

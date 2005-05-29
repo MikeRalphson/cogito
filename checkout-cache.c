@@ -34,7 +34,6 @@
  */
 #include <sys/types.h>
 #include <dirent.h>
-#include <limits.h>
 #include "cache.h"
 
 static int force = 0, quiet = 0, not_new = 0, refresh_cache = 0;
