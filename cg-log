@@ -66,6 +66,7 @@ while [ "$1" ]; do
 		shift
 		if echo "$1" | grep -q ':'; then
 			log_end=$(echo "$1" | cut -d : -f 2)
+			[ "$log_end" ] || log_end="HEAD"
 			log_start=$(echo "$1" | cut -d : -f 1)
 		elif [ -z "$log_start" ]; then
 			log_start="$1"
