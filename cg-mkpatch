@@ -9,6 +9,9 @@
 #
 # Takes an -r followed with ID defaulting to HEAD, or id1:id2, forming
 # a range (id1;id2]. (Use "id1:" to take just everything from id1 to HEAD.)
+#
+# Takes -m to base the patches at the merge base of the -r arguments
+# (defaulting to master and origin).
 
 . ${COGITO_LIB}cg-Xlib
 
@@ -16,6 +19,7 @@ omit_header=
 has_diffstat=
 log_start=
 log_end=
+mergebase=
 
 showpatch () {
 	header=$(mktemp -t gitpatch.XXXXXX)
@@ -78,6 +82,9 @@ while [ "$1" ]; do
 		fi
 		shift
 		;;
+	-m)
+		mergebase=1
+		;;
 	*)
 		break
 		;;
@@ -86,6 +93,12 @@ done
 
 if ! [ "$omit_header" ]; then
 	which diffstat >/dev/null 2>&1 && has_diffstat=1
+fi
+
+if [ "$mergebase" ]; then
+	[ "$log_start" ] || log_start="origin"
+	[ "$log_end" ] || log_end="master"
+	log_start=$(git-merge-base $(commit-id $log_start) $(commit-id $log_end))
 fi
 
 if [ "$log_end" ]; then

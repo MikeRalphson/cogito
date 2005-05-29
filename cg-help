@@ -26,14 +26,14 @@ Available commands:
 	cg-cancel
 	cg-clone	[-s] SOURCE_LOC [DESTDIR]
 	cg-commit	[-m"Commit message"]... [-e | -E] [FILE]... < log message
-	cg-diff		[-c] [-p] [-r FROM_ID[:TO_ID]] [FILE]...
+	cg-diff		[-c] [-m] [-p] [-r FROM_ID[:TO_ID]] [FILE]...
 	cg-export	DEST [TREE_ID]
 	cg-help		[COMMAND]
 	cg-init
-	cg-log		[-c] [-f] [-r FROM_ID[:TO_ID]] [FILE]...
+	cg-log		[-c] [-f] [-m] [-r FROM_ID[:TO_ID]] [FILE]...
 	cg-ls		[TREE_ID]
 	cg-merge	[-c] [-b BASE_ID] FROM_ID
-	cg-mkpatch	[-s] [-r FROM_ID[:TO_ID]]
+	cg-mkpatch	[-m] [-s] [-r FROM_ID[:TO_ID]]
 	cg-patch			< patch on stdin
 	cg-pull		[BNAME]
 	cg-restore	[FILE]...

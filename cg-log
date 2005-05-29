@@ -22,6 +22,9 @@
 # (HEAD by default), or id1:id2 representing an (id1;id2] range
 # of commits to show.
 #
+# Takes -m to end the log listing at the merge base of the -r arguments
+# (defaulting to master and origin).
+#
 # The rest of arguments are took as filenames; cg-log then displays
 # only changes in those files.
 
@@ -40,6 +43,7 @@ list_files=
 log_start=
 log_end=
 user=
+mergebase=
 
 while [ "$1" ]; do
 	arg="$1"
@@ -71,6 +75,9 @@ while [ "$1" ]; do
 			log_end="$1"
 		fi
 		shift
+		;;
+	-m)
+		mergebase=1
 		;;
 	*)
 		break
@@ -105,6 +112,12 @@ list_commit_files()
 	done
 	echo "$coldefault:"
 }
+
+if [ "$mergebase" ]; then
+	[ "$log_start" ] || log_start="origin"
+	[ "$log_end" ] || log_end="master"
+	log_start=$(git-merge-base $(commit-id $log_start) $(commit-id $log_end))
+fi
 
 if [ "$log_end" ]; then
 	id1="$(commit-id $log_start)" || exit 1

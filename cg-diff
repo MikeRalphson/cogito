@@ -16,6 +16,9 @@
 # -p instead of one ID denotes a parent commit to the specified ID
 # (which must not be a tree, obviously).
 #
+# Takes -m to base the diff at the merge base of the -r arguments
+# (defaulting to master and origin).
+#
 # Outputs a diff converting the first tree to the second one.
 
 . ${COGITO_LIB}cg-Xlib
@@ -25,6 +28,7 @@ id1=" "
 id2=" "
 parent=
 opt_color=
+mergebase=
 
 # TODO: Make cg-log use this too.
 setup_colors()
@@ -60,6 +64,9 @@ while [ "$1" ]; do
 			id2="$1"
 		fi
 		shift
+		;;
+	-m)
+		mergebase=1
 		;;
 	*)
 		break
@@ -104,6 +111,12 @@ colorize() {
 if [ "$parent" ]; then
 	id2="$id1"
 	id1=$(parent-id "$id2" | head -n 1) || exit 1
+fi
+
+if [ "$mergebase" ]; then
+	[ "$id1" != " " ] || id1="origin"
+	[ "$id2" != " " ] || id2="master"
+	id1=$(git-merge-base $(commit-id $id1) $(commit-id $id2))
 fi
 
 
