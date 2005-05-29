@@ -28,33 +28,24 @@ USAGE="cg-status"
 
 . ${COGITO_LIB}cg-Xlib
 
+[ 0 -eq $# ] || die "no arguments allowed"
+
 EXCLUDEFILE=$_git/exclude
 EXCLUDE=
 if [ -f $EXCLUDEFILE ]; then
 	EXCLUDE="--exclude-from=$EXCLUDEFILE"
 fi
 
-{
-	git-ls-files -z -t --others --deleted --unmerged $EXCLUDE
-} | sort -z -k 2 | xargs -0 sh -c '
-while [ "$1" ]; do
-	tag=${1% *};
-	filename=${1#* };
-	case "$filename" in
-	*.[ao] | tags | ,,merge*) ;;
-	*)   echo "$tag $filename";;
-	esac
-	shift
-done
-' padding
+git-update-cache --refresh > /dev/null
 
-{
-	git-update-cache --refresh
-} | cut -f 1 -d ":" | xargs sh -c '
-while [ "$1" ]; do
-	tag="M";
-	filename=${1%: *};
-	echo "$tag $filename";
-	shift
+git-ls-files --others --exclude='*.[ao]' --exclude='.*' --exclude=tags \
+	--exclude='*~' --exclude='#*' \
+	--exclude=',,merge*' $EXCLUDE | sed 's,^,? ,'
+
+git-diff-cache HEAD | cut -f5- -d' ' | 
+while IFS=$'\t' read -r mode file; do
+	if [ "$mode" = D ]; then
+		[ "$(git-diff-files "$file")" ] && mode=!
+	fi
+	echo "$mode $file"
 done
-' padding
