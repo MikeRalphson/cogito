@@ -12,6 +12,7 @@ static const char *diff_opts = "-pu";
 static unsigned char null_sha1[20] = { 0, };
 
 static int reverse_diff;
+static int use_size_cache;
 
 static const char *external_diff(void)
 {
@@ -141,7 +142,7 @@ static void builtin_diff(const char *name_a,
 			printf("new mode %s\n", temp[1].mode);
 		}
 		if (xfrm_msg && xfrm_msg[0])
-			fputs(xfrm_msg, stdout);
+			puts(xfrm_msg);
 
 		if (strncmp(temp[0].mode, temp[1].mode, 3))
 			/* we do not run diff between different kind
@@ -222,18 +223,69 @@ static int work_tree_matches(const char *name, const unsigned char *sha1)
 	return 1;
 }
 
+static struct sha1_size_cache {
+	unsigned char sha1[20];
+	unsigned long size;
+} **sha1_size_cache;
+static int sha1_size_cache_nr, sha1_size_cache_alloc;
+
+static struct sha1_size_cache *locate_size_cache(unsigned char *sha1,
+						 unsigned long size)
+{
+	int first, last;
+	struct sha1_size_cache *e;
+
+	first = 0;
+	last = sha1_size_cache_nr;
+	while (last > first) {
+		int next = (last + first) >> 1;
+		e = sha1_size_cache[next];
+		int cmp = memcmp(e->sha1, sha1, 20);
+		if (!cmp)
+			return e;
+		if (cmp < 0) {
+			last = next;
+			continue;
+		}
+		first = next+1;
+	}
+	/* not found */
+	if (size == UINT_MAX)
+		return NULL;
+	/* insert to make it at "first" */
+	if (sha1_size_cache_alloc <= sha1_size_cache_nr) {
+		sha1_size_cache_alloc = alloc_nr(sha1_size_cache_alloc);
+		sha1_size_cache = xrealloc(sha1_size_cache,
+					   sha1_size_cache_alloc *
+					   sizeof(*sha1_size_cache));
+	}
+	sha1_size_cache_nr++;
+	if (first < sha1_size_cache_nr)
+		memmove(sha1_size_cache + first + 1, sha1_size_cache + first,
+			(sha1_size_cache_nr - first - 1) *
+			sizeof(*sha1_size_cache));
+	e = xmalloc(sizeof(struct sha1_size_cache));
+	sha1_size_cache[first] = e;
+	memcpy(e->sha1, sha1, 20);
+	e->size = size;
+	return e;
+}
+
 /*
  * While doing rename detection and pickaxe operation, we may need to
  * grab the data for the blob (or file) for our own in-core comparison.
  * diff_filespec has data and size fields for this purpose.
  */
-int diff_populate_filespec(struct diff_filespec *s)
+int diff_populate_filespec(struct diff_filespec *s, int size_only)
 {
 	int err = 0;
 	if (!DIFF_FILE_VALID(s))
 		die("internal error: asking to populate invalid file.");
 	if (S_ISDIR(s->mode))
 		return -1;
+
+	if (!use_size_cache)
+		size_only = 0;
 
 	if (s->data)
 		return err;
@@ -254,6 +306,8 @@ int diff_populate_filespec(struct diff_filespec *s)
 		s->size = st.st_size;
 		if (!s->size)
 			goto empty;
+		if (size_only)
+			return 0;
 		if (S_ISLNK(st.st_mode)) {
 			int ret;
 			s->data = xmalloc(s->size);
@@ -273,9 +327,21 @@ int diff_populate_filespec(struct diff_filespec *s)
 		close(fd);
 	}
 	else {
+		/* We cannot do size only for SHA1 blobs */
 		char type[20];
+		struct sha1_size_cache *e;
+
+		if (size_only) {
+			e = locate_size_cache(s->sha1, UINT_MAX);
+			if (e) {
+				s->size = e->size;
+				return 0;
+			}
+		}
 		s->data = read_sha1_file(s->sha1, type, &s->size);
 		s->should_free = 1;
+		if (s->data && size_only)
+			locate_size_cache(s->sha1, s->size);
 	}
 	return 0;
 }
@@ -361,7 +427,7 @@ static void prepare_temp_file(const char *name,
 		return;
 	}
 	else {
-		if (diff_populate_filespec(one))
+		if (diff_populate_filespec(one, 0))
 			die("cannot read data blob for %s", one->path);
 		prep_temp_blob(temp, one->data, one->size,
 			       one->sha1, one->mode);
@@ -492,9 +558,23 @@ static void run_diff(const char *name,
 		run_external_diff(pgm, name, other, one, two, xfrm_msg);
 }
 
-void diff_setup(int reverse_diff_)
+void diff_setup(int flags)
 {
-	reverse_diff = reverse_diff_;
+	if (flags & DIFF_SETUP_REVERSE)
+		reverse_diff = 1;
+	if (flags & DIFF_SETUP_USE_CACHE) {
+		if (!active_cache)
+			/* read-cache does not die even when it fails
+			 * so it is safe for us to do this here.  Also
+			 * it does not smudge active_cache or active_nr
+			 * when it fails, so we do not have to worry about
+			 * cleaning it up oufselves either.
+			 */
+			read_cache();
+	}
+	if (flags & DIFF_SETUP_USE_SIZE_CACHE)
+		use_size_cache = 1;
+	
 }
 
 struct diff_queue_struct diff_queued_diff;
@@ -517,8 +597,16 @@ struct diff_filepair *diff_queue(struct diff_queue_struct *queue,
 	dp->one = one;
 	dp->two = two;
 	dp->score = 0;
+	dp->source_stays = 0;
 	diff_q(queue, dp);
 	return dp;
+}
+
+void diff_free_filepair(struct diff_filepair *p)
+{
+	diff_free_filespec_data(p->one);
+	diff_free_filespec_data(p->two);
+	free(p);
 }
 
 static void diff_flush_raw(struct diff_filepair *p,
@@ -615,7 +703,7 @@ static void diff_flush_patch(struct diff_filepair *p)
 		sprintf(msg_,
 			"similarity index %d%%\n"
 			"copy from %s\n"
-			"copy to %s\n",
+			"copy to %s",
 			(int)(0.5 + p->score * 100.0/MAX_SCORE),
 			p->one->path, p->two->path);
 		msg = msg_;
@@ -624,7 +712,7 @@ static void diff_flush_patch(struct diff_filepair *p)
 		sprintf(msg_,
 			"similarity index %d%%\n"
 			"rename old %s\n"
-			"rename new %s\n",
+			"rename new %s",
 			(int)(0.5 + p->score * 100.0/MAX_SCORE),
 			p->one->path, p->two->path);
 		msg = msg_;
@@ -637,28 +725,6 @@ static void diff_flush_patch(struct diff_filepair *p)
 		run_diff(name, NULL, NULL, NULL, NULL);
 	else
 		run_diff(name, other, p->one, p->two, msg);
-}
-
-int diff_needs_to_stay(struct diff_queue_struct *q, int i,
-		       struct diff_filespec *it)
-{
-	/* If it will be used in later entry (either stay or used
-	 * as the source of rename/copy), we need to copy, not rename.
-	 */
-	while (i < q->nr) {
-		struct diff_filepair *p = q->queue[i++];
-		if (!DIFF_FILE_VALID(p->two))
-			continue; /* removed is fine */
-		if (strcmp(p->one->path, it->path))
-			continue; /* not relevant */
-
-		/* p has its src set to *it and it is not a delete;
-		 * it will be used for in-place change, rename/copy,
-		 * or just stays there.  We cannot rename it out.
-		 */
-		return 1;
-	}
-	return 0;
 }
 
 int diff_queue_is_empty(void)
@@ -689,8 +755,8 @@ void diff_debug_filepair(const struct diff_filepair *p, int i)
 {
 	diff_debug_filespec(p->one, i, "one");
 	diff_debug_filespec(p->two, i, "two");
-	fprintf(stderr, "score %d, status %c\n",
-		p->score, p->status ? : '?');
+	fprintf(stderr, "score %d, status %c source_stays %d\n",
+		p->score, p->status ? : '?', p->source_stays);
 }
 
 void diff_debug_queue(const char *msg, struct diff_queue_struct *q)
@@ -712,8 +778,6 @@ static void diff_resolve_rename_copy(void)
 	struct diff_filepair *p, *pp;
 	struct diff_queue_struct *q = &diff_queued_diff;
 
-	/* This should not depend on the ordering of things. */
-
 	diff_debug_queue("resolve-rename-copy", q);
 
 	for (i = 0; i < q->nr; i++) {
@@ -721,23 +785,28 @@ static void diff_resolve_rename_copy(void)
 		p->status = 0; /* undecided */
 		if (DIFF_PAIR_UNMERGED(p))
 			p->status = 'U';
-		else if (!DIFF_FILE_VALID((p)->one))
+		else if (!DIFF_FILE_VALID(p->one))
 			p->status = 'N';
-		else if (!DIFF_FILE_VALID((p)->two)) {
-			/* Deletion record should be omitted if there
-			 * are rename/copy entries using this one as
-			 * the source.  Then we can say one of them
-			 * is a rename and the rest are copies.
+		else if (!DIFF_FILE_VALID(p->two)) {
+			/* Deleted entry may have been picked up by
+			 * another rename-copy entry.  So we scan the
+			 * queue and if we find one that uses us as the
+			 * source we do not say delete for this entry.
 			 */
-			p->status = 'D';
 			for (j = 0; j < q->nr; j++) {
 				pp = q->queue[j];
-				if (!strcmp(pp->one->path, p->one->path) &&
-				    strcmp(pp->one->path, pp->two->path)) {
+				if (!strcmp(p->one->path, pp->one->path) &&
+				    pp->score) {
+					/* rename/copy are always valid
+					 * so we do not say DIFF_FILE_VALID()
+					 * on pp->one and pp->two.
+					 */
 					p->status = 'X';
 					break;
 				}
 			}
+			if (!p->status)
+				p->status = 'D';
 		}
 		else if (DIFF_PAIR_TYPE_CHANGED(p))
 			p->status = 'T';
@@ -746,33 +815,24 @@ static void diff_resolve_rename_copy(void)
 		 * whose both sides are valid and of the same type, i.e.
 		 * either in-place edit or rename/copy edit.
 		 */
-		else if (strcmp(p->one->path, p->two->path)) {
-			/* See if there is somebody else anywhere that
-			 * will keep the path (either modified or
-			 * unmodified).  If so, we have to be a copy,
-			 * not a rename.  In addition, if there is
-			 * some other rename or copy that comes later
-			 * than us that uses the same source, we
-			 * have to be a copy, not a rename.
+		else if (p->score) {
+			if (p->source_stays) {
+				p->status = 'C';
+				continue;
+			}
+			/* See if there is some other filepair that
+			 * copies from the same source as us.  If so
+			 * we are a copy.  Otherwise we are a rename.
 			 */
-			for (j = 0; j < q->nr; j++) {
+			for (j = i + 1; j < q->nr; j++) {
 				pp = q->queue[j];
 				if (strcmp(pp->one->path, p->one->path))
-					continue;
-				if (!strcmp(pp->one->path, pp->two->path)) {
-					if (DIFF_FILE_VALID(pp->two)) {
-						/* non-delete */
-						p->status = 'C';
-						break;
-					}
-					continue;
-				}
-				/* pp is a rename/copy ... */
-				if (i < j) {
-					/* ... and comes later than us */
-					p->status = 'C';
-					break;
-				}
+					continue; /* not us */
+				if (!pp->score)
+					continue; /* not a rename/copy */
+				/* pp is a rename/copy from the same source */
+				p->status = 'C';
+				break;
 			}
 			if (!p->status)
 				p->status = 'R';
@@ -781,8 +841,11 @@ static void diff_resolve_rename_copy(void)
 			 p->one->mode != p->two->mode)
 			p->status = 'M';
 		else
-			/* this is a "no-change" entry */
-			p->status = 'X';
+			/* this is a "no-change" entry.
+			 * should not happen anymore.
+			 * p->status = 'X';
+			 */
+			die("internal error in diffcore: unmodified entry remains");
 	}
 	diff_debug_queue("resolve-rename-copy done", q);
 }
@@ -817,12 +880,8 @@ void diff_flush(int diff_output_style, int resolve_rename_copy)
 			break;
 		}
 	}
-	for (i = 0; i < q->nr; i++) {
-		struct diff_filepair *p = q->queue[i];
-		diff_free_filespec_data(p->one);
-		diff_free_filespec_data(p->two);
-		free(p);
-	}
+	for (i = 0; i < q->nr; i++)
+		diff_free_filepair(q->queue[i]);
 	free(q->queue);
 	q->queue = NULL;
 	q->nr = q->alloc = 0;
@@ -883,7 +942,7 @@ void diff_helper_input(unsigned old_mode,
 	if (new_mode)
 		fill_filespec(two, new_sha1, new_mode);
 	dp = diff_queue(&diff_queued_diff, one, two);
-	dp->score = score;
+	dp->score = score * MAX_SCORE / 100;
 	dp->status = status;
 }
 

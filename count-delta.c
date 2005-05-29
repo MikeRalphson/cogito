@@ -6,7 +6,6 @@
 #include <stdlib.h>
 #include <string.h>
 #include <limits.h>
-#include "delta.h"
 #include "count-delta.h"
 
 static unsigned long get_hdr_size(const unsigned char **datap)
@@ -89,5 +88,8 @@ unsigned long count_delta(void *delta_buf, unsigned long delta_size)
 	/* delete size is what was _not_ copied from source.
 	 * edit size is that and literal additions.
 	 */
+	if (src_size + added_literal < copied_from_source)
+		/* we ended up overcounting and underflowed */
+		return 0;
 	return (src_size - copied_from_source) + added_literal;
 }

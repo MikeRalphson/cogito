@@ -10,9 +10,10 @@ static int show_tree_entry_in_recursive = 0;
 static int read_stdin = 0;
 static int diff_output_format = DIFF_FORMAT_HUMAN;
 static int detect_rename = 0;
-static int reverse_diff = 0;
+static int diff_setup_opt = 0;
 static int diff_score_opt = 0;
 static const char *pickaxe = NULL;
+static int pickaxe_opts = 0;
 static const char *header = NULL;
 static const char *header_prefix = "";
 
@@ -255,7 +256,7 @@ static int diff_tree_sha1(const unsigned char *old, const unsigned char *new, co
 
 static void call_diff_setup(void)
 {
-	diff_setup(reverse_diff);
+	diff_setup(diff_setup_opt);
 }
 
 static int call_diff_flush(void)
@@ -263,7 +264,7 @@ static int call_diff_flush(void)
 	if (detect_rename)
 		diffcore_rename(detect_rename, diff_score_opt);
 	if (pickaxe)
-		diffcore_pickaxe(pickaxe);
+		diffcore_pickaxe(pickaxe, pickaxe_opts);
 	if (diff_queue_is_empty()) {
 		diff_flush(DIFF_FORMAT_NO_OUTPUT, 0);
 		return 0;
@@ -497,7 +498,7 @@ int main(int argc, const char **argv)
 			continue;
 		}
 		if (!strcmp(arg, "-R")) {
-			reverse_diff = 1;
+			diff_setup_opt |= DIFF_SETUP_REVERSE;
 			continue;
 		}
 		if (!strcmp(arg, "-p")) {
@@ -507,6 +508,10 @@ int main(int argc, const char **argv)
 		}
 		if (!strncmp(arg, "-S", 2)) {
 			pickaxe = arg + 2;
+			continue;
+		}
+		if (!strcmp(arg, "--pickaxe-all")) {
+			pickaxe_opts = DIFF_PICKAXE_ALL;
 			continue;
 		}
 		if (!strncmp(arg, "-M", 2)) {
@@ -573,6 +578,9 @@ int main(int argc, const char **argv)
 	if (!read_stdin)
 		return 0;
 
+	if (detect_rename)
+		diff_setup_opt |= (DIFF_SETUP_USE_SIZE_CACHE |
+				   DIFF_SETUP_USE_CACHE);
 	while (fgets(line, sizeof(line), stdin))
 		diff_tree_stdin(line);
 

@@ -11,9 +11,10 @@ static const char *diff_files_usage =
 
 static int diff_output_format = DIFF_FORMAT_HUMAN;
 static int detect_rename = 0;
-static int reverse_diff = 0;
+static int diff_setup_opt = 0;
 static int diff_score_opt = 0;
 static const char *pickaxe = NULL;
+static int pickaxe_opts = 0;
 static int silent = 0;
 
 static void show_unmerge(const char *path)
@@ -51,9 +52,11 @@ int main(int argc, const char **argv)
 		else if (!strcmp(argv[1], "-z"))
 			diff_output_format = DIFF_FORMAT_MACHINE;
 		else if (!strcmp(argv[1], "-R"))
-			reverse_diff = 1;
-		else if (!strcmp(argv[1], "-S"))
+			diff_setup_opt |= DIFF_SETUP_REVERSE;
+		else if (!strncmp(argv[1], "-S", 2))
 			pickaxe = argv[1] + 2;
+		else if (!strcmp(argv[1], "--pickaxe-all"))
+			pickaxe_opts = DIFF_PICKAXE_ALL;
 		else if (!strncmp(argv[1], "-M", 2)) {
 			diff_score_opt = diff_scoreopt_parse(argv[1]);
 			detect_rename = DIFF_DETECT_RENAME;
@@ -75,7 +78,7 @@ int main(int argc, const char **argv)
 		exit(1);
 	}
 
-	diff_setup(reverse_diff);
+	diff_setup(diff_setup_opt);
 
 	for (i = 0; i < entries; i++) {
 		struct stat st;
@@ -113,12 +116,12 @@ int main(int argc, const char **argv)
 		show_modified(oldmode, mode, ce->sha1, null_sha1,
 			      ce->name);
 	}
+	if (1 < argc)
+		diffcore_pathspec(argv + 1);
 	if (detect_rename)
 		diffcore_rename(detect_rename, diff_score_opt);
 	if (pickaxe)
-		diffcore_pickaxe(pickaxe);
-	if (1 < argc)
-		diffcore_pathspec(argv + 1);
+		diffcore_pickaxe(pickaxe, pickaxe_opts);
 	diff_flush(diff_output_format, 1);
 	return 0;
 }

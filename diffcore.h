@@ -33,14 +33,17 @@ extern struct diff_filespec *alloc_filespec(const char *);
 extern void fill_filespec(struct diff_filespec *, const unsigned char *,
 			  unsigned short);
 
-extern int diff_populate_filespec(struct diff_filespec *);
+extern int diff_populate_filespec(struct diff_filespec *, int);
 extern void diff_free_filespec_data(struct diff_filespec *);
 
 struct diff_filepair {
 	struct diff_filespec *one;
 	struct diff_filespec *two;
-	int score; /* only valid when one and two are different paths */
-	int status; /* M C R N D U (see Documentation/diff-format.txt) */
+	unsigned short int score; /* only valid when one and two are
+				   * different paths
+				   */
+	char source_stays; /* all of R/C are copies */
+	char status; /* M C R N D U (see Documentation/diff-format.txt) */
 };
 #define DIFF_PAIR_UNMERGED(p) \
 	(!DIFF_FILE_VALID((p)->one) && !DIFF_FILE_VALID((p)->two))
@@ -53,6 +56,8 @@ struct diff_filepair {
 #define DIFF_FILE_CANON_MODE(mode) \
 	(S_ISREG(mode) ? (S_IFREG | ce_permissions(mode)) : \
 	S_ISLNK(mode) ? S_IFLNK : S_IFDIR)
+
+extern void diff_free_filepair(struct diff_filepair *);
 
 extern int diff_unmodified_pair(struct diff_filepair *);
 
@@ -67,9 +72,6 @@ extern struct diff_filepair *diff_queue(struct diff_queue_struct *,
 					struct diff_filespec *,
 					struct diff_filespec *);
 extern void diff_q(struct diff_queue_struct *, struct diff_filepair *);
-
-extern int diff_needs_to_stay(struct diff_queue_struct *, int,
-			      struct diff_filespec *);
 
 #define DIFF_DEBUG 0
 #if DIFF_DEBUG

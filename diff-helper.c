@@ -4,9 +4,9 @@
 #include "cache.h"
 #include "strbuf.h"
 #include "diff.h"
-#include "diffcore.h" /* just for MAX_SCORE */
 
 static const char *pickaxe = NULL;
+static int pickaxe_opts = 0;
 static int line_termination = '\n';
 static int inter_name_termination = '\t';
 
@@ -15,6 +15,7 @@ static const char *diff_helper_usage =
 
 int main(int ac, const char **av) {
 	struct strbuf sb;
+	const char *garbage_flush_format;
 
 	strbuf_init(&sb);
 
@@ -24,10 +25,14 @@ int main(int ac, const char **av) {
 		else if (av[1][1] == 'S') {
 			pickaxe = av[1] + 2;
 		}
+		else if (!strcmp(av[1], "--pickaxe-all"))
+			pickaxe_opts = DIFF_PICKAXE_ALL;
 		else
 			usage(diff_helper_usage);
 		ac--; av++;
 	}
+	garbage_flush_format = (line_termination == 0) ? "%s" : "%s\n";
+
 	/* the remaining parameters are paths patterns */
 
 	diff_setup(0);
@@ -78,7 +83,6 @@ int main(int ac, const char **av) {
 			if (status == 'R' || status == 'C') {
 				two_paths = 1;
 				sscanf(cp, "%d", &score);
-				score = score * MAX_SCORE / 100;
 				if (line_termination) {
 					cp = strchr(cp,
 						    inter_name_termination);
@@ -128,17 +132,17 @@ int main(int ac, const char **av) {
 					  new_path);
 			continue;
 		}
-		if (pickaxe)
-			diffcore_pickaxe(pickaxe);
 		if (1 < ac)
 			diffcore_pathspec(av + 1);
+		if (pickaxe)
+			diffcore_pickaxe(pickaxe, pickaxe_opts);
 		diff_flush(DIFF_FORMAT_PATCH, 0);
-		printf("%s\n", sb.buf);
+		printf(garbage_flush_format, sb.buf);
 	}
-	if (pickaxe)
-		diffcore_pickaxe(pickaxe);
 	if (1 < ac)
 		diffcore_pathspec(av + 1);
+	if (pickaxe)
+		diffcore_pickaxe(pickaxe, pickaxe_opts);
 	diff_flush(DIFF_FORMAT_PATCH, 0);
 	return 0;
 }

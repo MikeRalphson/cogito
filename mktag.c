@@ -98,7 +98,7 @@ static int verify_tag(char *buffer, unsigned long size)
 
 int main(int argc, char **argv)
 {
-	unsigned long size, readsize;
+	unsigned long size;
 	char buffer[MAXSIZE];
 	unsigned char result_sha1[20];
 
@@ -107,10 +107,17 @@ int main(int argc, char **argv)
 
 	// Read the signature
 	size = 0;
-	do {
-		readsize = read(0, buffer + size, MAXSIZE - size);
-		size += readsize;
-	} while (readsize);
+	for (;;) {
+		int ret = read(0, buffer + size, MAXSIZE - size);
+		if (!ret)
+			break;
+		if (ret < 0) {
+			if (errno == EAGAIN)
+				continue;
+			break;
+		}
+		size += ret;
+	}
 
 	// Verify it for some basic sanity: it needs to start with "object <sha1>\ntype "
 	if (verify_tag(buffer, size) < 0)

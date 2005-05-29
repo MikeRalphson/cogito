@@ -4,7 +4,6 @@
 #include "cache.h"
 #include "diff.h"
 #include "diffcore.h"
-#include "delta.h"
 
 struct path_spec {
 	const char *spec;
@@ -55,11 +54,10 @@ void diffcore_pathspec(const char **pathspec)
 
 	for (i = 0; i < q->nr; i++) {
 		struct diff_filepair *p = q->queue[i];
-		if (matches_pathspec(p->one->path, spec, speccnt) ||
-		    matches_pathspec(p->two->path, spec, speccnt))
+		if (matches_pathspec(p->two->path, spec, speccnt))
 			diff_q(&outq, p);
 		else
-			free(p);
+			diff_free_filepair(p);
 	}
 	free(q->queue);
 	*q = outq;
