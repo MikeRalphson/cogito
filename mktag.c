@@ -98,7 +98,7 @@ static int verify_tag(char *buffer, unsigned long size)
 
 int main(int argc, char **argv)
 {
-	unsigned long size;
+	unsigned long size, readsize;
 	char buffer[MAXSIZE];
 	unsigned char result_sha1[20];
 
@@ -106,7 +106,11 @@ int main(int argc, char **argv)
 		usage("cat <signaturefile> | git-mktag");
 
 	// Read the signature
-	size = read(0, buffer, MAXSIZE);
+	size = 0;
+	do {
+		readsize = read(0, buffer + size, MAXSIZE - size);
+		size += readsize;
+	} while (readsize);
 
 	// Verify it for some basic sanity: it needs to start with "object <sha1>\ntype "
 	if (verify_tag(buffer, size) < 0)
