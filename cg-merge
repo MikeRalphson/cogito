@@ -54,7 +54,7 @@ if [ "$head" = "$base" ]; then
 	echo "Fast-forwarding $base -> $branch" >&2
 	echo -e "\ton top of $head..." >&2
 
-	tree_timewarp "forward" "" $base $branch
+	tree_timewarp "forward" "yes, rollback (or rather rollforth) the tree!" $base $branch
 
 	exit 0
 fi
