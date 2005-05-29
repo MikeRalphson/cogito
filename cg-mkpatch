@@ -14,12 +14,8 @@
 
 omit_header=
 has_diffstat=
-if [ "$1" = "-s" ]; then
-	shift
-	omit_header=1
-else
-	which diffstat >/dev/null 2>&1 && has_diffstat=1
-fi
+log_start=
+log_end=
 
 showpatch () {
 	header=$(mktemp -t gitpatch.XXXXXX)
@@ -63,21 +59,33 @@ showpatch () {
 }
 
 
-log_start=
-log_end=
-if [ "$1" = "-r" ]; then
+while [ "$1" ]; do
+	arg="$1"
 	shift
-	log_start="$1"
-	shift
-	if echo "$log_start" | grep -q ':'; then
-		log_end=$(echo "$log_start" | cut -d : -f 2)
-		log_start=$(echo "$log_start" | cut -d : -f 1)
-	fi
-fi
-if [ "$1" = "-r" ]; then
-	shift
-	log_end="$1"
-	shift
+	case "$arg" in
+	-s)
+		omit_header=1
+		;;
+	-r)
+		if echo "$1" | grep -q ':'; then
+			log_end=$(echo "$1" | cut -d : -f 2)
+			[ "$log_end" ] || log_end="HEAD"
+			log_start=$(echo "$1" | cut -d : -f 1)
+		elif [ -z "$log_start" ]; then
+			log_start="$1"
+		else
+			log_end="$1"
+		fi
+		shift
+		;;
+	*)
+		break
+		;;
+	esac
+done
+
+if ! [ "$omit_header" ]; then
+	which diffstat >/dev/null 2>&1 && has_diffstat=1
 fi
 
 if [ "$log_end" ]; then
