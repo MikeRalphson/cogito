@@ -13,16 +13,18 @@
 #
 # Takes the ID to normalize and returns the normalized ID.
 
+. ${COGITO_LIB}cg-Xlib
+
 id="$1"
 
 if [ ! "$id" ] || [ "$id" = "this" ] || [ "$id" = "HEAD" ]; then
-	read id < .git/HEAD
+	read id < "$_git/HEAD"
 
-elif [ -r ".git/refs/tags/$id" ]; then
-	read id < ".git/refs/tags/$id"
+elif [ -r "$_git/refs/tags/$id" ]; then
+	read id < "$_git/refs/tags/$id"
 
-elif [ -r ".git/refs/heads/$id" ]; then
-	read id < ".git/refs/heads/$id"
+elif [ -r "$_git/refs/heads/$id" ]; then
+	read id < "$_git/refs/heads/$id"
 
 # Short id's must be lower case and at least 4 digits.
 elif [[ "$id" == [0-9a-z][0-9a-z][0-9a-z][0-9a-z]* ]]; then
@@ -30,10 +32,10 @@ elif [[ "$id" == [0-9a-z][0-9a-z][0-9a-z][0-9a-z]* ]]; then
 	idpost=${id:2}
 
 	# Assign array elements to matching names
-	idmatch=(.git/objects/$idpref/$idpost*)
+	idmatch=($_git_objects/$idpref/$idpost*)
 
 	if [ ${#idmatch[*]} -eq 1 ] && [ -r "$idmatch" ]; then
-		id=$idpref${idmatch#.git/objects/$idpref/}
+		id=$idpref${idmatch#$_git_objects/$idpref/}
 	elif [ ${#idmatch[*]} -gt 1 ]; then
 		echo "Ambiguous id: $id" >&2
 		exit 1
@@ -41,7 +43,7 @@ elif [[ "$id" == [0-9a-z][0-9a-z][0-9a-z][0-9a-z]* ]]; then
 fi
 
 # If we don't have a 40-char ID by now, it's an error
-if [ ${#id} -ne 40 ] || [ ! -f .git/objects/${id:0:2}/${id:2} ]; then
+if [ ${#id} -ne 40 ] || [ ! -f $_git_objects/${id:0:2}/${id:2} ]; then
 	echo "Invalid id: $id" >&2
 	exit 1
 fi
