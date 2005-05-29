@@ -163,12 +163,6 @@ static int write_entry(struct cache_entry *ce, const char *path)
 		lstat(ce->name, &st);
 		fill_stat_cache_info(ce, &st);
 	}
-
-	if (refresh_cache) {
-		struct stat st;
-		lstat(ce->name, &st);
-		fill_stat_cache_info(ce, &st);
-	}
 	return 0;
 }
 
