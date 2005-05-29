@@ -38,31 +38,34 @@ setup_colors()
 	eval $C
 }
 
-# FIXME: The commandline parsing is awful.
-
-if [ "$1" = "-c" ]; then
+while [ "$1" ]; do
+	arg="$1"
 	shift
-	opt_color=1
-	setup_colors
-fi
-
-if [ "$1" = "-p" ]; then
-	shift
-	parent=1
-fi
-
-if [ "$1" = "-r" ]; then
-	shift
-	id1=$(echo "$1": | cut -d : -f 1)
-	[ "$id1" != "$1" ] && id2=$(echo "$1": | cut -d : -f 2)
-	shift
-fi
-
-if [ "$1" = "-r" ]; then
-	shift
-	id2="$1"
-	shift
-fi
+	case "$arg" in
+	-c)
+		opt_color=1
+		setup_colors
+		;;
+	-p)
+		parent=1
+		;;
+	-r)
+		if echo "$1" | grep -q ':'; then
+			id2=$(echo "$1" | cut -d : -f 2)
+			[ "$id2" ] || log_end="HEAD"
+			id1=$(echo "$1" | cut -d : -f 1)
+		elif [ "$id1" = " " ]; then
+			id1="$1"
+		else
+			id2="$1"
+		fi
+		shift
+		;;
+	*)
+		break
+		;;
+	esac
+done
 
 colorize() {
 	if [ "$opt_color" ]; then
