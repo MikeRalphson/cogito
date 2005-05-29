@@ -42,7 +42,9 @@ log_end=
 user=
 
 while [ "$1" ]; do
-	case "$1" in
+	arg="$1"
+	shift
+	case "$arg" in
 	-c)
 		# See terminfo(5), "Color Handling"
 		colheader="$(tput setaf 2)"    # Green
@@ -51,18 +53,14 @@ while [ "$1" ]; do
 		colfiles="$(tput setaf 4)"     # Blue
 		colsignoff="$(tput setaf 3)"   # Yellow
 		coldefault="$(tput op)"        # Restore default
-		shift
 		;;
 	-f)
 		list_files=1
-		shift
 		;;
 	-u*)
-		user="${1#-u}"
-		shift
+		user="${arg#-u}"
 		;;
 	-r)
-		shift
 		if echo "$1" | grep -q ':'; then
 			log_end=$(echo "$1" | cut -d : -f 2)
 			[ "$log_end" ] || log_end="HEAD"
