@@ -8,7 +8,7 @@
 . ${COGITO_LIB}cg-Xlib
 
 id="$1"
-normid=$(cg-Xnormid "$id") || exit 1
+normid=$(${COGITO_LIB}cg-Xnormid "$id") || exit 1
 
 if [ "$(git-cat-file -t "$normid")" != "commit" ]; then
 	echo "Invalid commit id: $id" >&2
