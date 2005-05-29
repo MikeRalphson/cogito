@@ -61,6 +61,7 @@ These expressions can be used interchangably as "ID"s:
 	empty string, "this" or "HEAD" (current HEAD)
 	branch name (as registered with cg-branch-add)
 	tag name (as registered with cg-tag)
+	date string (as recognized by the date tool)
 	shortcut hash (shorted unambiguous hash lead)
 	commit object hash (as returned by commit-id)
 	tree object hash (accepted only by some commands)

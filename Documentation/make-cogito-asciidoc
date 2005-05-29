@@ -122,6 +122,7 @@ COMMIT_ID, FROM_ID, TO_ID, BASE_COMMIT::
 	- empty string, 'this' or 'HEAD' (current HEAD)
 	- branch name (as registered with $(link cg-branch-add))
 	- tag name (as registered with $(link cg-tag))
+	- date string (as recognized by the 'date' tool)
 	- shortcut object hash (shorted unambiguous hash lead)
 	- commit object hash (as returned by 'commit-id')
 	- tree object hash (as returned by 'tree-id')
