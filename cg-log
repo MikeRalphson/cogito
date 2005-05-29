@@ -37,7 +37,10 @@ colfiles=
 colsignoff=
 coldefault=
 list_files=
+log_start=
+log_end=
 user=
+
 while [ "$1" ]; do
 	# TODO: Parse -r here too.
 	case "$1" in
@@ -57,6 +60,18 @@ while [ "$1" ]; do
 		;;
 	-u*)
 		user="${1#-u}"
+		shift
+		;;
+	-r)
+		shift
+		if echo "$1" | grep -q ':'; then
+			log_end=$(echo "$1" | cut -d : -f 2)
+			log_start=$(echo "$1" | cut -d : -f 1)
+		elif [ -z "$log_start" ]; then
+			log_start="$1"
+		else
+			log_end="$1"
+		fi
 		shift
 		;;
 	*)
@@ -92,23 +107,6 @@ list_commit_files()
 	done
 	echo "$coldefault:"
 }
-
-log_start=
-log_end=
-if [ "$1" = "-r" ]; then
-	shift
-	log_start="$1"
-	shift
-	if echo "$log_start" | grep -q ':'; then
-		log_end=$(echo "$log_start" | cut -d : -f 2)
-		log_start=$(echo "$log_start" | cut -d : -f 1)
-	fi
-fi
-if [ "$1" = "-r" ]; then
-	shift
-	log_end="$1"
-	shift
-fi
 
 if [ "$log_end" ]; then
 	id1="$(commit-id $log_start)" || exit 1
