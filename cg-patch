@@ -111,7 +111,7 @@ while [ "$1" ]; do
 		else
 			mask=$(printf %o $((8#666&~8#$(umask))))
 		fi
-		chmod "$mask" "$1"; shift; shift;;
+		chmod "$mask" "$1"; shift;;
 	esac
 done
 ' padding
