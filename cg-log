@@ -42,7 +42,6 @@ log_end=
 user=
 
 while [ "$1" ]; do
-	# TODO: Parse -r here too.
 	case "$1" in
 	-c)
 		# See terminfo(5), "Color Handling"
