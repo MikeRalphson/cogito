@@ -43,6 +43,13 @@ extern void diffcore_pickaxe(const char *needle, int opts);
 
 extern void diffcore_pathspec(const char **pathspec);
 
+extern void diffcore_break(int);
+
+extern void diffcore_std(const char **paths,
+			 int detect_rename, int rename_score,
+			 const char *pickaxe, int pickaxe_opts,
+			 int break_opt);
+
 extern int diff_queue_is_empty(void);
 
 #define DIFF_FORMAT_HUMAN	0

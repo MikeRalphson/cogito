@@ -27,7 +27,7 @@ uri=$1
 trap "rm -rf $_git" SIGTERM EXIT
 
 git-init-db
-mkdir $_git/branches $_git/refs $_git/refs/heads $_git/refs/tags
+mkdir $_git/branches
 touch $_git/refs/heads/master
 ln -s refs/heads/master $_git/HEAD
 

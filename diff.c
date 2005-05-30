@@ -421,8 +421,13 @@ static void prepare_temp_file(const char *name,
 				strcpy(temp->hex, sha1_to_hex(null_sha1));
 			else
 				strcpy(temp->hex, sha1_to_hex(one->sha1));
-			sprintf(temp->mode, "%06o",
-				S_IFREG |ce_permissions(st.st_mode));
+			/* Even though we may sometimes borrow the
+			 * contents from the work tree, we always want
+			 * one->mode.  mode is trustworthy even when
+			 * !(one->sha1_valid), as long as
+			 * DIFF_FILE_VALID(one).
+			 */
+			sprintf(temp->mode, "%06o", one->mode);
 		}
 		return;
 	}
@@ -598,6 +603,7 @@ struct diff_filepair *diff_queue(struct diff_queue_struct *queue,
 	dp->two = two;
 	dp->score = 0;
 	dp->source_stays = 0;
+	dp->broken_pair = 0;
 	diff_q(queue, dp);
 	return dp;
 }
@@ -631,6 +637,16 @@ static void diff_flush_raw(struct diff_filepair *p,
 		two_paths = 1;
 		sprintf(status, "%c%03d", p->status,
 			(int)(0.5 + p->score * 100.0/MAX_SCORE));
+		break;
+	case 'N': case 'D':
+		two_paths = 0;
+		if (p->score)
+			sprintf(status, "%c%03d", p->status,
+				(int)(0.5 + p->score * 100.0/MAX_SCORE));
+		else {
+			status[0] = p->status;
+			status[1] = 0;
+		}
 		break;
 	default:
 		two_paths = 0;
@@ -755,8 +771,9 @@ void diff_debug_filepair(const struct diff_filepair *p, int i)
 {
 	diff_debug_filespec(p->one, i, "one");
 	diff_debug_filespec(p->two, i, "two");
-	fprintf(stderr, "score %d, status %c source_stays %d\n",
-		p->score, p->status ? : '?', p->source_stays);
+	fprintf(stderr, "score %d, status %c stays %d broken %d\n",
+		p->score, p->status ? : '?',
+		p->source_stays, p->broken_pair);
 }
 
 void diff_debug_queue(const char *msg, struct diff_queue_struct *q)
@@ -787,27 +804,8 @@ static void diff_resolve_rename_copy(void)
 			p->status = 'U';
 		else if (!DIFF_FILE_VALID(p->one))
 			p->status = 'N';
-		else if (!DIFF_FILE_VALID(p->two)) {
-			/* Deleted entry may have been picked up by
-			 * another rename-copy entry.  So we scan the
-			 * queue and if we find one that uses us as the
-			 * source we do not say delete for this entry.
-			 */
-			for (j = 0; j < q->nr; j++) {
-				pp = q->queue[j];
-				if (!strcmp(p->one->path, pp->one->path) &&
-				    pp->score) {
-					/* rename/copy are always valid
-					 * so we do not say DIFF_FILE_VALID()
-					 * on pp->one and pp->two.
-					 */
-					p->status = 'X';
-					break;
-				}
-			}
-			if (!p->status)
-				p->status = 'D';
-		}
+		else if (!DIFF_FILE_VALID(p->two))
+			p->status = 'D';
 		else if (DIFF_PAIR_TYPE_CHANGED(p))
 			p->status = 'T';
 
@@ -815,7 +813,7 @@ static void diff_resolve_rename_copy(void)
 		 * whose both sides are valid and of the same type, i.e.
 		 * either in-place edit or rename/copy edit.
 		 */
-		else if (p->score) {
+		else if (DIFF_PAIR_RENAME(p)) {
 			if (p->source_stays) {
 				p->status = 'C';
 				continue;
@@ -828,7 +826,7 @@ static void diff_resolve_rename_copy(void)
 				pp = q->queue[j];
 				if (strcmp(pp->one->path, p->one->path))
 					continue; /* not us */
-				if (!pp->score)
+				if (!DIFF_PAIR_RENAME(pp))
 					continue; /* not a rename/copy */
 				/* pp is a rename/copy from the same source */
 				p->status = 'C';
@@ -885,6 +883,21 @@ void diff_flush(int diff_output_style, int resolve_rename_copy)
 	free(q->queue);
 	q->queue = NULL;
 	q->nr = q->alloc = 0;
+}
+
+void diffcore_std(const char **paths,
+		  int detect_rename, int rename_score,
+		  const char *pickaxe, int pickaxe_opts,
+		  int break_opt)
+{
+	if (paths && paths[0])
+		diffcore_pathspec(paths);
+	if (0 <= break_opt)
+		diffcore_break(break_opt);
+	if (detect_rename)
+		diffcore_rename(detect_rename, rename_score);
+	if (pickaxe)
+		diffcore_pickaxe(pickaxe, pickaxe_opts);
 }
 
 void diff_addremove(int addremove, unsigned mode,
