@@ -90,7 +90,7 @@ tree_timewarp () {
 	cat $patchfile | cg-patch
 	rm $patchfile
 
-	git-update-cache --refresh
+	git-update-cache --refresh >/dev/null
 }
 
 
