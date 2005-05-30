@@ -207,7 +207,7 @@ static void record_rename_pair(struct diff_queue_struct *renq,
 	fill_filespec(two, dst->sha1, dst->mode);
 
 	dp = diff_queue(renq, one, two);
-	dp->score = score ? : 1; /* make sure it is at least 1 */
+	dp->score = score;
 	dp->source_stays = rename_src[src_index].src_stays;
 	rename_dst[dst_index].pair = dp;
 }
@@ -225,8 +225,8 @@ static int score_compare(const void *a_, const void *b_)
 int diff_scoreopt_parse(const char *opt)
 {
 	int diglen, num, scale, i;
-	if (opt[0] != '-' || (opt[1] != 'M' && opt[1] != 'C'))
-		return -1; /* that is not a -M nor -C option */
+	if (opt[0] != '-' || (opt[1] != 'M' && opt[1] != 'C' && opt[1] != 'B'))
+		return -1; /* that is not a -M, -C nor -B option */
 	diglen = strspn(opt+2, "0123456789");
 	if (diglen == 0 || strlen(opt+2) != diglen)
 		return 0; /* use default */
@@ -249,7 +249,7 @@ void diffcore_rename(int detect_rename, int minimum_score)
 	int num_create, num_src, dst_cnt;
 
 	if (!minimum_score)
-		minimum_score = DEFAULT_MINIMUM_SCORE;
+		minimum_score = DEFAULT_RENAME_SCORE;
 	renq.queue = NULL;
 	renq.nr = renq.alloc = 0;
 
@@ -328,24 +328,65 @@ void diffcore_rename(int detect_rename, int minimum_score)
 	outq.nr = outq.alloc = 0;
 	for (i = 0; i < q->nr; i++) {
 		struct diff_filepair *p = q->queue[i];
-		struct diff_rename_dst *dst = locate_rename_dst(p->two, 0);
 		struct diff_filepair *pair_to_free = NULL;
 
-		if (dst) {
-			/* creation */
-			if (dst->pair) {
-				/* renq has rename/copy to produce
-				 * this file already, so we do not
-				 * emit the creation record in the
-				 * output.
-				 */
+		if (!DIFF_FILE_VALID(p->one) && DIFF_FILE_VALID(p->two)) {
+			/*
+			 * Creation
+			 *
+			 * We would output this create record if it has
+			 * not been turned into a rename/copy already.
+			 */
+			struct diff_rename_dst *dst =
+				locate_rename_dst(p->two, 0);
+			if (dst && dst->pair) {
 				diff_q(&outq, dst->pair);
 				pair_to_free = p;
 			}
 			else
-				/* no matching rename/copy source, so record
-				 * this as a creation.
+				/* no matching rename/copy source, so
+				 * record this as a creation.
 				 */
+				diff_q(&outq, p);
+		}
+		else if (DIFF_FILE_VALID(p->one) && !DIFF_FILE_VALID(p->two)) {
+			/*
+			 * Deletion
+			 *
+			 * We would output this delete record if:
+			 *
+			 * (1) this is a broken delete and the counterpart
+			 *     broken create remains in the output; or
+			 * (2) this is not a broken delete, and renq does
+			 *     not have a rename/copy to move p->one->path
+			 *     out.
+			 *
+			 * Otherwise, the counterpart broken create
+			 * has been turned into a rename-edit; or
+			 * delete did not have a matching create to
+			 * begin with.
+			 */
+			if (DIFF_PAIR_BROKEN(p)) {
+				/* broken delete */
+				struct diff_rename_dst *dst =
+					locate_rename_dst(p->one, 0);
+				if (dst && dst->pair)
+					/* counterpart is now rename/copy */
+					pair_to_free = p;
+			}
+			else {
+				for (j = 0; j < renq.nr; j++)
+					if (!strcmp(renq.queue[j]->one->path,
+						    p->one->path))
+						break;
+				if (j < renq.nr)
+					/* this path remains */
+					pair_to_free = p;
+			}
+
+			if (pair_to_free)
+				;
+			else
 				diff_q(&outq, p);
 		}
 		else if (!diff_unmodified_pair(p))
