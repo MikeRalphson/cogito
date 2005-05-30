@@ -3,16 +3,21 @@
 # Cancels current edits in the working tree.
 # Copyright (c) Petr Baudis, 2005
 #
-# This script reverts the working tree to a consistent state before
-# any changes to it (including merges etc) were done.
+# Reverts the working tree to a consistent state before any changes to it
+# (including merges etc.) were done.
 #
-# Basically, this is the opposite of cg-commit in some sense.
+# Basically, this is the opposite of `cg-commit` in some sense.
 #
-# Takes no arguments and the evil changes from the tree.
-#
-# This command is complementary to cg-restore, which only brings
+# This command is complementary to `cg-restore`, which only brings
 # individual files in sync with their state at the time of the
 # last commit.
+#
+# OPTIONS
+# -------
+# -h, --help::
+#	Print usage help
+
+USAGE="cg-cancel"
 
 . ${COGITO_LIB}cg-Xlib
 

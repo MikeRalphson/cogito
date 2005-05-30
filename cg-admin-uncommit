@@ -1,18 +1,26 @@
 #!/usr/bin/env bash
 #
-# Undo a commit or a series of commits
+# Undo a commit or a series of commits.
 # Copyright (c) Matt Porter, 2005
 # Copyright (c) Petr Baudis, 2005
 #
-# Optional -t parameter makes cg-admin-uncommit to roll back the tree
-# as well to the previous commit. Without this option (by default)
-# Cogito keeps the tree in its current state, therefore generating
-# tree with local changes against the target commit, consisting of the
-# changes in the rolled back commits.
+# Takes a commit ID which is the earliest commit to be removed from
+# the repository. If no parameter is passed, it uncommits the latest
+# commit ('HEAD').
 #
-# Takes a commit ID which is the earliest commit to be
-# removed from the repository. If no parameter is passed,
-# it uncommits the latest commit (HEAD).
+# OPTIONS
+# -------
+# -t::
+#	This optional parameter makes `cg-admin-uncommit` to roll back
+#	the tree as well to the previous commit. Without this option
+#	(by default) Cogito keeps the tree in its current state,
+#	therefore generating tree with local changes against the target
+#	commit, consisting of the changes in the rolled back commits.
+#
+# -h, --help::
+#	Print usage help.
+
+USAGE="cg-admin-uncommit [-t] [REVISION]"
 
 . ${COGITO_LIB}cg-Xlib
 

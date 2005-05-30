@@ -1,9 +1,19 @@
 #!/usr/bin/env bash
 #
-# Pulls changes from another branch to the local repository and merge changes.
+# Pull and merge changes from a branch to the local repository.
 # Copyright (c) Petr Baudis, 2005
 #
-# Takes the branch' name, defaulting to "origin".
+# Takes the branch name as an argument, defaulting to 'origin'.
+#
+# If local changes conflict with those of the branch updated from the
+# merge will be blocked.
+#
+# OPTIONS
+# -------
+# -h, --help::
+#	Print usage help.
+
+USAGE="cg-update [BRANCH]"
 
 . ${COGITO_LIB}cg-Xlib
 

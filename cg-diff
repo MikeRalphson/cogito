@@ -3,23 +3,34 @@
 # Make a diff between two GIT trees.
 # Copyright (c) Petr Baudis, 2005
 #
+# Outputs a diff for converting the first tree to the second one.
 # By default compares the current working tree to the state at the
-# last commit. You can specify -r rev1:rev2 or -r rev1 -r rev2 to
-# tell it to make a diff between the specified revisions. If you
-# do not specify a revision, the current working tree is implied
-# (note that no revision is different from empty revision - -r rev:
-# compares between rev and HEAD, while -r rev compares between rev
-# and working tree).
+# last commit.
 #
-# -c colorizes the diff output
+# OPTIONS
+# -------
+# -c::
+#	Colorizes the diff output
 #
-# -p instead of one ID denotes a parent commit to the specified ID
-# (which must not be a tree, obviously).
+# -p::
+#	Instead of one ID denotes a parent commit to the specified ID
+#	(which must not be a tree, obviously).
 #
-# Takes -m to base the diff at the merge base of the -r arguments
-# (defaulting to master and origin).
+# -r REVISION[:REVISION]::
+#	Specify the revisions to diff using either '-r rev1:rev2' or
+#	'-r rev1 -r rev2'. If no revision is specified, the current
+#	working tree is implied. Note that no revision is different from
+#	empty revision which means '-r rev:' compares between 'rev' and
+#	'HEAD', while '-r rev' compares between 'rev' and working tree.
 #
-# Outputs a diff converting the first tree to the second one.
+# -m::
+#	Base the diff at the merge base of the -r arguments (defaulting
+#	to master and origin).
+#
+# -h, --help::
+#	Print usage help.
+
+USAGE="cg-diff [-p] [-r REVISION[:REVISION]] [FILE]..."
 
 . ${COGITO_LIB}cg-Xlib
 

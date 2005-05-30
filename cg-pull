@@ -1,11 +1,18 @@
 #!/usr/bin/env bash
 #
-# Pulls changes from remote branch to the local GIT repository.
-# Copyright (c) Petr Baudis, 2005
+# Pull changes from a remote branch to the local GIT repository.
+# Copyright (c) Petr Baudis, 2005.
 #
-# See cg-branch-add for some description.
+# Takes the branch name as an argument, defaulting to "origin".
 #
-# Takes the branch' name, defaulting to "origin".
+# See `cg-branch-add` for some description.
+#
+# OPTIONS
+# -------
+# -h, --help::
+#	Print usage help.
+
+USAGE="cg-pull [BRANCH]"
 
 . ${COGITO_LIB}cg-Xlib
 

@@ -4,26 +4,78 @@
 # Copyright (c) Petr Baudis, 2005
 # Based on an example script fragment sent to LKML by Linus Torvalds.
 #
-# Ignores any parameters for now, excepts changelog entry on stdin.
-# -C makes cg-commit ignore cache and just commit the thing as-is;
-# this is for internal purposes (merging).
-# -m"log message" specifies the commit message, which is used instead
-# of starting up an editor (if the input is not stdin, the input is
-# appended after all the -m messages). Multiple -m parameters are
-# appended to a single commit message, each as separate paragraph.
-# -e forces the editor to be brought up even when -m parameters were
-# passed to cg-commit.
-# -E forces the editor to be brought up and it will do the commit
-# even if the default commit message is not changed.
+# Commits changes to a GIT repository. Accepts the commit message from
+# `stdin`. If the commit message is not modified the commit will be
+# aborted.
 #
-# These git environment variables are used in case values other than
-# that returned by getpwuid(getuid()) are desired when performing a commit:
+# The `GIT_AUTHOR_NAME`, `GIT_AUTHOR_EMAIL`, `GIT_AUTHOR_DATE`,
+# `GIT_COMMITTER_NAME` and `GIT_COMMITTER_EMAIL` environment variables
+# are used in case values other than that returned by `getpwuid(getuid())`
+# are desired when performing a commit.
 #
-# GIT_AUTHOR_NAME       Author's name
-# GIT_AUTHOR_EMAIL      Author's e-mail address
-# GIT_AUTHOR_DATE       Date, perhaps from a patch e-mail
-# GIT_COMMITTER_NAME    Committer's name
-# GIT_COMMITTER_EMAIL   Committer's e-mail address
+# OPTIONS
+# -------
+# -C::
+#	Make `cg-commit` ignore the cache and just commit the thing as-is.
+#	Note, this is used internally by Cogito when merging. This option
+#	does not make sense when files are given on the command line.
+#
+# -m<message>::
+#	Specify the commit message, which is used instead of starting
+#	up an editor (if the input is not `stdin`, the input is appended
+#	after all the '-m' messages). Multiple '-m' parameters are appended
+#	to a single commit message, each as separate paragraph.
+#
+# -e::
+#	Force the editor to be brought up even when '-m' parameters were
+#	passed to `cg-commit`.
+#
+# -E::
+#	Force the editor to be brought up and do the commit even if
+#	the default commit message is not changed.
+#
+# -h, --help::
+#	Print usage help.
+#
+# FILES
+# -----
+# $GIT_DIR/commit-template::
+#	If the file exists it will be used as a template when creating
+#	the commit message. The template file makes it possible to
+#	automatically add `Signed-off-by` line to the log message.
+#
+# $GIT_DIR/hooks/commit-post::
+#	If the file exists and is executable it will be executed upon
+#	completion of the commit. The script is passed two arguments.
+#	The first argument is the commit ID and the second is the
+#	branchname. A sample `commit-post` script might look like:
+#
+#	#!/bin/sh
+#	id=$1
+#	branch=$2
+#	echo "Committed $id in $branch" | mail user@host
+#
+# ENVIRONMENT VARIABLES
+# ---------------------
+# GIT_AUTHOR_NAME::
+#	Author's name
+#
+# GIT_AUTHOR_EMAIL::
+#	Author's e-mail address
+#
+# GIT_AUTHOR_DATE::
+#	Date, useful when applying patches an e-mail
+#
+# GIT_COMMITTER_NAME::
+#	Committer's name
+#
+# GIT_COMMITTER_EMAIL::
+#	Committer's e-mail address
+#
+# EDITOR::
+#	The editor used for entering revision log information.
+
+USAGE="cg-commit [-m<message>]... [-C] [-e | -E] [FILE]..."
 
 . ${COGITO_LIB}cg-Xlib
 

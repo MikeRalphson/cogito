@@ -1,7 +1,6 @@
 #!/usr/bin/env bash
 #
-# Normalize an ID to an SHA1 hash value
-#
+# Normalize an ID to an SHA1 hash value.
 # Copyright (c) Petr Baudis, 2005
 # Copyright (c) Philip Pokorny, 2005
 #

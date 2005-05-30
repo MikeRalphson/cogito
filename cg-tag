@@ -3,10 +3,17 @@
 # Mark certain commit by a tag.
 # Copyright (c) Petr Baudis, 2005
 #
-# Creates a tag referencing the given commit (or HEAD). You can then
-# use the tag anywhere you specify a commit/tree ID.
+# Creates a tag referencing the given commit (or 'HEAD'). You can then
+# use the tag anywhere you specify a commit or tree ID.
 #
-# Takes the tag's name and optionally the associated ID.
+# Takes the tag name and optionally the associated ID as arguments.
+#
+# OPTIONS
+# -------
+# -h, --help::
+#	Print usage help.
+
+USAGE="cg-tag TAG [REVISION]"
 
 . ${COGITO_LIB}cg-Xlib
 

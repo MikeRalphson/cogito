@@ -6,13 +6,20 @@
 # This is like cg-init, but it will create a new directory where it will do
 # the checkout.
 #
-# If you pass it an optional -s parameter, it does the clone in the current
-# directory instead of creating a new one.
-#
 # Takes a parameter specifying the location of the source repository and an
-# optional second parameter specifying the destination.  If the second
+# optional second parameter specifying the destination. If the second
 # parameter is omitted, the basename of the source repository is used as the
 # destination.
+#
+# OPTIONS
+# -------
+# -s::
+#	Clone in the current directory instead of creating a new one.
+#
+# -h, --help::
+#	Print usage help
+
+USAGE="cg-clone [-s] LOCATION [<directory>]"
 
 . ${COGITO_LIB}cg-Xlib
 

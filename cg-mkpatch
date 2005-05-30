@@ -1,17 +1,43 @@
 #!/usr/bin/env bash
 #
-# Make a patch from a given commit.
+# Make a patch from one or several commits.
 # Copyright (c) Petr Baudis, 2005
 #
-# Takes an -s option which specifies whether to print a short
-# version of the patch without a patch header with meta info such
-# as author and committer.
+# Generate a patch with diff statistics and meta info about each commit.
 #
-# Takes an -r followed with ID defaulting to HEAD, or id1:id2, forming
-# a range (id1;id2]. (Use "id1:" to take just everything from id1 to HEAD.)
+# OPTIONS
+# -------
+# -s::
+#	Specify whether to print a short version of the patch without
+#	a patch header with meta info such as author and committer.
 #
-# Takes -m to base the patches at the merge base of the -r arguments
-# (defaulting to master and origin).
+# -r REVISION[:REVISION]::
+#	Specify a set of commits to make patches from using either
+#	'-r FROM_ID[:TO_ID]' or '-r FROM_ID -r TO_ID'. In both cases the
+#	option expects IDs which resolve to commits and will include the
+#	specified IDs. If 'TO_ID' is omitted patches for all commits
+#	from 'FROM_ID' to the initial commit will be generated. If no
+#	`-r` option is given the commit ID defaults to 'HEAD'.
+#
+# -m::
+#	Base the patches at the merge base of the -r arguments
+#	(defaulting to master and origin).
+#
+# -h, --help::
+#	Print usage help.
+#
+# EXAMPLE USAGE
+# -------------
+# To make patches for all commits between two releases tagged as
+# 'releasetag-0.9' and 'releasetag-0.10' do:
+#
+#	$ cg-mkpatch -r releasetag-0.9:releasetag-0.10
+#
+# The output will be a contionuos dump of patches each separated by
+# the line
+# `!-------------------------------------------------------------flip-`
+
+USAGE="cg-mkpatch [-s] [-r REVISION[:REVISION]]"
 
 . ${COGITO_LIB}cg-Xlib
 

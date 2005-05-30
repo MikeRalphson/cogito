@@ -1,5 +1,8 @@
-MAN1_TXT=$(wildcard git-*.txt)
-MAN7_TXT=git.txt
+CG_IGNORE=$(wildcard ../cg-X*)
+CG_SRC=$(filter-out $(CG_IGNORE), $(wildcard ../cg-*))
+
+MAN1_TXT=$(patsubst ../cg-%,cg-%.txt,$(CG_SRC)) $(wildcard git-*.txt)
+MAN7_TXT=cogito.txt git.txt
 
 DOC_HTML=$(patsubst %.txt,%.html,$(MAN1_TXT) $(MAN7_TXT))
 
@@ -29,7 +32,7 @@ git-diff-%.txt: diff-format.txt
 	touch $@
 
 clean:
-	rm -f *.xml *.html *.1 *.7
+	rm -f *.xml *.html *.1 *.7 cg-*.txt cogito.txt
 
 %.html : %.txt
 	asciidoc -b css-embedded -d manpage $<
@@ -39,3 +42,9 @@ clean:
 
 %.xml : %.txt
 	asciidoc -b docbook -d manpage $<
+
+cogito.txt : make-cogito-asciidoc
+	./make-cogito-asciidoc > $@
+
+cg-%.txt : ../cg-% make-cg-asciidoc
+	./make-cg-asciidoc $< > $@

@@ -4,29 +4,61 @@
 # Copyright (c) Petr Baudis, 2005.
 # Copyright (c) David Woodhouse, 2005.
 #
-# Takes a -c option to add color to the output.
-# Currently, the colors are:
+# Display log information for files or a range of commits. The output
+# will automatically be displayed in a pager unless it is piped to
+# a program.
 #
-#	header		Green	
-#	author 		Cyan
-#	committer	Magenta
-#	files		Blue
-#	signoff		Yellow
+# OPTIONS
+# -------
+# Arguments not interpreted as options will be interpreted as filenames;
+# cg-log then displays only changes in those files.
 #
-# Takes an -f option to list which files was changed.
+# -c::
+#	Add color to the output. Currently, the colors are:
+#	- `author`:	'cyan'
+#	- `committer`:	'magenta'
+#	- `header`:	'green'
+#	- `files`:	'blue'
+#	- `signoff`:	'yellow'
 #
-# Takes -u"username" to list only commits where author or
-# committer contains username.
+# -f::
+#	List affected files.
 #
-# Takes an -r followed with id resolving to a commit to start from
-# (HEAD by default), or id1:id2 representing an (id1;id2] range
-# of commits to show.
+# -r REVISION[:REVISION]::
+#	Limit the log information to a set of revisions using either
+#	'-r FROM_ID[:TO_ID]' or '-r FROM_ID -r TO_ID'. In both cases the
+#	option expects IDs which resolve to commits and will include the
+#	specified IDs. If 'TO_ID' is omitted all commits from 'FROM_ID'
+#	to the initial commit is shown. If no revisions is specified,
+#	the log information starting from 'HEAD' will be shown.
 #
-# Takes -m to end the log listing at the merge base of the -r arguments
-# (defaulting to master and origin).
+# -m::
+#	End the log listing at the merge base of the -r arguments
+#	(defaulting to master and origin).
 #
-# The rest of arguments are took as filenames; cg-log then displays
-# only changes in those files.
+# -uUSERNAME::
+#	List only commits where author or committer contains 'USERNAME'.
+#	The search for 'USERNAME' is case-insensitive.
+#
+# -h, --help::
+#	Print usage help.
+#
+# ENVIRONMENT VARIABLES
+# ---------------------
+# PAGER::
+#	The pager to display log information in, defaults to `less`.
+#
+# PAGER_FLAGS::
+#	Flags to pass to the pager, defaults to `--R`
+#
+# EXAMPLE USAGE
+# -------------
+# To show a log of changes between two releases tagged as 'releasetag-0.9'
+# and 'releasetag-0.10' do:
+#
+#	$ cg-log -r releasetag-0.9:releasetag-0.10
+
+USAGE="cg-log [-c] [-f] [-uUSERNAME] [-r REVISION[:REVISION]] FILE..."
 
 . ${COGITO_LIB}cg-Xlib
 # Try to fix the annoying "Broken pipe" output. May not help, but apparently

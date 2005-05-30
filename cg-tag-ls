@@ -3,7 +3,36 @@
 # List stored GIT tags.
 # Copyright (c) Steve Hoelzer 2005
 #
-# Takes no parameters.
+# This command takes no arguments, and lists all tags in a given repository
+# in alphabetical order, along with their corresponding SHA1 hash IDs.
+#
+# OPTIONS
+# -------
+# -h, --help::
+#	Print usage help.
+#
+# EXAMPLE USAGE
+# -------------
+# Doing this on the current Cogito repository, produces the following output:
+#
+#	$ cg-tag-ls
+#	cogito-0.10     4ed293bc0a5ffca9683e139cad499b69a4c4d569
+#	cogito-0.8      f9f0459b5b39cf83143c91ae39b4eaf187cf678a
+#	cogito-0.9      cc5517b4ea4134c296d4ce2b1d82700c44200c1e
+#	git-pasky-0.1   463d05c7c4fe7f24da29749f4c7f25893fc20b8c
+#	git-pasky-0.2   2c70421be7d88fbee49986d7a5584d1f010a25de
+#	git-pasky-0.3   d14925c87cdb6ca6345bcb3c8e34a2d659c79451
+#	git-pasky-0.4   b0bb73f33fc06cc5ff6fca0d2dfce484c5f191b7
+#	git-pasky-0.5   0ec59a771ff9d618a1b86e0cc1b93e3d9dad17a9
+#	git-pasky-0.6   b498dafca4dcc136294853d1de09fb64b0b0deea
+#	git-pasky-0.6.1 1690697813ffcfc35075859534a627699d07c613
+#	git-pasky-0.6.2 b21cee2236b494787204754960d6a5d2916dfeb4
+#	git-pasky-0.6.3 acc71aab89b4ae8d5f4a03c758cc4c2bc04a3229
+#	git-pasky-0.7   bc61d9a04dc39598014f38b0ad7422f0ceaf2cc9
+#	pull_from_pasky 11ed64c1b141c9ba397a1ca76aef2cd250976007
+#	$
+
+USAGE="cg-tag-ls"
 
 . ${COGITO_LIB}cg-Xlib
 

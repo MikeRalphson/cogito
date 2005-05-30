@@ -3,7 +3,38 @@
 # List contents of a particular tree in a GIT repository.
 # Copyright (c) Petr Baudis, 2005
 #
-# Optionally takes commit or tree id as a parameter, defaulting to HEAD.
+# Optionally takes a commit or tree ID as a parameter, defaulting to
+# 'HEAD'.
+#
+# Each line in the output has the following format:
+#
+#	<mode>	<type>	<sha1>	<name>
+#
+# where
+#
+# '<mode>'::
+#	The file permission information in octal format.
+#
+# '<type>'::
+#	The type can be the following: `blob` refers to files
+#	and `tree` refers to directories.
+#
+# '<sha1>'::
+#	The object ID.
+#
+# '<name>'::
+#	The file or directory name.
+#
+# Example line:
+#
+#	100644  blob    c7dacd0ea28994e3c754ca4eadb2e08c011ee3d3        README
+#
+# OPTIONS
+# -------
+# -h, --help::
+#	Print usage help.
+
+USAGE="cg-ls [TREE]"
 
 . ${COGITO_LIB}cg-Xlib
 

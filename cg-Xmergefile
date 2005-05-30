@@ -1,5 +1,6 @@
 #!/usr/bin/env bash
 #
+# Merge two files.
 # Copyright (c) Linus Torvalds, 2005
 #
 # This is the per-file merge script, called with

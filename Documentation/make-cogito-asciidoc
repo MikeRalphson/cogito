@@ -1,0 +1,147 @@
+#!/usr/bin/env bash
+#
+# Generate a quick reference asciidoc manpage for the Cogito.
+# Copyright (c) Jonas Fonseca, 2005
+
+REGULAR_COMMANDS="$(ls ../cg-* | grep -v cg-admin- | grep -v cg-X)"
+ADVANCED_COMMANDS="$(ls ../cg-admin-*)"
+HELPER_COMMANDS="$(ls ../cg-X*) $(ls ../*-id | grep -v git-)"
+
+# Shorthand for the link markup.
+link()
+{
+	command="$1"
+	echo "link:$command.html['$command']"
+}
+
+# Print description list entry.
+print_command_info()
+{
+	command="$1"
+	caption=$(sed -n '3s/^# *//p' < "$command")
+	cmdname=$(basename $command)
+
+	echo
+	case "$cmdname" in
+	cg-X*|*-id)
+		echo "$cmdname::"
+		;;
+	cg-*)
+		usage=$(sed -n '/^USAGE=/,0s/.*cg-[^ ]*\(.*\)"/\1/p' < $command)
+		echo "link:$cmdname.html[$cmdname] $usage::"
+		;;
+	esac
+	echo "	$caption"
+}
+
+print_command_listing()
+{
+	for command in "$@"; do
+		print_command_info "$command"
+	done
+}
+
+
+cat <<__END__
+cogito(7)
+=========
+
+NAME
+----
+cogito - version control system
+
+SYNOPSIS
+--------
+cg-COMMAND <arg>...
+
+DESCRIPTION
+-----------
+
+'Cogito' is a version control system layered on top of the git tree history
+storage system. Amongst some of the noteworthy features, 'Cogito' has support
+for branching, tagging and multiple backends for distributing repositories
+(local files, rsync, HTTP, ssh).
+
+'Cogito' is implemented as a series of 'bash(1)' scripts on top of $(link git)
+(a content-tracking filesystem) with the goal of providing an interface for
+working with the 'GIT' database in a manner similar to other SCM tools (like
+'CVS', 'BitKeeper' or 'Monotone').
+
+Commands Overview
+-----------------
+
+The 'Cogito' commands can be split into regular commands and advanced commands.
+The regular commands are those used for normal interacting with the repository,
+while the advanced commands can be used for administrating the repository and
+should to some degree be regarded as low-level and in some cases dangerous.
+
+Below an overview of the available commands are listed. For details on
+individual commands, do e.g.
+
+	cg-help cg-log
+
+or
+
+	cg-log --help
+
+Regular commands
+~~~~~~~~~~~~~~~~
+
+$(print_command_listing $REGULAR_COMMANDS)
+
+Advanced commands
+~~~~~~~~~~~~~~~~~
+
+$(print_command_listing $ADVANCED_COMMANDS)
+
+Helper commands
+~~~~~~~~~~~~~~~
+
+There are a few helper commands that are not meant to be used from the command
+line. They provide a library of generic functions used by many of the real
+'Cogito' commands. You can safely ignore them, unless you want to contribute to
+'Cogito' development.
+
+$(print_command_listing $HELPER_COMMANDS)
+
+Command Identifiers
+-------------------
+BRANCH::
+	Indicates a branch name added with the $(link cg-branch-add) name.
+
+COMMAND::
+	Indicates a 'Cogito' command. The \`cg-\` prefix is optional.
+
+DESTINATION::
+	Indicates a path to a location file.
+
+LOCATION::
+	Indicates a local file path or a URI. See $(link cg-branch-add) for a
+	list of supported URI schemes.
+
+REVISION::
+	Indicates an ID resolving to a commit. The following expressions can
+	be used interchangably as IDs:
+	- empty string, 'this' or 'HEAD' (current HEAD)
+	- branch name (as registered with $(link cg-branch-add))
+	- tag name (as registered with $(link cg-tag))
+	- shortcut object hash (shorted unambiguous hash lead)
+	- commit object hash (as returned by 'commit-id')
+	- tree object hash (as returned by 'tree-id')
+
+TAG::
+	Indicates a free form tag name.
+
+TYPE::
+	Indicates a git object type i.e.: 'blob', 'commit', 'tree' or 'tag'.
+
+USERNAME::
+	Indicates a free form user name.
+
+FILE::
+	Indicates a filename - always relative to the root of the repository.
+
+COPYRIGHT
+---------
+Copyright (C) Petr Baudis, 2005.
+__END__

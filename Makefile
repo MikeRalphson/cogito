@@ -125,20 +125,31 @@ $(LIB_FILE): $(LIB_OBJS)
 
 
 ifneq (,$(wildcard .git))
-cg-version: $(VERSION) .git/HEAD
-	@echo Generating cg-version...
-	@rm -f $@
-	@echo "#!/bin/sh" > $@
-	@echo "echo \"$(shell cat $(VERSION)) ($(shell cat .git/HEAD))\"" >> $@
-	@chmod +x $@
-else
-cg-version: $(VERSION)
-	@echo Generating cg-version...
-	@rm -f $@
-	@echo "#!/bin/sh" > $@
-	@echo "echo \"$(shell cat $(VERSION))\"" >> $@
-	@chmod +x $@
+GIT_HEAD=.git/HEAD
+GIT_HEAD_ID=" \($(shell cat $(GIT_HEAD))\)"
 endif
+cg-version: $(VERSION) $(GIT_HEAD) Makefile
+	@echo Generating cg-version...
+	@rm -f $@
+	@echo "#!/bin/sh" > $@
+	@echo "#" >> $@
+	@echo "# Show the version of the Cogito toolkit." >> $@
+	@echo "# Copyright (c) Petr Baudis, 2005" >> $@
+	@echo "#" >> $@
+	@echo "# Show which version of Cogito is installed." >> $@
+	@echo "# Additionally, the 'HEAD' of the installed Cogito" >> $@
+	@echo "# is also shown if this information was available" >> $@
+	@echo "# at the build time." >> $@
+	@echo "#" >> $@
+	@echo "# OPTIONS" >> $@
+	@echo "# -------" >> $@
+	@echo "# -h, --help::" >> $@
+	@echo "#	Print usage help." >> $@
+	@echo >> $@
+	@echo "USAGE=\"cg-version\"" >> $@
+	@echo >> $@
+	@echo "echo \"$(shell cat $(VERSION))$(GIT_HEAD_ID)\"" >> $@
+	@chmod +x $@
 
 git.spec: git.spec.in $(VERSION)
 	sed -e 's/@@VERSION@@/$(shell cat $(VERSION) | cut -d"-" -f2)/g' < $< > $@

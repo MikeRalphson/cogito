@@ -4,17 +4,43 @@
 # Copyright (c) Randy Dunlap, 2005
 # Copyright (c) Petr Baudis, 2005
 #
-# Lists IDs of all the objects of a given type (blob, tree, commit) found
-# in the dircache.
+# Lists IDs of all the objects of a given type found in the dircache.
+# Takes the object type as the first parameter, defaults to all objects.
 #
-# Example usage:
+# The possible object types are:
+#
+# blob::
+#	This object is a pure storage object containing some user data.
+#
+# commit::
+#	This object ties directory hierarchies together into a DAG
+#	of revisions.
+#
+# tree::
+#	This object is an object that ties one or more `blob` objects
+#	into a directory structure.
+#
+# tag::
+#	This object ties a symbolic release tag to an object in the
+#	database.
+#
+# See the git README for more information about the object types.
+#
+# OPTIONS
+# -------
+# -h, --help::
+#	Print usage help.
+#
+# EXAMPLE USAGE
+# -------------
 # Oh, I was messing with my HEADs and lost few commits, where on the earth
 # could they be...?
+#
 #	for i in `cg-admin-lsobj commit | cut -f 1`; do
 #		echo -e "\n==================\nme $i"; cat-file commit $i;
 #	done
-#
-# Takes the object type as the first parameter, defaults to all objects.
+
+USAGE="cg-admin-lsobj [TYPE]"
 
 . ${COGITO_LIB}cg-Xlib
 

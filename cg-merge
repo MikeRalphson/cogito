@@ -4,14 +4,25 @@
 # Copyright (c) Petr Baudis, 2005
 #
 # Takes a parameter identifying the branch to be merged.
-# Optional "-b base_commit" parameter specifies the base for the merge.
-# Optional "-c" parameter specifies that you want to have tree merge
-# never autocomitted, but want to review and commit it manually.
 #
-# You have to examine the tree after the merge and then do cg-commit.
+# You have to examine the tree after the merge and then do `cg-commit`.
 #
-# Alternatively, it will just bring the HEAD forward, if your current
-# HEAD is also the merge base.
+# Alternatively, it will just bring the 'HEAD' forward, if your current
+# 'HEAD' is also the merge base.
+#
+# OPTIONS
+# -------
+# -b REVISION::
+#	Parameter specifies the base commit for the merge.
+#
+# -c::
+#	Parameter specifies that you want to have tree merge never
+#	autocomitted, but want to review and commit it manually.
+#
+# -h, --help::
+#	Print usage help.
+
+USAGE="cg-merge [-c] [-b REVISION] BRANCH"
 
 . ${COGITO_LIB}cg-Xlib
 

@@ -4,9 +4,19 @@
 # Copyright (c) Petr Baudis, 2005
 #
 # Takes an optional parameter which will make it "clone" a specified
-# remote repository. Note that this usage is DEPRECATED - use cg-clone
-# (possibly with the -s parameter) for doing this. This functionality
-# will go away from cg-init soon.
+# remote repository. Note that this usage is 'DEPRECATED'. Instead use
+# `cg-clone` (possibly with the `-s` parameter) for doing this. This
+# functionality will go away from `cg-init` soon.
+#
+# If `cg-init` is run in a non-empty directory files in the top and
+# sub directory will automatically be added.
+#
+# OPTIONS
+# -------
+# -h, --help::
+#	Print usage help.
+
+USAGE="cg-init"
 
 . ${COGITO_LIB}cg-Xlib
 

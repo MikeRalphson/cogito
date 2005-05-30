@@ -3,7 +3,22 @@
 # List configured GIT branches.
 # Copyright (c) Steven Cole 2005
 #
-# Takes no parameters.
+# Print a listing of all known branches.
+#
+# The output has the following format:
+#
+#	BRANCH LOCATION
+# 
+# For example
+#
+#	origin  rsync://rsync.kernel.org/pub/scm/cogito/cogito.git
+#
+# OPTIONS
+# -------
+# -h, --help::
+#	Print usage help.
+
+USAGE="cg-branch-ls"
 
 . ${COGITO_LIB}cg-Xlib
 

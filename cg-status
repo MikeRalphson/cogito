@@ -3,7 +3,33 @@
 # Show status of entries in your working tree.
 # Copyright (c) Petr Baudis, 2005
 #
-# Takes no arguments.
+# Print of files in the working tree.
+#
+# The output has the following format:
+#
+#	<status flag> <file>
+#
+# where '<status flag>' can be one of the following:
+#
+# ?::
+#	'<file>' is unknown.
+# M::
+#	'<file>' has been touched or modified.
+#
+# OPTIONS
+# -------
+# -h, --help::
+#	Print usage help.
+#
+# FILES
+# -----
+# $GIT_DIR/exclude::
+#	If the file exists it will be used to prune which files to
+#	show status for. The format is similar to the `dontdiff` file;
+#	each line contains a pattern for a file or group of files
+#	to exclude.
+
+USAGE="cg-status"
 
 . ${COGITO_LIB}cg-Xlib
 

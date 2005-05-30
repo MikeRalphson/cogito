@@ -1,9 +1,22 @@
 #!/usr/bin/env bash
 #
-# The help for the Cogito toolkit.
+# Show help for Cogito commands.
 # Copyright (c) Petr Baudis, 2005
 #
 # Takes an optional argument describing the command to show the help for.
+# The command can be specified either as 'COMMAND' or 'cg-COMMAND'.
+# If the argument is left out an overview of all the Cogito commands will
+# be shown.
+#
+# Note help for a command is also available by passing `--help` or `-h`
+# to the command.
+#
+# OPTIONS
+# -------
+# -h, --help::
+#	Print usage help
+
+USAGE="cg-help [COMMAND]"
 
 . ${COGITO_LIB}cg-Xlib
 

@@ -1,10 +1,24 @@
 #!/usr/bin/env bash
 #
-# Add new file to a GIT repository.
+# Add files to the GIT repository.
 # Copyright (c) Petr Baudis, 2005
 #
 # Takes a list of file names at the command line, and schedules them
 # for addition to the GIT repository at the next commit.
+#
+# The command will fail if one of the given files does not exist.
+#
+# Note that directories never have to be added to the repository and any attempt
+# in doing so will cause the command to fail. The reason for this is that cogito
+# manage content and empty directories have no content. Instead, directories are
+# added automatically when adding files inside them.
+#
+# OPTIONS
+# -------
+# -h, --help::
+#	Print usage help.
+
+USAGE="cg-add FILE..."
 
 . ${COGITO_LIB}cg-Xlib
 

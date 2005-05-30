@@ -1,21 +1,27 @@
 #!/usr/bin/env bash
 #
-# Restores files removed/changed in the working tree.
+# Restore removed/changed files in the working tree.
 # Copyright (c) Petr Baudis, 2005
 #
-# This script restores given files to their original state.
-#
-# Without any parameters, it recovers any files removed locally
-# whose removal was not recorded by cg-rm.
+# Restore given files to their original state. Without any parameters,
+# it recovers any files removed locally whose removal was not recorded
+# by `cg-rm`.
 #
 # If passed a set of file names, it restores those files to their
-# state as of the last commit (including bringing cg-rm'd files
-# back to life; FIXME: does not do that part yet).
+# state as of the last commit (including bringing files removed with
+# `cg-rm` back to life; FIXME: does not do that part yet).
 #
-# This command is complementary to the cg-cancel command, which
+# This command is complementary to the `cg-cancel` command, which
 # forcefully abandons all the changes in the working tree and
 # restores everything to a proper state (including unseeking,
 # cancelling merge in progress and rebuilding indexes).
+#
+# OPTIONS
+# -------
+# -h, --help::
+#	Print usage help.
+
+USAGE="cg-restore [FILE]..."
 
 . ${COGITO_LIB}cg-Xlib
 

@@ -1,0 +1,66 @@
+#!/usr/bin/env bash
+#
+# Generate asciidoc manpage markup from Cogito script header.
+# Copyright (c) Jonas Fonseca, 2005
+#
+# Takes a path to a Cogito script. Prints the manpage to stdout.
+
+command=$1
+
+[ -e "$command" ] || die "$command does not exist"
+
+COMMAND=$(basename $command)
+
+# FIXME: Show the SHA1 of the command below the TITLELINE.
+
+# Generate the 'CG-COMMAND(1)' title from cg-command
+TITLE="$COMMAND(1)"
+# Asciidocs wants the title line ('====') to be as wide as the title.
+TITLELINE=$(echo "$TITLE" | sed 's/[0-9a-zA-Z()-]/=/g')
+
+# Get `USAGE="cg-command args..."` line and make it `cg-command args...`
+SYNOPSIS=$(sed -n '/^USAGE=/,0s/^USAGE="\(.*\)"/\1/p' < $command)
+
+# Extract the script header.
+HEADER=$(sed -n '3,/^$/s/^# *//p' < $command)
+
+# Some scripts have copyright lines followed by 'Based on script by ...' lines.
+# Include them so they are also put in the COPYRIGHT section.
+COPYRIGHT=$(echo "$HEADER" | sed -n '/^Copyright (c)/,/^$/p' \
+			   | sed 's/(c)/(C)/')
+
+# First line of the header contains the caption. Normalize it by lowercasing the
+# start and stripping any punctuation.
+CAPTION=$(echo "$HEADER" | head -n 1 | tr '[A-Z]' '[a-z]' | sed 's/\.$//')
+
+# Get remaining sections and carefully insert links to cogito commands when they
+# were referenced as "`cg-command`". This way references from cg-* combos in
+# code listings will be ignored.
+BODY=$(echo "$HEADER" | sed '0,/^$/d' \
+		      | sed 's/`\(cg-[a-z-]\+\)`/link:\1.html[\1]/')
+
+cat <<__END__
+$TITLE
+$TITLELINE
+
+NAME
+----
+$COMMAND - $CAPTION
+
+SYNOPSIS
+--------
+$SYNOPSIS
+
+DESCRIPTION
+-----------
+$BODY
+
+COPYRIGHT
+---------
+$COPYRIGHT
+
+SEE ALSO
+--------
+$COMMAND command is part of link:cogito.html[cogito(7)],
+a toolkit for managing link:git.html[git(1)] trees.
+__END__

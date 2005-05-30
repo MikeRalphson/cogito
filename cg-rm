@@ -1,10 +1,17 @@
 #!/usr/bin/env bash
 #
-# Remove a file from a GIT repository.
+# Remove files from a GIT repository.
 # Copyright (c) Petr Baudis, 2005
 #
 # Takes a list of file names at the command line, and schedules them
 # for removal from the GIT repository at the next commit.
+#
+# OPTIONS
+# -------
+# -h, --help::
+#	Print usage help.
+
+USAGE="cg-rm FILE..."
 
 . ${COGITO_LIB}cg-Xlib
 

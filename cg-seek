@@ -3,22 +3,28 @@
 # Seek the working tree to a given commit.
 # Copyright (c) Petr Baudis, 2005
 #
-# This will bring the working tree from its current HEAD to a given
-# commit. Note that it changes just the HEAD of the working tree, not
-# the branch it is corresponding to. It will return to the HEAD of
+# Takes the target commit ID to seek to as an argument.
+# Seeking will bring the working tree from its current 'HEAD' to a given
+# commit. Note that it changes just the 'HEAD' of the working tree, not
+# the branch it is corresponding to. It will return to the 'HEAD' of
 # the appropriate branch if passed no arguments.
 #
 # Therefore, for a quick excurse to the past of the 'master' branch:
 #
-#	cg-seek git-pasky-0.1
-#	cg-diff this master # will do the correct thing
-#	cg-seek # will restore what we had before
+#	$ cg-seek git-pasky-0.1
+#	$ cg-diff this master	# will do the correct thing
+#	$ cg-seek		# will restore what we had before
 #
-# For intuitiveness, specifying the branch name (cg-seek master) will do
+# For intuitiveness, specifying the branch name (`cg-seek master`) will do
 # the right thing too. If you want to migrate your working tree to another
-# branch, use cg-fork.
+# branch, use `cg-clone`.
 #
-# Takes the target commit ID.
+# OPTIONS
+# -------
+# -h, --help::
+#	Print usage help.
+
+USAGE="cg-seek REVISION"
 
 . ${COGITO_LIB}cg-Xlib
 
