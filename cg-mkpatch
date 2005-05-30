@@ -42,7 +42,6 @@ USAGE="cg-mkpatch [-s] [-r REVISION[:REVISION]]"
 . ${COGITO_LIB}cg-Xlib
 
 omit_header=
-has_diffstat=
 log_start=
 log_end=
 mergebase=
@@ -71,11 +70,8 @@ showpatch () {
 
 				echo commit $id
 				cat $header
-
-				if [ "$has_diffstat" ]; then
-					echo
-					cat $patch | diffstat -p1
-				fi
+				echo
+				cat $patch | git-apply --stat
 			fi
 			;;
 		*)
@@ -115,10 +111,6 @@ while [ "$1" ]; do
 	esac
 	shift
 done
-
-if ! [ "$omit_header" ]; then
-	which diffstat >/dev/null 2>&1 && has_diffstat=1
-fi
 
 if [ "$mergebase" ]; then
 	[ "$log_start" ] || log_start="origin"
