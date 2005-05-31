@@ -142,8 +142,8 @@ list_commit_files()
 }
 
 if [ "$mergebase" ]; then
-	[ "$log_start" ] || log_start="origin"
-	[ "$log_end" ] || log_end="master"
+	[ "$log_start" ] || log_start="master"
+	[ "$log_end" ] || log_end="origin"
 	log_start=$(git-merge-base $(commit-id $log_start) $(commit-id $log_end))
 fi
 
