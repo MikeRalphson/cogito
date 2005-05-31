@@ -16,6 +16,11 @@ USAGE="cg-cancel"
 
 . ${COGITO_LIB}cg-Xlib
 
+if ! [ -s $_git/HEAD ]; then
+	rm -f $_git/HEAD
+	ln -s refs/heads/master $_git/HEAD
+fi
+
 # Undo seek?
 branch=
 [ -s $_git/blocked ] && branch=$(grep '^seeked from ' $_git/blocked | sed 's/^seeked from //')
