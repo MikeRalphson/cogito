@@ -35,6 +35,6 @@ else
 	git-checkout-cache -q -a
 fi
 
-git-update-cache --refresh || ret=1
+update_index || ret=1
 
 exit $ret

@@ -41,7 +41,6 @@ mktemp () {
 	$(which mktemp) $dirarg $prefix"$1"
 }
 
-
 showdate () {
 	date="$1"
 	sec=${date[0]}; tz=${date[1]}
@@ -51,7 +50,6 @@ showdate () {
 
 	echo "${pdate/+0000/$tz}"
 }
-
 
 # Usage: tree_timewarp DIRECTION_STR ROLLBACK_BOOL BASE BRANCH
 tree_timewarp () {
@@ -94,6 +92,10 @@ tree_timewarp () {
 	rm $patchfile
 
 	git-update-cache --refresh >/dev/null
+}
+
+update_index () {
+	git-update-cache --refresh | sed 's/needs update$/locally modified/'
 }
 
 
