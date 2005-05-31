@@ -10,11 +10,24 @@
 # having the "(mode: 0123)" stuff on the +++ and --- lines) as well
 # as the new-style git-diff patches (those with the "diff --git" lines).
 #
+# OPTIONS
+# -------
+# -R::
+#	Applies the patch in reverse (therefore effectively unapplies it)
+#
 # Takes the diff on stdin.
 
-USAGE="cg-patch < patch on stdin"
+USAGE="cg-patch [-R] < patch on stdin"
 
 . ${COGITO_LIB}cg-Xlib
+
+
+reverse=
+if [ "$1" = "-R" ]; then
+	reverse=1
+	shift
+fi
+
 
 gonefile=$(mktemp -t gitapply.XXXXXX)
 todo=$(mktemp -t gitapply.XXXXXX)
@@ -25,7 +38,9 @@ git-ls-files --deleted >$gonefile
 
 # patch file removal behaviour cannot be sensibly controlled, so we
 # just handle it all ourselves.
-patch -p1 -N <$patchfifo &
+patch_args="-p1 -N"
+[ "$reverse" ] && patch_args="$patch_args -R"
+patch $patch_args <$patchfifo &
 
 tee $patchfifo | {
 	victim=
@@ -67,11 +82,20 @@ tee $patchfifo | {
 		"+++")
 			if [ "$file" = "/dev/null" ]; then
 				torm=$(echo "$victim" | sed 's/[^\/]*\///') #-p1
-				(git-ls-files | fgrep -qx "$torm") && echo -ne "rm\0$torm\0"
-				continue
+				if ! [ "$reverse" ]; then
+					(git-ls-files | fgrep -qx "$torm") && echo -ne "rm\0$torm\0"
+					continue
+				else
+					(git-ls-files | fgrep -qx "$torm") || echo -ne "add\0$torm\0"
+				fi
 			elif [ "$victim" = "/dev/null" ]; then
 				toadd=$(echo "$file" | sed 's/^[^\/]*\///') #-p1
-				(git-ls-files | fgrep -qx "$toadd") || echo -ne "add\0$toadd\0"
+				if ! [ "$reverse" ]; then
+					(git-ls-files | fgrep -qx "$toadd") || echo -ne "add\0$toadd\0"
+				else
+					(git-ls-files | fgrep -qx "$toadd") && echo -ne "rm\0$toadd\0"
+					continue
+				fi
 			fi
 			mode=$(echo $attrs | sed 's/.*mode:[0-7]*\([0-7]\{3\}\).*/\1/')
 			if [ "$mode" ] && [ "$mode" != "$attrs" ]; then
@@ -81,7 +105,12 @@ tee $patchfifo | {
 			fi
 			if [ "$origmode" != "$newmode" ]; then
 				tocm=$(echo "$file" | sed 's/[^\/]*\///') #-p1
-				echo -ne "cm\0 $newmode\000$tocm\0"
+				if ! [ "$reverse" ]; then
+					mode="$newmode"
+				else
+					mode="$oldmode"
+				fi
+				echo -ne "cm\0 $mode\000$tocm\0"
 			fi
 			;;
 		esac
