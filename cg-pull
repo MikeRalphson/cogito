@@ -7,7 +7,7 @@
 #
 # See `cg-branch-add` for some description.
 
-USAGE="cg-pull [BRANCH]"
+USAGE="cg-pull [BRANCH_NAME]"
 
 . ${COGITO_LIB}cg-Xlib
 

@@ -16,7 +16,7 @@
 #	Instead of one ID denotes a parent commit to the specified ID
 #	(which must not be a tree, obviously).
 #
-# -r REVISION[:REVISION]::
+# -r FROM_ID[:TO_ID]::
 #	Specify the revisions to diff using either '-r rev1:rev2' or
 #	'-r rev1 -r rev2'. If no revision is specified, the current
 #	working tree is implied. Note that no revision is different from
@@ -27,7 +27,7 @@
 #	Base the diff at the merge base of the -r arguments (defaulting
 #	to master and origin).
 
-USAGE="cg-diff [-p] [-r REVISION[:REVISION]] [FILE]..."
+USAGE="cg-diff [-c] [-m] [-p] [-r FROM_ID[:TO_ID] [FILE]..."
 
 . ${COGITO_LIB}cg-Xlib
 

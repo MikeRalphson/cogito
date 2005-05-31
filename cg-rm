@@ -10,7 +10,7 @@ USAGE="cg-rm FILE..."
 
 . ${COGITO_LIB}cg-Xlib
 
-[ "$1" ] || die "usage: cg-rm FILE..."
+[ "$1" ] || usage
 
 rm -f "$@"
 git-update-cache --remove -- "$@"

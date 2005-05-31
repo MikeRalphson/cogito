@@ -15,8 +15,9 @@
 # -------
 # -s::
 #	Clone in the current directory instead of creating a new one.
+#	Specifying both -s and a desination directory makes no sense .
 
-USAGE="cg-clone [-s] LOCATION [<directory>]"
+USAGE="cg-clone [-s] LOCATION [DESTDIR]"
 
 . ${COGITO_LIB}cg-Xlib
 
@@ -27,7 +28,7 @@ if [ "$1" = "-s" ]; then
 fi
 
 location=$1
-[ "$location" ] || die "usage: cg-clone [-s] SOURCE_LOC [DESTDIR]"
+[ "$location" ] || usage
 location=${location%/}
 
 destdir=$2

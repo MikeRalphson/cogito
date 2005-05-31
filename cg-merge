@@ -12,14 +12,14 @@
 #
 # OPTIONS
 # -------
-# -b REVISION::
+# -b BASE_COMMIT::
 #	Parameter specifies the base commit for the merge.
 #
 # -c::
 #	Parameter specifies that you want to have tree merge never
 #	autocomitted, but want to review and commit it manually.
 
-USAGE="cg-merge [-c] [-b REVISION] BRANCH"
+USAGE="cg-merge [-c] [-b BASE_COMMIT] BRANCH_NAME"
 
 . ${COGITO_LIB}cg-Xlib
 
@@ -35,11 +35,11 @@ fi
 base=
 if [ "$1" = "-b" ]; then
 	shift
-	[ "$1" ] || die "usage: cg-merge [-c] [-b BASE_ID] FROM_ID"
+	[ "$1" ] || usage
 	base=$(commit-id "$1") || exit 1; shift
 fi
 
-[ "$1" ] || die "usage: cg-merge [-c] [-b BASE_ID] FROM_ID"
+[ "$1" ] || usage
 branchname="$1"
 branch=$(commit-id "$branchname") || exit 1
 

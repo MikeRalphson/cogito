@@ -24,7 +24,7 @@
 # -f::
 #	List affected files.
 #
-# -r REVISION[:REVISION]::
+# -r FROM_ID[:TO_ID]::
 #	Limit the log information to a set of revisions using either
 #	'-r FROM_ID[:TO_ID]' or '-r FROM_ID -r TO_ID'. In both cases the
 #	option expects IDs which resolve to commits and will include the
@@ -55,7 +55,7 @@
 #
 #	$ cg-log -r releasetag-0.9:releasetag-0.10
 
-USAGE="cg-log [-c] [-f] [-uUSERNAME] [-r REVISION[:REVISION]] FILE..."
+USAGE="cg-log [-c] [-f] [m] [-uUSERNAME] [-r FROM_ID[:TO_ID] FILE..."
 
 . ${COGITO_LIB}cg-Xlib
 # Try to fix the annoying "Broken pipe" output. May not help, but apparently

@@ -35,7 +35,7 @@
 #		echo -e "\n==================\nme $i"; cat-file commit $i;
 #	done
 
-USAGE="cg-admin-lsobj [TYPE]"
+USAGE="cg-admin-lsobj [OBJECT_TYPE]"
 
 . ${COGITO_LIB}cg-Xlib
 

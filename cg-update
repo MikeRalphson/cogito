@@ -8,7 +8,7 @@
 # If local changes conflict with those of the branch updated from the
 # merge will be blocked.
 
-USAGE="cg-update [BRANCH]"
+USAGE="cg-update [BRANCH_NAME]"
 
 . ${COGITO_LIB}cg-Xlib
 

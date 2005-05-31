@@ -10,14 +10,14 @@
 # for generating a tarball. Other destination specifiers are assumed
 # to be directory names, and the tree is exported to the given directory.
 
-USAGE="cg-export DESTINATION [TREE]"
+USAGE="cg-export DESTFILE [TREE_ID]"
 
 . ${COGITO_LIB}cg-Xlib
 
 dest=$1
 id=$(tree-id $2)
 
-([ "$dest" ] && [ "$id" ]) || die "usage: cg-export DEST [TREE_ID]"
+([ "$dest" ] && [ "$id" ]) || usage
 
 [ -e "$dest" ] && die "$dest already exists."
 

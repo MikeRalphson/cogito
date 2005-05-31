@@ -8,14 +8,14 @@
 #
 # Takes the tag name and optionally the associated ID as arguments.
 
-USAGE="cg-tag TAG [REVISION]"
+USAGE="cg-tag TAG_NAME [COMMIT_ID]"
 
 . ${COGITO_LIB}cg-Xlib
 
 name=$1
 id=$2
 
-[ "$name" ] || die "usage: cg-tag TNAME [COMMIT_ID]"
+[ "$name" ] || usage
 [ "$id" ] || id=$(commit-id)
 
 (echo $name | egrep -qv '[^a-zA-Z0-9_.@!:-]') || \

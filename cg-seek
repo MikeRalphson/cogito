@@ -19,7 +19,7 @@
 # the right thing too. If you want to migrate your working tree to another
 # branch, use `cg-clone`.
 
-USAGE="cg-seek REVISION"
+USAGE="cg-seek [COMMIT_ID]"
 
 . ${COGITO_LIB}cg-Xlib
 

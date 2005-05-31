@@ -106,20 +106,17 @@ $(print_command_listing $HELPER_COMMANDS)
 
 Command Identifiers
 -------------------
-BRANCH::
-	Indicates a branch name added with the $(link cg-branch-add) name.
+BRANCH_NAME::
+	Indicates a branch name added with the $(link cg-branch-add) command.
 
 COMMAND::
 	Indicates a 'Cogito' command. The \`cg-\` prefix is optional.
-
-DESTINATION::
-	Indicates a path to a location file.
 
 LOCATION::
 	Indicates a local file path or a URI. See $(link cg-branch-add) for a
 	list of supported URI schemes.
 
-REVISION::
+COMMIT_ID, FROM_ID, TO_ID, BASE_COMMIT::
 	Indicates an ID resolving to a commit. The following expressions can
 	be used interchangably as IDs:
 	- empty string, 'this' or 'HEAD' (current HEAD)
@@ -129,17 +126,18 @@ REVISION::
 	- commit object hash (as returned by 'commit-id')
 	- tree object hash (as returned by 'tree-id')
 
-TAG::
+TAG_NAME::
 	Indicates a free form tag name.
 
-TYPE::
+OBJECT_TYPE::
 	Indicates a git object type i.e.: 'blob', 'commit', 'tree' or 'tag'.
 
 USERNAME::
 	Indicates a free form user name.
 
 FILE::
-	Indicates a filename - always relative to the root of the repository.
+	Indicates an already existing filename - always relative to the root
+	of the repository.
 
 COPYRIGHT
 ---------

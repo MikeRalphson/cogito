@@ -11,7 +11,7 @@
 #	Specify whether to print a short version of the patch without
 #	a patch header with meta info such as author and committer.
 #
-# -r REVISION[:REVISION]::
+# -r FROM_ID[:TO_ID]::
 #	Specify a set of commits to make patches from using either
 #	'-r FROM_ID[:TO_ID]' or '-r FROM_ID -r TO_ID'. In both cases the
 #	option expects IDs which resolve to commits and will include the
@@ -34,7 +34,7 @@
 # the line
 # `!-------------------------------------------------------------flip-`
 
-USAGE="cg-mkpatch [-s] [-r REVISION[:REVISION]]"
+USAGE="cg-mkpatch [-m] [-s] [-r FROM_ID[:TO_ID]]"
 
 . ${COGITO_LIB}cg-Xlib
 

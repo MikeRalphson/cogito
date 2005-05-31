@@ -17,6 +17,9 @@ die () {
 	exit 1
 }
 
+usage() {
+	die "usage: $USAGE"
+}
 
 mktemp () {
 	if [ ! "$BROKEN_MKTEMP" ]; then

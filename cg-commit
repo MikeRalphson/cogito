@@ -20,7 +20,7 @@
 #	Note, this is used internally by Cogito when merging. This option
 #	does not make sense when files are given on the command line.
 #
-# -m<message>::
+# -mMESSAGE::
 #	Specify the commit message, which is used instead of starting
 #	up an editor (if the input is not `stdin`, the input is appended
 #	after all the '-m' messages). Multiple '-m' parameters are appended
@@ -72,7 +72,7 @@
 # EDITOR::
 #	The editor used for entering revision log information.
 
-USAGE="cg-commit [-m<message>]... [-C] [-e | -E] [FILE]..."
+USAGE="cg-commit [-mMESSAGE]... [-C] [-e | -E] [FILE]..."
 
 . ${COGITO_LIB}cg-Xlib
 

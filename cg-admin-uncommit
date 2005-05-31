@@ -17,7 +17,7 @@
 #	therefore generating tree with local changes against the target
 #	commit, consisting of the changes in the rolled back commits.
 
-USAGE="cg-admin-uncommit [-t] [REVISION]"
+USAGE="cg-admin-uncommit [-t] [COMMIT_ID]"
 
 . ${COGITO_LIB}cg-Xlib
 

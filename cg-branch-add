@@ -30,14 +30,14 @@
 #
 # and refer to it as 'repo-testing' anytime later.
 
-USAGE="cg-branch-add BRANCH LOCATION"
+USAGE="cg-branch-add BRANCH_NAME LOCATION"
 
 . ${COGITO_LIB}cg-Xlib
 
 name=$1
 location=$2
 
-([ "$name" ] && [ "$location" ]) || die "usage: cg-branch-add NAME SOURCE_LOC"
+([ "$name" ] && [ "$location" ]) || usage
 (echo $name | egrep -qv '[^a-zA-Z0-9_.@!:-]') || \
 	die "name contains invalid characters"
 if [ "$name" = "this" ] || [ "$name" = "HEAD" ]; then

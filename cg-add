@@ -17,7 +17,7 @@ USAGE="cg-add FILE..."
 
 . ${COGITO_LIB}cg-Xlib
 
-[ "$1" ] || die "usage: cg-add FILE..."
+[ "$1" ] || usage
 
 TMPFILE=$(mktemp -t gitadd.XXXXXX)
 find "$@" -type f > $TMPFILE || die "not all files exist, nothing added"
