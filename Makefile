@@ -141,11 +141,6 @@ cg-version: $(VERSION) $(GIT_HEAD) Makefile
 	@echo "# Additionally, the 'HEAD' of the installed Cogito" >> $@
 	@echo "# is also shown if this information was available" >> $@
 	@echo "# at the build time." >> $@
-	@echo "#" >> $@
-	@echo "# OPTIONS" >> $@
-	@echo "# -------" >> $@
-	@echo "# -h, --help::" >> $@
-	@echo "#	Print usage help." >> $@
 	@echo >> $@
 	@echo "USAGE=\"cg-version\"" >> $@
 	@echo >> $@
