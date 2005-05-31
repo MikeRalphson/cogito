@@ -51,14 +51,19 @@ showdate () {
 	echo "${pdate/+0000/$tz}"
 }
 
-# Usage: tree_timewarp DIRECTION_STR ROLLBACK_BOOL BASE BRANCH
+# Usage: tree_timewarp [--no-head-update] DIRECTION_STR ROLLBACK_BOOL BASE BRANCH
 tree_timewarp () {
-	dirstr=$1; shift
-	rollback=$1; shift
-	base=$1; shift
-	branch=$1; shift
+	local no_head_update=
+	if [ "$1" = "--no-head-update" ]; then
+		no_head_update=1
+		shift
+	fi
+	local dirstr=$1; shift
+	local rollback=$1; shift
+	local base=$1; shift
+	local branch=$1; shift
 
-	patchfile=$(mktemp -t gituncommit.XXXXXX)
+	local patchfile=$(mktemp -t gituncommit.XXXXXX)
 	if [ "$rollback" ]; then
 		cg-diff >$patchfile
 		[ -s "$patchfile" ] &&
@@ -71,7 +76,7 @@ tree_timewarp () {
 	fi
 
 	git-read-tree -m "$branch" || die "$branch: bad commit"
-	echo "$branch" > $_git/HEAD
+	[ "$no_head_update" ] || echo "$branch" > $_git/HEAD
 
 	# Kill gone files
 	git-diff-tree -z -r $base $branch | xargs -0 bash -c '
