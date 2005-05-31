@@ -50,10 +50,14 @@ showdate () {
 	format="$2"
 	[ "$format" ] || format=-R
 	sec=${date[0]}; tz=${date[1]}
-	dtz=${tz/+/}
-	lsec=$(($dtz / 100 * 3600 + $dtz % 100 * 60 + $sec))
-	pdate="$(date -ud "1970-01-01 UTC + $lsec sec" "$format" 2>/dev/null)"
-
+	if [ "$has_gnudate" ]; then
+	        dtz=${tz/+/}
+		lsec=$(($dtz / 100 * 3600 + $dtz % 100 * 60 + $sec))
+	        pdate="$(date -ud "1970-01-01 UTC + $lsec sec" "$format" 2>/dev/null)"
+	else
+		# FIXME: $format
+	        pdate="$(date -u -r ${date[0]} 2>/dev/null)"
+	fi
 	echo "${pdate/+0000/$tz}"
 }
 
@@ -165,3 +169,4 @@ fi
 
 export BROKEN_MKTEMP=1
 del=$($(which mktemp) -t 2>/dev/null) && { rm $del; export BROKEN_MKTEMP=; }
+has_gnudate=$(date -Rud "1970-01-01 UTC" 2>/dev/null)
