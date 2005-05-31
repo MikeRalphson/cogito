@@ -1,6 +1,10 @@
 #include "cache.h"
 #include "commit.h"
 
+#define SEEN		(1u << 0)
+#define INTERESTING	(1u << 1)
+#define UNINTERESTING	(1u << 2)
+
 static const char rev_list_usage[] =
 	"usage: git-rev-list [OPTION] commit-id <commit-id>\n"
 		      "  --max-count=nr\n"
@@ -8,13 +12,36 @@ static const char rev_list_usage[] =
 		      "  --min-age=epoch\n"
 		      "  --header";
 
+static void mark_parents_uninteresting(struct commit *commit)
+{
+	struct commit_list *parents = commit->parents;
+
+	while (parents) {
+		struct commit *commit = parents->item;
+		commit->object.flags |= UNINTERESTING;
+		parents = parents->next;
+	}
+}
+
+static int everybody_uninteresting(struct commit_list *list)
+{
+	while (list) {
+		struct commit *commit = list->item;
+		list = list->next;
+		if (commit->object.flags & UNINTERESTING)
+			continue;
+		return 0;
+	}
+	return 1;
+}
+
 int main(int argc, char **argv)
 {
 	int nr_sha;
 	unsigned char sha1[2][20];
 	struct commit_list *list = NULL;
 	struct commit *commit, *end;
-	int i, verbose_header = 0;
+	int i, verbose_header = 0, show_parents = 0;
 	unsigned long max_age = -1;
 	unsigned long min_age = -1;
 	int max_count = -1;
@@ -39,6 +66,10 @@ int main(int argc, char **argv)
 			verbose_header = 1;
 			continue;
 		}
+		if (!strcmp(arg, "--parents")) {
+			show_parents = 1;
+			continue;
+		}
 
 		if (nr_sha > 2 || get_sha1(arg, sha1[nr_sha]))
 			usage(rev_list_usage);
@@ -60,20 +91,46 @@ int main(int argc, char **argv)
 	}
 
 	commit_list_insert(commit, &list);
-	do {
-		struct commit *commit = pop_most_recent_commit(&list, 0x1);
+	if (end) {
+		struct commit_list *newlist = NULL;
+		struct commit_list **p = &newlist;
+		do {
+			struct commit *commit = pop_most_recent_commit(&list, SEEN);
+			struct object *obj = &commit->object;
 
-		if (commit == end)
-			break;
+			if (commit == end || (obj->flags & UNINTERESTING)) {
+				mark_parents_uninteresting(commit);
+				if (everybody_uninteresting(list))
+					break;
+				continue;
+			}
+			p = &commit_list_insert(commit, p)->next;
+		} while (list);
+		list = newlist;
+	}
+
+	while (list) {
+		struct commit *commit = pop_most_recent_commit(&list, SEEN);
+
+		if (commit->object.flags & UNINTERESTING)
+			continue;
 		if (min_age != -1 && (commit->date > min_age))
 			continue;
 		if (max_age != -1 && (commit->date < max_age))
 			break;
 		if (max_count != -1 && !max_count--)
 			break;
-		printf("%s\n", sha1_to_hex(commit->object.sha1));
+		printf("%s", sha1_to_hex(commit->object.sha1));
+		if (show_parents) {
+			struct commit_list *parents = commit->parents;
+			while (parents) {
+				printf(" %s", sha1_to_hex(parents->item->object.sha1));
+				parents = parents->next;
+			}
+		}
+		putchar('\n');
 		if (verbose_header)
 			printf("%s%c", commit->buffer, 0);
-	} while (list);
+	}
 	return 0;
 }

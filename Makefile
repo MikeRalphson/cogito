@@ -75,7 +75,7 @@ LIB_OBJS += strbuf.o
 
 LIB_H += diff.h count-delta.h
 DIFF_OBJS = diff.o diffcore-rename.o diffcore-pickaxe.o diffcore-pathspec.o \
-	diffcore-break.o
+	diffcore-break.o diffcore-order.o
 LIB_OBJS += $(DIFF_OBJS) count-delta.o
 
 LIB_OBJS += gitenv.o
