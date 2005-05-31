@@ -29,11 +29,6 @@
 #	$ cg-branch-add repo-testing rsync://host/path/repo.git#testing
 #
 # and refer to it as 'repo-testing' anytime later.
-#
-# OPTIONS
-# -------
-# -h, --help::
-#	Print usage help.
 
 USAGE="cg-branch-add BRANCH LOCATION"
 

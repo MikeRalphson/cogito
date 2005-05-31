@@ -11,11 +11,6 @@
 # as the new-style git-diff patches (those with the "diff --git" lines).
 #
 # Takes the diff on stdin.
-#
-# OPTIONS
-# -------
-# -h, --help::
-#	Print usage help.
 
 USAGE="cg-patch < patch on stdin"
 

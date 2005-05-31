@@ -40,9 +40,6 @@
 #	List only commits where author or committer contains 'USERNAME'.
 #	The search for 'USERNAME' is case-insensitive.
 #
-# -h, --help::
-#	Print usage help.
-#
 # ENVIRONMENT VARIABLES
 # ---------------------
 # PAGER::

@@ -26,9 +26,6 @@
 # -m::
 #	Base the diff at the merge base of the -r arguments (defaulting
 #	to master and origin).
-#
-# -h, --help::
-#	Print usage help.
 
 USAGE="cg-diff [-p] [-r REVISION[:REVISION]] [FILE]..."
 

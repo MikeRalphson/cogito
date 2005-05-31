@@ -7,7 +7,10 @@
 
 command=$1
 
-[ -e "$command" ] || die "$command does not exist"
+if [ ! -e "$command" ]; then
+	echo "$command does not exist" >&2
+	exit
+fi
 
 COMMAND=$(basename $command)
 
@@ -39,6 +42,41 @@ CAPTION=$(echo "$HEADER" | head -n 1 | tr '[A-Z]' '[a-z]' | sed 's/\.$//')
 BODY=$(echo "$HEADER" | sed '0,/^$/d' \
 		      | sed 's/`\(cg-[a-z-]\+\)`/link:\1.html[\1]/')
 
+DESCRIPTION=
+OPTIONS=
+MISC=
+
+section=$(echo "$BODY" | sed -n '1,/^-[-]*-$/p')
+section_lines=$(echo "$section" | wc -l)
+lines=$(echo "$BODY" | wc -l)
+
+if [ $section_lines = $lines ]; then
+	DESCRIPTION="$BODY"
+
+else
+	section_end=$(($section_lines - 2))
+	DESCRIPTION=$(echo "$BODY" | sed -n "1,${section_end}p")
+	BODY=$(echo "$BODY" | sed -n "$((section_lines - 1)),\$p")
+
+	if [ "$(echo "$BODY" | head -n 1)" = "OPTIONS" ]; then
+		BODY=$(echo "$BODY" | sed -n '3,$p')
+		section=$(echo "$BODY" | sed -n "1,/^-[-]*-\$/p")
+		section_lines=$(echo "$section" | wc -l)
+		lines=$(echo "$BODY" | wc -l)
+
+		if [ $section_lines = $lines ]; then
+			OPTIONS="$BODY"
+		else
+			section_end=$(($section_lines - 2))
+			OPTIONS=$(echo "$BODY" | sed -n "1,${section_end}p")
+			MISC=$(echo "$BODY" | sed -n "${section_end},\$p")
+		fi
+
+	else
+		MISC="$BODY"
+	fi
+fi
+
 cat <<__END__
 $TITLE
 $TITLELINE
@@ -53,7 +91,16 @@ $SYNOPSIS
 
 DESCRIPTION
 -----------
-$BODY
+$DESCRIPTION
+
+OPTIONS
+-------
+$OPTIONS
+
+-h, --help::
+	Print usage help.
+
+$MISC
 
 COPYRIGHT
 ---------

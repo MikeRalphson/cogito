@@ -26,11 +26,6 @@
 #
 # See the git README for more information about the object types.
 #
-# OPTIONS
-# -------
-# -h, --help::
-#	Print usage help.
-#
 # EXAMPLE USAGE
 # -------------
 # Oh, I was messing with my HEADs and lost few commits, where on the earth

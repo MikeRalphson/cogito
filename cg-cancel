@@ -11,11 +11,6 @@
 # This command is complementary to `cg-restore`, which only brings
 # individual files in sync with their state at the time of the
 # last commit.
-#
-# OPTIONS
-# -------
-# -h, --help::
-#	Print usage help
 
 USAGE="cg-cancel"
 

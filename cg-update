@@ -7,11 +7,6 @@
 #
 # If local changes conflict with those of the branch updated from the
 # merge will be blocked.
-#
-# OPTIONS
-# -------
-# -h, --help::
-#	Print usage help.
 
 USAGE="cg-update [BRANCH]"
 

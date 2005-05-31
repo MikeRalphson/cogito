@@ -6,11 +6,6 @@
 # This command takes no arguments, and lists all tags in a given repository
 # in alphabetical order, along with their corresponding SHA1 hash IDs.
 #
-# OPTIONS
-# -------
-# -h, --help::
-#	Print usage help.
-#
 # EXAMPLE USAGE
 # -------------
 # Doing this on the current Cogito repository, produces the following output:

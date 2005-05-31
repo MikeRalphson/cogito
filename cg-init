@@ -10,11 +10,6 @@
 #
 # If `cg-init` is run in a non-empty directory files in the top and
 # sub directory will automatically be added.
-#
-# OPTIONS
-# -------
-# -h, --help::
-#	Print usage help.
 
 USAGE="cg-init"
 

@@ -16,9 +16,6 @@
 #	(by default) Cogito keeps the tree in its current state,
 #	therefore generating tree with local changes against the target
 #	commit, consisting of the changes in the rolled back commits.
-#
-# -h, --help::
-#	Print usage help.
 
 USAGE="cg-admin-uncommit [-t] [REVISION]"
 

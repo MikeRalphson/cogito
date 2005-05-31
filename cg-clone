@@ -15,9 +15,6 @@
 # -------
 # -s::
 #	Clone in the current directory instead of creating a new one.
-#
-# -h, --help::
-#	Print usage help
 
 USAGE="cg-clone [-s] LOCATION [<directory>]"
 

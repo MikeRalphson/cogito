@@ -16,11 +16,6 @@
 # M::
 #	'<file>' has been touched or modified.
 #
-# OPTIONS
-# -------
-# -h, --help::
-#	Print usage help.
-#
 # FILES
 # -----
 # $GIT_DIR/exclude::

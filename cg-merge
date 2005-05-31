@@ -18,9 +18,6 @@
 # -c::
 #	Parameter specifies that you want to have tree merge never
 #	autocomitted, but want to review and commit it manually.
-#
-# -h, --help::
-#	Print usage help.
 
 USAGE="cg-merge [-c] [-b REVISION] BRANCH"
 

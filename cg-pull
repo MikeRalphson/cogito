@@ -6,11 +6,6 @@
 # Takes the branch name as an argument, defaulting to "origin".
 #
 # See `cg-branch-add` for some description.
-#
-# OPTIONS
-# -------
-# -h, --help::
-#	Print usage help.
 
 USAGE="cg-pull [BRANCH]"
 

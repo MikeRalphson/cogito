@@ -18,11 +18,6 @@
 # For intuitiveness, specifying the branch name (`cg-seek master`) will do
 # the right thing too. If you want to migrate your working tree to another
 # branch, use `cg-clone`.
-#
-# OPTIONS
-# -------
-# -h, --help::
-#	Print usage help.
 
 USAGE="cg-seek REVISION"
 

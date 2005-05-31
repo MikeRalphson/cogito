@@ -15,11 +15,6 @@
 # forcefully abandons all the changes in the working tree and
 # restores everything to a proper state (including unseeking,
 # cancelling merge in progress and rebuilding indexes).
-#
-# OPTIONS
-# -------
-# -h, --help::
-#	Print usage help.
 
 USAGE="cg-restore [FILE]..."
 

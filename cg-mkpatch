@@ -23,9 +23,6 @@
 #	Base the patches at the merge base of the -r arguments
 #	(defaulting to master and origin).
 #
-# -h, --help::
-#	Print usage help.
-#
 # EXAMPLE USAGE
 # -------------
 # To make patches for all commits between two releases tagged as

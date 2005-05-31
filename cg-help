@@ -10,11 +10,6 @@
 #
 # Note help for a command is also available by passing `--help` or `-h`
 # to the command.
-#
-# OPTIONS
-# -------
-# -h, --help::
-#	Print usage help
 
 USAGE="cg-help [COMMAND]"
 

@@ -12,11 +12,6 @@
 # For example
 #
 #	origin  rsync://rsync.kernel.org/pub/scm/cogito/cogito.git
-#
-# OPTIONS
-# -------
-# -h, --help::
-#	Print usage help.
 
 USAGE="cg-branch-ls"
 

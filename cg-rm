@@ -5,11 +5,6 @@
 #
 # Takes a list of file names at the command line, and schedules them
 # for removal from the GIT repository at the next commit.
-#
-# OPTIONS
-# -------
-# -h, --help::
-#	Print usage help.
 
 USAGE="cg-rm FILE..."
 

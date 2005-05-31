@@ -12,11 +12,6 @@
 # in doing so will cause the command to fail. The reason for this is that cogito
 # manage content and empty directories have no content. Instead, directories are
 # added automatically when adding files inside them.
-#
-# OPTIONS
-# -------
-# -h, --help::
-#	Print usage help.
 
 USAGE="cg-add FILE..."
 

@@ -7,11 +7,6 @@
 # use the tag anywhere you specify a commit or tree ID.
 #
 # Takes the tag name and optionally the associated ID as arguments.
-#
-# OPTIONS
-# -------
-# -h, --help::
-#	Print usage help.
 
 USAGE="cg-tag TAG [REVISION]"
 

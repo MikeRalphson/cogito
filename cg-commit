@@ -34,9 +34,6 @@
 #	Force the editor to be brought up and do the commit even if
 #	the default commit message is not changed.
 #
-# -h, --help::
-#	Print usage help.
-#
 # FILES
 # -----
 # $GIT_DIR/commit-template::
