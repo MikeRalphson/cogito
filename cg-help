@@ -12,6 +12,7 @@
 # to the command.
 
 USAGE="cg-help [COMMAND]"
+_git_repo_unneeded=1
 
 . ${COGITO_LIB}cg-Xlib
 

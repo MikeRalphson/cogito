@@ -18,6 +18,7 @@
 #	Specifying both -s and a destination directory makes no sense.
 
 USAGE="cg-clone [-s] LOCATION [DESTDIR]"
+_git_repo_unneeded=1
 
 . ${COGITO_LIB}cg-Xlib
 

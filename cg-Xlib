@@ -125,6 +125,18 @@ for option in "$@"; do
 done
 
 
+# Check if we have something to work on, unless the script can do w/o it.
+if [ ! "$_git_repo_unneeded" ]; then
+	if [ ! -d "$_git" ]; then
+	       echo "There is no GIT repository here ($_git not found)" >&2
+	       exit 1
+	elif [ ! -x "$_git" ]; then
+	       echo "You do not have permission to access this GIT repository" >&2
+	       exit 1
+	fi
+fi
+
+
 # Compatibility hacks:
 # 2005-04-26
 if [ -d $_git ] && [ -s $_git/remotes ] && [ ! -e $_git/branches ]; then
