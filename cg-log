@@ -159,8 +159,8 @@ list_commit_files()
 	$list_cmd | cut -f 2- | while read file; do
 		echo -n "$sep"
 		sep=", "
-		if [ $(echo "$line$sep$file" | wc -c) -le 75 ]; then
-			line="$line$sep$file"
+		line="$line$sep$file"
+		if [ ${#line} -le 74 ]; then
 			echo -n "$file"
 		else
 			line="      $file"
