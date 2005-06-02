@@ -177,14 +177,15 @@ uninstall:
 	cd $(DESTDIR)$(bindir) && rm $(PROG) $(SCRIPTS) $(SCRIPT) $(GEN_SCRIPT)
 	cd $(DESTDIR)$(libdir) && rm $(LIB_SCRIPT)
 
+tarname=$(shell cat $(VERSION))
 dist: cogito.spec
-	cg-export cogito-dist.tar
-	@mkdir cogito-dist
-	@cp cogito.spec cogito-dist
-	tar rf cogito-dist.tar cogito-dist/cogito.spec
-	@rm cogito-dist/cogito.spec
-	@rmdir cogito-dist
-	gzip -9 cogito-dist.tar
+	cg-export $(tarname).tar
+	@mkdir $(tarname)
+	@cp cogito.spec $(tarname)
+	tar rf $(tarname).tar $(tarname)/cogito.spec
+	@rm $(tarname)/cogito.spec
+	@rmdir $(tarname)
+	gzip -9 $(tarname).tar
 
 clean:
 	rm -f *.o mozilla-sha1/*.o ppc/*.o $(PROG) $(GEN_SCRIPT) $(LIB_FILE)
