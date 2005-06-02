@@ -152,6 +152,9 @@ cogito.spec: cogito.spec.in $(VERSION)
 	sed -e 's/@@VERSION@@/$(shell cat $(VERSION) | cut -d"-" -f2)/g' < $< > $@
 
 
+test: all
+	$(MAKE) -C t/ all
+
 sedlibdir=$(shell echo $(libdir) | sed 's/\//\\\//g')
 
 install: $(PROG) $(SCRIPTS) $(SCRIPT) $(LIB_SCRIPT) $(GEN_SCRIPT)
@@ -174,8 +177,14 @@ uninstall:
 	cd $(DESTDIR)$(bindir) && rm $(PROG) $(SCRIPTS) $(SCRIPT) $(GEN_SCRIPT)
 	cd $(DESTDIR)$(libdir) && rm $(LIB_SCRIPT)
 
-test: all
-	$(MAKE) -C t/ all
+dist: cogito.spec
+	cg-export cogito-dist.tar
+	@mkdir cogito-dist
+	@cp cogito.spec cogito-dist
+	tar rf cogito-dist.tar cogito-dist/cogito.spec
+	@rm cogito-dist/cogito.spec
+	@rmdir cogito-dist
+	gzip -9 cogito-dist.tar
 
 clean:
 	rm -f *.o mozilla-sha1/*.o ppc/*.o $(PROG) $(GEN_SCRIPT) $(LIB_FILE)
