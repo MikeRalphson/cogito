@@ -167,7 +167,9 @@ $revls | $revsort | while read time commit parents; do
 	[ "$revfmt" = "git-rev-list" ] && commit="$time"
 	if [ $# -ne 0 ]; then
 		parent=$(git-cat-file commit $commit | sed -n '2s/parent //p;2Q')
-		[ "$parent" ] && [ "$(git-diff-tree -r $commit $parent "$@")" ] || continue
+		diff_ops=
+		[ "$parent" ] || diff_ops=--root
+		[ "$(git-diff-tree -r $diff_ops $commit $parent "$@")" ] || continue
 	fi
 	if [ "$user" ]; then
 		git-cat-file commit $commit | grep -e '^author ' -e '^committer ' | grep -qi "$user" || continue
