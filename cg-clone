@@ -15,7 +15,7 @@
 # -------
 # -s::
 #	Clone in the current directory instead of creating a new one.
-#	Specifying both -s and a desination directory makes no sense .
+#	Specifying both -s and a destination directory makes no sense.
 
 USAGE="cg-clone [-s] LOCATION [DESTDIR]"
 
