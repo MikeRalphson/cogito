@@ -141,8 +141,10 @@ fetch_http () {
 	fi
 
 	wget $wget_flags "$dest" "$src" 2>&1 | grep -vF 'robots.txt' | grep -vF 'index.html'
+	ret=${PIPESTATUS[0]}
 	[ -d "$dest" ] && rm -f "$dest"/robots.txt "$dest"/index.html*
 	popd >/dev/null
+	return $ret
 }
 
 pull_http () {
@@ -262,6 +264,20 @@ if [ "$rsyncerr" ]; then
 	$fetch -i -s -u -d "$uri/tags" "$_git/refs/tags" || rsyncerr=1
 fi
 [ "$rsyncerr" ] && echo "unable to get tags list (non-fatal)" >&2
+
+# Now check if we have the objects pointed at by the tags; if they are
+# tag objects, $pull didn't get them.
+# XXX: This is the quick'n'dirty way.
+(
+	cd $_git/refs/tags
+	for tag in *; do
+		tagid=$(cat $tag)
+		tagfile=objects/${tagid:0:2}/${tagid:2}
+		[ -s "../../$tagfile" ] && continue
+		echo -n "Missing object of tag $tag, trying to retrieve... "
+		$fetch -s "$uri/$tagfile" "../../$tagfile" && echo ok
+	done
+)
 
 
 new_head=$(cat "$_git/refs/heads/$name")
