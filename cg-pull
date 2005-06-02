@@ -271,11 +271,16 @@ fi
 (
 	cd $_git/refs/tags
 	for tag in *; do
+		[ "$tag" = "*" ] && break
 		tagid=$(cat $tag)
 		tagfile=objects/${tagid:0:2}/${tagid:2}
 		[ -s "../../$tagfile" ] && continue
-		echo -n "Missing object of tag $tag, trying to retrieve... "
-		$fetch -s "$uri/$tagfile" "../../$tagfile" && echo ok
+		echo -n "Missing object of tag $tag... "
+		if $fetch -i -s "$uri/$tagfile" "../../$tagfile" 2>/dev/null >&2; then
+			echo "retrieved"
+		else
+			echo "different source (obsolete tag?)"
+		fi
 	done
 )
 
