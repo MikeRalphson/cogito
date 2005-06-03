@@ -333,7 +333,6 @@ int diff_populate_filespec(struct diff_filespec *s, int size_only)
 		close(fd);
 	}
 	else {
-		/* We cannot do size only for SHA1 blobs */
 		char type[20];
 		struct sha1_size_cache *e;
 
@@ -343,11 +342,13 @@ int diff_populate_filespec(struct diff_filespec *s, int size_only)
 				s->size = e->size;
 				return 0;
 			}
+			if (!sha1_file_size(s->sha1, &s->size))
+				locate_size_cache(s->sha1, s->size);
 		}
-		s->data = read_sha1_file(s->sha1, type, &s->size);
-		s->should_free = 1;
-		if (s->data && size_only)
-			locate_size_cache(s->sha1, s->size);
+		else {
+			s->data = read_sha1_file(s->sha1, type, &s->size);
+			s->should_free = 1;
+		}
 	}
 	return 0;
 }
@@ -586,6 +587,57 @@ void diff_setup(int flags)
 	if (flags & DIFF_SETUP_USE_SIZE_CACHE)
 		use_size_cache = 1;
 	
+}
+
+static int parse_num(const char **cp_p)
+{
+	int num, scale, ch, cnt;
+	const char *cp = *cp_p;
+
+	cnt = num = 0;
+	scale = 1;
+	while ('0' <= (ch = *cp) && ch <= '9') {
+		if (cnt++ < 5) {
+			/* We simply ignore more than 5 digits precision. */
+			scale *= 10;
+			num = num * 10 + ch - '0';
+		}
+		*cp++;
+	}
+	*cp_p = cp;
+
+	/* user says num divided by scale and we say internally that
+	 * is MAX_SCORE * num / scale.
+	 */
+	return (MAX_SCORE * num / scale);
+}
+
+int diff_scoreopt_parse(const char *opt)
+{
+	int opt1, opt2, cmd;
+
+	if (*opt++ != '-')
+		return -1;
+	cmd = *opt++;
+	if (cmd != 'M' && cmd != 'C' && cmd != 'B')
+		return -1; /* that is not a -M, -C nor -B option */
+
+	opt1 = parse_num(&opt);
+	if (cmd != 'B')
+		opt2 = 0;
+	else {
+		if (*opt == 0)
+			opt2 = 0;
+		else if (*opt != '/')
+			return -1; /* we expect -B80/99 or -B80 */
+		else {
+			opt++;
+			opt2 = parse_num(&opt);
+		}
+	}
+	if (*opt != 0)
+		return -1;
+	return opt1 | (opt2 << 16);
 }
 
 struct diff_queue_struct diff_queued_diff;
@@ -915,6 +967,8 @@ void diffcore_std(const char **paths,
 		diffcore_break(break_opt);
 	if (detect_rename)
 		diffcore_rename(detect_rename, rename_score);
+	if (0 <= break_opt)
+		diffcore_merge_broken();
 	if (pickaxe)
 		diffcore_pickaxe(pickaxe, pickaxe_opts);
 	if (orderfile)
