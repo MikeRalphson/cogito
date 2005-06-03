@@ -174,8 +174,8 @@ install: $(PROG) $(SCRIPTS) $(SCRIPT) $(LIB_SCRIPT) $(GEN_SCRIPT)
 	done
 
 uninstall:
-	cd $(DESTDIR)$(bindir) && rm $(PROG) $(SCRIPTS) $(SCRIPT) $(GEN_SCRIPT)
-	cd $(DESTDIR)$(libdir) && rm $(LIB_SCRIPT)
+	cd $(DESTDIR)$(bindir) && rm -f $(PROG) $(SCRIPTS) $(SCRIPT) $(GEN_SCRIPT)
+	cd $(DESTDIR)$(libdir) && rm -f $(LIB_SCRIPT)
 
 tarname=$(shell cat $(VERSION))
 dist: cogito.spec
