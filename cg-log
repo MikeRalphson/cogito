@@ -144,17 +144,17 @@ list_commit_files()
 if [ "$mergebase" ]; then
 	[ "$log_start" ] || log_start="master"
 	[ "$log_end" ] || log_end="origin"
-	log_start=$(git-merge-base $(commit-id $log_start) $(commit-id $log_end))
+	log_start=$(git-merge-base $(commit-id "$log_start") $(commit-id "$log_end"))
 fi
 
 if [ "$log_end" ]; then
-	id1="$(commit-id $log_start)" || exit 1
-	id2="$(commit-id $log_end)" || exit 1
+	id1="$(commit-id "$log_start")" || exit 1
+	id2="$(commit-id "$log_end")" || exit 1
 	revls="git-rev-tree $id2 ^$id1"
 	revsort="sort -rn"
 	revfmt="git-rev-tree"
 else
-	id1="$(commit-id $log_start)" || exit 1
+	id1="$(commit-id "$log_start")" || exit 1
 	revls="git-rev-list $id1"
 	revsort="cat"
 	revfmt="git-rev-list"

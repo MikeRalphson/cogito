@@ -7,6 +7,6 @@
 #
 # NOTE: Will return multiple SHA1s if ID is a commit with multiple parents.
 
-id=$(commit-id $1) || exit 1
+id=$(commit-id "$1") || exit 1
 
 git-cat-file commit $id | awk '/^parent/{print $2};/^$/{exit}'

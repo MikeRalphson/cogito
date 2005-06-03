@@ -41,10 +41,10 @@ if [ "$dstcommit" ] && [ "$dstcommit" != "$branch" ]; then
 	seek_mode=away
 else
 	seek_mode=back
-	dstcommit=$(commit-id $branch)
+	dstcommit=$(commit-id "$branch")
 fi
 
-dstcommit=$(commit-id $dstcommit)
+dstcommit=$(commit-id "$dstcommit")
 if [ "$curcommit" != "$dstcommit" ]; then
 	tree_timewarp --no-head-update "along" "please rollback" $curcommit $dstcommit
 fi
