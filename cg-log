@@ -14,20 +14,17 @@
 # cg-log then displays only changes in those files.
 #
 # -c::
-#	Colorize to the output.
-#
-#	When getting the full log the colors are:
-#		- `author`:	'cyan'
-#		- `committer`:	'magenta'
-#		- `header`:	'green'
-#		- `files`:	'blue'
-#		- `signoff`:	'yellow'
-#
-#	When getting the summary log the colors are:
-#		- `commit_id`:	'magenta'
-#		- `date`:	'green'
-#		- `author`:	'cyan'
-#		- `trim_mark`:	'blue'
+#	Colorize to the output. The used colors are listed below together
+#	with information about which log output (summary, full or both)
+#	they apply to:
+#		- `author`:	'cyan'		(both)
+#		- `committer`:	'magenta'	(full)
+#		- `header`:	'green'		(full)
+#		- `files`:	'blue'		(full)
+#		- `signoff`:	'yellow'	(full)
+#		- `commit_id`:	'blue'		(summary)
+#		- `date`:	'green'		(summary)
+#		- `trim_mark`:	'magenta'	(summary)
 #
 # -f::
 #	List affected files. (No effect when passed along `-s`.)
@@ -69,7 +66,7 @@
 #
 #	$ cg-log -r releasetag-0.9:releasetag-0.10
 
-USAGE="cg-log [-c] [-f] [-m] [-s] [-uUSERNAME] [-r FROM_ID[:TO_ID] FILE..."
+USAGE="cg-log [-c] [-f] [-m] [-s] [-uUSERNAME] [-r FROM_ID[:TO_ID]] FILE..."
 
 . ${COGITO_LIB}cg-Xlib
 # Try to fix the annoying "Broken pipe" output. May not help, but apparently
