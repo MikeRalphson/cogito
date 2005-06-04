@@ -14,15 +14,23 @@
 # cg-log then displays only changes in those files.
 #
 # -c::
-#	Add color to the output. Currently, the colors are:
-#	- `author`:	'cyan'
-#	- `committer`:	'magenta'
-#	- `header`:	'green'
-#	- `files`:	'blue'
-#	- `signoff`:	'yellow'
+#	Colorize to the output.
+#
+#	When getting the full log the colors are:
+#		- `author`:	'cyan'
+#		- `committer`:	'magenta'
+#		- `header`:	'green'
+#		- `files`:	'blue'
+#		- `signoff`:	'yellow'
+#
+#	When getting the summary log the colors are:
+#		- `commit_id`:	'magenta'
+#		- `date`:	'green'
+#		- `author`:	'cyan'
+#		- `trim_mark`:	'blue'
 #
 # -f::
-#	List affected files.
+#	List affected files. (No effect when passed along `-s`.)
 #
 # -r FROM_ID[:TO_ID]::
 #	Limit the log information to a set of revisions using either
@@ -35,6 +43,12 @@
 # -m::
 #	End the log listing at the merge base of the -r arguments
 #	(defaulting to master and origin).
+#
+# -s::
+#	Show a one line summary for each log entry. The summary contains
+#	information about the commit date, the author, the first line
+#	of the commit log and the commit ID. Long author and commit log
+#	titles are trimmed but marked with an ending tilde (~).
 #
 # -uUSERNAME::
 #	List only commits where author or committer contains 'USERNAME'.
@@ -55,22 +69,29 @@
 #
 #	$ cg-log -r releasetag-0.9:releasetag-0.10
 
-USAGE="cg-log [-c] [-f] [m] [-uUSERNAME] [-r FROM_ID[:TO_ID] FILE..."
+USAGE="cg-log [-c] [-f] [-m] [-s] [-uUSERNAME] [-r FROM_ID[:TO_ID] FILE..."
 
 . ${COGITO_LIB}cg-Xlib
 # Try to fix the annoying "Broken pipe" output. May not help, but apparently
 # at least somewhere it does. Bash is broken.
 trap exit SIGPIPE
 
+[ "$COLUMNS" ] || COLUMNS="$(tput cols)"
+
 colheader=
 colauthor=
 colcommitter=
 colfiles=
 colsignoff=
+colcommit=
+coldate=
+coltrim=
 coldefault=
+
 list_files=
 log_start=
 log_end=
+summary=
 user=
 mergebase=
 files=()
@@ -84,6 +105,11 @@ while [ "$1" ]; do
 		colcommitter="$(tput setaf 5)" # Magenta
 		colfiles="$(tput setaf 4)"     # Blue
 		colsignoff="$(tput setaf 3)"   # Yellow
+
+		colcommit="$(tput setaf 4)"
+		coldate="$(tput setaf 2)"
+		coltrim="$(tput setaf 5)"
+
 		coldefault="$(tput op)"        # Restore default
 		;;
 	-f)
@@ -106,6 +132,9 @@ while [ "$1" ]; do
 		;;
 	-m)
 		mergebase=1
+		;;
+	-s)
+		summary=1
 		;;
 	*)
 		files=("$@")
@@ -196,6 +225,25 @@ print_commit_log() {
 					echo -e "author $author\ncommitter $committer" \
 						| grep -qi "$user" || return
 				fi
+				if [ "$summary" ]; then
+					# Print summary
+					commit="${commit%:*}"
+					author="${author% <*}"
+					date=(${committer#*> })
+					date="$(showdate $date '+%F %H:%M')"
+					read title
+					if [ "${#author}" -gt 15 ]; then
+						author="${author:0:14}$coltrim~"
+					fi
+					if [ "${COLUMNS:-0}" -le 90 ]; then
+						commit="${commit:0:12}$coltrim~"
+					fi
+
+					printf "$colcommit%s $colauthor%-15s $coldate%s $coldefault%s\n" \
+						"${commit%:*}" "$author" "$date" "$title"
+					return
+				fi
+
 				echo ${colheader}commit ${commit%:*} $coldefault
 				echo ${colheader}tree $tree $coldefault
 
@@ -232,6 +280,8 @@ $revls | $revsort | while read time commit parents; do
 	log="$(print_commit_log $commit)"
 	if [ "$log" ]; then
 		echo "$log"
-		echo
+		[ "$summary" ] || echo
 	fi
-done | pager
+	# LESS="S" will prevent less to wrap too long titles to multiple lines;
+	# you can scroll horizontally.
+done | LESS="S$LESS" pager
