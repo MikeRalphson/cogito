@@ -53,11 +53,8 @@ showpatch () {
 		"author"|"committer")
 			date=(${rest#*> })
 			pdate="$(showdate $date)"
-			if [ "$pdate" ]; then
-				echo $key $rest | sed "s/>.*/> $pdate/" >>$header
-			else
-				echo $key $rest >>$header
-			fi
+			[ "$pdate" ] && rest="${rest%> *}> $pdate"
+			echo $key $rest >>$header
 			;;
 		"")
 			cat

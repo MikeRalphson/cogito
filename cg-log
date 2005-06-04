@@ -188,12 +188,8 @@ $revls | $revsort | while read time commit parents; do
 
 				date=(${rest#*> })
 				pdate="$(showdate $date)"
-				if [ "$pdate" ]; then
-					echo -n $color$key $rest | sed "s/>.*/> $pdate/"
-					echo $coldefault
-				else
-					echo $color$key $rest $coldefault
-				fi
+				[ "$pdate" ] && rest="${rest%> *}> $pdate"
+				echo $color$key $rest $coldefault
 				;;
 			"tree"|"parent")
 				if [ -z $tree1 ]; then
