@@ -176,7 +176,6 @@ $revls | $revsort | while read time commit parents; do
 	if [ "$user" ]; then
 		git-cat-file commit $commit | grep -e '^author ' -e '^committer ' | grep -qi "$user" || continue
 	fi
-	echo $colheader""commit ${commit%:*} $coldefault;
 	git-cat-file commit $commit | \
 		while read key rest; do
 			trap exit SIGPIPE
@@ -194,6 +193,7 @@ $revls | $revsort | while read time commit parents; do
 				parents[${#parents[@]}]="$rest"
 				;;
 			"")
+				echo ${colheader}commit ${commit%:*} $coldefault
 				echo ${colheader}tree $tree $coldefault
 
 				for parent in "${parents[@]}"; do
