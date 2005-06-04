@@ -184,6 +184,10 @@ print_commit_log() {
 				parents[${#parents[@]}]="$rest"
 				;;
 			"")
+				if [ "$user" ]; then
+					echo -e "author $author\ncommitter $committer" \
+						| grep -qi "$user" || return
+				fi
 				echo ${colheader}commit ${commit%:*} $coldefault
 				echo ${colheader}tree $tree $coldefault
 
@@ -223,9 +227,9 @@ $revls | $revsort | while read time commit parents; do
 		[ "$parent" ] || diff_ops=--root
 		[ "$(git-diff-tree -r $diff_ops $commit $parent "$@")" ] || continue
 	fi
-	if [ "$user" ]; then
-		git-cat-file commit $commit | grep -e '^author ' -e '^committer ' | grep -qi "$user" || continue
+	log="$(print_commit_log $commit)"
+	if [ "$log" ]; then
+		echo "$log"
+		echo
 	fi
-	print_commit_log $commit
-	echo
 done | pager
