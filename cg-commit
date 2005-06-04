@@ -216,7 +216,7 @@ else
 	cat >>$LOGMSG2
 fi
 # Remove heading and trailing blank lines.
-grep -v ^CG: $LOGMSG2 | sed '/./,${/./b;:a;$d;N;/\n$/ba;b;};d' >$LOGMSG
+grep -v ^CG: $LOGMSG2 | git-stripspace >$LOGMSG
 rm $LOGMSG2
 
 
