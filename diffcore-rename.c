@@ -135,7 +135,7 @@ static int estimate_similarity(struct diff_filespec *src,
 	 * call into this function in that case.
 	 */
 	void *delta;
-	unsigned long delta_size, base_size;
+	unsigned long delta_size, base_size, src_copied, literal_added;
 	int score;
 
 	/* We deal only with regular files.  Symlink renames are handled
@@ -174,10 +174,17 @@ static int estimate_similarity(struct diff_filespec *src,
 		return 0;
 
 	/* Estimate the edit size by interpreting delta. */
-	delta_size = count_delta(delta, delta_size);
-	free(delta);
-	if (delta_size == UINT_MAX)
+	if (count_delta(delta, delta_size, &src_copied, &literal_added)) {
+		free(delta);
 		return 0;
+	}
+	free(delta);
+
+	/* Extent of damage */
+	if (src->size + literal_added < src_copied)
+		delta_size = 0;
+	else
+		delta_size = (src->size - src_copied) + literal_added;
 
 	/*
 	 * Now we will give some score to it.  100% edit gets 0 points
@@ -220,24 +227,6 @@ static int score_compare(const void *a_, const void *b_)
 {
 	const struct diff_score *a = a_, *b = b_;
 	return b->score - a->score;
-}
-
-int diff_scoreopt_parse(const char *opt)
-{
-	int diglen, num, scale, i;
-	if (opt[0] != '-' || (opt[1] != 'M' && opt[1] != 'C' && opt[1] != 'B'))
-		return -1; /* that is not a -M, -C nor -B option */
-	diglen = strspn(opt+2, "0123456789");
-	if (diglen == 0 || strlen(opt+2) != diglen)
-		return 0; /* use default */
-	sscanf(opt+2, "%d", &num);
-	for (i = 0, scale = 1; i < diglen; i++)
-		scale *= 10;
-
-	/* user says num divided by scale and we say internally that
-	 * is MAX_SCORE * num / scale.
-	 */
-	return MAX_SCORE * num / scale;
 }
 
 void diffcore_rename(int detect_rename, int minimum_score)
