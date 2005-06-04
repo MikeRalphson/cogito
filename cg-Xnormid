@@ -41,7 +41,7 @@ elif [[ "$id" == [0-9a-z][0-9a-z][0-9a-z][0-9a-z]* ]]; then
 	fi
 fi
 
-if [ ${#id} -ne 40 ] || [ ! -f .git/objects/${id:0:2}/${id:2} ]; then
+if ([ "$id" ] && [ "$id" != " " ]) && ([ ${#id} -ne 40 ] || [ ! -f .git/objects/${id:0:2}/${id:2} ]); then
 	reqsecs=$(date --date="$id" +'%s' 2>/dev/null)
 
 	if [ "$reqsecs" ]; then
