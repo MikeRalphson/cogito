@@ -107,11 +107,12 @@ while [ "$1" ]; do
 done
 
 if [ "$1" ]; then
-	commitfiles=("$@")
-	customfiles="${commitfiles[*]}"
-
 	[ "$ignorecache" ] && die "-C and listing files to commit does not make sense"
 	[ -s $_git/merging ] && die "cannot commit individual files when merging"
+
+	eval commitfiles=($(git-diff-cache -r -m HEAD "$@" | \
+		sed 's/^\([^\t]*\)\(.\t.*\)\(\t.*\)*$/"\2"/'))
+	customfiles=1
 
 else
 	# We bother with added/removed files here instead of updating
@@ -122,9 +123,8 @@ else
 	# be committed along automagically as well.
 
 	if [ ! "$ignorecache" ]; then
-		eval changedfiles=($(git-diff-cache -r -m HEAD | cut -f 2 | \
-			sed -e 's/^/"/' -e 's/$/"/'))
-		commitfiles=($addedfiles $remfiles "${changedfiles[@]}")
+		eval commitfiles=($(git-diff-cache -r -m HEAD | \
+			sed 's/^\([^\t]*\)\(.\t.*\)\(\t.*\)*$/"\2"/'))
 	fi
 
 	merging=
@@ -202,14 +202,14 @@ if tty -s; then
 		fi
 	fi
 	if [ ! "$ignorecache" ] && [ ! "$merging" ]; then
-		eval newcommitfiles=($(grep ^CG:F $LOGMSG2 | sed 's/^CG:F//'))
+		eval newcommitfiles=($(grep ^CG:F $LOGMSG2 | sed 's/^CG:F *\(.*\)$/"\1"/'))
 		if [ ! "${newcommitfiles[*]}" ]; then
 			rm $LOGMSG $LOGMSG2
 			die 'Nothing to commit'
 		fi
 		if [ "${commitfiles[*]}" != "${newcommitfiles[*]}" ]; then
 			commitfiles=("${newcommitfiles[@]}")
-			customfiles="${newcommitfiles[*]}"
+			customfiles=1
 		fi
 	fi
 else
@@ -220,16 +220,28 @@ grep -v ^CG: $LOGMSG2 | sed '/./,${/./b;:a;$d;N;/\n$/ba;b;};d' >$LOGMSG
 rm $LOGMSG2
 
 
+precommit_update () {
+	queueN=(); queueD=(); queueM=();
+	for file in "$@"; do
+		op=${file%% *}
+		fname=${file#* }
+		[ "$op" = "A" ] || [ "$op" = "D" ] || [ "$op" = "M" ] || op=M
+		eval "queue$op[\${#queue$op[@]}]=\"\$fname\""
+	done
+	# XXX: Do we even need to do the --add and --remove update-caches?
+	[ "$queueN" ] && { git-update-cache --add -- "${queueN[@]}" || return 1; }
+	[ "$queueD" ] && { git-update-cache --force-remove -- "${queueD[@]}" || return 1; }
+	[ "$queueM" ] && { git-update-cache -- "${queueM[@]}" || return 1; }
+	return 0
+}
+
 if [ ! "$ignorecache" ]; then
 	if [ "$customfiles" ]; then
-		git-update-cache --add --remove -- "${commitfiles[@]}" \
-			|| die "update-cache failed"
+		precommit_update "${commitfiles[@]}" || die "update-cache failed"
 		export GIT_INDEX_FILE=$(mktemp -t gitci.XXXXXX)
 		git-read-tree HEAD
 	fi
-	# TODO: Do the proper separation of adds, removes, and changes.
-	git-update-cache --add --remove -- "${commitfiles[@]}" \
-		|| die "update-cache failed"
+	precommit_update "${commitfiles[@]}" || die "update-cache failed"
 fi
 
 
