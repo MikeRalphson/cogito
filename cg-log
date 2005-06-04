@@ -73,6 +73,7 @@ log_start=
 log_end=
 user=
 mergebase=
+files=()
 
 while [ "$1" ]; do
 	case "$1" in
@@ -107,6 +108,7 @@ while [ "$1" ]; do
 		mergebase=1
 		;;
 	*)
+		files=("$@")
 		break
 		;;
 	esac
@@ -184,6 +186,12 @@ print_commit_log() {
 				parents[${#parents[@]}]="$rest"
 				;;
 			"")
+				if [ "$files" ]; then
+					parent="${parents[0]}"
+					diff_ops=
+					[ "$parent" ] || diff_ops=--root
+					[ "$(git-diff-tree -r $diff_ops $commit $parent "${files[@]}")" ] || return 1
+				fi
 				if [ "$user" ]; then
 					echo -e "author $author\ncommitter $committer" \
 						| grep -qi "$user" || return
@@ -221,12 +229,6 @@ print_commit_log() {
 $revls | $revsort | while read time commit parents; do
 	trap exit SIGPIPE
 	[ "$revfmt" = "git-rev-list" ] && commit="$time"
-	if [ $# -ne 0 ]; then
-		parent=$(git-cat-file commit $commit | sed -n '2s/parent //p;2Q')
-		diff_ops=
-		[ "$parent" ] || diff_ops=--root
-		[ "$(git-diff-tree -r $diff_ops $commit $parent "$@")" ] || continue
-	fi
 	log="$(print_commit_log $commit)"
 	if [ "$log" ]; then
 		echo "$log"
