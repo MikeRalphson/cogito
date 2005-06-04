@@ -219,11 +219,7 @@ $revls | $revsort | while read time commit parents; do
 					s/./    &/
 				'
 				;;
-			*)
-				echo $colheader$key $rest $coldefault
-				;;
 			esac
-
 		done
 	echo
 done | pager
