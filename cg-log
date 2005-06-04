@@ -183,27 +183,33 @@ $revls | $revsort | while read time commit parents; do
 			case "$key" in
 			"author")
 				author="$rest"
-				date=(${author#*> })
-				pdate="$(showdate $date)"
-				[ "$pdate" ] && author="${author%> *}> $pdate"
-				echo $colauthor$key $author $coldefault
 				;;
 			"committer")
 				committer="$rest"
-				date=(${committer#*> })
-				pdate="$(showdate $date)"
-				[ "$pdate" ] && committer="${committer%> *}> $pdate"
-				echo $colcommitter$key $committer $coldefault
 				;;
 			"tree")
 				tree="$rest"
-				echo $colheader$key $tree $coldefault
 				;;
 			"parent")
 				parents[${#parents[@]}]="$rest"
-				echo $colheader$key $rest $coldefault
 				;;
 			"")
+				echo ${colheader}tree $tree $coldefault
+
+				for parent in "${parents[@]}"; do
+					echo ${colheader}parent $parent $coldefault
+				done
+
+				date=(${author#*> })
+				pdate="$(showdate $date)"
+				[ "$pdate" ] && author="${author%> *}> $pdate"
+				echo ${colauthor}author $author $coldefault
+
+				date=(${committer#*> })
+				pdate="$(showdate $date)"
+				[ "$pdate" ] && committer="${committer%> *}> $pdate"
+				echo ${colcommitter}committer $committer $coldefault
+
 				if [ -n "$list_files" ]; then
 					list_commit_files "$tree" "${parents[0]}"
 				fi
