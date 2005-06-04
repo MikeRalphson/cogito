@@ -162,8 +162,8 @@ fi
 
 $revls | $revsort | while read time commit parents; do
 	trap exit SIGPIPE
-	tree1=
-	tree2=
+	tree=
+	parents=()
 	[ "$revfmt" = "git-rev-list" ] && commit="$time"
 	if [ $# -ne 0 ]; then
 		parent=$(git-cat-file commit $commit | sed -n '2s/parent //p;2Q')
@@ -191,17 +191,17 @@ $revls | $revsort | while read time commit parents; do
 				[ "$pdate" ] && rest="${rest%> *}> $pdate"
 				echo $color$key $rest $coldefault
 				;;
-			"tree"|"parent")
-				if [ -z $tree1 ]; then
-					tree1=$rest
-				elif [ -z $tree2 ]; then
-					tree2=$rest
-				fi
+			"tree")
+				tree="$rest"
+				echo $colheader$key $tree $coldefault
+				;;
+			"parent")
+				parents[${#parents[@]}]="$rest"
 				echo $colheader$key $rest $coldefault
 				;;
 			"")
 				if [ -n "$list_files" ]; then
-					list_commit_files "$tree1" "$tree2"
+					list_commit_files "$tree" "${parents[0]}"
 				fi
 				echo; sed -re '
 					/ *Signed-off-by:.*/Is//'$colsignoff'&'$coldefault'/
