@@ -162,6 +162,8 @@ fi
 
 $revls | $revsort | while read time commit parents; do
 	trap exit SIGPIPE
+	author=
+	committer=
 	tree=
 	parents=()
 	[ "$revfmt" = "git-rev-list" ] && commit="$time"
@@ -179,17 +181,19 @@ $revls | $revsort | while read time commit parents; do
 		while read key rest; do
 			trap exit SIGPIPE
 			case "$key" in
-			"author"|"committer")
-				if [ "$key" = "author" ]; then
-					color="$colauthor"
-				else
-					color="$colcommitter"
-				fi
-
-				date=(${rest#*> })
+			"author")
+				author="$rest"
+				date=(${author#*> })
 				pdate="$(showdate $date)"
-				[ "$pdate" ] && rest="${rest%> *}> $pdate"
-				echo $color$key $rest $coldefault
+				[ "$pdate" ] && author="${author%> *}> $pdate"
+				echo $colauthor$key $author $coldefault
+				;;
+			"committer")
+				committer="$rest"
+				date=(${committer#*> })
+				pdate="$(showdate $date)"
+				[ "$pdate" ] && committer="${committer%> *}> $pdate"
+				echo $colcommitter$key $committer $coldefault
 				;;
 			"tree")
 				tree="$rest"
