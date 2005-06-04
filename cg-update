@@ -7,16 +7,27 @@
 #
 # If local changes conflict with those of the branch updated from the
 # merge will be blocked.
+#
+# OPTIONS
+# -------
+# -f::
+#	Force the complete pull even if the heads are the same.
 
-USAGE="cg-update [BRANCH_NAME]"
+USAGE="cg-update [-f] [BRANCH_NAME]"
 
 . ${COGITO_LIB}cg-Xlib
+
+force=
+if [ "$1" = "-f" ]; then
+	force=$1
+	shift
+fi
 
 name=$1
 [ "$name" ] || { [ -s $_git/refs/heads/origin ] && name=origin; }
 [ "$name" ] || die "where to update from?"
 
-cg-pull $name || exit 1
+cg-pull $force $name || exit 1
 echo
 echo "Applying changes..."
 cg-merge $name
