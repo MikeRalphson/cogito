@@ -35,12 +35,34 @@ static void show_commit(struct commit *commit)
 	putchar('\n');
 	if (verbose_header) {
 		const char *buf = commit->buffer;
+		static char pretty_header[16384];
 		if (pretty_print) {
-			static char pretty_header[16384];
 			pretty_print_commit(commit->buffer, ~0, pretty_header, sizeof(pretty_header));
 			buf = pretty_header;
+		} else {
+			/* Indent the commit contents by four chars */
+			char *buf2 = pretty_header;
+			char *eol;
+			do {
+				int len = -1;
+
+				eol = strchr(buf, '\n');
+				if (eol || *buf) {
+					strcpy(buf2, "    ");
+					buf2 += 4;
+				}
+				if (eol) {
+					eol++;
+					len = eol - buf;
+					strncpy(buf2, buf, len);
+					buf2 += len;
+					buf = eol;
+				} else {
+					strcpy(buf2, buf);
+				}
+			} while (eol);
 		}
-		printf("%s%c", buf, hdr_termination);
+		printf("%s%c", pretty_header, hdr_termination);
 	}
 }
 
