@@ -44,8 +44,8 @@
 # -s::
 #	Show a one line summary for each log entry. The summary contains
 #	information about the commit date, the author, the first line
-#	of the commit log and the commit ID. Long author and commit log
-#	titles are trimmed but marked with an ending tilde (~).
+#	of the commit log and the commit ID. Long author names and commit
+#	IDs are trimmed and marked with an ending tilde (~).
 #
 # -uUSERNAME::
 #	List only commits where author or committer contains 'USERNAME'.
@@ -57,7 +57,9 @@
 #	The pager to display log information in, defaults to `less`.
 #
 # PAGER_FLAGS::
-#	Flags to pass to the pager, defaults to `--R`
+#	Flags to pass to the pager. By default `R` and `S` is added to the
+#	`LESS` environment variable to allow displaying of colorized output
+#	and to avoid long lines from wrapping when using `-s`.
 #
 # EXAMPLE USAGE
 # -------------

@@ -5,12 +5,13 @@
 #
 # Outputs a diff for converting the first tree to the second one.
 # By default compares the current working tree to the state at the
-# last commit.
+# last commit. The output will automatically be displayed in a pager
+# unless it is piped to a program.
 #
 # OPTIONS
 # -------
 # -c::
-#	Colorizes the diff output
+#	Colorize the diff output
 #
 # -p::
 #	Instead of one ID denotes a parent commit to the specified ID
@@ -26,8 +27,17 @@
 # -m::
 #	Base the diff at the merge base of the -r arguments (defaulting
 #	to master and origin).
+#
+# ENVIRONMENT VARIABLES
+# ---------------------
+# PAGER::
+#	The pager to display log information in, defaults to `less`.
+#
+# PAGER_FLAGS::
+#	Flags to pass to the pager. By default `R` is added to the `LESS`
+#	environment variable to allow displaying of colorized output.
 
-USAGE="cg-diff [-c] [-m] [-p] [-r FROM_ID[:TO_ID] [FILE]..."
+USAGE="cg-diff [-c] [-m] [-p] [-r FROM_ID[:TO_ID]] [FILE]..."
 
 . ${COGITO_LIB}cg-Xlib
 
