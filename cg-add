@@ -19,10 +19,13 @@ USAGE="cg-add FILE..."
 
 [ "$1" ] || usage
 
-TMPFILE=$(mktemp -t gitadd.XXXXXX)
-find "$@" -type f > $TMPFILE || die "not all files exist, nothing added"
+TMPFILE=$(mktemp -t gitadd.XXXXXX) || exit 1
+find "$@" -type f -print0 > $TMPFILE || {
+	die "not all files exist, nothing added"
+	rm $TMPFILE
+}
 
-cat $TMPFILE | awk '{print "Adding file "  $0}'
-cat $TMPFILE | xargs git-update-cache --add --
+cat $TMPFILE | tr '\0' '\n' | sed 's/^/Adding file /'
+cat $TMPFILE | xargs -0r git-update-cache --add --
 
 rm $TMPFILE
