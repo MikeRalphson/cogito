@@ -111,7 +111,7 @@ if [ "$1" ]; then
 	[ -s $_git/merging ] && die "cannot commit individual files when merging"
 
 	eval commitfiles=($(git-diff-cache -r -m HEAD "$@" | \
-		sed 's/^\([^\t]*\)\(.\t.*\)\(\t.*\)*$/"\2"/'))
+		sed 's/^\([^	]*\)\(.	.*\)\(	.*\)*$/"\2"/'))
 	customfiles=1
 
 else
@@ -123,8 +123,10 @@ else
 	# be committed along automagically as well.
 
 	if [ ! "$ignorecache" ]; then
+		# \t instead of the tab character itself works only with new
+		# sed versions.
 		eval commitfiles=($(git-diff-cache -r -m HEAD | \
-			sed 's/^\([^\t]*\)\(.\t.*\)\(\t.*\)*$/"\2"/'))
+			sed 's/^\([^	]*\)\(.	.*\)\(	.*\)*$/"\2"/'))
 	fi
 
 	merging=
