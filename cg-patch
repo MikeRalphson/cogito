@@ -128,7 +128,7 @@ wait
 touchfiles="$(git-ls-files --deleted | join -v 2 $gonefile -)"
 [ "$touchfiles" ] && touch $touchfiles
 
-cat $todo | xargs -0 sh -c '
+cat $todo | xargs -0 bash -c '
 while [ "$1" ]; do
 	op="$1"; shift;
 	case "$op" in
