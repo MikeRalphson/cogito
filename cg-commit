@@ -110,7 +110,7 @@ if [ "$1" ]; then
 	[ "$ignorecache" ] && die "-C and listing files to commit does not make sense"
 	[ -s $_git/merging ] && die "cannot commit individual files when merging"
 
-	eval commitfiles=($(git-diff-cache -r -m HEAD "$@" | \
+	eval commitfiles=($(git-diff-cache -r -m HEAD -- "$@" | \
 		sed 's/^\([^	]*\)\(.	.*\)\(	.*\)*$/"\2"/'))
 	customfiles=1
 
