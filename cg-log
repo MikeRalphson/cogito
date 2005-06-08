@@ -270,10 +270,10 @@ print_commit_log()
 	committer=
 	tree=
 
-	sed -re '
-		s/^    (.*)/% \1/
-		/^% *Signed-off-by:.*/Is/^% (.*)/% '$colsignoff'\1'$coldefault'/
-		/^% *Acked-by:.*/Is/^% (.*)/% '$colsignoff'\1'$coldefault'/
+	sed -e '
+		s/^    \(.*\)/% \1/
+		/^% *[Ss]igned-[Oo]ff-[Bb]y:.*/ s/^% \(.*\)/% '$colsignoff'\1'$coldefault'/
+		/^% *[Aa]cked-[Bb]y:.*/ s/^% \(.*\)/% '$colsignoff'\1'$coldefault'/
 	' | while read key rest; do
 		trap exit SIGPIPE
 		process_commit_line
