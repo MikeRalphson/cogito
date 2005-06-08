@@ -118,8 +118,8 @@ git-rev-list: LIBS += -lssl
 git-http-pull: LIBS += -lcurl
 git-http-pull: pull.c
 git-local-pull: pull.c
-git-rpull: pull.c rsh.c
-git-rpush: rsh.c
+git-ssh-pull: pull.c rsh.c
+git-ssh-push: rsh.c
 
 $(LIB_OBJS): $(LIB_H)
 $(DIFF_OBJS): diffcore.h
