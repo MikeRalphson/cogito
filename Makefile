@@ -57,7 +57,8 @@ PROG=   git-update-cache git-diff-files git-init-db git-write-tree \
 SCRIPT=	commit-id tree-id parent-id cg-add cg-admin-lsobj cg-admin-uncommit \
 	cg-branch-add cg-branch-ls cg-cancel cg-clone cg-commit cg-diff \
 	cg-export cg-help cg-init cg-log cg-ls cg-merge cg-mkpatch cg-patch \
-	cg-pull cg-restore cg-rm cg-seek cg-status cg-tag cg-tag-ls cg-update
+	cg-pull cg-restore cg-rm cg-seek cg-status cg-tag cg-tag-ls cg-update \
+	cg
 
 LIB_SCRIPT=cg-Xlib cg-Xmergefile cg-Xnormid
 

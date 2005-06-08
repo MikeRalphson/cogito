@@ -1,0 +1,7 @@
+#!/bin/sh
+
+cmd="$1"; shift
+[ x"$cmd" = x"--help" ] && cmd="help"
+
+exe="cg-$cmd"
+exec $exe "$@"
