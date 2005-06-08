@@ -215,7 +215,10 @@ process_commit_line()
 			parent="${parents[0]}"
 			diff_ops=
 			[ "$parent" ] || diff_ops=--root
-			[ "$(git-diff-tree -r $diff_ops $commit $parent "${files[@]}")" ] || return 1
+			if ! [ "$(git-diff-tree -r $diff_ops $commit $parent "${files[@]}")" ]; then
+				skip_commit=1
+				return
+			fi
 		fi
 		if [ "$summary" ]; then
 			# Print summary
