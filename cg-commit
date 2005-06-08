@@ -158,7 +158,7 @@ for msg in "${msgs[@]}"; do
 	else
 		echo >>$LOGMSG
 	fi
-	echo $msg | fmt -s >>$LOGMSG
+	echo "$msg" | fmt -s >>$LOGMSG
 	written=1
 done
 # Always have at least one blank line, to ease the editing for
