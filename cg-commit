@@ -227,7 +227,7 @@ precommit_update () {
 	for file in "$@"; do
 		op=${file%% *}
 		fname=${file#* }
-		[ "$op" = "A" ] || [ "$op" = "D" ] || [ "$op" = "M" ] || op=M
+		[ "$op" = "N" ] || [ "$op" = "D" ] || [ "$op" = "M" ] || op=M
 		eval "queue$op[\${#queue$op[@]}]=\"\$fname\""
 	done
 	# XXX: Do we even need to do the --add and --remove update-caches?
