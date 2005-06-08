@@ -172,21 +172,28 @@ list_commit_files()
 }
 
 print_commit_log() {
-	commit="$1"
+	commit=
 	author=
 	committer=
 	tree=
-	parents=()
 
-	git-cat-file commit $commit | \
+	sed -re '
+		s/^    (.*)/% \1/
+		/^% *Signed-off-by:.*/Is/^% (.*)/% '$colsignoff'\1'$coldefault'/
+		/^% *Acked-by:.*/Is/^% (.*)/% '$colsignoff'\1'$coldefault'/
+	' | \
 		while read key rest; do
 			trap exit SIGPIPE
+			if [ "$key" = "%" ] || [ "$key" = "%$colsignoff" ]; then
+				# The fast common case
+				[ "$summary" ] || echo "    $rest"
+				continue
+			fi
 			case "$key" in
-			"author")
-				author="$rest"
-				;;
-			"committer")
-				committer="$rest"
+			"commit")
+				[ "$summary" ] || { [ "$commit" ] && echo; }
+				commit="$rest"
+				parents=()
 				;;
 			"tree")
 				tree="$rest"
@@ -194,7 +201,19 @@ print_commit_log() {
 			"parent")
 				parents[${#parents[@]}]="$rest"
 				;;
+			"committer")
+				committer="$rest"
+				;;
+			"author")
+				author="$rest"
+				;;
 			"")
+				if [ ! "$commit" ]; then
+					# Next commit is coming
+					[ "$summary" ] || echo
+					continue
+				fi
+
 				if [ "$files" ]; then
 					parent="${parents[0]}"
 					diff_ops=
@@ -220,8 +239,9 @@ print_commit_log() {
 					fi
 
 					printf "$colcommit%s $colauthor%-15s $coldate%s $coldefault%s\n" \
-						"${commit%:*}" "$author" "$date" "$title"
-					return
+						"${commit%:*}" "$author" "$date" "${title:2}"
+					commit=
+					continue
 				fi
 
 				echo ${colheader}commit ${commit%:*} $coldefault
@@ -244,11 +264,8 @@ print_commit_log() {
 				if [ -n "$list_files" ]; then
 					list_commit_files "$tree" "${parents[0]}"
 				fi
-				echo; sed -re '
-					/ *Signed-off-by:.*/Is//'$colsignoff'&'$coldefault'/
-					/ *Acked-by:.*/Is//'$colsignoff'&'$coldefault'/
-					s/./    &/
-				'
+				echo
+				commit=
 				;;
 			esac
 		done
@@ -260,27 +277,14 @@ if [ "$mergebase" ]; then
 	log_start=$(git-merge-base $(commit-id "$log_start") $(commit-id "$log_end"))
 fi
 
+id1="$(commit-id "$log_start")" || exit 1
 if [ "$log_end" ]; then
-	id1="$(commit-id "$log_start")" || exit 1
 	id2="$(commit-id "$log_end")" || exit 1
-	revls="git-rev-tree $id2 ^$id1"
-	revsort="sort -rn"
-	revfmt="git-rev-tree"
+	revls="git-rev-list --pretty=raw $id2 ^$id1"
 else
-	id1="$(commit-id "$log_start")" || exit 1
-	revls="git-rev-list $id1"
-	revsort="cat"
-	revfmt="git-rev-list"
+	revls="git-rev-list --pretty=raw $id1"
 fi
 
-$revls | $revsort | while read time commit parents; do
-	trap exit SIGPIPE
-	[ "$revfmt" = "git-rev-list" ] && commit="$time"
-	log="$(print_commit_log $commit)"
-	if [ "$log" ]; then
-		echo "$log"
-		[ "$summary" ] || echo
-	fi
-	# LESS="S" will prevent less to wrap too long titles to multiple lines;
-	# you can scroll horizontally.
-done | LESS="S$LESS" pager
+# LESS="S" will prevent less to wrap too long titles to multiple lines;
+# you can scroll horizontally.
+$revls | print_commit_log | LESS="S$LESS" pager
