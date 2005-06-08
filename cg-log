@@ -171,7 +171,96 @@ list_commit_files()
 	echo "$coldefault:"
 }
 
-print_commit_log() {
+process_commit_line()
+{
+	if [ "$key" = "%" ] || [ "$key" = "%$colsignoff" ]; then
+		# The fast common case
+		[ "$summary" ] || echo "    $rest"
+		return
+	fi
+	case "$key" in
+	"commit")
+		[ "$summary" ] || { [ "$commit" ] && echo; }
+		commit="$rest"
+		parents=()
+		;;
+	"tree")
+		tree="$rest"
+		;;
+	"parent")
+		parents[${#parents[@]}]="$rest"
+		;;
+	"committer")
+		committer="$rest"
+		;;
+	"author")
+		author="$rest"
+		;;
+	"")
+		if [ ! "$commit" ]; then
+			# Next commit is coming
+			[ "$summary" ] || echo
+			return
+		fi
+
+		if [ "$files" ]; then
+			parent="${parents[0]}"
+			diff_ops=
+			[ "$parent" ] || diff_ops=--root
+			[ "$(git-diff-tree -r $diff_ops $commit $parent "${files[@]}")" ] || return 1
+		fi
+		if [ "$user" ]; then
+			echo -e "author $author\ncommitter $committer" \
+				| grep -qi "$user" || return
+		fi
+		if [ "$summary" ]; then
+			# Print summary
+			commit="${commit%:*}"
+			author="${author% <*}"
+			date=(${committer#*> })
+			date="$(showdate $date '+%F %H:%M')"
+			read title
+			if [ "${#author}" -gt 15 ]; then
+				author="${author:0:14}$coltrim~"
+			fi
+			if [ "${COLUMNS:-0}" -le 90 ]; then
+				commit="${commit:0:12}$coltrim~"
+			fi
+
+			printf "$colcommit%s $colauthor%-15s $coldate%s $coldefault%s\n" \
+				"${commit%:*}" "$author" "$date" "${title:2}"
+			commit=
+			return
+		fi
+
+		echo ${colheader}commit ${commit%:*} $coldefault
+		echo ${colheader}tree $tree $coldefault
+
+		for parent in "${parents[@]}"; do
+			echo ${colheader}parent $parent $coldefault
+		done
+
+		date=(${author#*> })
+		pdate="$(showdate $date)"
+		[ "$pdate" ] && author="${author%> *}> $pdate"
+		echo ${colauthor}author $author $coldefault
+
+		date=(${committer#*> })
+		pdate="$(showdate $date)"
+		[ "$pdate" ] && committer="${committer%> *}> $pdate"
+		echo ${colcommitter}committer $committer $coldefault
+
+		if [ -n "$list_files" ]; then
+			list_commit_files "$tree" "${parents[0]}"
+		fi
+		echo
+		commit=
+		;;
+	esac
+}
+
+print_commit_log()
+{
 	commit=
 	author=
 	committer=
@@ -183,90 +272,7 @@ print_commit_log() {
 		/^% *Acked-by:.*/Is/^% (.*)/% '$colsignoff'\1'$coldefault'/
 	' | while read key rest; do
 		trap exit SIGPIPE
-		if [ "$key" = "%" ] || [ "$key" = "%$colsignoff" ]; then
-			# The fast common case
-			[ "$summary" ] || echo "    $rest"
-			continue
-		fi
-		case "$key" in
-		"commit")
-			[ "$summary" ] || { [ "$commit" ] && echo; }
-			commit="$rest"
-			parents=()
-			;;
-		"tree")
-			tree="$rest"
-			;;
-		"parent")
-			parents[${#parents[@]}]="$rest"
-			;;
-		"committer")
-			committer="$rest"
-			;;
-		"author")
-			author="$rest"
-			;;
-		"")
-			if [ ! "$commit" ]; then
-				# Next commit is coming
-				[ "$summary" ] || echo
-				continue
-			fi
-
-			if [ "$files" ]; then
-				parent="${parents[0]}"
-				diff_ops=
-				[ "$parent" ] || diff_ops=--root
-				[ "$(git-diff-tree -r $diff_ops $commit $parent "${files[@]}")" ] || return 1
-			fi
-			if [ "$user" ]; then
-				echo -e "author $author\ncommitter $committer" \
-					| grep -qi "$user" || return
-			fi
-			if [ "$summary" ]; then
-				# Print summary
-				commit="${commit%:*}"
-				author="${author% <*}"
-				date=(${committer#*> })
-				date="$(showdate $date '+%F %H:%M')"
-				read title
-				if [ "${#author}" -gt 15 ]; then
-					author="${author:0:14}$coltrim~"
-				fi
-				if [ "${COLUMNS:-0}" -le 90 ]; then
-					commit="${commit:0:12}$coltrim~"
-				fi
-
-				printf "$colcommit%s $colauthor%-15s $coldate%s $coldefault%s\n" \
-					"${commit%:*}" "$author" "$date" "${title:2}"
-				commit=
-				continue
-			fi
-
-			echo ${colheader}commit ${commit%:*} $coldefault
-			echo ${colheader}tree $tree $coldefault
-
-			for parent in "${parents[@]}"; do
-				echo ${colheader}parent $parent $coldefault
-			done
-
-			date=(${author#*> })
-			pdate="$(showdate $date)"
-			[ "$pdate" ] && author="${author%> *}> $pdate"
-			echo ${colauthor}author $author $coldefault
-
-			date=(${committer#*> })
-			pdate="$(showdate $date)"
-			[ "$pdate" ] && committer="${committer%> *}> $pdate"
-			echo ${colcommitter}committer $committer $coldefault
-
-			if [ -n "$list_files" ]; then
-				list_commit_files "$tree" "${parents[0]}"
-			fi
-			echo
-			commit=
-			;;
-		esac
+		process_commit_line
 	done
 }
 
