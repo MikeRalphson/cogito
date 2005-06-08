@@ -106,7 +106,7 @@ If, instead, you want to clone the repository to the current directory,
 first make sure you are in an empty directory. Then give the following
 command:
 
-	$ cg-clone -s rsync://rsync.kernel.org/pub/scm/cogito/cogito.git cogitodir
+	$ cg-clone -s rsync://rsync.kernel.org/pub/scm/cogito/cogito.git
 
 When you get your prompt back, do an ls to see the source tree and .git
 directory.
