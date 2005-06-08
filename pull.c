@@ -3,9 +3,15 @@
 #include "cache.h"
 #include "commit.h"
 #include "tree.h"
+#include "refs.h"
+
+const char *write_ref = NULL;
+
+const unsigned char *current_ref = NULL;
 
 int get_tree = 0;
 int get_history = 0;
+/* 1 means "get delta", 2 means "really check delta harder */
 int get_delta = 1;
 int get_all = 0;
 int get_verbosely = 0;
@@ -32,12 +38,16 @@ static void report_missing(const char *what, const unsigned char *missing)
 
 static int make_sure_we_have_it(const char *what, unsigned char *sha1)
 {
-	int status;
-	if (has_sha1_file(sha1))
+	int status = 0;
+
+	if (!has_sha1_file(sha1)) {
+		status = fetch(sha1);
+		if (status && what)
+			report_missing(what, sha1);
+	}
+	else if (get_delta < 2)
 		return 0;
-	status = fetch(sha1);
-	if (status && what)
-		report_missing(what, sha1);
+
 	if (get_delta) {
 		char delta_sha1[20];
 		status = sha1_delta_base(sha1, delta_sha1);
@@ -105,16 +115,42 @@ static int process_commit(unsigned char *sha1)
 	return 0;
 }
 
+static int interpret_target(char *target, unsigned char *sha1)
+{
+	if (!get_sha1_hex(target, sha1))
+		return 0;
+	if (!check_ref_format(target)) {
+		if (!fetch_ref(target, sha1)) {
+			return 0;
+		}
+	}
+	return -1;
+}
+
+
 int pull(char *target)
 {
-	int retval;
 	unsigned char sha1[20];
-	retval = get_sha1_hex(target, sha1);
-	if (retval)
-		return retval;
-	retval = make_sure_we_have_it(commitS, sha1);
-	if (retval)
-		return retval;
-	memcpy(current_commit_sha1, sha1, 20);
-	return process_commit(sha1);
+	int fd = -1;
+
+	if (write_ref && current_ref) {
+		fd = lock_ref_sha1(write_ref, current_ref);
+		if (fd < 0)
+			return -1;
+	}
+
+	if (interpret_target(target, sha1))
+		return error("Could not interpret %s as something to pull",
+			     target);
+	if (process_commit(sha1))
+		return -1;
+	
+	if (write_ref) {
+		if (current_ref) {
+			write_ref_sha1(write_ref, fd, sha1);
+		} else {
+			write_ref_sha1_unlocked(write_ref, sha1);
+		}
+	}
+	return 0;
 }

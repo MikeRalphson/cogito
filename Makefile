@@ -42,16 +42,17 @@ INSTALL?=install
 SCRIPTS=git git-apply-patch-script git-merge-one-file-script git-prune-script \
 	git-pull-script git-tag-script git-resolve-script git-whatchanged \
 	git-deltafy-script git-fetch-script git-status-script git-commit-script \
-	git-log-script git-shortlog
+	git-log-script git-shortlog git-cvsimport-script
 
 PROG=   git-update-cache git-diff-files git-init-db git-write-tree \
 	git-read-tree git-commit-tree git-cat-file git-fsck-cache \
 	git-checkout-cache git-diff-tree git-rev-tree git-ls-files \
 	git-check-files git-ls-tree git-merge-base git-merge-cache \
 	git-unpack-file git-export git-diff-cache git-convert-cache \
-	git-http-pull git-rpush git-rpull git-rev-list git-mktag \
+	git-http-pull git-ssh-push git-ssh-pull git-rev-list git-mktag \
 	git-diff-helper git-tar-tree git-local-pull git-write-blob \
-	git-get-tar-commit-id git-mkdelta git-apply git-stripspace
+	git-get-tar-commit-id git-mkdelta git-apply git-stripspace \
+	git-cvs2git
 
 SCRIPT=	commit-id tree-id parent-id cg-add cg-admin-lsobj cg-admin-uncommit \
 	cg-branch-add cg-branch-ls cg-cancel cg-clone cg-commit cg-diff \
@@ -67,9 +68,10 @@ VERSION= VERSION
 COMMON=	read-cache.o
 
 LIB_OBJS=read-cache.o sha1_file.o usage.o object.o commit.o tree.o blob.o \
-	 tag.o delta.o date.o index.o diff-delta.o patch-delta.o
+	 tag.o delta.o date.o index.o diff-delta.o patch-delta.o entry.o \
+	 epoch.o refs.o
 LIB_FILE=libgit.a
-LIB_H=cache.h object.h blob.h tree.h commit.h tag.h delta.h
+LIB_H=cache.h object.h blob.h tree.h commit.h tag.h delta.h epoch.h
 
 LIB_H += strbuf.h
 LIB_OBJS += strbuf.o
@@ -106,18 +108,18 @@ all: $(PROG) $(GEN_SCRIPT)
 test-delta: test-delta.c diff-delta.o patch-delta.o
 	$(CC) $(CFLAGS) -o $@ $^
 
+test-date: test-date.c date.o
+	$(CC) $(CFLAGS) -o $@ test-date.c date.o
+
 git-%: %.c $(LIB_FILE)
 	$(CC) $(CFLAGS) -o $@ $(filter %.c,$^) $(LIBS)
 
+git-rev-list: LIBS += -lssl
 git-http-pull: LIBS += -lcurl
 git-http-pull: pull.c
 git-local-pull: pull.c
 git-rpull: pull.c rsh.c
 git-rpush: rsh.c
-
-test-date: test-date.c date.o
-	$(CC) $(CFLAGS) -o $@ test-date.c date.o
-
 
 $(LIB_OBJS): $(LIB_H)
 $(DIFF_OBJS): diffcore.h
@@ -150,7 +152,6 @@ cg-version: $(VERSION) $(GIT_HEAD) Makefile
 
 cogito.spec: cogito.spec.in $(VERSION)
 	sed -e 's/@@VERSION@@/$(shell cat $(VERSION) | cut -d"-" -f2)/g' < $< > $@
-
 
 test: all
 	$(MAKE) -C t/ all

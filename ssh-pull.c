@@ -2,6 +2,7 @@
 #include "commit.h"
 #include "rsh.h"
 #include "pull.h"
+#include "refs.h"
 
 static int fd_in;
 static int fd_out;
@@ -39,11 +40,25 @@ int get_version(void)
 	return 0;
 }
 
+int fetch_ref(char *ref, unsigned char *sha1)
+{
+	signed char remote;
+	char type = 'r';
+	write(fd_out, &type, 1);
+	write(fd_out, ref, strlen(ref) + 1);
+	read(fd_in, &remote, 1);
+	if (remote < 0)
+		return remote;
+	read(fd_in, sha1, 20);
+	return 0;
+}
+
 int main(int argc, char **argv)
 {
 	char *commit_id;
 	char *url;
 	int arg = 1;
+	const char *prog = getenv("GIT_SSH_PUSH") ? : "git-ssh-push";
 
 	while (arg < argc && argv[arg][0] == '-') {
 		if (argv[arg][1] == 't') {
@@ -52,23 +67,28 @@ int main(int argc, char **argv)
 			get_history = 1;
 		} else if (argv[arg][1] == 'd') {
 			get_delta = 0;
+		} else if (!strcmp(argv[arg], "--recover")) {
+			get_delta = 2;
 		} else if (argv[arg][1] == 'a') {
 			get_all = 1;
 			get_tree = 1;
 			get_history = 1;
 		} else if (argv[arg][1] == 'v') {
 			get_verbosely = 1;
+		} else if (argv[arg][1] == 'w') {
+			write_ref = argv[arg + 1];
+			arg++;
 		}
 		arg++;
 	}
 	if (argc < arg + 2) {
-		usage("git-rpull [-c] [-t] [-a] [-v] [-d] commit-id url");
+		usage("git-ssh-pull [-c] [-t] [-a] [-v] [-d] [--recover] [-w ref] commit-id url");
 		return 1;
 	}
 	commit_id = argv[arg];
 	url = argv[arg + 1];
 
-	if (setup_connection(&fd_in, &fd_out, "git-rpush", url, arg, argv + 1))
+	if (setup_connection(&fd_in, &fd_out, prog, url, arg, argv + 1))
 		return 1;
 
 	if (get_version())

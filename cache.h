@@ -33,6 +33,12 @@
 #define DTYPE(de)	DT_UNKNOWN
 #endif
 
+#ifdef __GNUC__
+#define NORETURN __attribute__((__noreturn__))
+#else
+#define NORETURN
+#endif
+
 /*
  * Environment variables transition.
  * We accept older names for now but warn.
@@ -85,6 +91,7 @@ struct cache_entry {
 
 #define CE_NAMEMASK  (0x0fff)
 #define CE_STAGEMASK (0x3000)
+#define CE_UPDATE    (0x4000)
 #define CE_STAGESHIFT 12
 
 #define create_ce_flags(len, stage) htons((len) | ((stage) << CE_STAGESHIFT))
@@ -111,6 +118,7 @@ extern unsigned int active_nr, active_alloc, active_cache_changed;
 #define INDEX_ENVIRONMENT "GIT_INDEX_FILE"
 
 extern char *get_object_directory(void);
+extern char *get_refs_directory(void);
 extern char *get_index_file(void);
 
 #define ALTERNATE_DB_ENVIRONMENT "GIT_ALTERNATE_OBJECT_DIRECTORIES"
@@ -175,8 +183,8 @@ extern int get_sha1_hex(const char *hex, unsigned char *sha1);
 extern char *sha1_to_hex(const unsigned char *sha1);	/* static buffer result! */
 
 /* General helper functions */
-extern void usage(const char *err);
-extern void die(const char *err, ...);
+extern void usage(const char *err) NORETURN;
+extern void die(const char *err, ...) NORETURN;
 extern int error(const char *err, ...);
 
 extern int base_name_compare(const char *name1, int len1, int mode1, const char *name2, int len2, int mode2);
@@ -214,5 +222,16 @@ static inline void *xcalloc(size_t nmemb, size_t size)
 		die("Out of memory, calloc failed");
 	return ret;
 }
+
+struct checkout {
+	const char *base_dir;
+	int base_dir_len;
+	unsigned force:1,
+		 quiet:1,
+		 not_new:1,
+		 refresh_cache:1;
+};
+
+extern int checkout_entry(struct cache_entry *ce, struct checkout *state);
 
 #endif /* CACHE_H */
