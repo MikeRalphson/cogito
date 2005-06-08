@@ -104,10 +104,11 @@ tee $patchfifo | {
 				newmode=
 			fi
 			if [ "$origmode" != "$newmode" ]; then
-				tocm=$(echo "$file" | sed 's/[^\/]*\///') #-p1
 				if ! [ "$reverse" ]; then
+					tocm=$(echo "$file" | sed 's/[^\/]*\///') #-p1
 					mode="$newmode"
 				else
+					tocm=$(echo "$victim" | sed 's/[^\/]*\///') #-p1
 					mode="$oldmode"
 				fi
 				echo -ne "cm\0 $mode\000$tocm\0"
