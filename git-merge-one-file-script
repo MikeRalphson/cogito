@@ -74,10 +74,14 @@ case "${1:-.}${2:-.}${3:-.}" in
 	merge -p "$src1" "$orig" "$src2" > "$4"
 	ret=$?
 	rm -f -- "$orig" "$src1" "$src2"
+
 	if [ "$6" != "$7" ]; then
 		echo "ERROR: Permissions conflict: $5->$6 here but merging $7."
 		ret=1
 	fi
+	case "$6" in *7??) mode=+x;; *) mode=-x;; esac
+	chmod "$mode" "$4"
+
 	if [ $ret -ne 0 ]; then
 		# Reset the index to the first branch, making
 		# git-diff-file useful
@@ -85,13 +89,11 @@ case "${1:-.}${2:-.}${3:-.}" in
 		echo "ERROR: Merge conflict in $4."
 		exit 1
 	fi
-	sha1=`git-write-blob "$src2"` || {
-		echo "ERROR: Leaving conflict merge in $src2."
-	}
-	exec git-update-cache --add --cacheinfo "$6" $sha1 "$4"
+	exec git-update-cache --add -- "$4"
 	;;
 
 *)
-	echo "ERROR: Not handling case $4: $1 -> $2 -> $3" ;;
+	echo "ERROR: Not handling case $4: $1 -> $2 -> $3"
+	;;
 esac
 exit 1
