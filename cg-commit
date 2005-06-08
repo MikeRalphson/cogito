@@ -215,7 +215,7 @@ if tty -s; then
 		fi
 	fi
 else
-	cat >>$LOGMSG2
+	cat >$LOGMSG2
 fi
 # Remove heading and trailing blank lines.
 grep -v ^CG: $LOGMSG2 | git-stripspace >$LOGMSG
