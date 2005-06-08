@@ -236,6 +236,7 @@ static struct sha1_size_cache {
 static int sha1_size_cache_nr, sha1_size_cache_alloc;
 
 static struct sha1_size_cache *locate_size_cache(unsigned char *sha1,
+						 int find_only,
 						 unsigned long size)
 {
 	int first, last;
@@ -244,9 +245,9 @@ static struct sha1_size_cache *locate_size_cache(unsigned char *sha1,
 	first = 0;
 	last = sha1_size_cache_nr;
 	while (last > first) {
-		int next = (last + first) >> 1;
+		int cmp, next = (last + first) >> 1;
 		e = sha1_size_cache[next];
-		int cmp = memcmp(e->sha1, sha1, 20);
+		cmp = memcmp(e->sha1, sha1, 20);
 		if (!cmp)
 			return e;
 		if (cmp < 0) {
@@ -256,7 +257,7 @@ static struct sha1_size_cache *locate_size_cache(unsigned char *sha1,
 		first = next+1;
 	}
 	/* not found */
-	if (size == UINT_MAX)
+	if (find_only)
 		return NULL;
 	/* insert to make it at "first" */
 	if (sha1_size_cache_alloc <= sha1_size_cache_nr) {
@@ -337,13 +338,13 @@ int diff_populate_filespec(struct diff_filespec *s, int size_only)
 		struct sha1_size_cache *e;
 
 		if (size_only) {
-			e = locate_size_cache(s->sha1, UINT_MAX);
+			e = locate_size_cache(s->sha1, 1, 0);
 			if (e) {
 				s->size = e->size;
 				return 0;
 			}
 			if (!sha1_file_size(s->sha1, &s->size))
-				locate_size_cache(s->sha1, s->size);
+				locate_size_cache(s->sha1, 0, s->size);
 		}
 		else {
 			s->data = read_sha1_file(s->sha1, type, &s->size);
@@ -785,8 +786,8 @@ static void diff_flush_patch(struct diff_filepair *p)
 	case 'R':
 		sprintf(msg_,
 			"similarity index %d%%\n"
-			"rename old %s\n"
-			"rename new %s",
+			"rename from %s\n"
+			"rename to %s",
 			(int)(0.5 + p->score * 100.0/MAX_SCORE),
 			p->one->path, p->two->path);
 		msg = msg_;
@@ -963,11 +964,11 @@ void diffcore_std(const char **paths,
 {
 	if (paths && paths[0])
 		diffcore_pathspec(paths);
-	if (0 <= break_opt)
+	if (break_opt != -1)
 		diffcore_break(break_opt);
 	if (detect_rename)
 		diffcore_rename(detect_rename, rename_score);
-	if (0 <= break_opt)
+	if (break_opt != -1)
 		diffcore_merge_broken();
 	if (pickaxe)
 		diffcore_pickaxe(pickaxe, pickaxe_opts);

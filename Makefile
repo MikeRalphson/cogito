@@ -23,16 +23,17 @@ INSTALL=install
 SCRIPTS=git git-apply-patch-script git-merge-one-file-script git-prune-script \
 	git-pull-script git-tag-script git-resolve-script git-whatchanged \
 	git-deltafy-script git-fetch-script git-status-script git-commit-script \
-	git-log-script git-shortlog
+	git-log-script git-shortlog git-cvsimport-script
 
 PROG=   git-update-cache git-diff-files git-init-db git-write-tree \
 	git-read-tree git-commit-tree git-cat-file git-fsck-cache \
 	git-checkout-cache git-diff-tree git-rev-tree git-ls-files \
 	git-check-files git-ls-tree git-merge-base git-merge-cache \
 	git-unpack-file git-export git-diff-cache git-convert-cache \
-	git-http-pull git-rpush git-rpull git-rev-list git-mktag \
+	git-http-pull git-ssh-push git-ssh-pull git-rev-list git-mktag \
 	git-diff-helper git-tar-tree git-local-pull git-write-blob \
-	git-get-tar-commit-id git-mkdelta git-apply git-stripspace
+	git-get-tar-commit-id git-mkdelta git-apply git-stripspace \
+	git-cvs2git
 
 all: $(PROG)
 
@@ -40,9 +41,10 @@ install: $(PROG) $(SCRIPTS)
 	$(INSTALL) $(PROG) $(SCRIPTS) $(dest)$(bin)
 
 LIB_OBJS=read-cache.o sha1_file.o usage.o object.o commit.o tree.o blob.o \
-	 tag.o delta.o date.o index.o diff-delta.o patch-delta.o
+	 tag.o delta.o date.o index.o diff-delta.o patch-delta.o entry.o \
+	 epoch.o refs.o
 LIB_FILE=libgit.a
-LIB_H=cache.h object.h blob.h tree.h commit.h tag.h delta.h
+LIB_H=cache.h object.h blob.h tree.h commit.h tag.h delta.h epoch.h
 
 LIB_H += strbuf.h
 LIB_OBJS += strbuf.o
@@ -105,8 +107,8 @@ git-diff-cache: diff-cache.c
 git-convert-cache: convert-cache.c
 git-http-pull: http-pull.c pull.c
 git-local-pull: local-pull.c pull.c
-git-rpush: rsh.c
-git-rpull: rsh.c pull.c
+git-ssh-push: rsh.c
+git-ssh-pull: rsh.c pull.c
 git-rev-list: rev-list.c
 git-mktag: mktag.c
 git-diff-helper: diff-helper.c
@@ -114,8 +116,10 @@ git-tar-tree: tar-tree.c
 git-write-blob: write-blob.c
 git-mkdelta: mkdelta.c
 git-stripspace: stripspace.c
+git-cvs2git: cvs2git.c
 
 git-http-pull: LIBS += -lcurl
+git-rev-list: LIBS += -lssl
 
 # Library objects..
 blob.o: $(LIB_H)
@@ -128,12 +132,14 @@ sha1_file.o: $(LIB_H)
 usage.o: $(LIB_H)
 strbuf.o: $(LIB_H)
 gitenv.o: $(LIB_H)
+entry.o: $(LIB_H)
 diff.o: $(LIB_H) diffcore.h
 diffcore-rename.o : $(LIB_H) diffcore.h
 diffcore-pathspec.o : $(LIB_H) diffcore.h
 diffcore-pickaxe.o : $(LIB_H) diffcore.h
 diffcore-break.o : $(LIB_H) diffcore.h
 diffcore-order.o : $(LIB_H) diffcore.h
+epoch.o: $(LIB_H)
 
 test: all
 	$(MAKE) -C t/ all
