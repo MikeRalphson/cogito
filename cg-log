@@ -175,14 +175,15 @@ process_commit_line()
 {
 	if [ "$key" = "%" ] || [ "$key" = "%$colsignoff" ]; then
 		# The fast common case
-		[ "$summary" ] || echo "    $rest"
+		[ "$summary" ] || [ "$skip_commit" ] || echo "    $rest"
 		return
 	fi
 	case "$key" in
 	"commit")
-		[ "$summary" ] || { [ "$commit" ] && echo; }
+		[ "$summary" ] || [ "$skip_commit" ] || { [ "$commit" ] && echo; }
 		commit="$rest"
 		parents=()
+		skip_commit=
 		;;
 	"tree")
 		tree="$rest"
@@ -203,15 +204,18 @@ process_commit_line()
 			return
 		fi
 
+		if [ "$user" ]; then
+			if ! echo -e "author $author\ncommitter $committer" \
+			     | grep -qi "$user"; then
+				skip_commit=1
+				return
+			fi
+		fi
 		if [ "$files" ]; then
 			parent="${parents[0]}"
 			diff_ops=
 			[ "$parent" ] || diff_ops=--root
 			[ "$(git-diff-tree -r $diff_ops $commit $parent "${files[@]}")" ] || return 1
-		fi
-		if [ "$user" ]; then
-			echo -e "author $author\ncommitter $committer" \
-				| grep -qi "$user" || return
 		fi
 		if [ "$summary" ]; then
 			# Print summary
