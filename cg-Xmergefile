@@ -100,7 +100,7 @@ case "${1:-.}${2:-.}${3:-.}" in
 	rm -f -- "$orig" "$src1" "$src2"
 
 	if [ "$6" != "$7" ]; then
-		error "Permissions conflict: $5->$6 here but merging $7."
+		error "Permissions conflict: $5->$6,$7."
 		ret=1
 	fi
 	case "$6" in *7??) mode=+x;; *) mode=-x;; esac
