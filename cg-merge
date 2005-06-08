@@ -69,20 +69,18 @@ fi
 
 
 [ "$(git-diff-files -s)" ] && update_index
-if [ "$(git-diff-files -s)" ] || [ "$(git-diff-cache HEAD)" ]; then
-	die "merge blocked: local changes"
-fi
 
 echo "Merging $base -> $branch" >&2
 echo -e "\tto $head..." >&2
+
+
+git-read-tree -m $(tree-id $base) $(tree-id $head) $(tree-id $branch) ||
+	die "git-read-tree failed (merge likely blocked by local changes)"
 
 echo $base >>$_git/merge-base
 echo $branch >>$_git/merging
 echo $branchname >>$_git/merging-sym
 
-
-git-read-tree -m $(tree-id $base) $(tree-id $head) $(tree-id $branch) ||
-	die "git-read-tree failed"
 if ! git-merge-cache -o ${COGITO_LIB}cg-Xmergefile -a || [ "$careful" ]; then
 	git-checkout-cache -f -a
 
@@ -123,7 +121,7 @@ if ! git-merge-cache -o ${COGITO_LIB}cg-Xmergefile -a || [ "$careful" ]; then
 __END__
 	exit 2
 fi
-git-checkout-cache -f -a
+git-checkout-cache -f -u -a
 
 echo
 readtree=
