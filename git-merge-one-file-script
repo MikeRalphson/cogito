@@ -33,8 +33,8 @@ case "${1:-.}${2:-.}${3:-.}" in
 #
 "$1.$1" | "$1$1.")
 	echo "Removing $4"
-	rm -f -- "$4"
-	exec git-update-cache --remove -- "$4"
+	exec rm -f -- "$4" &&
+		git-update-cache --remove -- "$4"
 	;;
 #
 # Added in one.
@@ -42,9 +42,9 @@ case "${1:-.}${2:-.}${3:-.}" in
 ".$2." | "..$3" )
 	case "$6$7" in *7??) mode=+x;; *) mode=-x;; esac
 	echo "Adding $4 with perm $mode."
-	git-cat-file blob "$2$3" > "$4"
-	chmod $mode -- "$4"
-	exec git-update-cache --add -- "$4"
+	exec git-cat-file blob "$2$3" >"$4" &&
+		chmod $mode -- "$4" &&
+		git-update-cache --add -- "$4"
 	;;
 #
 # Added in both (check for same permissions).
@@ -57,9 +57,9 @@ case "${1:-.}${2:-.}${3:-.}" in
 	fi
 	case "$6" in *7??) mode=+x;; *) mode=-x;; esac
 	echo "Adding $4 with perm $mode"
-	git-cat-file blob "$2" > "$4"
-	chmod $mode -- "$4"
-	exec git-update-cache --add -- "$4"
+	exec git-cat-file blob "$2" >"$4" &&
+		chmod $mode -- "$4" &&
+		git-update-cache --add -- "$4"
 	;;
 #
 # Modified in both, but differently.
