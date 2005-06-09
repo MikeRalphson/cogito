@@ -52,7 +52,7 @@ showpatch () {
 		case "$key" in
 		"author"|"committer")
 			date=(${rest#*> })
-			pdate="$(showdate $date)"
+			pdate="$(showdate ${date[*]})"
 			[ "$pdate" ] && rest="${rest%> *}> $pdate"
 			echo $key $rest >>$header
 			;;

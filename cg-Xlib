@@ -60,19 +60,17 @@ stat () {
 }
 
 showdate () {
-	date="$1"
-	format="$2"
-	[ "$format" ] || format=-R
-	sec=${date[0]}; tz=${date[1]}
+	local secs=$1 tzhours=${2:0:3} tzmins=${2:0:1}${2:3} format="$3"
+	# bash doesn't like leading zeros
+	[ "${tzhours:1:1}" = 0 ] && tzhours=${2:0:1}${2:2:1}
+	secs=$(($secs + $tzhours * 3600 + $tzmins * 60))
 	if [ "$has_gnudate" ]; then
-	        dtz=${tz/+/}
-		lsec=$(($dtz / 100 * 3600 + $dtz % 100 * 60 + $sec))
-	        pdate="$(date -ud "1970-01-01 UTC + $lsec sec" "$format" 2>/dev/null)"
+		[ "$format" ] || format=-R
+		date -ud "1970-01-01 UTC + $secs sec" "$format"
 	else
-		# FIXME: $format
-	        pdate="$(date -u -r ${date[0]} 2>/dev/null)"
+		[ "$format" ] || format=--
+		date -u -r $secs "$format"
 	fi
-	echo "${pdate/+0000/$tz}"
 }
 
 # Usage: tree_timewarp [--no-head-update] DIRECTION_STR ROLLBACK_BOOL BASE BRANCH

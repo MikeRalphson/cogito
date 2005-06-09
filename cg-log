@@ -225,7 +225,7 @@ process_commit_line()
 			commit="${commit%:*}"
 			author="${author% <*}"
 			date=(${committer#*> })
-			date="$(showdate $date '+%F %H:%M')"
+			date="$(showdate ${date[*]} '+%F %H:%M')"
 			read title
 			if [ "${#author}" -gt 15 ]; then
 				author="${author:0:14}$coltrim~"
@@ -248,12 +248,12 @@ process_commit_line()
 		done
 
 		date=(${author#*> })
-		pdate="$(showdate $date)"
+		pdate="$(showdate ${date[*]})"
 		[ "$pdate" ] && author="${author%> *}> $pdate"
 		echo ${colauthor}author $author $coldefault
 
 		date=(${committer#*> })
-		pdate="$(showdate $date)"
+		pdate="$(showdate ${date[*]})"
 		[ "$pdate" ] && committer="${committer%> *}> $pdate"
 		echo ${colcommitter}committer $committer $coldefault
 
