@@ -3,6 +3,9 @@
 # on non-x86 architectures (e.g. PowerPC), while the OpenSSL version (default
 # choice) has very fast version optimized for i586.
 #
+# Define NO_OPENSSL environment variable if you do not have OpenSSL. You will
+# miss out git-rev-list --merge-order. This also implies MOZILLA_SHA1.
+#
 # Define PPC_SHA1 environment variable when running make to make use of
 # a bundled SHA1 routine optimized for PowerPC.
 
@@ -70,9 +73,9 @@ COMMON=	read-cache.o
 
 LIB_OBJS=read-cache.o sha1_file.o usage.o object.o commit.o tree.o blob.o \
 	 tag.o delta.o date.o index.o diff-delta.o patch-delta.o entry.o \
-	 epoch.o refs.o
+	 refs.o
 LIB_FILE=libgit.a
-LIB_H=cache.h object.h blob.h tree.h commit.h tag.h delta.h epoch.h
+LIB_H=cache.h object.h blob.h tree.h commit.h tag.h delta.h
 
 LIB_H += strbuf.h
 LIB_OBJS += strbuf.o
@@ -87,6 +90,13 @@ LIB_OBJS += gitenv.o
 LIBS = $(LIB_FILE)
 LIBS += -lz
 
+ifndef NO_OPENSSL
+	LIB_OBJS += epoch.o
+	LIB_H += epoch.h
+else
+	CFLAGS += '-DNO_OPENSSL'
+	MOZILLA_SHA1=1
+endif
 ifdef MOZILLA_SHA1
 	SHA1_HEADER="mozilla-sha1/sha1.h"
 	LIB_OBJS += mozilla-sha1/sha1.o

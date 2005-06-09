@@ -221,9 +221,13 @@ int main(int argc, char **argv)
 			
 	} else {
 		
+#ifdef NO_OPENSSL
 		if (sort_list_in_merge_order(list, &process_commit)) {
 			  die("merge order sort failed\n");
 		}
+#else
+		die("merge order sort unsupported, OpenSSL not linked");
+#endif
 					
 	}
 
