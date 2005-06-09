@@ -3,7 +3,7 @@
 # Merge two files.
 # Copyright (c) Linus Torvalds, 2005
 #
-# This is the per-file merge script, called with
+# This is the git per-file merge script, called with
 #
 #   $1 - original file SHA1 (or empty)
 #   $2 - file in branch1 SHA1 (or empty)
@@ -24,11 +24,6 @@
 
 . ${COGITO_LIB}cg-Xlib
 
-# if the directory is newly added in a branch, it might not exist
-# in the current tree
-dir=$(dirname "$4")
-mkdir -p "$dir" || exit
-
 
 error () {
 	echo "MERGE ERROR: $@" >&2
@@ -42,42 +37,30 @@ warning () {
 
 case "${1:-.}${2:-.}${3:-.}" in
 #
-# Deleted in both.
+# Deleted in both or deleted in one and unchanged in the other
 #
-"$1..")
-	warning "$4 is removed in both branches"
-	warning "This is a potential rename conflict"
-	exec git-update-cache --remove -- "$4"
-	;;
-#
-# Deleted in one and unchanged in the other.
-#
-"$1.$1" | "$1$1.")
+"$1.." | "$1.$1" | "$1$1.")
 	#echo "Removing $4"
-	exec rm -f -- "$4" &&
-		git-update-cache --remove -- "$4"
+	rm -f -- "$4" &&
+		exec git-update-cache --remove -- "$4"
 	;;
 
 #
 # Added in one.
 #
 ".$2." | "..$3" )
-	case "$6$7" in *7??) mode=+x;; *) mode=-x;; esac
-	#echo "Adding $4 with perm $mode."
-	exec git-cat-file blob "$2$3" >"$4" &&
-		chmod $mode -- "$4" &&
-		git-update-cache --add -- "$4"
+	#echo "Adding $4"
+	git-update-cache --add --cacheinfo "$6$7" "$2$3" "$4" &&
+		exec git-checkout-cache -u -f -- "$4"
 	;;
 
 #
 # Added in both (check for same permissions).
 #
 ".$3$2")
-	case "$6" in *7??) mode=+x;; *) mode=-x;; esac
-	#echo "Adding $4 with perm $mode"
-	git-cat-file blob "$2" >"$4" &&
-		chmod $mode -- "$4" &&
-		git-update-cache --add -- "$4"
+	#echo "Adding $4"
+	git-update-cache --add --cacheinfo "$6" "$2" "$4" &&
+		git-checkout-cache -u -f -- "$4"
 	ret=$?
 	if [ "$6" != "$7" ]; then
 		error "$4: added in both branches, permissions conflict $6->$7"
@@ -92,30 +75,28 @@ case "${1:-.}${2:-.}${3:-.}" in
 "$1$2$3")
 	echo "... Auto-merging $4"
 	orig=$(git-unpack-file $1)
-	src1=$(git-unpack-file $2)
 	src2=$(git-unpack-file $3)
 
-	merge -p "$src1" "$orig" "$src2" > "$4"
+	# We reset the index to the first branch, making
+	# git-diff-file useful
+	git-update-cache --add --cacheinfo "$6" "$2" "$4"
+		git-checkout-cache -u -f -- "$4" &&
+		merge "$4" "$orig" "$src2"
 	ret=$?
-	rm -f -- "$orig" "$src1" "$src2"
+	rm -f -- "$orig" "$src2"
 
 	if [ "$6" != "$7" ]; then
 		error "Permissions conflict: $5->$6,$7."
 		ret=1
 	fi
-	case "$6" in *7??) mode=+x;; *) mode=-x;; esac
-	chmod "$mode" "$4"
 
 	if [ $ret -ne 0 ]; then
-		# Reset the index to the first branch, making
-		# git-diff-file useful
-		git-update-cache --add --cacheinfo "$6" "$2" "$4"
 		# The user already gets the warning from merge itself and
 		# from merge-cache too. This is too much.
 		#error "Auto-merge failed"
 		exit 1
 	fi
-	exec git-update-cache --add -- "$4"
+	exec git-update-cache -- "$4"
 	;;
 
 *)

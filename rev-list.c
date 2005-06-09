@@ -214,13 +214,10 @@ int main(int argc, char **argv)
 		usage(rev_list_usage);
 
 	if (!merge_order) {		
-	
-	        if (limited) 
+	        if (limited)
 			list = limit_list(list);
 		show_commit_list(list);
-			
 	} else {
-		
 #ifdef NO_OPENSSL
 		if (sort_list_in_merge_order(list, &process_commit)) {
 			  die("merge order sort failed\n");
@@ -228,7 +225,6 @@ int main(int argc, char **argv)
 #else
 		die("merge order sort unsupported, OpenSSL not linked");
 #endif
-					
 	}
 
 	return 0;
