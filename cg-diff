@@ -60,35 +60,27 @@ setup_colors()
 	eval $C
 }
 
-while [ "$1" ]; do
-	case "$1" in
-	-c)
+while optparse; do
+	if optparse -c; then
 		opt_color=1
 		setup_colors
-		;;
-	-p)
+	elif optparse -p; then
 		parent=1
-		;;
-	-r)
-		shift
-		if echo "$1" | grep -q ':'; then
-			id2=$(echo "$1" | cut -d : -f 2)
+	elif optparse -r=; then
+		if echo "$OPTARG" | grep -q ':'; then
+			id2=$(echo "$OPTARG" | cut -d : -f 2)
 			[ "$id2" ] || log_end="HEAD"
-			id1=$(echo "$1" | cut -d : -f 1)
+			id1=$(echo "$OPTARG" | cut -d : -f 1)
 		elif [ "$id1" = " " ]; then
-			id1="$1"
+			id1="$OPTARG"
 		else
-			id2="$1"
+			id2="$OPTARG"
 		fi
-		;;
-	-m)
+	elif optparse -m; then
 		mergebase=1
-		;;
-	*)
-		break
-		;;
-	esac
-	shift
+	else
+		optfail
+	fi
 done
 
 colorize() {
@@ -139,7 +131,7 @@ fi
 
 
 filter=$(mktemp -t gitdiff.XXXXXX)
-for file in "$@"; do
+for file in "${ARGS[@]}"; do
 	echo "$file" >>$filter
 done
 

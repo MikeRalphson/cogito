@@ -93,11 +93,9 @@ log_end=
 summary=
 user=
 mergebase=
-files=()
 
-while [ "$1" ]; do
-	case "$1" in
-	-c)
+while optparse; do
+	if optparse -c; then
 		# See terminfo(5), "Color Handling"
 		colheader="$(tput setaf 2)"    # Green
 		colauthor="$(tput setaf 6)"    # Cyan
@@ -110,38 +108,29 @@ while [ "$1" ]; do
 		coltrim="$(tput setaf 5)"
 
 		coldefault="$(tput op)"        # Restore default
-		;;
-	-f)
+	elif optparse -f; then
 		list_files=1
-		;;
-	-u*)
-		user="${1#-u}"
-		;;
-	-r)
-		shift
-		if echo "$1" | grep -q ':'; then
-			log_end=$(echo "$1" | cut -d : -f 2)
+	elif optparse -u=; then
+		user="$OPTARG"
+	elif optparse -r=; then
+		if echo "$OPTARG" | grep -q ':'; then
+			log_end=$(echo "$OPTARG" | cut -d : -f 2)
 			[ "$log_end" ] || log_end="HEAD"
-			log_start=$(echo "$1" | cut -d : -f 1)
+			log_start=$(echo "$OPTARG" | cut -d : -f 1)
 		elif [ -z "$log_start" ]; then
-			log_start="$1"
+			log_start="$OPTARG"
 		else
-			log_end="$1"
+			log_end="$OPTARG"
 		fi
-		;;
-	-m)
+	elif optparse -m; then
 		mergebase=1
-		;;
-	-s)
+	elif optparse -s; then
 		summary=1
-		;;
-	*)
-		files=("$@")
-		break
-		;;
-	esac
-	shift
+	else
+		optfail
+	fi
 done
+files=("${ARGS[@]}")
 
 list_commit_files()
 {

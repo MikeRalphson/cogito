@@ -140,10 +140,72 @@ print_help () {
 }
 
 for option in "$@"; do
+	[ "$option" = -- ] && break
 	if [ "$option" = "-h" -o "$option" = "--help" ]; then
 		print_help ${_cg_cmd##cg-}
 	fi
 done
+
+
+ARGS=("$@")
+ARGPOS=0
+
+optshift() {
+	unset ARGS[$ARGPOS]
+	ARGS=("${ARGS[@]}")
+	[ -z "$1" -o -n "${ARGS[$ARGPOS]}" ] ||
+		die "option \`$1' requires an argument"
+}
+
+optfail() {
+	die "unrecognized option \`${ARGS[$ARGPOS]}'"
+}
+
+optconflict() {
+	die "conflicting option \`$CUROPT'"
+}
+
+optparse() {
+	unset OPTARG
+	if [ -z "$1" ]; then
+		case ${ARGS[$ARGPOS]} in
+		--)	optshift; return 1 ;;
+		-*)	return 0 ;;
+		*)	while (( ++ARGPOS < ${#ARGS[@]} )); do
+				[[ "${ARGS[$ARGPOS]}" == -- ]] && return 1
+				[[ "${ARGS[$ARGPOS]}" == -* ]] && return 0
+			done;
+			return 1 ;;
+		esac
+	fi
+
+	CUROPT=${ARGS[$ARGPOS]}
+	local match=${1%=} minmatch=${2:-1} opt=$CUROPT o=$CUROPT val
+	[[ "$1" == *= ]] && val=$match
+	case $match in
+	--*)
+		[ "$val" ] && o=${o%%=*}
+		[ ${#o} -ge $((2 + $minmatch)) -a \
+			"${match:0:${#o}}" = "$o" ] || return 1
+		[[ -n "$val" && "$opt" == *=?* ]] \
+			&& ARGS[$ARGPOS]=${opt#*=} \
+			|| optshift $val ;;
+	-?)
+		[[ "$o" == $match* ]] || return 1
+		[[ "$o" != -?-* || -n "$val" ]] || optfail
+		ARGS[$ARGPOS]=${o#$match}
+		[ "${ARGS[$ARGPOS]}" ] \
+			&& { [ "$val" ] || ARGS[$ARGPOS]=-${ARGS[$ARGPOS]}; } \
+			|| optshift $val ;;
+	*)
+		die "optparse cannot handle $1" ;;
+	esac
+
+	if [ "$val" ]; then
+		OPTARG=${ARGS[$ARGPOS]}
+		optshift
+	fi
+}
 
 
 # Check if we have something to work on, unless the script can do w/o it.
