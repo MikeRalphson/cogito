@@ -144,6 +144,24 @@ setup_colors()
 	colorify_setup "$C"
 }
 
+print_summary()
+{
+	commit="${commit%:*}"
+	author="${author% <*}"
+	[ "${#author}" -gt 15 ] && author="${author:0:14}$collogsumtrim~"
+	sumcommit="${commit:0:12}$collogsumtrim~"
+
+	# We want wordsplitting in the $date here, to get
+	# TZ as separate argument.
+	date=(${committer#*> })
+	showdate ${date[*]} '+%F %H:%M'; date="$_showdate"
+
+	read -r title
+
+	printf "$collogsumcommit%s $collogsumauthor%-15s $collogsumdate%s $coldefault%s\n" \
+		"$sumcommit" "$author" "$date" "${title:3}"
+}
+
 list_commit_files()
 {
 	if [ ${#files[@]} -eq 0 ]; then
@@ -262,21 +280,7 @@ process_commit_line()
 			fi
 		fi
 		if [ "$summary" ]; then
-			# Print summary
-			commit="${commit%:*}"
-			author="${author% <*}"
-			# We want wordsplitting in the $date here, to get
-			# TZ as separate argument.
-			date=(${committer#*> })
-			showdate ${date[*]} '+%F %H:%M'; date="$_showdate"
-			read -r title
-			if [ "${#author}" -gt 15 ]; then
-				author="${author:0:14}$collogsumtrim~"
-			fi
-			sumcommit="${commit:0:12}$collogsumtrim~"
-
-			printf "$collogsumcommit%s $collogsumauthor%-15s $collogsumdate%s $coldefault%s\n" \
-				"$sumcommit" "$author" "$date" "${title:3}"
+			print_summary
 			state=silent
 			return
 		fi
