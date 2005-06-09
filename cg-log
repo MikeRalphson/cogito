@@ -341,8 +341,8 @@ followrenames=
 neverfollowrenames=
 
 list_files=
-log_start=
-log_end=
+id1=
+id2=
 summary=
 shortlog=
 user=
@@ -364,17 +364,22 @@ while optparse; do
 		user="$OPTARG"
 	elif optparse -r=; then
 		if echo "$OPTARG" | fgrep -q '..'; then
-			log_end="${OPTARG#*..}"
-			[ "$log_end" ] || log_end="HEAD"
-			log_start="${OPTARG%..*}"
+			id1="${OPTARG%..*}"
+			id2="${OPTARG#*..}"
+			# id2 was specified as empty commit, that is HEAD;
+			# but leaving it empty now would give the code below
+			# wrong idea.
+			[ "$id2" ] || id2="HEAD"
 		elif echo "$OPTARG" | grep -q ':'; then
-			log_end="${OPTARG#*:}"
-			[ "$log_end" ] || log_end="HEAD"
-			log_start="${OPTARG%:*}"
-		elif [ -z "$log_start" ]; then
-			log_start="$OPTARG"
+			id1="${OPTARG%:*}"
+			id2="${OPTARG#*:}"
+			[ "$id2" ] || id2="HEAD"
+		elif [ -z "$id1" ]; then
+			id1="$OPTARG"
+		elif [ -z "$id2" ]; then
+			id2="$OPTARG"
 		else
-			log_end="$OPTARG"
+			die "too many revisions"
 		fi
 	elif optparse -D=; then
 		if [ -z "$date_from" ]; then
@@ -405,32 +410,38 @@ while optparse; do
 done
 
 
+# Word splitting is ok here and we want to auto-drop empty dates.
+revls="$no_merges $date_from $date_to"
+
+
 if [ "$mergebase" ]; then
-	[ "$log_start" ] || log_start="HEAD"
-	[ "$log_end" ] || log_end="origin"
-	id1="$(cg-object-id -c "$log_start")" || exit 1
-	id2="$(cg-object-id -c "$log_end")" || exit 1
+	[ "$id1" ] || id1="HEAD"
+	[ "$id2" ] || id2="origin"
+
+	id1="$(cg-object-id -c "$id1")" || exit 1
+	id2="$(cg-object-id -c "$id2")" || exit 1
 	conservative_merge_base "$id1" "$id2" || exit 1
 	[ "$_cg_base_conservative" ] &&
 		warn -b "multiple merge bases, picking the most conservative one"
-	log_start="$_cg_baselist"
+	id1="$_cg_baselist"
+
+else
+	id1="$(cg-object-id -c "$id1")" || exit 1
 fi
+
+if [ "$id2" ]; then
+	id2="$(cg-object-id -c "$id2")" || exit 1
+	revls="$revls ^$id1"
+	revlsstart="$id2"
+else
+	revlsstart="$id1"
+fi
+
 
 if [ "$shortlog" ]; then
 	fmt="--pretty=short"
 else
 	fmt="--pretty=raw"
-fi
-# Word splitting is ok here and we want to auto-drop empty dates.
-revls="$no_merges $date_from $date_to"
-
-id1="$(cg-object-id -c "$log_start")" || exit 1
-if [ "$log_end" ]; then
-	id2="$(cg-object-id -c "$log_end")" || exit 1
-	revls="$revls ^$id1"
-	revlsstart="$id2"
-else
-	revlsstart="$id1"
 fi
 
 sep=
@@ -446,7 +457,8 @@ if [ "$_git_relpath" ]; then
 	done
 fi
 
-[ "$followrenames" ] && difffilter=implied
+[ "$followrenames" ] && difffilter=followrenames
+
 
 # A curious pipeline:
 rev_extract()
