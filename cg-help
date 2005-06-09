@@ -19,7 +19,10 @@ _git_repo_unneeded=1
 
 if [ "$1" ]; then
 	cmd=$(echo "$1" | sed 's/^cg-//')
-	print_help $cmd
+	( print_help $cmd ) && exit
+	echo "cg-help: no help available for command \"$1\""
+	echo "Call cg-help without any arguments for the list of available commands"
+	exit 1
 fi
 
 
