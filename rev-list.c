@@ -218,7 +218,7 @@ int main(int argc, char **argv)
 			list = limit_list(list);
 		show_commit_list(list);
 	} else {
-#ifdef NO_OPENSSL
+#ifndef NO_OPENSSL
 		if (sort_list_in_merge_order(list, &process_commit)) {
 			  die("merge order sort failed\n");
 		}
