@@ -74,7 +74,7 @@ echo "Merging $base -> $branch" >&2
 echo -e "\tto $head..." >&2
 
 
-git-read-tree -m $(tree-id $base) $(tree-id $head) $(tree-id $branch) ||
+git-read-tree -u -m $(tree-id $base) $(tree-id $head) $(tree-id $branch) ||
 	die "git-read-tree failed (merge likely blocked by local changes)"
 
 echo $base >>$_git/merge-base
@@ -82,8 +82,6 @@ echo $branch >>$_git/merging
 echo $branchname >>$_git/merging-sym
 
 if ! git-merge-cache -o ${COGITO_LIB}cg-Xmergefile -a || [ "$careful" ]; then
-	git-checkout-cache -f -a
-
 	# "Resolve" merges still in the cache (conflicts).
 	# We will resolve only those caught by merge-cache;
 	# that is "three-way conflicts". Others should still
