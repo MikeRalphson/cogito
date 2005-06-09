@@ -22,7 +22,11 @@ usage() {
 }
 
 pager () {
-	LESS="R$LESS" ${PAGER:-less} $PAGER_FLAGS
+	local line
+	# Invoke pager only if there's any actual output
+	if read -r line; then
+		{ echo "$line"; cat; } | LESS="R$LESS" ${PAGER:-less} $PAGER_FLAGS
+	fi
 }
 
 mktemp () {
