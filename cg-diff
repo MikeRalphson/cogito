@@ -126,8 +126,11 @@ colorize() {
 }
 
 if [ "$parent" ]; then
+	echo "$id1,$id2"
 	id2="$id1"
-	id1=$(parent-id "$id2" | head -n 1) || exit 1
+	id="$id2"; [ "$id" = " " ] && id=""
+	id1=$(parent-id "$id" | head -n 1) || exit 1
+	echo "$id1,$id2"
 fi
 
 if [ "$mergebase" ]; then
