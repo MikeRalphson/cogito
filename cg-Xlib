@@ -66,11 +66,12 @@ showdate () {
 	secs=$(($secs + $tzhours * 3600 + $tzmins * 60))
 	if [ "$has_gnudate" ]; then
 		[ "$format" ] || format=-R
-		date -ud "1970-01-01 UTC + $secs sec" "$format"
+		pdate=$(date -ud "1970-01-01 UTC + $secs sec" "$format")
 	else
 		[ "$format" ] || format=--
-		date -u -r $secs "$format"
+		pdate=$(date -u -r $secs "$format")
 	fi
+	echo "${pdate/+0000/$tz}"
 }
 
 # Usage: tree_timewarp [--no-head-update] DIRECTION_STR ROLLBACK_BOOL BASE BRANCH
