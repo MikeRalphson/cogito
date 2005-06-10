@@ -29,10 +29,16 @@
 #
 #	100644  blob    c7dacd0ea28994e3c754ca4eadb2e08c011ee3d3        README
 
-USAGE="cg-ls [TREE_ID]"
+USAGE="cg-ls [-t TREE_ID] [PATH]"
 
 . ${COGITO_LIB}cg-Xlib
 
-id=$(tree-id $1) || exit 1
+tree_id=
+if [ "$1" = "-t" ]; then
+	shift
+	tree_id=$1
+	shift
+fi
+id=$(tree-id $tree_id) || exit 1
 
-git-ls-tree "$id"
+git-ls-tree "$id" "$@"
