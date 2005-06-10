@@ -195,7 +195,7 @@ fetch_ssh () {
 }
 
 pull_ssh () {
-	(git-rpull -a -v "$(cat "$_git/refs/heads/$1")" "$2" 2>&1 /dev/null) | pull_progress
+	(git-ssh-pull -a -v "$(cat "$_git/refs/heads/$1")" "$2" 2>&1 /dev/null) | pull_progress
 	return ${PIPESTATUS[0]}
 }
 
