@@ -23,16 +23,20 @@ _git_repo_unneeded=1
 . ${COGITO_LIB}cg-Xlib
 
 same_dir=
-if [ "$1" = "-s" ]; then
-	shift
-	same_dir=1
-fi
+while optparse; do
+	if optparse -s; then
+		same_dir=1
+	else
+		optfail
+	fi
+done
 
-location=$1
+location=${ARGS[0]}
+
 [ "$location" ] || usage
 location=${location%/}
 
-destdir=$2
+destdir=${ARGS[1]}
 if [ "$destdir" ]; then
 	[ ! "$same_dir" ] || die "specifying both -s and DESTDIR makes no sense"
 	dir=$destdir

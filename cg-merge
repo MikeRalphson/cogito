@@ -27,20 +27,19 @@ head=$(commit-id)
 
 
 careful=
-if [ "$1" = "-c" ]; then
-	shift
-	careful=1
-fi
-
 base=
-if [ "$1" = "-b" ]; then
-	shift
-	[ "$1" ] || usage
-	base=$(commit-id "$1") || exit 1; shift
-fi
+while optparse; do
+	if optparse -c; then
+		careful=1
+	elif optparse -b=; then
+		base=$(commit-id "$OPTARG") || exit 1
+	else
+		optfail
+	fi
+done
 
-[ "$1" ] || usage
-branchname="$1"
+[ "$ARGS" ] || usage
+branchname="${ARGS[0]}"
 branch=$(commit-id "$branchname") || exit 1
 
 [ "$base" ] || base=$(git-merge-base "$head" "$branch")

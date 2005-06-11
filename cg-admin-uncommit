@@ -35,10 +35,13 @@ USAGE="cg-admin-uncommit [-t] [COMMIT_ID]"
 [ -s $_git/blocked ] && die "uncommitting blocked: $(cat $_git/blocked)"
 
 rollback_tree=
-if [ "$1" = "-t" ]; then
-	shift
-	rollback_tree=1
-fi
+while optparse; do
+	if optparse -t; then
+		rollback_tree=1
+	else
+		optfail
+	fi
+done
 
 
 base=$(commit-id) || exit 1

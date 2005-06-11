@@ -18,12 +18,15 @@ USAGE="cg-update [-f] [BRANCH_NAME]"
 . ${COGITO_LIB}cg-Xlib
 
 force=
-if [ "$1" = "-f" ]; then
-	force=$1
-	shift
-fi
+while optparse; do
+	if optparse -f; then
+		force=-f
+	else
+		optfail
+	fi
+done
 
-name=$1
+name=${ARGS[0]}
 [ "$name" ] || { [ -s $_git/refs/heads/origin ] && name=origin; }
 [ "$name" ] || die "where to update from?"
 

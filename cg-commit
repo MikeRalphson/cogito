@@ -83,34 +83,26 @@ forceeditor=
 ignorecache=
 commitalways=
 msgs=()
-while [ "$1" ]; do
-	case "$1" in
-	-C)
+while optparse; do
+	if optparse -C; then
 		ignorecache=1
-		shift
-		;;
-	-e)
+	elif optparse -e; then
 		forceeditor=1
-		shift
-		;;
-	-E)
+	elif optparse -E; then
 		forceeditor=1
 		commitalways=1
-		shift
-		;;
-	-m*)
-		msgs=("${msgs[@]}" "${1#-m}")
-		shift
-		;;
-	*)	break;;
-	esac
+	elif optparse -m=; then
+		msgs=("${msgs[@]}" "$OPTARG")
+	else
+		optfail
+	fi
 done
 
-if [ "$1" ]; then
+if [ "$ARGS" ]; then
 	[ "$ignorecache" ] && die "-C and listing files to commit does not make sense"
 	[ -s $_git/merging ] && die "cannot commit individual files when merging"
 
-	eval commitfiles=($(git-diff-cache -r -m HEAD -- "$@" | \
+	eval commitfiles=($(git-diff-cache -r -m HEAD -- "${ARGS[@]}" | \
 		sed 's/^\([^	]*\)\(.	.*\)\(	.*\)*$/"\2"/'))
 	customfiles=1
 

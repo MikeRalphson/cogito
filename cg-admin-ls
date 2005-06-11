@@ -34,11 +34,14 @@ USAGE="cg-admin-ls [-t TREE_ID] [PATH]"
 . ${COGITO_LIB}cg-Xlib
 
 tree_id=
-if [ "$1" = "-t" ]; then
-	shift
-	tree_id=$1
-	shift
-fi
+while optparse; do
+	if optparse -t=; then
+		tree_id="$OPTARG"
+	else
+		optfail
+	fi
+done
+
 id=$(tree-id $tree_id) || exit 1
 
-git-ls-tree "$id" "$@"
+git-ls-tree "$id" "${ARGS[@]}"
