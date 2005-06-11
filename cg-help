@@ -10,17 +10,57 @@
 #
 # Note help for a command is also available by passing `--help` or `-h`
 # to the command.
+#
+# OPTIONS
+# -------
+# -c::
+#	Colorize to the output.
 
-USAGE="cg-help [COMMAND]"
+USAGE="cg-help [-c] [cg-COMMAND | COMMAND]"
 _git_repo_unneeded=1
 
 . ${COGITO_LIB}cg-Xlib
 
+setup_colors() {
+	local color_none="$(tput op)"
+	local emphasize="$(tput setaf 1)"
+	local desclist="$(tput setaf 3)"
+	local cgcmd="$(tput setaf 2)"
+	local codesnippet="$(tput setaf 6)"
+	local usage="$(tput setaf 3)"
+	local section="$(tput setaf 5)"
+	local copyright="$(tput setaf 4)"
 
-if [ "$1" ]; then
-	cmd=$(echo "$1" | sed 's/^cg-//')
-	( print_help $cmd ) && exit
-	echo "cg-help: no help available for command \"$1\""
+	apply_colors="
+	s/^\(.*\)::/$desclist\1$color_none:/
+	s/\`\(cg-[a-z-]*\)\`/$cgcmd\1$color_none/g
+	s/\`\([^\`]*\)\`/$codesnippet&$color_none/g
+	s/[^A-Z0-9a-z_-]\$ .*/$codesnippet&$color_none/g
+	s/'\([^ ]*\)'/$emphasize&$color_none/g
+	s/'\(-[A-Z0-9a-z_-]* [^']*\)'/$emphasize&$color_none/g
+	s/^Usage: .*/$usage&$color_none/
+	/^[A-Z -_]*/,/^---*$/s/^[A-Z -_]*\$/$section&$color_none/
+	s/^Copyright .*/$copyright&$color_none/
+	"
+}
+
+apply_colors=
+while optparse; do
+	if optparse -c; then
+		setup_colors
+	else
+		optfail
+	fi
+done
+
+colorize() {
+	sed -e "$apply_colors" | pager
+}
+
+if [ "$ARGS" ]; then
+	cmd=$(echo "${ARGS[0]}" | sed 's/^cg-//')
+	( print_help $cmd | colorize ) && exit
+	echo "cg-help: no help available for command \"${ARGS[0]}\""
 	echo "Call cg-help without any arguments for the list of available commands"
 	exit 1
 fi
@@ -35,17 +75,17 @@ print_command_listing()
 	for command in "$@"; do
 		cmdname=$(basename $command)
 
-		usage=$(sed -n '/^USAGE=/,0s/.*\(cg-.*\)"/\1/p' < $command)
+		usage=$(sed -n '/^USAGE=/,0s/.*"\(cg-.*\)"/\1/p' < $command)
 		# Some minimal sanity check that we didn't pick up some
 		# random binary named cg-*
 		[ "$usage" ] || continue
-		usage=$(echo "$usage" | sed 's/cg-[^ ]*//')
+		usage=$(echo "$usage" | sed 's/^cg-[^ ]*//')
 		printf "	%-17s %s\n" "$cmdname" "$usage"
 	done
 }
 
 
-cat <<__END__
+colorize <<__END__
 The Cogito version control system  $(cg-version)
 
 Usage: cg-COMMAND [ARG]...

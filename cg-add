@@ -8,10 +8,11 @@
 #
 # The command will fail if one of the given files does not exist.
 #
-# Note that directories never have to be added to the repository and any attempt
-# in doing so will cause the command to fail. The reason for this is that cogito
-# manage content and empty directories have no content. Instead, directories are
-# added automatically when adding files inside them.
+# Note that directories never have to be added to the repository and any
+# attempt in doing so will cause the command to fail. The reason for this
+# is that 'Cogito' manages content and empty directories have no content.
+# Instead, directories are added automatically when adding files inside
+# them.
 
 USAGE="cg-add FILE..."
 

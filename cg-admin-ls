@@ -12,17 +12,17 @@
 #
 # where
 #
-# '<mode>'::
+# <mode>::
 #	The file permission information in octal format.
 #
-# '<type>'::
+# <type>::
 #	The type can be the following: `blob` refers to files
 #	and `tree` refers to directories.
 #
-# '<sha1>'::
+# <sha1>::
 #	The object ID.
 #
-# '<name>'::
+# <name>::
 #	The file or directory name.
 #
 # Example line:
