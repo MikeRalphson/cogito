@@ -133,6 +133,7 @@ while optparse; do
 	fi
 done
 
+
 [ "$id1" = " " ] && id1=HEAD
 
 if [ "$parent" ]; then
@@ -159,6 +160,7 @@ else
 	id1="$(cg-object-id -t "$id1")" || exit 1
 fi
 
+
 if [ "$id2" = " " ]; then
 	[ "$_git_no_wc" ] && die "only cg-diff between two revisions allowed outside a working copy"
 
@@ -177,26 +179,16 @@ else
 fi
 
 
-filter="$(mktemp -t gitdiff.XXXXXX)"
-[ "$_git_relpath" -a ! "$ARGS" ] && echo "$_git_relpath" >>"$filter"
+[ "$_git_relpath" -a ! "$ARGS" ] &&
+	diffargs[${#diffargs[@]}]="$_git_relpath"
 for file in "${ARGS[@]}"; do
-	echo "${_git_relpath}$file" >>"$filter"
+	diffargs[${#diffargs[@]}]="$_git_relpath$file"
 done
-
 
 # FIXME: Update ret based on what did we match. And take "$@"
 # to account after all.
 #ret=
-
-# xargs on FreeBSD is hardcoded to --no-run-if-empty :/
-if [ -s "$filter" ]; then
-	cat "$filter" | path_xargs $diffprog -r -p "${diffargs[@]}" | colorize | pager
-else
-	$diffprog -r -p "${diffargs[@]}" | colorize | pager
-fi
-
-rm "$filter"
-
+$diffprog -r -p "${diffargs[@]}" | colorize | pager
 #[ "$ret" ] && die "no files matched"
 #exit $ret
 exit 0
