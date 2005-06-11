@@ -140,6 +140,19 @@ FILE::
 	Indicates an already existing filename - always relative to the root
 	of the repository.
 
+FILES
+-----
+~/.cgrc::
+	This file is read on startup if \`stdout\` is a terminal and may
+	contain information about default command line options. Each line
+	consists of a command name and a list of options. Lines not
+	starting with a 'Cogito' command name are ignored. To have
+	\`cg-log\` and \`cg-diff\` colorize the output put the following
+	in ~/.cgrc:
+
+		log -c
+		diff -c
+
 COPYRIGHT
 ---------
 Copyright (C) Petr Baudis, 2005.

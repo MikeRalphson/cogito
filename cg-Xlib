@@ -150,6 +150,13 @@ done
 ARGS=("$@")
 ARGPOS=0
 
+if [ -t 1 -a -e "$HOME/.cgrc" ]; then
+	_cg_name=${_cg_cmd#cg-}
+	_cg_defaults="$(sed -n "/^$_cg_name/s/^$_cg_name //p" < $HOME/.cgrc)"
+	ARGS=($_cg_defaults "${ARGS[@]}")
+fi
+
+
 optshift() {
 	unset ARGS[$ARGPOS]
 	ARGS=("${ARGS[@]}")
