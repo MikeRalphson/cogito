@@ -714,7 +714,7 @@ optfail()
 
 optconflict()
 {
-	die "conflicting option $CUROPT"
+	die "conflicting options $CUROPT and $1"
 }
 
 optparse()

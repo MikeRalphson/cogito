@@ -107,6 +107,7 @@ while optparse; do
 		opt_color=1
 		setup_colors
 	elif optparse -p; then
+		[ "$mergebase" ] && optconflict -m
 		parent=1
 	elif optparse -s; then
 		opt_summary=1
@@ -125,6 +126,7 @@ while optparse; do
 			id2="$OPTARG"
 		fi
 	elif optparse -m; then
+		[ "$parent" ] && optconflict -p
 		mergebase=1
 	else
 		optfail
