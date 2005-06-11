@@ -112,9 +112,10 @@ endif
 
 CFLAGS += '-DSHA1_HEADER=$(SHA1_HEADER)'
 
-
-all: $(PROG) $(GEN_SCRIPT)
-
+.PHONY: all git cogito
+all: git cogito
+git: $(PROG)
+cogito: $(GEN_SCRIPT)
 
 test-delta: test-delta.c diff-delta.o patch-delta.o
 	$(CC) $(CFLAGS) -o $@ $^
@@ -169,9 +170,16 @@ test: all
 
 sedlibdir=$(shell echo $(libdir) | sed 's/\//\\\//g')
 
-install: $(PROG) $(SCRIPTS) $(SCRIPT) $(LIB_SCRIPT) $(GEN_SCRIPT)
+.PHONY: install install-git install-cogito
+install: install-git install-cogito
+
+install-git: $(PROG) $(SCRIPTS)
 	$(INSTALL) -m755 -d $(DESTDIR)$(bindir)
-	$(INSTALL) $(PROG) $(SCRIPTS) $(SCRIPT) $(GEN_SCRIPT) $(DESTDIR)$(bindir)
+	$(INSTALL) $(PROG) $(SCRIPTS) $(DESTDIR)$(bindir)
+
+install-cogito: $(SCRIPT) $(LIB_SCRIPT) $(GEN_SCRIPT)
+	$(INSTALL) -m755 -d $(DESTDIR)$(bindir)
+	$(INSTALL) $(SCRIPT) $(GEN_SCRIPT) $(DESTDIR)$(bindir)
 	$(INSTALL) -m755 -d $(DESTDIR)$(libdir)
 	$(INSTALL) $(LIB_SCRIPT) $(DESTDIR)$(libdir)
 	cd $(DESTDIR)$(bindir); \
