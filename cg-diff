@@ -122,8 +122,10 @@ while optparse; do
 			id1="${OPTARG%:*}"
 		elif [ "$id1" = " " ]; then
 			id1="$OPTARG"
-		else
+		elif [ "$id2" = " " ]; then
 			id2="$OPTARG"
+		else
+			die "too many revisions"
 		fi
 	elif optparse -m; then
 		[ "$parent" ] && optconflict -p
@@ -134,6 +136,7 @@ while optparse; do
 done
 
 if [ "$parent" ]; then
+	[ "$id2" = " " ] || die "too many revisions"
 	id2="$id1"
 	id="$id2"; [ "$id" = " " ] && id=""
 
