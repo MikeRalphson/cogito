@@ -92,7 +92,7 @@ while optparse; do
 		forceeditor=1
 		commitalways=1
 	elif optparse -m=; then
-		msgs=("${msgs[@]}" "$OPTARG")
+		msgs[${#msgs[@]}]="$OPTARG"
 	else
 		optfail
 	fi
