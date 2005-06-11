@@ -6,7 +6,8 @@
 #
 # Takes a commit ID which is the earliest commit to be removed from
 # the repository. If no parameter is passed, it uncommits the latest
-# commit ('HEAD').
+# commit ('HEAD'). Read the CAVEATS section before using it for the
+# first time.
 #
 # OPTIONS
 # -------
@@ -16,6 +17,16 @@
 #	(by default) Cogito keeps the tree in its current state,
 #	therefore generating tree with local changes against the target
 #	commit, consisting of the changes in the rolled back commits.
+#
+# CAVEATS
+# -------
+# This command can be dangerous! It is safe to do as long as you do not
+# push the commit out in the meantime, but you should NEVER uncommit an
+# already pushed out commit. Things will break for the pullers since you
+# just broke the fast-forward merging mechanism (the new commit is not
+# descendant of the previous one). The future push scripts will refuse
+# to push after you uncommitted a pushed out commit, too. At the moment
+# you pushed the commit out it's etched to history, live with that.
 
 USAGE="cg-admin-uncommit [-t] [COMMIT_ID]"
 
