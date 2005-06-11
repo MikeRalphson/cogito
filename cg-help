@@ -25,6 +25,25 @@ if [ "$1" ]; then
 	exit 1
 fi
 
+bin_path="$(dirname $0)"
+
+REGULAR_COMMANDS="$(ls $bin_path/cg-* | grep -v cg-admin- | grep -v cg-X)"
+ADVANCED_COMMANDS="$(ls $bin_path/cg-admin-*)"
+
+print_command_listing()
+{
+	for command in "$@"; do
+		cmdname=$(basename $command)
+
+		usage=$(sed -n '/^USAGE=/,0s/.*\(cg-.*\)"/\1/p' < $command)
+		# Some minimal sanity check that we didn't pick up some
+		# random binary named cg-*
+		[ "$usage" ] || continue
+		usage=$(echo "$usage" | sed 's/cg-[^ ]*//')
+		printf "	%-17s %s\n" "$cmdname" "$usage"
+	done
+}
+
 
 cat <<__END__
 The Cogito version control system  $(cg-version)
@@ -32,34 +51,10 @@ The Cogito version control system  $(cg-version)
 Usage: cg-COMMAND [ARG]...
 
 Available commands:
-	cg-add		FILE...
-	cg-branch-add	BNAME SOURCE_LOC
-	cg-branch-ls
-	cg-cancel
-	cg-clone	[-s] SOURCE_LOC [DESTDIR]
-	cg-commit	[-m"Commit message"]... [-e | -E] [FILE]... < log message
-	cg-diff		[-c] [-m] [-p] [-r FROM_ID[:TO_ID]] [FILE]...
-	cg-export	DEST [TREE_ID]
-	cg-help		[COMMAND]
-	cg-init
-	cg-log		[-c] [-f] [-m] [-r FROM_ID[:TO_ID]] [FILE]...
-	cg-merge	[-c] [-b BASE_ID] FROM_ID
-	cg-mkpatch	[-m] [-s] [-r FROM_ID[:TO_ID]]
-	cg-patch			< patch on stdin
-	cg-pull		[BNAME]
-	cg-restore	[FILE]...
-	cg-rm		FILE...
-	cg-seek		[COMMIT_ID]
-	cg-status
-	cg-tag		TNAME [COMMIT_ID]
-	cg-tag-ls
-	cg-update	[BNAME]
-	cg-version
+$(print_command_listing $REGULAR_COMMANDS)
 
 Advanced (low-level or dangerous) commands:
-	cg-admin-ls	[-t TREE_ID] [PATH]
-	cg-admin-lsobj	[OBJTYPE]
-	cg-admin-uncommit [-t] [COMMIT_ID]
+$(print_command_listing $ADVANCED_COMMANDS)
 
 These expressions can be used interchangably as "ID"s:
 	empty string, "this" or "HEAD" (current HEAD)

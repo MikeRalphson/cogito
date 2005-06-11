@@ -72,7 +72,7 @@
 # EDITOR::
 #	The editor used for entering revision log information.
 
-USAGE="cg-commit [-mMESSAGE]... [-C] [-e | -E] [FILE]..."
+USAGE="cg-commit [-mMESSAGE]... [-C] [-e | -E] [FILE]... [< MESSAGE]"
 
 . ${COGITO_LIB}cg-Xlib
 
