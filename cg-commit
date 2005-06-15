@@ -175,11 +175,11 @@ EOT
 fi
 
 if [ ! "$ignorecache" ]; then
-	if [ ! "$force" ] && [ ! "${commitfiles[*]}" ]; then
-		rm $LOGMSG $LOGMSG2
-		die 'Nothing to commit'
-	fi
 	if [ ! "$merging" ]; then
+		if [ ! "$force" ] && [ ! "${commitfiles[*]}" ]; then
+			rm $LOGMSG $LOGMSG2
+			die 'Nothing to commit'
+		fi
 		echo "CG: By deleting lines beginning with CG:F, the associated file" >>$LOGMSG
 		echo "CG: will be removed from the commit list." >>$LOGMSG
 	fi	
