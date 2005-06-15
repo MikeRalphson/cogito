@@ -34,6 +34,11 @@
 #	Force the editor to be brought up and do the commit even if
 #	the default commit message is not changed.
 #
+# -f::
+#	Force the commit even when there's "nothing to commit", that is
+#	the tree is the same as the last time you committed, no changes
+#	happenned.
+#
 # FILES
 # -----
 # $GIT_DIR/commit-template::
@@ -79,6 +84,7 @@ USAGE="cg-commit [-mMESSAGE]... [-C] [-e | -E] [FILE]... [< MESSAGE]"
 
 [ -s $_git/blocked ] && die "committing blocked: $(cat $_git/blocked)"
 
+force=
 forceeditor=
 ignorecache=
 commitalways=
@@ -91,6 +97,8 @@ while optparse; do
 	elif optparse -E; then
 		forceeditor=1
 		commitalways=1
+	elif optparse -f; then
+		force=1
 	elif optparse -m=; then
 		msgs[${#msgs[@]}]="$OPTARG"
 	else
@@ -167,7 +175,7 @@ EOT
 fi
 
 if [ ! "$ignorecache" ]; then
-	if [ ! "${commitfiles[*]}" ]; then
+	if [ ! "$force" ] && [ ! "${commitfiles[*]}" ]; then
 		rm $LOGMSG $LOGMSG2
 		die 'Nothing to commit'
 	fi
@@ -247,10 +255,11 @@ fi
 
 treeid=$(git-write-tree)
 [ "$treeid" ] || die "git-write-tree failed"
-if [ ! "$merging" ] && [ "$oldhead" ] && [ "$treeid" = "$(tree-id)" ]; then
+if [ ! "$force" ] && [ ! "$merging" ] && [ "$oldhead" ] &&
+   [ "$treeid" = "$(tree-id)" ]; then
 	echo "Refusing to make an empty commit - the tree was not modified" >&2
 	echo "since the previous commit. If you really want to make the" >&2
-	echo "commit, do: commit-tree \`tree-id\` -p \`parent-id\`" >&2
+	echo "commit, pass cg-commit the -f argument." >&2
 	exit 2;
 fi
 
