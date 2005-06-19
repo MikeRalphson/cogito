@@ -199,8 +199,21 @@ if tty -s; then
 	if ! [ "$msgs" ] || [ "$forceeditor" ]; then
 		${EDITOR:-vi} $LOGMSG2
 		if ! [ "$commitalways" ] && ! [ $LOGMSG2 -nt $LOGMSG ]; then
-			rm $LOGMSG $LOGMSG2
-			die 'Commit message not modified, commit aborted'
+			echo "Log message unchanged or not specified" >&2
+			while true; do
+				read -p 'Abort or commit? [ac] ' choice
+				if [ "$choice" = "a" ] || [ "$choice" = "q" ]; then
+					rm $LOGMSG $LOGMSG2
+					echo "Commit message not modified, commit aborted" >&2
+					if [ "$merging" ]; then
+						echo "Note that the merge is NOT aborted - you can cg-commit again" >&2
+						echo "cg-cancel will abort the ongoing merge" >&2
+					fi
+					exit 1
+				elif [ "$choice" = "c" ]; then
+					break
+				fi
+			done
 		fi
 	fi
 	if [ ! "$ignorecache" ] && [ ! "$merging" ]; then
