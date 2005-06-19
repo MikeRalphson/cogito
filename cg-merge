@@ -48,6 +48,10 @@ branch=$(commit-id "$branchname") || exit 1
 
 [ -s $_git/blocked ] && die "merge blocked: $(cat $_git/blocked)"
 
+if grep -q "$branch" $_git/merging; then
+	echo "Branch already merged in the working tree." >&2
+	echo 0
+fi
 
 if [ "$base" = "$branch" ]; then
 	echo "Branch already fully merged." >&2
