@@ -102,7 +102,7 @@ static void reject_merge(struct cache_entry *ce)
 	die("Entry '%s' would be overwritten by merge. Cannot merge.", ce->name);
 }
 
-static int merged_entry(struct cache_entry *merge, struct cache_entry *old, struct cache_entry **dst)
+static int merged_entry_internal(struct cache_entry *merge, struct cache_entry *old, struct cache_entry **dst, int allow_dirty)
 {
 	merge->ce_flags |= htons(CE_UPDATE);
 	if (old) {
@@ -115,13 +115,23 @@ static int merged_entry(struct cache_entry *merge, struct cache_entry *old, stru
 		 */
 		if (same(old, merge)) {
 			*merge = *old;
-		} else {
+		} else if (!allow_dirty) {
 			verify_uptodate(old);
 		}
 	}
 	merge->ce_flags &= ~htons(CE_STAGEMASK);
 	*dst++ = merge;
 	return 1;
+}
+
+static int merged_entry_allow_dirty(struct cache_entry *merge, struct cache_entry *old, struct cache_entry **dst)
+{
+	return merged_entry_internal(merge, old, dst, 1);
+}
+
+static int merged_entry(struct cache_entry *merge, struct cache_entry *old, struct cache_entry **dst)
+{
+	return merged_entry_internal(merge, old, dst, 0);
 }
 
 static int deleted_entry(struct cache_entry *ce, struct cache_entry *old, struct cache_entry **dst)
@@ -133,13 +143,149 @@ static int deleted_entry(struct cache_entry *ce, struct cache_entry *old, struct
 	return 1;
 }
 
-static int threeway_merge(struct cache_entry *stages[4], struct cache_entry **dst)
+static int causes_df_conflict(struct cache_entry *ce, int stage,
+			      struct cache_entry **dst_,
+			      struct cache_entry **next_,
+			      int tail)
+{
+	/* This is called during the merge operation and walking
+	 * the active_cache[] array is messy, because it is in the
+	 * middle of overlapping copy operation.  The invariants
+	 * are:
+	 * (1) active_cache points at the first (zeroth) entry.
+	 * (2) up to dst pointer are resolved entries.
+	 * (3) from the next pointer (head-inclusive) to the tail
+	 *     of the active_cache array have the remaining paths
+	 *     to be processed.  There can be a gap between dst
+	 *     and next.  Note that next is called "src" in the
+	 *     merge_cache() function, and tail is the original
+	 *     end of active_cache array when merge_cache() started.
+	 * (4) the path corresponding to *ce is not found in (2)
+	 *     or (3).  It is in the gap.
+	 *
+	 *  active_cache -----......+++++++++++++.
+	 *                    ^dst  ^next        ^tail
+	 */
+	int i, next, dst;
+	const char *path = ce->name;
+	int namelen = ce_namelen(ce);
+
+	next = next_ - active_cache;
+	dst = dst_ - active_cache;
+
+	for (i = 0; i < tail; i++) {
+		int entlen, len;
+		const char *one, *two;
+		if (dst <= i && i < next)
+			continue;
+		ce = active_cache[i];
+		if (ce_stage(ce) != stage)
+			continue;
+		/* If ce->name is a prefix of path, then path is a file
+		 * that hangs underneath ce->name, which is bad.
+		 * If path is a prefix of ce->name, then it is the
+		 * other way around which also is bad.
+		 */
+		entlen = ce_namelen(ce);
+		if (namelen == entlen)
+			continue;
+		if (namelen < entlen) {
+			len = namelen;
+			one = path;
+			two = ce->name;
+		} else {
+			len = entlen;
+			one = ce->name;
+			two = path;
+		}
+		if (memcmp(one, two, len))
+			continue;
+		if (two[len] == '/')
+			return 1;
+	}
+	return 0;
+}
+
+static int threeway_merge(struct cache_entry *stages[4],
+			  struct cache_entry **dst,
+			  struct cache_entry **next, int tail)
 {
 	struct cache_entry *old = stages[0];
 	struct cache_entry *a = stages[1], *b = stages[2], *c = stages[3];
 	struct cache_entry *merge;
 	int count;
 
+	/* #5ALT */
+	if (!a && b && c && same(b, c)) {
+		if (old && !same(b, old))
+			return -1;
+		return merged_entry_allow_dirty(b, old, dst);
+	}
+	/* #2ALT and #3ALT */
+	if (!a && (!!b != !!c)) {
+		/*
+		 * The reason we need to worry about directory/file
+		 * conflicts only in #2ALT and #3ALT case is this:
+		 *
+		 * (1) For all other cases that read-tree internally
+		 *     resolves a path, we always have such a path in
+		 *     *both* stage2 and stage3 when we begin.
+		 *     Traditionally, the behaviour has been even
+		 *     stricter and we did not resolve a path without
+		 *     initially being in all of stage1, 2, and 3.
+		 *
+		 * (2) When read-tree finishes, all resolved paths (i.e.
+		 *     the paths that are in stage0) must have come from
+		 *     either stage2 or stage3.  It is not possible to
+		 *     have a stage0 path as a result of a merge if
+		 *     neither stage2 nor stage3 had that path.
+		 *
+		 * (3) It is guaranteed that just after reading the
+		 *     stages, each stage cannot have directory/file
+		 *     conflicts on its own, because they are populated
+		 *     by reading hierarchy of a tree.  Combined with
+		 *     (1) and (2) above, this means that no matter what
+		 *     combination of paths we take from stage2 and
+		 *     stage3 as a result of a merge, they cannot cause
+		 *     a directory/file conflict situation (otherwise
+		 *     the "guilty" path would have already had such a
+		 *     conflict in the original stage, either stage2
+		 *     or stage3).  Although its stage2 is synthesized
+		 *     by overlaying the current index on top of "our
+		 *     head" tree, --emu23 case also has this guarantee,
+		 *     by calling add_cache_entry() to create such stage2
+		 *     entries.
+		 *
+		 * (4) Only #2ALT and #3ALT lack the guarantee (1).
+		 *     They resolve paths that exist only in stage2
+		 *     or stage3.  The stage2 tree may have a file DF
+		 *     while stage3 tree may have a file DF/DF.  If
+		 *     #2ALT and #3ALT rules happen to apply to both
+		 *     of them, we would end up having DF (coming from
+		 *     stage2) and DF/DF (from stage3) in the result.
+		 *     When we attempt to resolve a path that exists
+		 *     only in stage2, we need to make sure there is
+		 *     no path that would conflict with it in stage3
+		 *     and vice versa.
+		 */
+		if (c) { /* #2ALT */
+			if (!causes_df_conflict(c, 2, dst, next, tail) &&
+			    (!old || same(c, old)))
+				return merged_entry_allow_dirty(c, old, dst);
+		}
+		else { /* #3ALT */
+			if (!causes_df_conflict(b, 3, dst, next, tail) &&
+			    (!old || same(b, old)))
+				return merged_entry_allow_dirty(b, old, dst);
+		}
+		/* otherwise we will apply the original rule */
+	}
+	/* #14ALT */
+	if (a && b && c && same(a, b) && !same(a, c)) {
+		if (old && same(old, c))
+			return merged_entry_allow_dirty(c, old, dst);
+		/* otherwise the regular rule applies */
+	}
 	/*
 	 * If we have an entry in the index cache ("old"), then we want
 	 * to make sure that it matches any entries in stage 2 ("first
@@ -170,7 +316,8 @@ static int threeway_merge(struct cache_entry *stages[4], struct cache_entry **ds
  * "carry forward" rule, please see <Documentation/git-read-tree.txt>.
  *
  */
-static int twoway_merge(struct cache_entry **src, struct cache_entry **dst)
+static int twoway_merge(struct cache_entry **src, struct cache_entry **dst,
+			struct cache_entry **next, int tail)
 {
 	struct cache_entry *current = src[0];
 	struct cache_entry *oldtree = src[1], *newtree = src[2];
@@ -210,12 +357,65 @@ static int twoway_merge(struct cache_entry **src, struct cache_entry **dst)
 }
 
 /*
+ * Two-way merge emulated with three-way merge.
+ *
+ * This treats "read-tree -m H M" by transforming it internally
+ * into "read-tree -m H I+H M", where I+H is a tree that would
+ * contain the contents of the current index file, overlayed on
+ * top of H.  Unlike the traditional two-way merge, this leaves
+ * the stages in the resulting index file and lets the user resolve
+ * the merge conflicts using standard tools for three-way merge.
+ *
+ * This function is just to set-up such an arrangement, and the
+ * actual merge uses threeway_merge() function.
+ */
+static void setup_emu23(void)
+{
+	/* stage0 contains I, stage1 H, stage2 M.
+	 * move stage2 to stage3, and create stage2 entries
+	 * by scanning stage0 and stage1 entries.
+	 */
+	int i, namelen, size;
+	struct cache_entry *ce, *stage2;
+
+	for (i = 0; i < active_nr; i++) {
+		ce = active_cache[i];
+		if (ce_stage(ce) != 2)
+			continue;
+		/* hoist them up to stage 3 */
+		namelen = ce_namelen(ce);
+		ce->ce_flags = create_ce_flags(namelen, 3);
+	}
+
+	for (i = 0; i < active_nr; i++) {
+		ce = active_cache[i];
+		if (ce_stage(ce) > 1)
+			continue;
+		namelen = ce_namelen(ce);
+		size = cache_entry_size(namelen);
+		stage2 = xmalloc(size);
+		memcpy(stage2, ce, size);
+		stage2->ce_flags = create_ce_flags(namelen, 2);
+		if (add_cache_entry(stage2, ADD_CACHE_OK_TO_ADD) < 0)
+			die("cannot merge index and our head tree");
+
+		/* We are done with this name, so skip to next name */
+		while (i < active_nr &&
+		       ce_namelen(active_cache[i]) == namelen &&
+		       !memcmp(active_cache[i]->name, ce->name, namelen))
+			i++;
+		i--; /* compensate for the loop control */
+	}
+}
+
+/*
  * One-way merge.
  *
  * The rule is:
  * - take the stat information from stage0, take the data from stage1
  */
-static int oneway_merge(struct cache_entry **src, struct cache_entry **dst)
+static int oneway_merge(struct cache_entry **src, struct cache_entry **dst,
+			struct cache_entry **next, int tail)
 {
 	struct cache_entry *old = src[0];
 	struct cache_entry *a = src[1];
@@ -256,11 +456,12 @@ static void check_updates(struct cache_entry **src, int nr)
 	}
 }
 
-typedef int (*merge_fn_t)(struct cache_entry **, struct cache_entry **);
+typedef int (*merge_fn_t)(struct cache_entry **, struct cache_entry **, struct cache_entry **, int);
 
 static void merge_cache(struct cache_entry **src, int nr, merge_fn_t fn)
 {
 	struct cache_entry **dst = src;
+	int tail = nr;
 
 	while (nr) {
 		int entries;
@@ -278,7 +479,7 @@ static void merge_cache(struct cache_entry **src, int nr, merge_fn_t fn)
 				break;
 		}
 
-		entries = fn(stages, dst);
+		entries = fn(stages, dst, src, tail);
 		if (entries < 0)
 			reject_merge(name);
 		dst += entries;
@@ -315,7 +516,7 @@ static struct cache_file cache_file;
 
 int main(int argc, char **argv)
 {
-	int i, newfd, merge, reset;
+	int i, newfd, merge, reset, emu23;
 	unsigned char sha1[20];
 
 	newfd = hold_index_file_for_update(&cache_file, get_index_file());
@@ -324,6 +525,7 @@ int main(int argc, char **argv)
 
 	merge = 0;
 	reset = 0;
+	emu23 = 0;
 	for (i = 1; i < argc; i++) {
 		const char *arg = argv[i];
 
@@ -335,17 +537,18 @@ int main(int argc, char **argv)
 
 		/* This differs from "-m" in that we'll silently ignore unmerged entries */
 		if (!strcmp(arg, "--reset")) {
-			if (stage || merge)
+			if (stage || merge || emu23)
 				usage(read_tree_usage);
 			reset = 1;
 			merge = 1;
 			stage = 1;
 			read_cache_unmerged();
+			continue;
 		}
 
 		/* "-m" stands for "merge", meaning we start in stage 1 */
 		if (!strcmp(arg, "-m")) {
-			if (stage || merge)
+			if (stage || merge || emu23)
 				usage(read_tree_usage);
 			if (read_cache_unmerged())
 				die("you need to resolve your current index first");
@@ -353,6 +556,17 @@ int main(int argc, char **argv)
 			merge = 1;
 			continue;
 		}
+
+		/* "-emu23" uses 3-way merge logic to perform fast-forward */
+		if (!strcmp(arg, "--emu23")) {
+			if (stage || merge || emu23)
+				usage(read_tree_usage);
+			if (read_cache_unmerged())
+				die("you need to resolve your current index first");
+			merge = emu23 = stage = 1;
+			continue;
+		}
+
 		if (get_sha1(arg, sha1) < 0)
 			usage(read_tree_usage);
 		if (stage > 3)
@@ -369,9 +583,18 @@ int main(int argc, char **argv)
 			[2] = twoway_merge,
 			[3] = threeway_merge,
 		};
+		merge_fn_t fn;
+
 		if (stage < 2 || stage > 4)
 			die("just how do you expect me to merge %d trees?", stage-1);
-		merge_cache(active_cache, active_nr, merge_function[stage-1]);
+		if (emu23 && stage != 3)
+			die("--emu23 takes only two trees");
+		fn = merge_function[stage-1];
+		if (stage == 3 && emu23) { 
+			setup_emu23();
+			fn = merge_function[3];
+		}
+		merge_cache(active_cache, active_nr, fn);
 	}
 	if (write_cache(newfd, active_cache, active_nr) ||
 	    commit_index_file(&cache_file))

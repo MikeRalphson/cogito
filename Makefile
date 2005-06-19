@@ -23,7 +23,8 @@ INSTALL=install
 SCRIPTS=git git-apply-patch-script git-merge-one-file-script git-prune-script \
 	git-pull-script git-tag-script git-resolve-script git-whatchanged \
 	git-deltafy-script git-fetch-script git-status-script git-commit-script \
-	git-log-script git-shortlog git-cvsimport-script
+	git-log-script git-shortlog git-cvsimport-script git-diff-script \
+	git-reset-script git-add-script
 
 PROG=   git-update-cache git-diff-files git-init-db git-write-tree \
 	git-read-tree git-commit-tree git-cat-file git-fsck-cache \
@@ -33,7 +34,7 @@ PROG=   git-update-cache git-diff-files git-init-db git-write-tree \
 	git-http-pull git-ssh-push git-ssh-pull git-rev-list git-mktag \
 	git-diff-helper git-tar-tree git-local-pull git-write-blob \
 	git-get-tar-commit-id git-mkdelta git-apply git-stripspace \
-	git-cvs2git git-diff-stages
+	git-cvs2git git-diff-stages git-rev-parse
 
 all: $(PROG)
 
@@ -118,6 +119,7 @@ git-mkdelta: mkdelta.c
 git-stripspace: stripspace.c
 git-cvs2git: cvs2git.c
 git-diff-stages: diff-stages.c
+git-rev-parse: rev-parse.c
 
 git-http-pull: LIBS += -lcurl
 git-rev-list: LIBS += -lssl

@@ -11,12 +11,14 @@ static int show_tree_entry_in_recursive = 0;
 static int read_stdin = 0;
 static int diff_output_format = DIFF_FORMAT_HUMAN;
 static int detect_rename = 0;
+static int find_copies_harder = 0;
 static int diff_setup_opt = 0;
 static int diff_score_opt = 0;
 static const char *pickaxe = NULL;
 static int pickaxe_opts = 0;
 static int diff_break_opt = -1;
 static const char *orderfile = NULL;
+static const char *diff_filter = NULL;
 static const char *header = NULL;
 static const char *header_prefix = "";
 static enum cmit_fmt commit_format = CMIT_FMT_RAW;
@@ -115,7 +117,7 @@ static int compare_tree_entry(void *tree1, unsigned long size1, void *tree2, uns
 		show_file("+", tree2, size2, base);
 		return 1;
 	}
-	if (!memcmp(sha1, sha2, 20) && mode1 == mode2)
+	if (!find_copies_harder && !memcmp(sha1, sha2, 20) && mode1 == mode2)
 		return 0;
 
 	/*
@@ -199,7 +201,7 @@ static int interesting(void *tree, unsigned long size, const char *base)
 static void show_tree(const char *prefix, void *tree, unsigned long size, const char *base)
 {
 	while (size) {
-		if (interesting(tree, size, base))
+		if (find_copies_harder || interesting(tree, size, base))
 			show_file(prefix, tree, size, base);
 		update_tree_entry(&tree, &size);
 	}
@@ -267,13 +269,14 @@ static void call_diff_setup(void)
 
 static int call_diff_flush(void)
 {
-	diffcore_std(0,
+	diffcore_std(find_copies_harder ? paths : 0,
 		     detect_rename, diff_score_opt,
 		     pickaxe, pickaxe_opts,
 		     diff_break_opt,
-		     orderfile);
+		     orderfile,
+		     diff_filter);
 	if (diff_queue_is_empty()) {
-		diff_flush(DIFF_FORMAT_NO_OUTPUT, 0);
+		diff_flush(DIFF_FORMAT_NO_OUTPUT);
 		return 0;
 	}
 	if (header) {
@@ -284,7 +287,7 @@ static int call_diff_flush(void)
 		printf(fmt, header, 0);
 		header = NULL;
 	}
-	diff_flush(diff_output_format, 1);
+	diff_flush(diff_output_format);
 	return 1;
 }
 
@@ -398,7 +401,20 @@ static int diff_tree_stdin(char *line)
 }
 
 static char *diff_tree_usage =
-"git-diff-tree [-p] [-r] [-z] [--stdin] [-M] [-C] [-R] [-S<string>] [-O<orderfile>] [-m] [-s] [-v] [-t] <tree-ish> <tree-ish>";
+"git-diff-tree [-p] [-r] [-z] [--stdin] [-M] [-C] [-R] [-S<string>] [-O<orderfile>] [-m] [-s] [-v] [--pretty] [-t] <tree-ish> <tree-ish>";
+
+static enum cmit_fmt get_commit_format(const char *arg)
+{
+	if (!*arg)
+		return CMIT_FMT_DEFAULT;
+	if (!strcmp(arg, "=raw"))
+		return CMIT_FMT_RAW;
+	if (!strcmp(arg, "=medium"))
+		return CMIT_FMT_MEDIUM;
+	if (!strcmp(arg, "=short"))
+		return CMIT_FMT_SHORT;
+	usage(diff_tree_usage);
+}
 
 int main(int argc, const char **argv)
 {
@@ -454,6 +470,10 @@ int main(int argc, const char **argv)
 			orderfile = arg + 2;
 			continue;
 		}
+		if (!strncmp(arg, "--diff-filter=", 14)) {
+			diff_filter = arg + 14;
+			continue;
+		}
 		if (!strcmp(arg, "--pickaxe-all")) {
 			pickaxe_opts = DIFF_PICKAXE_ALL;
 			continue;
@@ -475,6 +495,10 @@ int main(int argc, const char **argv)
 				usage(diff_tree_usage);
 			continue;
 		}
+		if (!strcmp(arg, "--find-copies-harder")) {
+			find_copies_harder = 1;
+			continue;
+		}
 		if (!strcmp(arg, "-z")) {
 			diff_output_format = DIFF_FORMAT_MACHINE;
 			continue;
@@ -492,6 +516,12 @@ int main(int argc, const char **argv)
 			header_prefix = "diff-tree ";
 			continue;
 		}
+		if (!strncmp(arg, "--pretty", 8)) {
+			verbose_header = 1;
+			header_prefix = "diff-tree ";
+			commit_format = get_commit_format(arg+8);
+			continue;
+		}
 		if (!strcmp(arg, "--stdin")) {
 			read_stdin = 1;
 			continue;
@@ -502,6 +532,8 @@ int main(int argc, const char **argv)
 		}
 		usage(diff_tree_usage);
 	}
+	if (find_copies_harder && detect_rename != DIFF_DETECT_COPY)
+		usage(diff_tree_usage);
 
 	if (argc > 0) {
 		int i;

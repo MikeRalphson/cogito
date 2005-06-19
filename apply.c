@@ -568,10 +568,13 @@ static int find_header(char *line, unsigned long size, int *hdrsize, struct patc
 		 */
 		if (!memcmp("diff --git ", line, 11)) {
 			int git_hdr_len = parse_git_header(line, len, size, patch);
-			if (git_hdr_len < 0)
+			if (git_hdr_len <= len)
 				continue;
-			if (!patch->old_name && !patch->new_name)
-				die("git diff header lacks filename information (line %d)", linenr);
+			if (!patch->old_name && !patch->new_name) {
+				if (!patch->def_name)
+					die("git diff header lacks filename information (line %d)", linenr);
+				patch->old_name = patch->new_name = patch->def_name;
+			}
 			*hdrsize = git_hdr_len;
 			return offset;
 		}
@@ -989,7 +992,7 @@ static int check_patch(struct patch *patch)
 		int changed;
 
 		if (lstat(old_name, &st) < 0)
-			return error("%s: %s\n", strerror(errno));
+			return error("%s: %s", old_name, strerror(errno));
 		if (check_index) {
 			int pos = cache_name_pos(old_name, strlen(old_name));
 			if (pos < 0)
@@ -1000,6 +1003,7 @@ static int check_patch(struct patch *patch)
 		}
 		if (patch->is_new < 0)
 			patch->is_new = 0;
+		st.st_mode = ntohl(create_ce_mode(st.st_mode));
 		if (!patch->old_mode)
 			patch->old_mode = st.st_mode;
 		if ((st.st_mode ^ patch->old_mode) & S_IFMT)
