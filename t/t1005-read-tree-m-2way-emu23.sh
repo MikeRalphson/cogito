@@ -3,7 +3,7 @@
 # Copyright (c) 2005 Junio C Hamano
 #
 
-test_description='Two way merge with read-tree -m $H $M
+test_description='Two way merge with read-tree --emu23 $H $M
 
 This test tries two-way merge (aka fast forward with carry forward).
 
@@ -23,7 +23,10 @@ In the test, these paths are used:
 . ./test-lib.sh
 
 read_tree_twoway () {
-    git-read-tree -m "$1" "$2" && git-ls-files --stage
+    git-read-tree --emu23 "$1" "$2" &&
+    git-ls-files --stage &&
+    git-merge-cache git-merge-one-file-script -a &&
+    git-ls-files --stage
 }
 
 _x40='[0-9a-f][0-9a-f][0-9a-f][0-9a-f][0-9a-f]'
@@ -51,6 +54,12 @@ check_cache_at () {
 	esac
 }
 
+check_stages () {
+    cat >expected_stages
+    git-ls-files --stage | sed -e "s/ $_x40 / X /" >current_stages
+    diff -u expected_stages current_stages
+}
+
 test_expect_success \
     setup \
     'echo frotz >frotz &&
@@ -71,6 +80,17 @@ test_expect_success \
      git-ls-tree $treeM &&
      git-diff-tree $treeH $treeM'
 
+# "read-tree -m H I+H M" but I is empty so this is "read-tree -m H H M".
+#
+# bozbar [O && A && B && O==A && O!=B (#14) ==> B] take M by read-tree
+# frotz  [!O && !A && B (#2) ==> B]                take M by read-tree
+# nitfol [O && A && B && O==A && O==B (#15) ==> B] take M by read-tree
+# rezrov [O && A && !B && O==A (#10) ==> no merge] removed by script
+#
+# Earlier one did not have #2ALT so taking M was done by the script,
+# which also updated the work tree and making frotz clean.  With #2ALT,
+# this is resolved by read-tree itself and the path is left dirty
+# because we are not testing "read-tree -u --emu23".
 test_expect_success \
     '1, 2, 3 - no carry forward' \
     'rm -f .git/index &&
@@ -78,7 +98,7 @@ test_expect_success \
      git-ls-files --stage >1-3.out &&
      diff -u M.out 1-3.out &&
      check_cache_at bozbar dirty &&
-     check_cache_at frotz dirty &&
+     check_cache_at frotz dirty && # same as pure 2-way again.
      check_cache_at nitfol dirty'
 
 echo '+100644 X 0	yomin' >expected
@@ -93,6 +113,8 @@ test_expect_success \
      compare_change 4diff.out expected &&
      check_cache_at yomin clean'
 
+# "read-tree -m H I+H M" where !H && !M; so (I+H) not being up-to-date
+# should not matter.  Thanks to #3ALT, this is now possible.
 test_expect_success \
     '5 - carry forward local addition.' \
     'rm -f .git/index &&
@@ -105,6 +127,8 @@ test_expect_success \
      compare_change 5diff.out expected &&
      check_cache_at yomin dirty'
 
+# "read-tree -m H I+H M" where !H && M && (I+H) == M, so this should
+# succeed (even the entry is clean), now thanks to #5ALT.
 test_expect_success \
     '6 - local addition already has the same.' \
     'rm -f .git/index &&
@@ -114,6 +138,8 @@ test_expect_success \
      diff -u M.out 6.out &&
      check_cache_at frotz clean'
 
+# Exactly the same pattern as above but with dirty cache.  This also
+# should succeed, now thanks to #5ALT.
 test_expect_success \
     '7 - local addition already has the same.' \
     'rm -f .git/index &&
@@ -200,12 +226,25 @@ test_expect_success \
      compare_change 15diff.out expected &&
      check_cache_at nitfol dirty'
 
+# This is different from straight 2-way merge in that it leaves
+# three stages of bozbar in the index file without failing, so
+# the user can run git-diff-stages to examine the situation.
+# With #2ALT, frotz is resolved internally.
 test_expect_success \
     '16 - conflicting local change.' \
     'rm -f .git/index &&
      echo bozbar bozbar >bozbar &&
      git-update-cache --add bozbar &&
-     if read_tree_twoway $treeH $treeM; then false; else :; fi'
+     git-read-tree --emu23 $treeH $treeM &&
+     check_stages' <<\EOF
+100644 X 1	bozbar
+100644 X 2	bozbar
+100644 X 3	bozbar
+100644 X 0	frotz
+100644 X 0	nitfol
+100644 X 1	rezrov
+100644 X 2	rezrov
+EOF
 
 test_expect_success \
     '17 - conflicting local change.' \
@@ -282,7 +321,7 @@ test_expect_success \
      read_tree_twoway $treeDF $treeDFDF &&
      git-ls-files --stage >DFDFcheck.out &&
      diff -u DFDF.out DFDFcheck.out &&
-     check_cache_at DF/DF dirty &&
+     check_cache_at DF/DF clean && # different from pure 2-way
      :'
 
 test_done
