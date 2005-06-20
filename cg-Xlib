@@ -226,29 +226,7 @@ fi
 
 
 # Compatibility hacks:
-# 2005-04-26
-if [ -d $_git ] && [ -s $_git/remotes ] && [ ! -e $_git/branches ]; then
-	stop=
-	mkdir $_git/branches || stop=1
-	[ "$stop" ] || cat $_git/remotes | while read branch location; do
-		echo "$location" >$_git/branches/$branch
-	done || stop=1
-	[ "$stop" ] || rm $_git/remotes
-fi
-# 2005-04-26
-if [ -d $_git ] && [ ! -d $_git/refs ]; then
-	stop=
-	mkdir $_git/refs || stop=1
-	if [ ! "$stop" ]; then
-		mv $_git/heads $_git/refs
-		mv $_git/tags $_git/refs
-		tgt=$(readlink $_git/HEAD)
-		if [ "$tgt" ]; then
-			rm $_git/HEAD
-			ln -s "refs/$tgt" $_git/HEAD
-		fi
-	fi
-fi
+# Fortunately none as of now.
 
 
 export BROKEN_MKTEMP=1
