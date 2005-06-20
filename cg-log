@@ -210,7 +210,7 @@ print_commit_log()
 	sed -e '
 		s/^    \(.*\)/% \1/
 		/^% *[Ss]igned-[Oo]ff-[Bb]y:.*/ s/^% \(.*\)/% '$colsignoff'\1'$coldefault'/
-		/^% *[Aa]cked-[Bb]y:.*/ s/^% \(.*\)/% '$colsignoff'\1'$coldefault'/
+		/^% *[Aa][Cc][Kk]ed-[Bb]y:.*/ s/^% \(.*\)/% '$colsignoff'\1'$coldefault'/
 	' | while read key rest; do
 		trap exit SIGPIPE
 		process_commit_line
