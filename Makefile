@@ -173,6 +173,9 @@ cogito.spec: cogito.spec.in $(VERSION)
 test: all
 	$(MAKE) -C t/ all
 
+doc:
+	$(MAKE) -C Documentation/ all
+
 sedlibdir=$(shell echo $(libdir) | sed 's/\//\\\//g')
 
 .PHONY: install install-git install-cogito
