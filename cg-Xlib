@@ -150,8 +150,9 @@ ARGPOS=0
 
 if [ -t 1 -a -e "$HOME/.cgrc" ]; then
 	_cg_name=${_cg_cmd#cg-}
-	_cg_defaults="$(sed -n "/^$_cg_name/s/^$_cg_name //p" < $HOME/.cgrc)"
-	ARGS=($_cg_defaults "${ARGS[@]}")
+	_cg_defaults1="$(sed -n "/^$_cg_cmd/s/^$_cg_cmd //p" < $HOME/.cgrc)"
+	_cg_defaults2="$(sed -n "/^$_cg_name/s/^$_cg_name //p" < $HOME/.cgrc)"
+	ARGS=($_cg_defaults1 $_cg_defaults2 "${ARGS[@]}")
 fi
 
 
