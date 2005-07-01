@@ -4,7 +4,6 @@
 #include "commit.h"
 #include "cache.h"
 #include "tag.h"
-#include "delta.h"
 
 struct object **objs;
 int nr_objs;
@@ -98,27 +97,32 @@ void mark_reachable(struct object *obj, unsigned int mask)
 	}
 }
 
+struct object *lookup_object_type(const unsigned char *sha1, const char *type)
+{
+	if (!strcmp(type, blob_type)) {
+		return &lookup_blob(sha1)->object;
+	} else if (!strcmp(type, tree_type)) {
+		return &lookup_tree(sha1)->object;
+	} else if (!strcmp(type, commit_type)) {
+		return &lookup_commit(sha1)->object;
+	} else if (!strcmp(type, tag_type)) {
+		return &lookup_tag(sha1)->object;
+	} else {
+		error("Unknown type %s", type);
+		return NULL;
+	}
+}
+
 struct object *parse_object(const unsigned char *sha1)
 {
-	unsigned long mapsize;
-	void *map = map_sha1_file(sha1, &mapsize);
-	if (map) {
-		int is_delta;
+	unsigned long size;
+	char type[20];
+	void *buffer = read_sha1_file(sha1, type, &size);
+	if (buffer) {
 		struct object *obj;
-		char type[100];
-		unsigned long size;
-		void *buffer = unpack_sha1_file(map, mapsize, type, &size);
-		munmap(map, mapsize);
-		if (!buffer)
-			return NULL;
-		is_delta = !strcmp(type, "delta");
-		if (!is_delta && check_sha1_signature(sha1, buffer, size, type) < 0)
+		if (check_sha1_signature(sha1, buffer, size, type) < 0)
 			printf("sha1 mismatch %s\n", sha1_to_hex(sha1));
-		if (is_delta) {
-			struct delta *delta = lookup_delta(sha1);
-			parse_delta_buffer(delta, buffer, size);
-			obj = (struct object *) delta;
-		} else if (!strcmp(type, "blob")) {
+		if (!strcmp(type, "blob")) {
 			struct blob *blob = lookup_blob(sha1);
 			parse_blob_buffer(blob, buffer, size);
 			obj = &blob->object;

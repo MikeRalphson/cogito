@@ -8,10 +8,15 @@ merge_repo=$1
 
 merge_name=$(echo "$1" | sed 's:\.git/*$::')
 merge_head=HEAD
+type=head
+if [ "$2" = "tag" ]; then
+   type=tag
+   shift
+fi
 if [ "$2" ]
 then
-   merge_name="'$2' branch of $merge_name"
-   merge_head="refs/heads/$2"
+   merge_name="$type '$2' of $merge_name"
+   merge_head="refs/${type}s/$2"
 fi
 
 : ${GIT_DIR=.git}
@@ -21,5 +26,5 @@ git-fetch-script "$merge_repo" "$merge_head" || exit 1
 
 git-resolve-script \
 	"$(cat "$GIT_DIR"/HEAD)" \
-	"$(cat "$GIT_DIR"/MERGE_HEAD)" \
+	"$(cat "$GIT_DIR"/FETCH_HEAD)" \
 	"$merge_name"

@@ -201,7 +201,7 @@ static int interesting(void *tree, unsigned long size, const char *base)
 static void show_tree(const char *prefix, void *tree, unsigned long size, const char *base)
 {
 	while (size) {
-		if (find_copies_harder || interesting(tree, size, base))
+		if (interesting(tree, size, base))
 			show_file(prefix, tree, size, base);
 		update_tree_entry(&tree, &size);
 	}
@@ -269,7 +269,7 @@ static void call_diff_setup(void)
 
 static int call_diff_flush(void)
 {
-	diffcore_std(find_copies_harder ? paths : 0,
+	diffcore_std(NULL,
 		     detect_rename, diff_score_opt,
 		     pickaxe, pickaxe_opts,
 		     diff_break_opt,
@@ -280,11 +280,7 @@ static int call_diff_flush(void)
 		return 0;
 	}
 	if (header) {
-		const char *fmt = "%s";
-		if (diff_output_format == DIFF_FORMAT_MACHINE)
-			fmt = "%s%c";
-		
-		printf(fmt, header, 0);
+		printf("%s%c", header, diff_output_format == DIFF_FORMAT_MACHINE ? 0 : '\n');
 		header = NULL;
 	}
 	diff_flush(diff_output_format);
@@ -318,18 +314,16 @@ static int diff_root_tree(const unsigned char *new, const char *base)
 	return retval;
 }
 
-static char *generate_header(const char *commit, const char *parent, const char *msg, unsigned long len)
+static const char *generate_header(const char *commit, const char *parent, const char *msg, unsigned long len)
 {
 	static char this_header[16384];
 	int offset;
 
-	offset = sprintf(this_header, "%s%s (from %s)\n", header_prefix, commit, parent);
-	if (verbose_header) {
-		offset += pretty_print_commit(commit_format, msg, len, this_header + offset, sizeof(this_header) - offset);
-		this_header[offset++] = '\n';
-		this_header[offset++] = 0;
-	}
+	if (!verbose_header)
+		return commit;
 
+	offset = sprintf(this_header, "%s%s (from %s)\n", header_prefix, commit, parent);
+	offset += pretty_print_commit(commit_format, msg, len, this_header + offset, sizeof(this_header) - offset);
 	return this_header;
 }
 
@@ -401,20 +395,7 @@ static int diff_tree_stdin(char *line)
 }
 
 static char *diff_tree_usage =
-"git-diff-tree [-p] [-r] [-z] [--stdin] [-M] [-C] [-R] [-S<string>] [-O<orderfile>] [-m] [-s] [-v] [--pretty] [-t] <tree-ish> <tree-ish>";
-
-static enum cmit_fmt get_commit_format(const char *arg)
-{
-	if (!*arg)
-		return CMIT_FMT_DEFAULT;
-	if (!strcmp(arg, "=raw"))
-		return CMIT_FMT_RAW;
-	if (!strcmp(arg, "=medium"))
-		return CMIT_FMT_MEDIUM;
-	if (!strcmp(arg, "=short"))
-		return CMIT_FMT_SHORT;
-	usage(diff_tree_usage);
-}
+"git-diff-tree [-p] [-r] [-z] [--stdin] [-m] [-s] [-v] [--pretty] [-t] [-R] [-B] [-M] [-C] [--find-copies-header] [-O<orderfile>] [-S<string>] [--pickaxe-all] <tree-ish> <tree-ish>";
 
 int main(int argc, const char **argv)
 {

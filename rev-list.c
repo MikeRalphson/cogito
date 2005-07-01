@@ -1,10 +1,14 @@
 #include "cache.h"
+#include "tag.h"
 #include "commit.h"
+#include "tree.h"
+#include "blob.h"
 #include "epoch.h"
 
 #define SEEN		(1u << 0)
 #define INTERESTING	(1u << 1)
 #define COUNTED		(1u << 2)
+#define SHOWN		(LAST_EPOCH_FLAG << 2)
 
 static const char rev_list_usage[] =
 	"usage: git-rev-list [OPTION] commit-id <commit-id>\n"
@@ -16,6 +20,9 @@ static const char rev_list_usage[] =
 		      "  --merge-order [ --show-breaks ]";
 
 static int bisect_list = 0;
+static int tag_objects = 0;
+static int tree_objects = 0;
+static int blob_objects = 0;
 static int verbose_header = 0;
 static int show_parents = 0;
 static int hdr_termination = 0;
@@ -26,9 +33,11 @@ static int max_count = -1;
 static enum cmit_fmt commit_format = CMIT_FMT_RAW;
 static int merge_order = 0;
 static int show_breaks = 0;
+static int stop_traversal = 0;
 
 static void show_commit(struct commit *commit)
 {
+	commit->object.flags |= SHOWN;
 	if (show_breaks) {
 		prefix = "| ";
 		if (commit->object.flags & DISCONTINUITY) {
@@ -55,15 +64,22 @@ static void show_commit(struct commit *commit)
 
 static int filter_commit(struct commit * commit)
 {
-	if (commit->object.flags & UNINTERESTING)
+	if (merge_order && stop_traversal && commit->object.flags & BOUNDARY)
+		return STOP;
+	if (commit->object.flags & (UNINTERESTING|SHOWN))
 		return CONTINUE;
 	if (min_age != -1 && (commit->date > min_age))
 		return CONTINUE;
-	if (max_age != -1 && (commit->date < max_age))
-		return STOP;
+	if (max_age != -1 && (commit->date < max_age)) {
+		if (!merge_order)
+			return STOP;
+		else {
+			stop_traversal = 1;
+			return CONTINUE;
+		}
+	}
 	if (max_count != -1 && !max_count--)
 		return STOP;
-
 	return DO;
 }
 
@@ -84,13 +100,116 @@ static int process_commit(struct commit * commit)
 	return CONTINUE;
 }
 
+static struct object_list **add_object(struct object *obj, struct object_list **p, const char *name)
+{
+	struct object_list *entry = xmalloc(sizeof(*entry));
+	entry->item = obj;
+	entry->next = *p;
+	entry->name = name;
+	*p = entry;
+	return &entry->next;
+}
+
+static struct object_list **process_blob(struct blob *blob, struct object_list **p, const char *name)
+{
+	struct object *obj = &blob->object;
+
+	if (!blob_objects)
+		return p;
+	if (obj->flags & (UNINTERESTING | SEEN))
+		return p;
+	obj->flags |= SEEN;
+	return add_object(obj, p, name);
+}
+
+static struct object_list **process_tree(struct tree *tree, struct object_list **p, const char *name)
+{
+	struct object *obj = &tree->object;
+	struct tree_entry_list *entry;
+
+	if (!tree_objects)
+		return p;
+	if (obj->flags & (UNINTERESTING | SEEN))
+		return p;
+	if (parse_tree(tree) < 0)
+		die("bad tree object %s", sha1_to_hex(obj->sha1));
+	obj->flags |= SEEN;
+	p = add_object(obj, p, name);
+	for (entry = tree->entries ; entry ; entry = entry->next) {
+		if (entry->directory)
+			p = process_tree(entry->item.tree, p, entry->name);
+		else
+			p = process_blob(entry->item.blob, p, entry->name);
+	}
+	return p;
+}
+
+static struct object_list *pending_objects = NULL;
+
 static void show_commit_list(struct commit_list *list)
 {
+	struct object_list *objects = NULL, **p = &objects, *pending;
 	while (list) {
 		struct commit *commit = pop_most_recent_commit(&list, SEEN);
 
+		p = process_tree(commit->tree, p, "");
 		if (process_commit(commit) == STOP)
 			break;
+	}
+	for (pending = pending_objects; pending; pending = pending->next) {
+		struct object *obj = pending->item;
+		const char *name = pending->name;
+		if (obj->flags & (UNINTERESTING | SEEN))
+			continue;
+		if (obj->type == tag_type) {
+			obj->flags |= SEEN;
+			p = add_object(obj, p, name);
+			continue;
+		}
+		if (obj->type == tree_type) {
+			p = process_tree((struct tree *)obj, p, name);
+			continue;
+		}
+		if (obj->type == blob_type) {
+			p = process_blob((struct blob *)obj, p, name);
+			continue;
+		}
+		die("unknown pending object %s (%s)", sha1_to_hex(obj->sha1), name);
+	}
+	while (objects) {
+		printf("%s %s\n", sha1_to_hex(objects->item->sha1), objects->name);
+		objects = objects->next;
+	}
+}
+
+static void mark_blob_uninteresting(struct blob *blob)
+{
+	if (!blob_objects)
+		return;
+	if (blob->object.flags & UNINTERESTING)
+		return;
+	blob->object.flags |= UNINTERESTING;
+}
+
+static void mark_tree_uninteresting(struct tree *tree)
+{
+	struct object *obj = &tree->object;
+	struct tree_entry_list *entry;
+
+	if (!tree_objects)
+		return;
+	if (obj->flags & UNINTERESTING)
+		return;
+	obj->flags |= UNINTERESTING;
+	if (parse_tree(tree) < 0)
+		die("bad tree %s", sha1_to_hex(obj->sha1));
+	entry = tree->entries;
+	while (entry) {
+		if (entry->directory)
+			mark_tree_uninteresting(entry->item.tree);
+		else
+			mark_blob_uninteresting(entry->item.blob);
+		entry = entry->next;
 	}
 }
 
@@ -98,6 +217,8 @@ static void mark_parents_uninteresting(struct commit *commit)
 {
 	struct commit_list *parents = commit->parents;
 
+	if (tree_objects)
+		mark_tree_uninteresting(commit->tree);
 	while (parents) {
 		struct commit *commit = parents->item;
 		commit->object.flags |= UNINTERESTING;
@@ -193,7 +314,7 @@ struct commit_list *limit_list(struct commit_list *list)
 {
 	struct commit_list *newlist = NULL;
 	struct commit_list **p = &newlist;
-	do {
+	while (list) {
 		struct commit *commit = pop_most_recent_commit(&list, SEEN);
 		struct object *obj = &commit->object;
 
@@ -204,25 +325,83 @@ struct commit_list *limit_list(struct commit_list *list)
 			continue;
 		}
 		p = &commit_list_insert(commit, p)->next;
-	} while (list);
+	}
 	if (bisect_list)
 		newlist = find_bisection(newlist);
 	return newlist;
 }
 
-static enum cmit_fmt get_commit_format(const char *arg)
+static void add_pending_object(struct object *obj, const char *name)
 {
-	if (!*arg)
-		return CMIT_FMT_DEFAULT;
-	if (!strcmp(arg, "=raw"))
-		return CMIT_FMT_RAW;
-	if (!strcmp(arg, "=medium"))
-		return CMIT_FMT_MEDIUM;
-	if (!strcmp(arg, "=short"))
-		return CMIT_FMT_SHORT;
-	usage(rev_list_usage);	
-}			
+	add_object(obj, &pending_objects, name);
+}
 
+static struct commit *get_commit_reference(const char *name, unsigned int flags)
+{
+	unsigned char sha1[20];
+	struct object *object;
+
+	if (get_sha1(name, sha1))
+		usage(rev_list_usage);
+	object = parse_object(sha1);
+	if (!object)
+		die("bad object %s", name);
+
+	/*
+	 * Tag object? Look what it points to..
+	 */
+	if (object->type == tag_type) {
+		struct tag *tag = (struct tag *) object;
+		object->flags |= flags;
+		if (tag_objects && !(object->flags & UNINTERESTING))
+			add_pending_object(object, tag->tag);
+		object = tag->tagged;
+	}
+
+	/*
+	 * Commit object? Just return it, we'll do all the complex
+	 * reachability crud.
+	 */
+	if (object->type == commit_type) {
+		struct commit *commit = (struct commit *)object;
+		object->flags |= flags;
+		if (parse_commit(commit) < 0)
+			die("unable to parse commit %s", name);
+		return commit;
+	}
+
+	/*
+	 * Tree object? Either mark it uniniteresting, or add it
+	 * to the list of objects to look at later..
+	 */
+	if (object->type == tree_type) {
+		struct tree *tree = (struct tree *)object;
+		if (!tree_objects)
+			die("%s is a tree object, not a commit", name);
+		if (flags & UNINTERESTING) {
+			mark_tree_uninteresting(tree);
+			return NULL;
+		}
+		add_pending_object(object, "");
+		return NULL;
+	}
+
+	/*
+	 * Blob object? You know the drill by now..
+	 */
+	if (object->type == blob_type) {
+		struct blob *blob = (struct blob *)object;
+		if (!blob_objects)
+			die("%s is a blob object, not a commit", name);
+		if (flags & UNINTERESTING) {
+			mark_blob_uninteresting(blob);
+			return NULL;
+		}
+		add_pending_object(object, "");
+		return NULL;
+	}
+	die("%s is unknown object", name);
+}
 
 int main(int argc, char **argv)
 {
@@ -232,7 +411,6 @@ int main(int argc, char **argv)
 	for (i = 1 ; i < argc; i++) {
 		int flags;
 		char *arg = argv[i];
-		unsigned char sha1[20];
 		struct commit *commit;
 
 		if (!strncmp(arg, "--max-count=", 12)) {
@@ -266,6 +444,12 @@ int main(int argc, char **argv)
 			bisect_list = 1;
 			continue;
 		}
+		if (!strcmp(arg, "--objects")) {
+			tag_objects = 1;
+			tree_objects = 1;
+			blob_objects = 1;
+			continue;
+		}
 		if (!strncmp(arg, "--merge-order", 13)) {
 		        merge_order = 1;
 			continue;
@@ -281,17 +465,13 @@ int main(int argc, char **argv)
 			arg++;
 			limited = 1;
 		}
-		if (get_sha1(arg, sha1) || (show_breaks && !merge_order))
+		if (show_breaks && !merge_order)
 			usage(rev_list_usage);
-		commit = lookup_commit_reference(sha1);
-		if (!commit || parse_commit(commit) < 0)
-			die("bad commit object %s", arg);
-		commit->object.flags |= flags;
+		commit = get_commit_reference(arg, flags);
+		if (!commit)
+			continue;
 		commit_list_insert(commit, &list);
 	}
-
-	if (!list)
-		usage(rev_list_usage);
 
 	if (!merge_order) {		
 	        if (limited)

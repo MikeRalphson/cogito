@@ -6,25 +6,8 @@
 #include <stdlib.h>
 #include <string.h>
 #include <limits.h>
+#include "delta.h"
 #include "count-delta.h"
-
-static unsigned long get_hdr_size(const unsigned char **datap)
-{
-	const unsigned char *data = *datap;
-	unsigned long size;
-	unsigned char cmd;
-	int i;
-	size = i = 0;
-	cmd = *data++;
-	while (cmd) {
-		if (cmd & 1)
-			size |= *data++ << i;
-		i += 8;
-		cmd >>= 1;
-	}
-	*datap = data;
-	return size;
-}
 
 /*
  * NOTE.  We do not _interpret_ delta fully.  As an approximation, we
@@ -47,15 +30,14 @@ int count_delta(void *delta_buf, unsigned long delta_size,
 	unsigned char cmd;
 	unsigned long src_size, dst_size, out;
 
-	/* the smallest delta size possible is 6 bytes */
-	if (delta_size < 6)
+	if (delta_size < DELTA_SIZE_MIN)
 		return -1;
 
 	data = delta_buf;
 	top = delta_buf + delta_size;
 
-	src_size = get_hdr_size(&data);
-	dst_size = get_hdr_size(&data);
+	src_size = get_delta_hdr_size(&data);
+	dst_size = get_delta_hdr_size(&data);
 
 	added_literal = copied_from_source = out = 0;
 	while (data < top) {
