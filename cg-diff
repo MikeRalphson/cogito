@@ -67,10 +67,14 @@ while optparse; do
 	elif optparse -p; then
 		parent=1
 	elif optparse -r=; then
-		if echo "$OPTARG" | grep -q ':'; then
-			id2=$(echo "$OPTARG" | cut -d : -f 2)
+		if echo "$OPTARG" | fgrep -q '..'; then
+			id2=${OPTARG#*..}
 			[ "$id2" ] || log_end="HEAD"
-			id1=$(echo "$OPTARG" | cut -d : -f 1)
+			id1=${OPTARG%..*}
+		elif echo "$OPTARG" | grep -q ':'; then
+			id2=${OPTARG#*:}
+			[ "$id2" ] || log_end="HEAD"
+			id1=${OPTARG%:*}
 		elif [ "$id1" = " " ]; then
 			id1="$OPTARG"
 		else

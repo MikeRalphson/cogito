@@ -83,10 +83,14 @@ while optparse; do
 	if optparse -s; then
 		omit_header=1
 	elif optparse -r=; then
-		if echo "$OPTARG" | grep -q ':'; then
-			log_end=$(echo "$OPTARG" | cut -d : -f 2)
+		if echo "$OPTARG" | fgrep -q '..'; then
+			log_end=${OPTARG#*..}
 			[ "$log_end" ] || log_end="HEAD"
-			log_start=$(echo "$OPTARG" | cut -d : -f 1)
+			log_start=${OPTARG%..*}
+		elif echo "$OPTARG" | grep -q ':'; then
+			log_end=${OPTARG#*:}
+			[ "$log_end" ] || log_end="HEAD"
+			log_start=${OPTARG%:*}
 		elif [ -z "$log_start" ]; then
 			log_start="$OPTARG"
 		else
