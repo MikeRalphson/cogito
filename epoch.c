@@ -224,17 +224,13 @@ static int find_base_for_list(struct commit_list *list, struct commit **boundary
 	for (; list; list = list->next) {
 		struct commit *item = list->item;
 
-		if (item->object.util) {
-			die("%s:%d:%s: logic error: this should not have happened - commit %s",
-			    __FILE__, __LINE__, __FUNCTION__,
-			    sha1_to_hex(item->object.sha1));
+		if (!item->object.util) {
+			new_mass_counter(list->item, get_one());
+			add(&injected, &injected, get_one());
+
+			commit_list_insert(list->item, &cleaner);
+			commit_list_insert(list->item, &pending);
 		}
-
-		new_mass_counter(list->item, get_one());
-		add(&injected, &injected, get_one());
-
-		commit_list_insert(list->item, &cleaner);
-		commit_list_insert(list->item, &pending);
 	}
 
 	while (!*boundary && pending && !ret) {
@@ -428,17 +424,8 @@ static void mark_ancestors_uninteresting(struct commit *commit)
 static void sort_first_epoch(struct commit *head, struct commit_list **stack)
 {
 	struct commit_list *parents;
-	struct commit_list *reversed_parents = NULL;
 
 	head->object.flags |= VISITED;
-
-	/*
-	 * parse_commit() builds the parent list in reverse order with respect
-	 * to the order of the git-commit-tree arguments. So we need to reverse
-	 * this list to output the oldest (or most "local") commits last.
-	 */
-	for (parents = head->parents; parents; parents = parents->next)
-		commit_list_insert(parents->item, &reversed_parents);
 
 	/*
 	 * TODO: By sorting the parents in a different order, we can alter the
@@ -449,8 +436,8 @@ static void sort_first_epoch(struct commit *head, struct commit_list **stack)
 	 * changes.
 	 */
 
-	while (reversed_parents) {
-		struct commit *parent = pop_commit(&reversed_parents);
+	for (parents = head->parents; parents; parents = parents->next) {
+		struct commit *parent = parents->item;
 
 		if (head->object.flags & UNINTERESTING) {
 			/*
@@ -474,7 +461,7 @@ static void sort_first_epoch(struct commit *head, struct commit_list **stack)
 
 			} else {
 				sort_first_epoch(parent, stack);
-				if (reversed_parents) {
+				if (parents) {
 					/*
 					 * This indicates a possible
 					 * discontinuity it may not be be
@@ -501,7 +488,7 @@ static void sort_first_epoch(struct commit *head, struct commit_list **stack)
  *
  * Sets the return value to STOP if no further output should be generated.
  */
-static int emit_stack(struct commit_list **stack, emitter_func emitter)
+static int emit_stack(struct commit_list **stack, emitter_func emitter, int include_last)
 {
 	unsigned int seen = 0;
 	int action = CONTINUE;
@@ -509,8 +496,11 @@ static int emit_stack(struct commit_list **stack, emitter_func emitter)
 	while (*stack && (action != STOP)) {
 		struct commit *next = pop_commit(stack);
 		seen |= next->object.flags;
-		if (*stack)
+		if (*stack || include_last) {
+			if (!*stack) 
+				next->object.flags |= BOUNDARY;
 			action = (*emitter) (next);
+		}
 	}
 
 	if (*stack) {
@@ -535,6 +525,8 @@ static int sort_in_merge_order(struct commit *head_of_epoch, emitter_func emitte
 	int action = CONTINUE;
 
 	ret = parse_commit(head_of_epoch);
+
+	next->object.flags |= BOUNDARY;
 
 	while (next && next->parents && !ret && (action != STOP)) {
 		struct commit *base = NULL;
@@ -564,7 +556,7 @@ static int sort_in_merge_order(struct commit *head_of_epoch, emitter_func emitte
 		} else {
 			struct commit_list *stack = NULL;
 			sort_first_epoch(next, &stack);
-			action = emit_stack(&stack, emitter);
+			action = emit_stack(&stack, emitter, (base == NULL));
 			next = base;
 		}
 	}
@@ -593,18 +585,15 @@ int sort_list_in_merge_order(struct commit_list *list, emitter_func emitter)
 	for (; list; list = list->next) {
 		struct commit *next = list->item;
 
-		if (!(next->object.flags & UNINTERESTING)) {
-			if (next->object.flags & DUPCHECK) {
-				fprintf(stderr, "%s: duplicate commit %s ignored\n",
-					__FUNCTION__, sha1_to_hex(next->object.sha1));
-			} else {
-				next->object.flags |= DUPCHECK;
-				commit_list_insert(list->item, &reversed);
-			}
+		if (!(next->object.flags & DUPCHECK)) {
+			next->object.flags |= DUPCHECK;
+			commit_list_insert(list->item, &reversed);
 		}
 	}
 
-	if (!reversed->next) {
+	if (!reversed)
+		return ret;
+	else if (!reversed->next) {
 		/*
 		 * If there is only one element in the list, we can sort it
 		 * using sort_in_merge_order.
@@ -621,24 +610,31 @@ int sort_list_in_merge_order(struct commit_list *list, emitter_func emitter)
 			base->object.flags |= BOUNDARY;
 
 		while (reversed) {
-			sort_first_epoch(pop_commit(&reversed), &stack);
-			if (reversed) {
-				/*
-				 * If we have more commits to push, then the
-				 * first push for the next parent may (or may
-				 * not) represent a discontinuity with respect
-				 * to the parent currently on the top of
-				 * the stack.
-				 *
-				 * Mark it for checking here, and check it
-				 * with the next push. See sort_first_epoch()
-				 * for more details.
-				 */
-				stack->item->object.flags |= DISCONTINUITY;
+			struct commit * next = pop_commit(&reversed);
+
+			if (!(next->object.flags & VISITED)) {
+				sort_first_epoch(next, &stack);
+				if (reversed) {
+					/*
+					 * If we have more commits 
+					 * to push, then the first
+					 * push for the next parent may 
+					 * (or may * not) represent a 
+					 * discontinuity with respect
+					 * to the parent currently on 
+					 * the top of the stack.
+					 *
+					 * Mark it for checking here, 
+					 * and check it with the next 
+					 * push. See sort_first_epoch()
+					 * for more details.
+					 */
+					stack->item->object.flags |= DISCONTINUITY;
+				}
 			}
 		}
 
-		action = emit_stack(&stack, emitter);
+		action = emit_stack(&stack, emitter, (base==NULL));
 	}
 
 	if (base && (action != STOP)) {

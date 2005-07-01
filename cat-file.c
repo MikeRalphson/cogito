@@ -13,16 +13,21 @@ int main(int argc, char **argv)
 	unsigned long size;
 
 	if (argc != 3 || get_sha1(argv[2], sha1))
-		usage("git-cat-file [-t | tagname] <sha1>");
+		usage("git-cat-file [-t | -s | tagname] <sha1>");
 
-	if (!strcmp("-t", argv[1])) {
-		buf = read_sha1_file(sha1, type, &size);
-		if (buf) {
-			buf = type;
-			size = strlen(type);
-			type[size] = '\n';
-			size++;
+	if (!strcmp("-t", argv[1]) || !strcmp("-s", argv[1])) {
+		if (!sha1_object_info(sha1, type, &size)) {
+			switch (argv[1][1]) {
+			case 't':
+				printf("%s\n", type);
+				break;
+			case 's':
+				printf("%lu\n", size);
+				break;
+			}
+			return 0;
 		}
+		buf = NULL;
 	} else {
 		buf = read_object_with_reference(sha1, argv[1], &size, NULL);
 	}

@@ -20,7 +20,7 @@ git-ssh-pull, aside from which end you run it on.
 OPTIONS
 -------
 commit-id::
-        Either the hash or the filename under $GIT_DIR/refs/ to push.
+        Id of commit to push.
 
 -c::
         Get the commit objects.
@@ -28,13 +28,6 @@ commit-id::
         Get tree associated with the requested commit object.
 -a::
         Get all the objects.
--d::
-        Do not check for delta base objects (use this option
-        only when you know the local repository is not
-        deltified).
---recover::
-        Check dependency of deltified object more carefully than
-        usual, to recover after earlier push that was interrupted.
 -v::
         Report what is uploaded.
 -w::

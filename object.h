@@ -4,24 +4,27 @@
 struct object_list {
 	struct object *item;
 	struct object_list *next;
+	const char *name;
 };
 
 struct object {
 	unsigned parsed : 1;
 	unsigned used : 1;
-	unsigned delta : 1;
 	unsigned int flags;
 	unsigned char sha1[20];
 	const char *type;
 	struct object_list *refs;
-	struct object_list *attached_deltas;
 	void *util;
 };
 
 extern int nr_objs;
 extern struct object **objs;
 
+/** Internal only **/
 struct object *lookup_object(const unsigned char *sha1);
+
+/** Returns the object, having looked it up as being the given type. **/
+struct object *lookup_object_type(const unsigned char *sha1, const char *type);
 
 void created_object(const unsigned char *sha1, struct object *obj);
 

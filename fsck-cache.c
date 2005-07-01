@@ -6,46 +6,18 @@
 #include "tree.h"
 #include "blob.h"
 #include "tag.h"
-#include "delta.h"
+#include "pack.h"
 
 #define REACHABLE 0x0001
 
 static int show_root = 0;
 static int show_tags = 0;
 static int show_unreachable = 0;
-static int show_max_delta_depth = 0;
+static int standalone = 0;
+static int check_full = 0;
 static int keep_cache_objects = 0; 
 static unsigned char head_sha1[20];
 
-static void expand_deltas(void)
-{
-	int i, max_depth = 0;
-
-	/*
-	 * To be as efficient as possible we look for delta heads and
-	 * recursively process them going backward, and parsing
-	 * resulting objects along the way.  This allows for processing
-	 * each delta objects only once regardless of the delta depth.
-	 */
-	for (i = 0; i < nr_objs; i++) {
-		struct object *obj = objs[i];
-		if (obj->parsed && !obj->delta && obj->attached_deltas) {
-			int depth = 0;
-			char type[10];
-			unsigned long size;
-			void *buf = read_sha1_file(obj->sha1, type, &size);
-			if (!buf)
-				continue;
-			depth = process_deltas(buf, size, obj->type,
-					       obj->attached_deltas);
-			if (max_depth < depth)
-				max_depth = depth;
-		}
-	}
-	if (show_max_delta_depth)
-		printf("maximum delta depth = %d\n", max_depth);
-}
-															
 static void check_connectivity(void)
 {
 	int i;
@@ -56,9 +28,8 @@ static void check_connectivity(void)
 		struct object_list *refs;
 
 		if (!obj->parsed) {
-			if (obj->delta)
-				printf("unresolved delta %s\n",
-				       sha1_to_hex(obj->sha1));
+			if (!standalone && has_sha1_file(obj->sha1))
+				; /* it is in pack */
 			else
 				printf("missing %s %s\n",
 				       obj->type, sha1_to_hex(obj->sha1));
@@ -66,7 +37,8 @@ static void check_connectivity(void)
 		}
 
 		for (refs = obj->refs; refs; refs = refs->next) {
-			if (refs->item->parsed)
+			if (refs->item->parsed ||
+			    (!standalone && has_sha1_file(refs->item->sha1)))
 				continue;
 			printf("broken link from %7s %s\n",
 			       obj->type, sha1_to_hex(obj->sha1));
@@ -74,17 +46,9 @@ static void check_connectivity(void)
 			       refs->item->type, sha1_to_hex(refs->item->sha1));
 		}
 
-		/* Don't bother with tag reachability. */
-		if (obj->type == tag_type)
-			continue;
-
 		if (show_unreachable && !(obj->flags & REACHABLE)) {
-			if (obj->attached_deltas)
-				printf("foreign delta reference %s\n", 
-				       sha1_to_hex(obj->sha1));
-			else
-				printf("unreachable %s %s\n",
-				       obj->type, sha1_to_hex(obj->sha1));
+			printf("unreachable %s %s\n",
+			       obj->type, sha1_to_hex(obj->sha1));
 			continue;
 		}
 
@@ -244,8 +208,6 @@ static int fsck_sha1(unsigned char *sha1)
 		return fsck_commit((struct commit *) obj);
 	if (obj->type == tag_type)
 		return fsck_tag((struct tag *) obj);
-	if (!obj->type && obj->delta)
-		return 0;
 	return -1;
 }
 
@@ -360,8 +322,11 @@ static int read_sha1_reference(const char *path)
 		return -1;
 
 	obj = lookup_object(sha1);
-	if (!obj)
+	if (!obj) {
+		if (!standalone && has_sha1_file(sha1))
+			return 0; /* it is in pack */
 		return error("%s: invalid sha1 pointer %.40s", path, hexname);
+	}
 
 	obj->used = 1;
 	mark_reachable(obj, REACHABLE);
@@ -411,10 +376,20 @@ static void get_default_heads(void)
 		die("No default references");
 }
 
+static void fsck_object_dir(const char *path)
+{
+	int i;
+	for (i = 0; i < 256; i++) {
+		static char dir[4096];
+		sprintf(dir, "%s/%02x", path, i);
+		fsck_dir(i, dir);
+	}
+	fsck_sha1_list();
+}
+
 int main(int argc, char **argv)
 {
 	int i, heads;
-	const char *sha1_dir;
 
 	for (i = 1; i < argc; i++) {
 		const char *arg = argv[i];
@@ -431,27 +406,53 @@ int main(int argc, char **argv)
 			show_root = 1;
 			continue;
 		}
-		if (!strcmp(arg, "--delta-depth")) {
-			show_max_delta_depth = 1;
-			continue;
-		}
 		if (!strcmp(arg, "--cache")) {
 			keep_cache_objects = 1;
 			continue;
 		}
+		if (!strcmp(arg, "--standalone")) {
+			standalone = 1;
+			continue;
+		}
+		if (!strcmp(arg, "--full")) {
+			check_full = 1;
+			continue;
+		}
 		if (*arg == '-')
-			usage("git-fsck-cache [--tags] [[--unreachable] [--cache] <head-sha1>*]");
+			usage("git-fsck-cache [--tags] [[--unreachable] [--cache] [--standalone | --full] <head-sha1>*]");
 	}
 
-	sha1_dir = get_object_directory();
-	for (i = 0; i < 256; i++) {
-		static char dir[4096];
-		sprintf(dir, "%s/%02x", sha1_dir, i);
-		fsck_dir(i, dir);
-	}
-	fsck_sha1_list();
+	if (standalone && check_full)
+		die("Only one of --standalone or --full can be used.");
+	if (standalone)
+		unsetenv("GIT_ALTERNATE_OBJECT_DIRECTORIES");
 
-	expand_deltas();
+	fsck_object_dir(get_object_directory());
+	if (check_full) {
+		int j;
+		struct packed_git *p;
+		prepare_alt_odb();
+		for (j = 0; alt_odb[j].base; j++) {
+			alt_odb[j].name[-1] = 0; /* was slash */
+			fsck_object_dir(alt_odb[j].base);
+			alt_odb[j].name[-1] = '/';
+		}
+		prepare_packed_git();
+		for (p = packed_git; p; p = p->next)
+			/* verify gives error messages itself */
+			verify_pack(p); 
+
+		for (p = packed_git; p; p = p->next) {
+			int num = num_packed_objects(p);
+			for (i = 0; i < num; i++) {
+				unsigned char sha1[20];
+				nth_packed_object_sha1(p, i, sha1);
+				if (fsck_sha1(sha1) < 0)
+					fprintf(stderr, "bad sha1 entry '%s'\n", sha1_to_hex(sha1));
+
+			}
+		}
+	}
 
 	heads = 0;
 	for (i = 1; i < argc; i++) {

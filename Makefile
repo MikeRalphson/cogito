@@ -22,9 +22,10 @@ INSTALL=install
 
 SCRIPTS=git git-apply-patch-script git-merge-one-file-script git-prune-script \
 	git-pull-script git-tag-script git-resolve-script git-whatchanged \
-	git-deltafy-script git-fetch-script git-status-script git-commit-script \
+	git-fetch-script git-status-script git-commit-script \
 	git-log-script git-shortlog git-cvsimport-script git-diff-script \
-	git-reset-script git-add-script
+	git-reset-script git-add-script git-checkout-script git-clone-script \
+	gitk git-cherry git-rebase-script git-relink-script
 
 PROG=   git-update-cache git-diff-files git-init-db git-write-tree \
 	git-read-tree git-commit-tree git-cat-file git-fsck-cache \
@@ -33,8 +34,10 @@ PROG=   git-update-cache git-diff-files git-init-db git-write-tree \
 	git-unpack-file git-export git-diff-cache git-convert-cache \
 	git-http-pull git-ssh-push git-ssh-pull git-rev-list git-mktag \
 	git-diff-helper git-tar-tree git-local-pull git-write-blob \
-	git-get-tar-commit-id git-mkdelta git-apply git-stripspace \
-	git-cvs2git git-diff-stages git-rev-parse
+	git-get-tar-commit-id git-apply git-stripspace \
+	git-cvs2git git-diff-stages git-rev-parse git-patch-id \
+	git-pack-objects git-unpack-objects git-verify-pack \
+	git-receive-pack git-send-pack
 
 all: $(PROG)
 
@@ -42,10 +45,11 @@ install: $(PROG) $(SCRIPTS)
 	$(INSTALL) $(PROG) $(SCRIPTS) $(dest)$(bin)
 
 LIB_OBJS=read-cache.o sha1_file.o usage.o object.o commit.o tree.o blob.o \
-	 tag.o delta.o date.o index.o diff-delta.o patch-delta.o entry.o \
-	 epoch.o refs.o
+	 tag.o date.o index.o diff-delta.o patch-delta.o entry.o \
+	 epoch.o refs.o csum-file.o verify_pack.o pkt-line.o
 LIB_FILE=libgit.a
-LIB_H=cache.h object.h blob.h tree.h commit.h tag.h delta.h epoch.h
+LIB_H=cache.h object.h blob.h tree.h commit.h tag.h delta.h epoch.h csum-file.h \
+	pack.h pkt-line.h
 
 LIB_H += strbuf.h
 LIB_OBJS += strbuf.o
@@ -115,11 +119,16 @@ git-mktag: mktag.c
 git-diff-helper: diff-helper.c
 git-tar-tree: tar-tree.c
 git-write-blob: write-blob.c
-git-mkdelta: mkdelta.c
 git-stripspace: stripspace.c
 git-cvs2git: cvs2git.c
 git-diff-stages: diff-stages.c
 git-rev-parse: rev-parse.c
+git-patch-id: patch-id.c
+git-pack-objects: pack-objects.c
+git-unpack-objects: unpack-objects.c
+git-verify-pack: verify-pack.c
+git-receive-pack: receive-pack.c
+git-send-pack: send-pack.c
 
 git-http-pull: LIBS += -lcurl
 git-rev-list: LIBS += -lssl

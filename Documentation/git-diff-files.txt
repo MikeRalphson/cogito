@@ -9,7 +9,7 @@ git-diff-files - Compares files in the working tree and the cache
 
 SYNOPSIS
 --------
-'git-diff-files' [-p] [-q] [-r] [-z] [-B] [-M] [-C] [-R] [-O<orderfile>] [-S<string>] [--pickaxe-all] [<pattern>...]
+'git-diff-files' [-p] [-q] [-r] [-z] [-R] [-B] [-M] [-C] [--find-copies-harder] [-O<orderfile>] [-S<string>] [--pickaxe-all] [<path>...]
 
 DESCRIPTION
 -----------
@@ -38,6 +38,14 @@ OPTIONS
 
 -C::
 	Detect copies as well as renames.
+
+--find-copies-harder::
+	By default, -C option finds copies only if the original
+	file of the copy was modified in the same changeset for
+	performance reasons.  This flag makes the command
+	inspect unmodified files as candidates for the source of
+	copy.  This is a very expensive operation for large
+	projects, so use it with caution.
 
 -S<string>::
 	Look for differences that contains the change in <string>.

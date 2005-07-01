@@ -5,6 +5,21 @@
 
 const char *commit_type = "commit";
 
+enum cmit_fmt get_commit_format(const char *arg)
+{
+	if (!*arg)
+		return CMIT_FMT_DEFAULT;
+	if (!strcmp(arg, "=raw"))
+		return CMIT_FMT_RAW;
+	if (!strcmp(arg, "=medium"))
+		return CMIT_FMT_MEDIUM;
+	if (!strcmp(arg, "=short"))
+		return CMIT_FMT_SHORT;
+	if (!strcmp(arg, "=full"))
+		return CMIT_FMT_FULL;
+	die("invalid --pretty format");
+}
+
 static struct commit *check_commit(struct object *obj, const unsigned char *sha1)
 {
 	if (obj->type != commit_type) {
@@ -63,6 +78,7 @@ int parse_commit_buffer(struct commit *item, void *buffer, unsigned long size)
 {
 	void *bufptr = buffer;
 	unsigned char parent[20];
+	struct commit_list **pptr;
 
 	if (item->object.parsed)
 		return 0;
@@ -72,11 +88,12 @@ int parse_commit_buffer(struct commit *item, void *buffer, unsigned long size)
 	if (item->tree)
 		add_ref(&item->object, &item->tree->object);
 	bufptr += 46; /* "tree " + "hex sha1" + "\n" */
+	pptr = &item->parents;
 	while (!memcmp(bufptr, "parent ", 7) &&
 	       !get_sha1_hex(bufptr + 7, parent)) {
 		struct commit *new_parent = lookup_commit(parent);
 		if (new_parent) {
-			commit_list_insert(new_parent, &item->parents);
+			pptr = &commit_list_insert(new_parent, pptr)->next;
 			add_ref(&item->object, &new_parent->object);
 		}
 		bufptr += 48;
@@ -194,14 +211,13 @@ static int get_one_line(const char *msg, unsigned long len)
 	return ret;
 }
 
-static int add_author_info(enum cmit_fmt fmt, char *buf, const char *line, int len)
+static int add_user_info(const char *what, enum cmit_fmt fmt, char *buf, const char *line)
 {
 	char *date;
 	unsigned int namelen;
 	unsigned long time;
 	int tz, ret;
 
-	line += strlen("author ");
 	date = strchr(line, '>');
 	if (!date)
 		return 0;
@@ -209,7 +225,7 @@ static int add_author_info(enum cmit_fmt fmt, char *buf, const char *line, int l
 	time = strtoul(date, &date, 10);
 	tz = strtol(date, NULL, 10);
 
-	ret = sprintf(buf, "Author: %.*s\n", namelen, line);
+	ret = sprintf(buf, "%s: %.*s\n", what, namelen, line);
 	if (fmt == CMIT_FMT_MEDIUM)
 		ret += sprintf(buf + ret, "Date:   %s\n", show_date(time, tz));
 	return ret;
@@ -282,7 +298,11 @@ unsigned long pretty_print_commit(enum cmit_fmt fmt, const char *msg, unsigned l
 				offset += add_parent_info(fmt, buf + offset, line, ++parents);
 			}
 			if (!memcmp(line, "author ", 7))
-				offset += add_author_info(fmt, buf + offset, line, linelen);
+				offset += add_user_info("Author", fmt, buf + offset, line + 7);
+			if (fmt == CMIT_FMT_FULL) {
+				if (!memcmp(line, "committer ", 10))
+					offset += add_user_info("Commit", fmt, buf + offset, line + 10);
+			}
 			continue;
 		}
 

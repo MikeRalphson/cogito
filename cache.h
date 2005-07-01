@@ -14,6 +14,8 @@
 #include <sys/mman.h>
 #include <sys/param.h>
 #include <netinet/in.h>
+#include <sys/types.h>
+#include <dirent.h>
 
 #include SHA1_HEADER
 #include <zlib.h>
@@ -130,6 +132,7 @@ extern int write_cache(int newfd, struct cache_entry **cache, int entries);
 extern int cache_name_pos(const char *name, int namelen);
 #define ADD_CACHE_OK_TO_ADD 1		/* Ok to add */
 #define ADD_CACHE_OK_TO_REPLACE 2	/* Ok to replace file/directory */
+#define ADD_CACHE_SKIP_DFCHECK 4	/* Ok to skip DF conflict checks */
 extern int add_cache_entry(struct cache_entry *ce, int option);
 extern int remove_cache_entry_at(int pos);
 extern int remove_file_from_cache(char *path);
@@ -161,8 +164,7 @@ extern char *sha1_file_name(const unsigned char *sha1);
 extern void * map_sha1_file(const unsigned char *sha1, unsigned long *size);
 extern int unpack_sha1_header(z_stream *stream, void *map, unsigned long mapsize, void *buffer, unsigned long size);
 extern int parse_sha1_header(char *hdr, char *type, unsigned long *sizep);
-extern int sha1_delta_base(const unsigned char *, unsigned char *);
-extern int sha1_file_size(const unsigned char *, unsigned long *);
+extern int sha1_object_info(const unsigned char *, char *, unsigned long *);
 extern void * unpack_sha1_file(void *map, unsigned long mapsize, char *type, unsigned long *size);
 extern void * read_sha1_file(const unsigned char *sha1, char *type, unsigned long *size);
 extern int write_sha1_file(void *buf, unsigned long len, const char *type, unsigned char *return_sha1);
@@ -232,5 +234,28 @@ struct checkout {
 };
 
 extern int checkout_entry(struct cache_entry *ce, struct checkout *state);
+
+extern struct alternate_object_database {
+	char *base;
+	char *name;
+} *alt_odb;
+extern void prepare_alt_odb(void);
+
+extern struct packed_git {
+	struct packed_git *next;
+	unsigned long index_size;
+	unsigned long pack_size;
+	unsigned int *index_base;
+	void *pack_base;
+	unsigned int pack_last_used;
+	unsigned int pack_use_cnt;
+	char pack_name[0]; /* something like ".git/objects/pack/xxxxx.pack" */
+} *packed_git;
+extern void prepare_packed_git(void);
+extern int use_packed_git(struct packed_git *);
+extern void unuse_packed_git(struct packed_git *);
+extern struct packed_git *add_packed_git(char *, int);
+extern int num_packed_objects(const struct packed_git *p);
+extern int nth_packed_object_sha1(const struct packed_git *, int, unsigned char*);
 
 #endif /* CACHE_H */
