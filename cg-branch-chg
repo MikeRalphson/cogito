@@ -1,0 +1,17 @@
+#!/usr/bin/env bash
+#
+# Change GIT branch's repository URL.
+# Copyright (c) Petr Baudis, 2005
+#
+# Takes the branch name and new source location as parameters.
+
+USAGE="cg-branch-chg BRANCH_NAME NEW_LOCATION"
+
+. ${COGITO_LIB}cg-Xlib
+
+name=$1
+location=$2
+([ "$name" ] && [ "$location" ]) || usage
+
+[ -s "$_git/branches/$name" ] || die "branch does not exist"
+echo "$location" >$_git/branches/$name
