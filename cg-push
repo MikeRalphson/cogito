@@ -36,9 +36,9 @@ fi
 if echo "$uri" | grep -q "^http://"; then
 	die "pushing over HTTP not supported yet"
 elif echo "$uri" | grep -q "^git+ssh://"; then
-	git-send-pack "$(echo "$uri" | sed 's#^git+ssh://\([^/]*\)\(/.*\)$#\1:\2#')"
+	git-send-pack "$(echo "$uri" | sed 's#^git+ssh://\([^/]*\)\(/.*\)$#\1:\2#')" $rembranch
 elif echo "$uri" | grep -q ":"; then
 	die "pushing over rsync not supported"
 else
-	git-send-pack "$uri"
+	git-send-pack "$uri" $rembranch
 fi
