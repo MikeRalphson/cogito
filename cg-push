@@ -1,0 +1,44 @@
+#!/usr/bin/env bash
+#
+# Push changes to a remote GIT repository.
+# Copyright (c) Petr Baudis, 2005.
+#
+# It will push your commits to the remote repository, provided that
+# your commits follow the last commit in the remote repository.
+# Note that if the remote repository is associated with a working
+# tree copy, this command won't update that. Use cg-cancel at the
+# remote side to bring it in sync (but throw away any local changes
+# in that tree).
+#
+# Takes the branch name as an argument, defaulting to "origin".
+
+USAGE="cg-push [BRANCH_NAME]"
+
+. ${COGITO_LIB}cg-Xlib
+
+while optparse; do
+	optfail
+done
+
+name=${ARGS[0]}
+
+[ "$name" ] || { [ -s $_git/refs/heads/origin ] && name=origin; }
+[ "$name" ] || die "where to push from?"
+uri=$(cat "$_git/branches/$name" 2>/dev/null) || die "unknown branch: $name"
+
+rembranch=master
+if echo "$uri" | grep -q '#'; then
+	rembranch=$(echo $uri | cut -d '#' -f 2)
+	uri=$(echo $uri | cut -d '#' -f 1)
+	die "pushing to a different head not supported yet"
+fi
+
+if echo "$uri" | grep -q "^http://"; then
+	die "pushing over HTTP not supported yet"
+elif echo "$uri" | grep -q "^git+ssh://"; then
+	git-send-pack "$(echo "$uri" | sed 's#^git+ssh://\([^/]*\)\(/.*\)$#\1:\2#')"
+elif echo "$uri" | grep -q ":"; then
+	die "pushing over rsync not supported"
+else
+	git-send-pack "$uri"
+fi
