@@ -6,14 +6,32 @@
 # Creates a tag referencing the given commit (or 'HEAD'). You can then
 # use the tag anywhere you specify a commit or tree ID.
 #
+# cg-tag will automatically try to sign the tag, provided that you have
+# gpg installed and secret keys in your keyring. You can override the
+# default key choice by passing it the -k argument.
+#
 # Takes the tag name and optionally the associated ID as arguments.
+#
+# OPTIONS
+# -------
+# -k KEYNAME::
+#	Use the given key to sign the tag, instead of the default one.
 
-USAGE="cg-tag TAG_NAME [COMMIT_ID]"
+USAGE="cg-tag [-k KEYNAME] TAG_NAME [COMMIT_ID]"
 
 . ${COGITO_LIB}cg-Xlib
 
-name=$1
-id=$2
+keyname=
+while optparse; do
+	if optparse -k=; then
+		keyname="--default-key \"$OPTARG\""
+	else
+		optfail
+	fi
+done
+
+name="${ARGS[0]}"
+id="${ARGS[1]}"
 
 [ "$name" ] || usage
 [ "$id" ] || id=$(commit-id)
@@ -26,4 +44,24 @@ mkdir -p $_git/refs/tags
 [ -s "$_git/refs/tags/$name" ] && die "tag already exists ($name)"
 [ "$id" ] || id=$(cat $_git/HEAD)
 
-echo $id >$_git/refs/tags/$name
+
+tagdir="$(mktemp -d -t gittag.XXXXXX)"
+
+cat <<SIGEND >"$tagdir/tag"
+object $id
+type commit
+tag $name
+SIGEND
+if which gpg >/dev/null 2>&1 && [ "$(gpg --list-secret-keys)" ]; then
+	if ! gpg $keyname -bsa "$tagdir/tag"; then
+		rm -rf "$tagdir"
+		die "error signing the tag"
+	fi
+	cat "$tagdir/tag.asc" >>"$tagdir/tag"
+fi
+if ! git-mktag <"$tagdir/tag" >$_git/refs/tags/$name; then
+	rm -rf "$tagdir"
+	die "error creating tag"
+fi
+
+rm -rf "$tagdir"
