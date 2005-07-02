@@ -173,6 +173,13 @@ CG: -----------------------------------------------------------------------
 CG: Lines beginning with the CG: prefix are removed automatically.
 EOT
 fi
+if [ "$GIT_AUTHOR_NAME" -o "$GIT_AUTHOR_EMAIL" -o "$GIT_AUTHOR_DATE" ]; then
+	echo "CG:" >>$LOGMSG
+	[ "$GIT_AUTHOR_NAME" ] && echo "CG: Author: $GIT_AUTHOR_NAME" >>$LOGMSG
+	[ "$GIT_AUTHOR_EMAIL" ] && echo "CG: Email: $GIT_AUTHOR_EMAIL" >>$LOGMSG
+	[ "$GIT_AUTHOR_DATE" ] && echo "CG: Date: $GIT_AUTHOR_DATE" >>$LOGMSG
+	echo "CG:" >>$LOGMSG
+fi
 
 if [ ! "$ignorecache" ]; then
 	if [ ! "$merging" ]; then
@@ -227,6 +234,16 @@ if tty -s; then
 			customfiles=1
 		fi
 	fi
+	setif () {
+		if ! grep -q "^CG: $2:" $LOGMSG2; then
+			unset $1
+		else
+			export $1="$(grep "^CG: $2:" $LOGMSG2 |cut -d ' ' -f 3-)"
+		fi
+	}
+	setif GIT_AUTHOR_NAME Author
+	setif GIT_AUTHOR_EMAIL Email
+	setif GIT_AUTHOR_DATE Date
 else
 	cat >$LOGMSG2
 fi
