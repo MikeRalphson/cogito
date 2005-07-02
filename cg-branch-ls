@@ -11,7 +11,7 @@
 # 
 # For example
 #
-#	origin  rsync://rsync.kernel.org/pub/scm/cogito/cogito.git
+#	origin  http://www.kernel.org/pub/scm/cogito/cogito.git
 
 USAGE="cg-branch-ls"
 

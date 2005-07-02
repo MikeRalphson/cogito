@@ -85,7 +85,7 @@ use the URL of a tarball, like the one given above for the Cogito source.
 The URL must point specifically to a .git directory somewhere. For instance,
 the URL for Cogito's self-hosting repository is
 
-	rsync://rsync.kernel.org/pub/scm/cogito/cogito.git
+	http://www.kernel.org/pub/scm/cogito/cogito.git
 
 Notice that the final directory, 'cogito.git', is not called '.git'. That is
 fine. It still has the same content as your .git directory.
@@ -98,7 +98,7 @@ To have a new directory created, just invoke cg-clone with the URL.  You can
 also include the directory in the command to specify exactly how should the
 new directory be called, as follows:
 
-	$ cg-clone rsync://rsync.kernel.org/pub/scm/cogito/cogito.git cogitodir
+	$ cg-clone http://www.kernel.org/pub/scm/cogito/cogito.git cogitodir
 
 You will see a whole bunch of output, and when it is over there will be a
 new directory called 'cogitodir' (or whatever name you chose) in the current
@@ -109,7 +109,7 @@ If, instead, you want to clone the repository to the current directory,
 first make sure you are in an empty directory. Then give the following
 command:
 
-	$ cg-clone -s rsync://rsync.kernel.org/pub/scm/cogito/cogito.git
+	$ cg-clone -s http://www.kernel.org/pub/scm/cogito/cogito.git
 
 When you get your prompt back, do an ls to see the source tree and .git
 directory.
@@ -185,11 +185,11 @@ which will show changes between the cloned branch and your current branch
 Note that you can also access the Linus' official branch, by adding it with
 the command
 
-	$ cg-branch-add name rsyncurl
+	$ cg-branch-add name repourl
 
-(the rsyncurl can have a fragment part identifying a branch inside of the
-repository accessible over rsync). Then you can specify the name to cg-update
-and cg-pull, or use it anywhere where you could use the "origin" name.
+(the repourl can have a fragment part identifying a branch inside of the
+repository). Then you can specify the name to cg-update and cg-pull, or use
+it anywhere where you could use the "origin" name.
 
 When you do some local changes, you can do
 

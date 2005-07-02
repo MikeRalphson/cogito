@@ -17,16 +17,18 @@
 #
 # 1. Local path - note that pulling will hardlink the objects, not copy them.
 # 2. rsync - either `rsync://host/path` or `host:/path` (the latter can change)
+#    THE rsync REPOSITORY ACCESS METHOD IS DEPRECATED AND WILL BE REMOVED
+#    IN THE FUTURE!
 # 3. HTTP - `http://host/path`
 # 4. SSH - `git+ssh://host/path` or `git+ssh://user@host/path` - note that
 #    the path must be absolute.
 #
 # The URL can have a fragment part, which identifies a branch inside of
 # the repository. Therefore, if you have a repository
-# `rsync://host/path/repo.git` and you are interested in its 'testing'
+# `git+ssh://host/path/repo.git` and you are interested in its 'testing'
 # branch, you can e.g.:
 #
-#	$ cg-branch-add repo-testing rsync://host/path/repo.git#testing
+#	$ cg-branch-add repo-testing git+ssh://host/path/repo.git#testing
 #
 # and refer to it as 'repo-testing' anytime later.
 
