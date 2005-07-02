@@ -128,15 +128,15 @@ test-delta: test-delta.c diff-delta.o patch-delta.o
 test-date: test-date.c date.o
 	$(CC) $(CFLAGS) -o $@ test-date.c date.o
 
-git-%: %.c $(LIB_FILE)
-	$(CC) $(CFLAGS) -o $@ $(filter %.c,$^) $(LIBS)
+git-%: %.o $(LIB_FILE)
+	$(CC) $(CFLAGS) -o $@ $(filter %.o,$^) $(LIBS)
 
 git-rev-list: LIBS += -lssl
 git-http-pull: LIBS += -lcurl
-git-http-pull: pull.c
-git-local-pull: pull.c
-git-ssh-pull: pull.c rsh.c
-git-ssh-push: rsh.c
+git-http-pull: pull.o
+git-local-pull: pull.o
+git-ssh-pull: pull.o rsh.o
+git-ssh-push: rsh.o
 
 $(LIB_OBJS): $(LIB_H)
 $(DIFF_OBJS): diffcore.h
