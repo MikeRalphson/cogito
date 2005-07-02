@@ -272,12 +272,6 @@ static int pack_used_ctr;
 static unsigned long pack_mapped;
 struct packed_git *packed_git;
 
-struct pack_entry {
-	unsigned int offset;
-	unsigned char sha1[20];
-	struct packed_git *p;
-};
-
 static int check_packed_git_idx(const char *path, unsigned long *idx_size_,
 				void **idx_map_)
 {
@@ -618,47 +612,67 @@ void * unpack_sha1_file(void *map, unsigned long mapsize, char *type, unsigned l
 	return unpack_sha1_rest(&stream, hdr, *size);
 }
 
+/* forward declaration for a mutually recursive function */
+static int packed_object_info(struct pack_entry *entry,
+			      char *type, unsigned long *sizep);
+
 static int packed_delta_info(unsigned char *base_sha1,
 			     unsigned long delta_size,
 			     unsigned long left,
 			     char *type,
-			     unsigned long *sizep)
+			     unsigned long *sizep,
+			     struct packed_git *p)
 {
-	const unsigned char *data;
-	unsigned char delta_head[64];
-	unsigned long result_size, base_size, verify_base_size;
-	z_stream stream;
-	int st;
+	struct pack_entry base_ent;
 
 	if (left < 20)
 		die("truncated pack file");
-	if (sha1_object_info(base_sha1, type, &base_size))
+
+	/* The base entry _must_ be in the same pack */
+	if (!find_pack_entry_one(base_sha1, &base_ent, p))
+		die("failed to find delta-pack base object %s",
+		    sha1_to_hex(base_sha1));
+
+	/* We choose to only get the type of the base object and
+	 * ignore potentially corrupt pack file that expects the delta
+	 * based on a base with a wrong size.  This saves tons of
+	 * inflate() calls.
+	 */
+
+	if (packed_object_info(&base_ent, type, NULL))
 		die("cannot get info for delta-pack base");
 
-	memset(&stream, 0, sizeof(stream));
+	if (sizep) {
+		const unsigned char *data;
+		unsigned char delta_head[64];
+		unsigned long result_size;
+		z_stream stream;
+		int st;
 
-	data = stream.next_in = base_sha1 + 20;
-	stream.avail_in = left - 20;
-	stream.next_out = delta_head;
-	stream.avail_out = sizeof(delta_head);
+		memset(&stream, 0, sizeof(stream));
 
-	inflateInit(&stream);
-	st = inflate(&stream, Z_FINISH);
-	inflateEnd(&stream);
-	if ((st != Z_STREAM_END) && stream.total_out != sizeof(delta_head))
-		die("delta data unpack-initial failed");
+		data = stream.next_in = base_sha1 + 20;
+		stream.avail_in = left - 20;
+		stream.next_out = delta_head;
+		stream.avail_out = sizeof(delta_head);
 
-	/* Examine the initial part of the delta to figure out
-	 * the result size.  Verify the base size while we are at it.
-	 */
-	data = delta_head;
-	verify_base_size = get_delta_hdr_size(&data);
-	if (verify_base_size != base_size)
-		die("delta base size mismatch");
+		inflateInit(&stream);
+		st = inflate(&stream, Z_FINISH);
+		inflateEnd(&stream);
+		if ((st != Z_STREAM_END) &&
+		    stream.total_out != sizeof(delta_head))
+			die("delta data unpack-initial failed");
 
-	/* Read the result size */
-	result_size = get_delta_hdr_size(&data);
-	*sizep = result_size;
+		/* Examine the initial part of the delta to figure out
+		 * the result size.
+		 */
+		data = delta_head;
+		get_delta_hdr_size(&data); /* ignore base size */
+
+		/* Read the result size */
+		result_size = get_delta_hdr_size(&data);
+		*sizep = result_size;
+	}
 	return 0;
 }
 
@@ -690,6 +704,57 @@ static unsigned long unpack_object_header(struct packed_git *p, unsigned long of
 	return offset;
 }
 
+void packed_object_info_detail(struct pack_entry *e,
+			       char *type,
+			       unsigned long *size,
+			       unsigned long *store_size,
+			       int *delta_chain_length,
+			       unsigned char *base_sha1)
+{
+	struct packed_git *p = e->p;
+	unsigned long offset, left;
+	unsigned char *pack;
+	enum object_type kind;
+
+	offset = unpack_object_header(p, e->offset, &kind, size);
+	pack = p->pack_base + offset;
+	left = p->pack_size - offset;
+	if (kind != OBJ_DELTA)
+		*delta_chain_length = 0;
+	else {
+		int chain_length = 0;
+		memcpy(base_sha1, pack, 20);
+		do {
+			struct pack_entry base_ent;
+			unsigned long junk;
+
+			find_pack_entry_one(pack, &base_ent, p);
+			offset = unpack_object_header(p, base_ent.offset,
+						      &kind, &junk);
+			pack = p->pack_base + offset;
+			chain_length++;
+		} while (kind == OBJ_DELTA);
+		*delta_chain_length = chain_length;
+	}
+	switch (kind) {
+	case OBJ_COMMIT:
+		strcpy(type, "commit");
+		break;
+	case OBJ_TREE:
+		strcpy(type, "tree");
+		break;
+	case OBJ_BLOB:
+		strcpy(type, "blob");
+		break;
+	case OBJ_TAG:
+		strcpy(type, "tag");
+		break;
+	default:
+		die("corrupted pack file");
+	}
+	*store_size = 0; /* notyet */
+}
+
 static int packed_object_info(struct pack_entry *entry,
 			      char *type, unsigned long *sizep)
 {
@@ -708,7 +773,7 @@ static int packed_object_info(struct pack_entry *entry,
 
 	switch (kind) {
 	case OBJ_DELTA:
-		retval = packed_delta_info(pack, size, left, type, sizep);
+		retval = packed_delta_info(pack, size, left, type, sizep, p);
 		unuse_packed_git(p);
 		return retval;
 	case OBJ_COMMIT:
@@ -726,7 +791,8 @@ static int packed_object_info(struct pack_entry *entry,
 	default:
 		die("corrupted pack file");
 	}
-	*sizep = size;
+	if (sizep)
+		*sizep = size;
 	unuse_packed_git(p);
 	return 0;
 }
@@ -738,8 +804,10 @@ static void *unpack_delta_entry(unsigned char *base_sha1,
 				unsigned long delta_size,
 				unsigned long left,
 				char *type,
-				unsigned long *sizep)
+				unsigned long *sizep,
+				struct packed_git *p)
 {
+	struct pack_entry base_ent;
 	void *data, *delta_data, *result, *base;
 	unsigned long data_size, result_size, base_size;
 	z_stream stream;
@@ -764,8 +832,11 @@ static void *unpack_delta_entry(unsigned char *base_sha1,
 	if ((st != Z_STREAM_END) || stream.total_out != delta_size)
 		die("delta data unpack failed");
 
-	/* This may recursively unpack the base, which is what we want */
-	base = read_sha1_file(base_sha1, type, &base_size);
+	/* The base entry _must_ be in the same pack */
+	if (!find_pack_entry_one(base_sha1, &base_ent, p))
+		die("failed to find delta-pack base object %s",
+		    sha1_to_hex(base_sha1));
+	base = unpack_entry_gently(&base_ent, type, &base_size);
 	if (!base)
 		die("failed to read delta-pack base object %s",
 		    sha1_to_hex(base_sha1));
@@ -811,21 +882,33 @@ static void *unpack_entry(struct pack_entry *entry,
 			  char *type, unsigned long *sizep)
 {
 	struct packed_git *p = entry->p;
-	unsigned long offset, size, left;
-	unsigned char *pack;
-	enum object_type kind;
 	void *retval;
 
 	if (use_packed_git(p))
 		die("cannot map packed file");
+	retval = unpack_entry_gently(entry, type, sizep);
+	unuse_packed_git(p);
+	if (!retval)
+		die("corrupted pack file");
+	return retval;
+}
+
+/* The caller is responsible for use_packed_git()/unuse_packed_git() pair */
+void *unpack_entry_gently(struct pack_entry *entry,
+			  char *type, unsigned long *sizep)
+{
+	struct packed_git *p = entry->p;
+	unsigned long offset, size, left;
+	unsigned char *pack;
+	enum object_type kind;
+	void *retval;
 
 	offset = unpack_object_header(p, entry->offset, &kind, &size);
 	pack = p->pack_base + offset;
 	left = p->pack_size - offset;
 	switch (kind) {
 	case OBJ_DELTA:
-		retval = unpack_delta_entry(pack, size, left, type, sizep);
-		unuse_packed_git(p);
+		retval = unpack_delta_entry(pack, size, left, type, sizep, p);
 		return retval;
 	case OBJ_COMMIT:
 		strcpy(type, "commit");
@@ -840,11 +923,10 @@ static void *unpack_entry(struct pack_entry *entry,
 		strcpy(type, "tag");
 		break;
 	default:
-		die("corrupted pack file");
+		return NULL;
 	}
 	*sizep = size;
 	retval = unpack_non_delta_entry(pack, size, left);
-	unuse_packed_git(p);
 	return retval;
 }
 
@@ -864,8 +946,8 @@ int nth_packed_object_sha1(const struct packed_git *p, int n,
 	return 0;
 }
 
-static int find_pack_entry_1(const unsigned char *sha1,
-			     struct pack_entry *e, struct packed_git *p)
+int find_pack_entry_one(const unsigned char *sha1,
+			struct pack_entry *e, struct packed_git *p)
 {
 	int *level1_ofs = p->index_base;
 	int hi = ntohl(level1_ofs[*sha1]);
@@ -895,7 +977,7 @@ static int find_pack_entry(const unsigned char *sha1, struct pack_entry *e)
 	prepare_packed_git();
 
 	for (p = packed_git; p; p = p->next) {
-		if (find_pack_entry_1(sha1, e, p))
+		if (find_pack_entry_one(sha1, e, p))
 			return 1;
 	}
 	return 0;
@@ -915,12 +997,7 @@ int sha1_object_info(const unsigned char *sha1, char *type, unsigned long *sizep
 
 		if (!find_pack_entry(sha1, &e))
 			return error("unable to find %s", sha1_to_hex(sha1));
-		if (!packed_object_info(&e, type, sizep))
-			return 0;
-		/* sheesh */
-		map = unpack_entry(&e, type, sizep);
-		free(map);
-		return (map == NULL) ? 0 : -1;
+		return packed_object_info(&e, type, sizep);
 	}
 	if (unpack_sha1_header(&stream, map, mapsize, hdr, sizeof(hdr)) < 0)
 		status = error("unable to unpack %s header",
@@ -929,7 +1006,8 @@ int sha1_object_info(const unsigned char *sha1, char *type, unsigned long *sizep
 		status = error("unable to parse %s header", sha1_to_hex(sha1));
 	else {
 		status = 0;
-		*sizep = size;
+		if (sizep)
+			*sizep = size;
 	}
 	inflateEnd(&stream);
 	munmap(map, mapsize);
