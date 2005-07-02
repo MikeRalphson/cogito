@@ -30,7 +30,11 @@ name=${ARGS[0]}
 [ "$name" ] || { [ -s $_git/refs/heads/origin ] && name=origin; }
 [ "$name" ] || die "where to update from?"
 
-cg-pull $force $name || exit 1
+if [ -s "$_git/branches/$name" ]; then
+	cg-pull $force $name || exit 1
+else
+	echo "Updating from a local branch."
+fi
 echo
 echo "Applying changes..."
 cg-merge $name
