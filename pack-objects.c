@@ -5,7 +5,7 @@
 #include "pack.h"
 #include "csum-file.h"
 
-static const char pack_usage[] = "git-pack-objects [--window=N] [--depth=N] {--stdout | base-name} < object-list";
+static const char pack_usage[] = "git-pack-objects [--incremental] [--window=N] [--depth=N] {--stdout | base-name} < object-list";
 
 struct object_entry {
 	unsigned char sha1[20];
@@ -18,6 +18,8 @@ struct object_entry {
 	struct object_entry *delta;
 };
 
+static int non_empty = 0;
+static int incremental = 0;
 static struct object_entry **sorted_by_sha, **sorted_by_type;
 static struct object_entry *objects = NULL;
 static int nr_objects = 0, nr_alloc = 0;
@@ -191,6 +193,9 @@ static void add_object_entry(unsigned char *sha1, unsigned int hash)
 {
 	unsigned int idx = nr_objects;
 	struct object_entry *entry;
+
+	if (incremental && has_sha1_pack(sha1))
+		return;
 
 	if (idx >= nr_alloc) {
 		unsigned int needed = (idx + 1024) * 3 / 2;
@@ -387,6 +392,14 @@ int main(int argc, char **argv)
 		const char *arg = argv[i];
 
 		if (*arg == '-') {
+			if (!strcmp("--non-empty", arg)) {
+				non_empty = 1;
+				continue;
+			}
+			if (!strcmp("--incremental", arg)) {
+				incremental = 1;
+				continue;
+			}
 			if (!strncmp("--window=", arg, 9)) {
 				char *end;
 				window = strtoul(arg+9, &end, 0);
@@ -432,6 +445,8 @@ int main(int argc, char **argv)
 		}
 		add_object_entry(sha1, hash);
 	}
+	if (non_empty && !nr_objects)
+		return 0;
 	get_object_details();
 
 	fprintf(stderr, "Packing %d objects\n", nr_objects);
