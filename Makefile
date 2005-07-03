@@ -65,7 +65,7 @@ PROG=   git-update-cache git-diff-files git-init-db git-write-tree \
 	git-get-tar-commit-id git-apply git-stripspace \
 	git-cvs2git git-diff-stages git-rev-parse git-patch-id \
 	git-pack-objects git-unpack-objects git-verify-pack \
-	git-receive-pack git-send-pack
+	git-receive-pack git-send-pack git-prune-packed
 
 SCRIPT=	commit-id tree-id parent-id cg-add cg-admin-lsobj cg-admin-uncommit \
 	cg-branch-add cg-branch-ls cg-cancel cg-clone cg-commit cg-diff \
