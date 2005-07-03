@@ -200,6 +200,7 @@ if [ ! "$ignorecache" ]; then
 	done
 fi
 echo "CG: -----------------------------------------------------------------------" >>$LOGMSG
+echo "CG: vim: textwidth=75" >>$LOGMSG
 
 cp $LOGMSG $LOGMSG2
 if tty -s; then
