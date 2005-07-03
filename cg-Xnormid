@@ -16,6 +16,13 @@
 
 id="$1"
 
+if [ "${id:0:1}" = "^" ]; then
+	# parent-id
+	id=$(commit-id "${id:1}") || exit 1
+	git-cat-file commit "$id" | awk '/^parent/{print $2};/^$/{exit}' || exit 1
+	exit
+fi
+
 if [ ! "$id" ] || [ "$id" = "this" ] || [ "$id" = "HEAD" ]; then
 	read id < "$_git/HEAD"
 
