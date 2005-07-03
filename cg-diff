@@ -26,7 +26,7 @@
 #
 # -m::
 #	Base the diff at the merge base of the -r arguments (defaulting
-#	to master and origin).
+#	to HEAD and origin).
 #
 # ENVIRONMENT VARIABLES
 # ---------------------
@@ -128,7 +128,7 @@ if [ "$parent" ]; then
 fi
 
 if [ "$mergebase" ]; then
-	[ "$id1" != " " ] || id1="master"
+	[ "$id1" != " " ] || id1="HEAD"
 	[ "$id2" != " " ] || id2="origin"
 	id1=$(git-merge-base $(commit-id "$id1") $(commit-id "$id2"))
 fi

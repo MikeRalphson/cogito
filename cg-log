@@ -39,7 +39,7 @@
 #
 # -m::
 #	End the log listing at the merge base of the -r arguments
-#	(defaulting to master and origin).
+#	(defaulting to HEAD and origin).
 #
 # -s::
 #	Show a one line summary for each log entry. The summary contains
@@ -277,7 +277,7 @@ print_commit_log()
 }
 
 if [ "$mergebase" ]; then
-	[ "$log_start" ] || log_start="master"
+	[ "$log_start" ] || log_start="HEAD"
 	[ "$log_end" ] || log_end="origin"
 	log_start=$(git-merge-base $(commit-id "$log_start") $(commit-id "$log_end"))
 fi

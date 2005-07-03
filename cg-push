@@ -26,7 +26,7 @@ name=${ARGS[0]}
 [ "$name" ] || die "where to push from?"
 uri=$(cat "$_git/branches/$name" 2>/dev/null) || die "unknown branch: $name"
 
-rembranch=master
+rembranch=$_git_branch
 if echo "$uri" | grep -q '#'; then
 	rembranch=$(echo $uri | cut -d '#' -f 2)
 	uri=$(echo $uri | cut -d '#' -f 1)

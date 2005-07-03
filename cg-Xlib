@@ -223,6 +223,8 @@ if [ ! "$_git_repo_unneeded" ]; then
 	       echo "You do not have permission to access this GIT repository" >&2
 	       exit 1
 	fi
+	_git_branch=master
+	[ -s "$_git/branch" ] && _git_branch="$(cat "$_git/branch")"
 fi
 
 
