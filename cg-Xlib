@@ -54,8 +54,8 @@ stat () {
 		echo "INTERNAL ERROR: Unsupported stat call $@" >&2
 		return 1
 	fi
-	if [ "$HAVE_STAT" ]; then
-		$(which stat) "$@"
+	if [ "$has_stat" ]; then
+		$has_stat "$@"
 		return
 	fi
 
@@ -232,6 +232,5 @@ fi
 
 export BROKEN_MKTEMP=1
 del=$($(which mktemp) -t 2>/dev/null) && { rm $del; export BROKEN_MKTEMP=; }
-export HAVE_STAT=
-which stat >/dev/null 2>&1 && export HAVE_STAT=1
+has_stat=$(which stat 2>/dev/null)
 has_gnudate=$(date -Rud "1970-01-01 UTC" 2>/dev/null)
