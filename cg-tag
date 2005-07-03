@@ -13,22 +13,27 @@
 #
 # OPTIONS
 # -------
+# -d DESCRIPTION::
+#	Append this text to the tag object before signing it.
 # -k KEYNAME::
 #	Use the given key to sign the tag, instead of the default one.
 # -s::
 #	Sign the tag by your private key using GPG.
 
-USAGE="cg-tag [-s [-k KEYNAME]] TAG_NAME [COMMIT_ID]"
+USAGE="cg-tag [-s [-d DESCRIPTION] [-k KEYNAME]] TAG_NAME [COMMIT_ID]"
 
 . ${COGITO_LIB}cg-Xlib
 
 sign=
 keyname=
+description=
 while optparse; do
 	if optparse -s; then
 		sign=1
 	elif optparse -k=; then
 		keyname="--default-key \"$OPTARG\""
+	elif optparse -d=; then
+		description="$OPTARG"
 	else
 		optfail
 	fi
@@ -57,6 +62,11 @@ object $id
 type commit
 tag $name
 SIGEND
+	if [ "$description" ]; then
+		echo >>"$tagdir/tag"
+		echo "$description" >>"$tagdir/tag"
+		echo >>"$tagdir/tag"
+	fi
 	if ! gpg $keyname -bsa "$tagdir/tag"; then
 		rm -rf "$tagdir"
 		die "error signing the tag"
