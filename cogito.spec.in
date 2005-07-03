@@ -1,7 +1,7 @@
 Name: 		cogito
 Version: 	@@VERSION@@
 Release: 	1
-Vendor: 	Petr Baudis <pasky@ucw.cz>
+Vendor: 	Petr Baudis <pasky@suse.cz>
 Summary:  	Git core and tools
 License: 	GPL
 Group: 		Development/Tools
