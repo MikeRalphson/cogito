@@ -15,10 +15,14 @@ static const char rev_list_usage[] =
 		      "  --max-count=nr\n"
 		      "  --max-age=epoch\n"
 		      "  --min-age=epoch\n"
+		      "  --bisect\n"
+		      "  --objects\n"
+		      "  --unpacked\n"
 		      "  --header\n"
 		      "  --pretty\n"
 		      "  --merge-order [ --show-breaks ]";
 
+static int unpacked = 0;
 static int bisect_list = 0;
 static int tag_objects = 0;
 static int tree_objects = 0;
@@ -310,7 +314,7 @@ static struct commit_list *find_bisection(struct commit_list *list)
 	return best;
 }
 
-struct commit_list *limit_list(struct commit_list *list)
+static struct commit_list *limit_list(struct commit_list *list)
 {
 	struct commit_list *newlist = NULL;
 	struct commit_list **p = &newlist;
@@ -318,6 +322,8 @@ struct commit_list *limit_list(struct commit_list *list)
 		struct commit *commit = pop_most_recent_commit(&list, SEEN);
 		struct object *obj = &commit->object;
 
+		if (unpacked && has_sha1_pack(obj->sha1))
+			obj->flags |= UNINTERESTING;
 		if (obj->flags & UNINTERESTING) {
 			mark_parents_uninteresting(commit);
 			if (everybody_uninteresting(list))
@@ -377,7 +383,7 @@ static struct commit *get_commit_reference(const char *name, unsigned int flags)
 	if (object->type == tree_type) {
 		struct tree *tree = (struct tree *)object;
 		if (!tree_objects)
-			die("%s is a tree object, not a commit", name);
+			return NULL;
 		if (flags & UNINTERESTING) {
 			mark_tree_uninteresting(tree);
 			return NULL;
@@ -392,7 +398,7 @@ static struct commit *get_commit_reference(const char *name, unsigned int flags)
 	if (object->type == blob_type) {
 		struct blob *blob = (struct blob *)object;
 		if (!blob_objects)
-			die("%s is a blob object, not a commit", name);
+			return NULL;
 		if (flags & UNINTERESTING) {
 			mark_blob_uninteresting(blob);
 			return NULL;
@@ -448,6 +454,11 @@ int main(int argc, char **argv)
 			tag_objects = 1;
 			tree_objects = 1;
 			blob_objects = 1;
+			continue;
+		}
+		if (!strcmp(arg, "--unpacked")) {
+			unpacked = 1;
+			limited = 1;
 			continue;
 		}
 		if (!strncmp(arg, "--merge-order", 13)) {
