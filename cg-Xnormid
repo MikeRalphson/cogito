@@ -41,16 +41,18 @@ elif [[ "$id" == [0-9a-z][0-9a-z][0-9a-z][0-9a-z]* ]]; then
 	fi
 fi
 
-if ([ "$id" ] && [ "$id" != " " ]) && ([ ${#id} -ne 40 ] || [ ! -f .git/objects/${id:0:2}/${id:2} ]); then
+valid=; [ ${#id} -eq 40 ] && [ "$(git-rev-parse --revs-only "$id")" ] && valid=1
+if ([ "$id" ] && [ "$id" != " " ]) && [ ! "$valid" ]; then
 	reqsecs=$(date --date="$id" +'%s' 2>/dev/null)
 
 	if [ "$reqsecs" ]; then
 		id=$(git-rev-list --min-age=$reqsecs --max-count=1 HEAD)
+		valid=; [ ${#id} -eq 40 ] && [ "$(git-rev-parse --revs-only "$id")" ] && valid=1
 	fi
 fi
 
 # If we don't have a 40-char ID by now, it's an error
-if [ ${#id} -ne 40 ] || [ ! -f $_git_objects/${id:0:2}/${id:2} ]; then
+if [ ! "$valid" ]; then
 	echo "Invalid id: $id" >&2
 	exit 1
 fi
