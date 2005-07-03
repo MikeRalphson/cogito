@@ -13,8 +13,15 @@ Monotone).
 	~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 Cogito is a version control system layered on top of the git tree history
-storage system.  We shall first describe some quick ways to get started using
-Cogito, then go over each available command one by one.  Quickstart
+storage system. Note that you can MOSTLY use it in parallel of other GIT
+frontends (e.g. StGIT), as well as the Linus' GIT plumbing and core GIT
+tools - they only need to keep HEAD in place and follow the standardized
+refs/ hierarchy. The exception is that you should stick with a single
+toolkit during a merge and mostly stick with Cogito while your tree is
+in cg-seek'd state.
+
+We shall first describe some quick ways to get started using Cogito, then go
+over each available command one by one.
 
 
 	Downloading Cogito From Scratch
