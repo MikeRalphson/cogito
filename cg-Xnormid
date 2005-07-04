@@ -33,7 +33,7 @@ elif [ -r "$_git/refs/heads/$id" ]; then
 	read id < "$_git/refs/heads/$id"
 
 # Short id's must be lower case and at least 4 digits.
-elif [[ "$id" == [0-9a-z][0-9a-z][0-9a-z][0-9a-z]* ]]; then
+elif [[ "$id" == [0-9a-f][0-9a-f][0-9a-f][0-9a-f]* ]]; then
 	idpref=${id:0:2}
 	idpost=${id:2}
 
