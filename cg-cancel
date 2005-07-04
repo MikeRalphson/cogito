@@ -23,7 +23,7 @@ fi
 
 # Undo seek?
 branch=
-[ -s $_git/blocked ] && branch=$(grep '^seeked from ' $_git/blocked | sed 's/^seeked from //')
+[ -s $_git/blocked ] && branch=$(sed -n 's/^seeked from //p' < $_git/blocked)
 if [ "$branch" ]; then
 	echo "Unseeking: $(cat $_git/HEAD) -> $(cat "$_git/refs/heads/$branch")"
 	if [ -s "$_git/refs/heads/$branch" ]; then

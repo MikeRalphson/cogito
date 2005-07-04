@@ -28,7 +28,7 @@ dstcommit=$1
 
 [ -s $_git/blocked ] && grep -vq '^seeked from ' $_git/blocked && die "action blocked: $(cat $_git/blocked)"
 if [ -s $_git/blocked ]; then
-	branch=$(grep '^seeked from ' $_git/blocked | sed 's/^seeked from //')
+	branch=$(sed -n 's/^seeked from //p' < $_git/blocked)
 else
 	tmp=$(readlink $_git/HEAD)
 	[ "$tmp" ] || die "HEAD is not on branch"
