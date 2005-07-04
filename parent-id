@@ -7,4 +7,4 @@
 #
 # NOTE: Will return multiple SHA1s if ID is a commit with multiple parents.
 
-exec cg-Xnormid ^"$1"
+exec ${COGITO_LIB}cg-Xnormid ^"$1"
