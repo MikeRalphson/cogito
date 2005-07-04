@@ -106,7 +106,9 @@ done
 if [ "$mergebase" ]; then
 	[ "$log_start" ] || log_start="HEAD"
 	[ "$log_end" ] || log_end="origin"
-	log_start=$(git-merge-base $(commit-id "$log_start") $(commit-id "$log_end"))
+	id1=$(commit-id "$log_start") || exit 1
+	id2=$(commit-id "$log_end") || exit 1
+	log_start=$(git-merge-base $id1 $id2) || exit 1
 fi
 
 if [ "$log_end" ]; then
