@@ -63,7 +63,8 @@ static void show_commit(struct commit *commit)
 		static char pretty_header[16384];
 		pretty_print_commit(commit_format, commit->buffer, ~0, pretty_header, sizeof(pretty_header));
 		printf("%s%c", pretty_header, hdr_termination);
-	}	
+	}
+	fflush(stdout);
 }
 
 static int filter_commit(struct commit * commit)
@@ -481,7 +482,7 @@ int main(int argc, char **argv)
 		commit = get_commit_reference(arg, flags);
 		if (!commit)
 			continue;
-		commit_list_insert(commit, &list);
+		insert_by_date(&list, commit);
 	}
 
 	if (!merge_order) {		

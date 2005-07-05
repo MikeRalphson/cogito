@@ -40,10 +40,10 @@ PROG=   git-update-cache git-diff-files git-init-db git-write-tree \
 	git-unpack-file git-export git-diff-cache git-convert-cache \
 	git-http-pull git-ssh-push git-ssh-pull git-rev-list git-mktag \
 	git-diff-helper git-tar-tree git-local-pull git-write-blob \
-	git-get-tar-commit-id git-apply git-stripspace \
-	git-cvs2git git-diff-stages git-rev-parse git-patch-id \
-	git-pack-objects git-unpack-objects git-verify-pack \
-	git-receive-pack git-send-pack git-prune-packed
+	git-get-tar-commit-id git-apply git-stripspace git-cvs2git \
+	git-diff-stages git-rev-parse git-patch-id git-pack-objects \
+	git-unpack-objects git-verify-pack git-receive-pack git-send-pack \
+	git-prune-packed git-fetch-pack git-upload-pack
 
 all: $(PROG)
 
@@ -52,7 +52,7 @@ install: $(PROG) $(SCRIPTS)
 
 LIB_OBJS=read-cache.o sha1_file.o usage.o object.o commit.o tree.o blob.o \
 	 tag.o date.o index.o diff-delta.o patch-delta.o entry.o \
-	 epoch.o refs.o csum-file.o pack-check.o pkt-line.o
+	 epoch.o refs.o csum-file.o pack-check.o pkt-line.o connect.o
 LIB_FILE=libgit.a
 LIB_H=cache.h object.h blob.h tree.h commit.h tag.h delta.h epoch.h csum-file.h \
 	pack.h pkt-line.h refs.h
@@ -139,6 +139,7 @@ git-verify-pack: verify-pack.c
 git-receive-pack: receive-pack.c
 git-send-pack: send-pack.c
 git-prune-packed: prune-packed.c
+git-fetch-pack: fetch-pack.c
 
 git-http-pull: LIBS += -lcurl
 git-rev-list: LIBS += -lssl
