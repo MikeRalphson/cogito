@@ -71,7 +71,7 @@ SCRIPT=	commit-id tree-id parent-id cg-add cg-admin-lsobj cg-admin-uncommit \
 	cg-branch-add cg-branch-ls cg-cancel cg-clone cg-commit cg-diff \
 	cg-export cg-help cg-init cg-log cg-merge cg-mkpatch cg-patch \
 	cg-pull cg-restore cg-rm cg-seek cg-status cg-tag cg-tag-ls cg-update \
-	cg cg-admin-ls cg-push cg-branch-chg
+	cg cg-admin-ls cg-push cg-branch-chg cg-info
 
 LIB_SCRIPT=cg-Xlib cg-Xmergefile cg-Xnormid
 
