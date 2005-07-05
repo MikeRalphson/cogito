@@ -18,17 +18,17 @@ USAGE="cg-cancel"
 
 if ! [ -s $_git/HEAD ]; then
 	rm -f $_git/HEAD
-	ln -s refs/heads/$_git_branch $_git/HEAD
+	ln -s refs/heads/$_git_head $_git/HEAD
 fi
 
 # Undo seek?
 if [ ! "$(readlink $_git/HEAD)" ]; then
-	echo "Unseeking: $(cat $_git/HEAD) -> $(cat "$_git/refs/heads/$_git_branch")"
-	if [ -s "$_git/refs/heads/$_git_branch" ]; then
+	echo "Unseeking: $(cat $_git/HEAD) -> $(cat "$_git/refs/heads/$_git_head")"
+	if [ -s "$_git/refs/heads/$_git_head" ]; then
 		rm $_git/HEAD
-		ln -s "refs/heads/$_git_branch" $_git/HEAD
+		ln -s "refs/heads/$_git_head" $_git/HEAD
 	else
-		echo "ERROR: Unknown branch $_git_branch! Preserving HEAD." >&2
+		echo "ERROR: Unknown branch $_git_head! Preserving HEAD." >&2
 	fi
 fi
 
