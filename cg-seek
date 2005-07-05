@@ -27,21 +27,14 @@ dstcommit=$1
 
 
 [ -s $_git/blocked ] && grep -vq '^seeked from ' $_git/blocked && die "action blocked: $(cat $_git/blocked)"
-if [ -s $_git/blocked ]; then
-	branch=$(sed -n 's/^seeked from //p' < $_git/blocked)
-else
-	tmp=$(readlink $_git/HEAD)
-	[ "$tmp" ] || die "HEAD is not on branch"
-	branch=$(basename "$tmp")
-fi
 
 curcommit=$(commit-id) || exit 1
 
-if [ "$dstcommit" ] && [ "$dstcommit" != "$branch" ]; then
+if [ "$dstcommit" ] && [ "$dstcommit" != "$_git_branch" ]; then
 	seek_mode=away
 else
 	seek_mode=back
-	dstcommit=$(commit-id "$branch") || exit 1
+	dstcommit=$(commit-id "$_git_branch") || exit 1
 fi
 
 dstcommit=$(commit-id "$dstcommit") || exit 1
@@ -52,10 +45,10 @@ fi
 if [ "$seek_mode" = "away" ]; then
 	rm $_git/HEAD
 	echo "$dstcommit" >$_git/HEAD
-	[ -s $_git/blocked ] || echo "seeked from $branch" >$_git/blocked
+	[ -s $_git/blocked ] || echo "seeked from $_git_branch" >$_git/blocked
 else
 	rm $_git/HEAD
-	ln -s "refs/heads/$branch" $_git/HEAD
+	ln -s "refs/heads/$_git_branch" $_git/HEAD
 	rm -f $_git/blocked
 fi
 
