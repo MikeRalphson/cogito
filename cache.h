@@ -158,7 +158,10 @@ extern void rollback_index_file(struct cache_file *);
 #define TYPE_CHANGED    0x0040
 
 /* Return a statically allocated filename matching the sha1 signature */
+extern char *git_path(const char *fmt, ...);
 extern char *sha1_file_name(const unsigned char *sha1);
+
+int safe_create_leading_directories(char *path);
 
 /* Read and unpack a sha1 file into memory, write memory to a sha1 file */
 extern void * map_sha1_file(const unsigned char *sha1, unsigned long *size);
@@ -262,6 +265,7 @@ struct pack_entry {
 extern int git_connect(int fd[2], char *url, const char *prog);
 extern int finish_connect(pid_t pid);
 extern int path_match(const char *path, int nr, char **match);
+extern int get_ack(int fd, unsigned char *result_sha1);
 
 extern void prepare_packed_git(void);
 extern int use_packed_git(struct packed_git *);

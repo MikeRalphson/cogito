@@ -6,24 +6,6 @@
 static const char fetch_pack_usage[] = "git-fetch-pack [host:]directory [heads]* < mycommitlist";
 static const char *exec = "git-upload-pack";
 
-static int get_ack(int fd, unsigned char *result_sha1)
-{
-	static char line[1000];
-	int len = packet_read_line(fd, line, sizeof(line));
-
-	if (!len)
-		die("git-fetch-pack: expected ACK/NAK, got EOF");
-	if (line[len-1] == '\n')
-		line[--len] = 0;
-	if (!strcmp(line, "NAK"))
-		return 0;
-	if (!strncmp(line, "ACK ", 3)) {
-		if (!get_sha1_hex(line+4, result_sha1))
-			return 1;
-	}
-	die("git-fetch_pack: expected ACK/NAK, got '%s'", line);
-}
-
 static int find_common(int fd[2], unsigned char *result_sha1, unsigned char *remote)
 {
 	static char line[1000];
@@ -70,43 +52,6 @@ static int find_common(int fd[2], unsigned char *result_sha1, unsigned char *rem
 	return retval;
 }
 
-static int get_old_sha1(const char *refname, unsigned char *sha1)
-{
-	static char pathname[PATH_MAX];
-	const char *git_dir;
-	int fd, ret;
-
-	git_dir = gitenv(GIT_DIR_ENVIRONMENT) ? : DEFAULT_GIT_DIR_ENVIRONMENT;
-	snprintf(pathname, sizeof(pathname), "%s/%s", git_dir, refname);
-	fd = open(pathname, O_RDONLY);
-	ret = -1;
-	if (fd >= 0) {
-		char buffer[60];
-		if (read(fd, buffer, sizeof(buffer)) >= 40)
-			ret = get_sha1_hex(buffer, sha1);
-		close(fd);
-	}
-	return ret;
-}
-
-static int check_ref(const char *refname, const unsigned char *sha1)
-{
-	unsigned char mysha1[20];
-	char oldhex[41];
-
-	if (get_old_sha1(refname, mysha1) < 0)
-		memset(mysha1, 0, 20);
-
-	if (!memcmp(sha1, mysha1, 20)) {
-		fprintf(stderr, "%s: unchanged\n", refname);
-		return 0;
-	}
-	
-	memcpy(oldhex, sha1_to_hex(mysha1), 41);
-	fprintf(stderr, "%s: %s (%s)\n", refname, sha1_to_hex(sha1), oldhex);
-	return 1;
-}
-
 static int get_remote_heads(int fd, int nr_match, char **match, unsigned char *result)
 {
 	int count = 0;
@@ -123,14 +68,12 @@ static int get_remote_heads(int fd, int nr_match, char **match, unsigned char *r
 		if (line[len-1] == '\n')
 			line[--len] = 0;
 		if (len < 42 || get_sha1_hex(line, sha1))
-			die("git-fetch-pack: protocol error - expected ref descriptor, got '%sÃ¤'", line);
+			die("git-fetch-pack: protocol error - expected ref descriptor, got '%s¤'", line);
 		refname = line+41;
 		if (nr_match && !path_match(refname, nr_match, match))
 			continue;
-		if (check_ref(refname, sha1)) {
-			count++;
-			memcpy(result, sha1, 20);
-		}
+		count++;
+		memcpy(result, sha1, 20);
 	}
 	return count;
 }
