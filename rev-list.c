@@ -8,7 +8,7 @@
 #define SEEN		(1u << 0)
 #define INTERESTING	(1u << 1)
 #define COUNTED		(1u << 2)
-#define SHOWN		(LAST_EPOCH_FLAG << 2)
+#define SHOWN		(1u << 3)
 
 static const char rev_list_usage[] =
 	"usage: git-rev-list [OPTION] commit-id <commit-id>\n"
@@ -38,6 +38,7 @@ static enum cmit_fmt commit_format = CMIT_FMT_RAW;
 static int merge_order = 0;
 static int show_breaks = 0;
 static int stop_traversal = 0;
+static int topo_order = 0;
 
 static void show_commit(struct commit *commit)
 {
@@ -69,19 +70,15 @@ static void show_commit(struct commit *commit)
 
 static int filter_commit(struct commit * commit)
 {
-	if (merge_order && stop_traversal && commit->object.flags & BOUNDARY)
+	if (stop_traversal && (commit->object.flags & BOUNDARY))
 		return STOP;
 	if (commit->object.flags & (UNINTERESTING|SHOWN))
 		return CONTINUE;
 	if (min_age != -1 && (commit->date > min_age))
 		return CONTINUE;
 	if (max_age != -1 && (commit->date < max_age)) {
-		if (!merge_order)
-			return STOP;
-		else {
-			stop_traversal = 1;
-			return CONTINUE;
-		}
+		stop_traversal=1;
+		return merge_order?CONTINUE:STOP;
 	}
 	if (max_count != -1 && !max_count--)
 		return STOP;
@@ -462,12 +459,17 @@ int main(int argc, char **argv)
 			limited = 1;
 			continue;
 		}
-		if (!strncmp(arg, "--merge-order", 13)) {
+		if (!strcmp(arg, "--merge-order")) {
 		        merge_order = 1;
 			continue;
 		}
-		if (!strncmp(arg, "--show-breaks", 13)) {
+		if (!strcmp(arg, "--show-breaks")) {
 			show_breaks = 1;
+			continue;
+		}
+		if (!strcmp(arg, "--topo-order")) {
+		        topo_order = 1;
+		        limited = 1;
 			continue;
 		}
 
@@ -482,12 +484,18 @@ int main(int argc, char **argv)
 		commit = get_commit_reference(arg, flags);
 		if (!commit)
 			continue;
-		insert_by_date(&list, commit);
+		if (commit->object.flags & SEEN)
+			continue;
+		commit->object.flags |= SEEN;
+		commit_list_insert(commit, &list);
 	}
 
 	if (!merge_order) {		
+		sort_by_date(&list);
 	        if (limited)
 			list = limit_list(list);
+		if (topo_order)
+			sort_in_topological_order(&list);
 		show_commit_list(list);
 	} else {
 #ifndef NO_OPENSSL

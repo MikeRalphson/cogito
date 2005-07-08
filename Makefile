@@ -62,10 +62,11 @@ PROG=   git-update-cache git-diff-files git-init-db git-write-tree \
 	git-unpack-file git-export git-diff-cache git-convert-cache \
 	git-http-pull git-ssh-push git-ssh-pull git-rev-list git-mktag \
 	git-diff-helper git-tar-tree git-local-pull git-write-blob \
-	git-get-tar-commit-id git-apply git-stripspace git-cvs2git \
+	git-get-tar-commit-id git-apply git-stripspace \
 	git-diff-stages git-rev-parse git-patch-id git-pack-objects \
 	git-unpack-objects git-verify-pack git-receive-pack git-send-pack \
-	git-prune-packed git-fetch-pack git-upload-pack
+	git-prune-packed git-fetch-pack git-upload-pack git-clone-pack \
+	git-show-index
 
 SCRIPT=	commit-id tree-id parent-id cg-add cg-admin-lsobj cg-admin-uncommit \
 	cg-branch-add cg-branch-ls cg-cancel cg-clone cg-commit cg-diff \
