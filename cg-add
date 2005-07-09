@@ -13,20 +13,36 @@
 # is that 'Cogito' manages content and empty directories have no content.
 # Instead, directories are added automatically when adding files inside
 # them.
+#
+# OPTIONS
+# -------
+# -N::
+#	Only update the cache: do not copy the data into the object database.
+#	This is for special purposes when you might not actually _have_ any
+#	object database. This option is normally not interesting.
 
-USAGE="cg-add FILE..."
+USAGE="cg-add [-N] FILE..."
 
 . ${COGITO_LIB}cg-Xlib
 
 [ "$1" ] || usage
 
+infoonly=
+while optparse; do
+	if optparse -N; then
+		infoonly=--info-only
+	else
+		optfail
+	fi
+done
+
 TMPFILE=$(mktemp -t gitadd.XXXXXX) || exit 1
-find "$@" -type f -print0 > $TMPFILE || {
+find "${ARGS[@]}" -type f -print0 > $TMPFILE || {
 	die "not all files exist, nothing added"
 	rm $TMPFILE
 }
 
 cat $TMPFILE | tr '\0' '\n' | sed 's/^/Adding file /'
-cat $TMPFILE | xargs -0r git-update-cache --add --
+cat $TMPFILE | xargs -0r git-update-cache --add ${infoonly} --
 
 rm $TMPFILE
