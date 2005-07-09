@@ -34,7 +34,7 @@ SCRIPTS=git git-apply-patch-script git-merge-one-file-script git-prune-script \
 	git-log-script git-shortlog git-cvsimport-script git-diff-script \
 	git-reset-script git-add-script git-checkout-script git-clone-script \
 	gitk git-cherry git-rebase-script git-relink-script git-repack-script \
-	git-format-patch-script
+	git-format-patch-script git-sh-setup-script git-push-script
 
 PROG=   git-update-cache git-diff-files git-init-db git-write-tree \
 	git-read-tree git-commit-tree git-cat-file git-fsck-cache \
@@ -42,7 +42,7 @@ PROG=   git-update-cache git-diff-files git-init-db git-write-tree \
 	git-check-files git-ls-tree git-merge-base git-merge-cache \
 	git-unpack-file git-export git-diff-cache git-convert-cache \
 	git-http-pull git-ssh-push git-ssh-pull git-rev-list git-mktag \
-	git-diff-helper git-tar-tree git-local-pull git-write-blob \
+	git-diff-helper git-tar-tree git-local-pull git-hash-object \
 	git-get-tar-commit-id git-apply git-stripspace \
 	git-diff-stages git-rev-parse git-patch-id git-pack-objects \
 	git-unpack-objects git-verify-pack git-receive-pack git-send-pack \
@@ -56,7 +56,7 @@ install: $(PROG) $(SCRIPTS)
 	$(INSTALL) $(PROG) $(SCRIPTS) $(dest)$(bin)
 
 LIB_OBJS=read-cache.o sha1_file.o usage.o object.o commit.o tree.o blob.o \
-	 tag.o date.o index.o diff-delta.o patch-delta.o entry.o \
+	 tag.o date.o index.o diff-delta.o patch-delta.o entry.o path.o \
 	 epoch.o refs.o csum-file.o pack-check.o pkt-line.o connect.o
 LIB_FILE=libgit.a
 LIB_H=cache.h object.h blob.h tree.h commit.h tag.h delta.h epoch.h csum-file.h \
@@ -64,6 +64,9 @@ LIB_H=cache.h object.h blob.h tree.h commit.h tag.h delta.h epoch.h csum-file.h 
 
 LIB_H += strbuf.h
 LIB_OBJS += strbuf.o
+
+LIB_H += quote.h
+LIB_OBJS += quote.o 
 
 LIB_H += diff.h count-delta.h
 LIB_OBJS += diff.o diffcore-rename.o diffcore-pickaxe.o diffcore-pathspec.o \
@@ -132,7 +135,7 @@ git-rev-list: rev-list.c
 git-mktag: mktag.c
 git-diff-helper: diff-helper.c
 git-tar-tree: tar-tree.c
-git-write-blob: write-blob.c
+git-hash-object: hash-object.c
 git-stripspace: stripspace.c
 git-diff-stages: diff-stages.c
 git-rev-parse: rev-parse.c

@@ -12,7 +12,7 @@
  * like "git-update-cache *" and suddenly having all the object
  * files be revision controlled.
  */
-static int allow_add = 0, allow_remove = 0, allow_replace = 0, not_new = 0, quiet = 0;
+static int allow_add = 0, allow_remove = 0, allow_replace = 0, not_new = 0, quiet = 0, info_only = 0;
 static int force_remove;
 
 /* Three functions to allow overloaded pointer return; see linux/err.h */
@@ -68,7 +68,7 @@ static int add_file_to_cache(char *path)
 		fd = open(path, O_RDONLY);
 		if (fd < 0)
 			return -1;
-		if (index_fd(ce->sha1, fd, &st) < 0)
+		if (index_fd(ce->sha1, fd, &st, !info_only, NULL) < 0)
 			return -1;
 		break;
 	case S_IFLNK:
@@ -77,7 +77,12 @@ static int add_file_to_cache(char *path)
 			free(target);
 			return -1;
 		}
-		if (write_sha1_file(target, st.st_size, "blob", ce->sha1))
+		if (info_only) {
+			unsigned char hdr[50];
+			int hdrlen;
+			write_sha1_file_prepare(target, st.st_size, "blob",
+						ce->sha1, hdr, &hdrlen);
+		} else if (write_sha1_file(target, st.st_size, "blob", ce->sha1))
 			return -1;
 		free(target);
 		break;
@@ -89,36 +94,15 @@ static int add_file_to_cache(char *path)
 	return add_cache_entry(ce, option);
 }
 
-static int match_data(int fd, void *buffer, unsigned long size)
-{
-	while (size) {
-		char compare[1024];
-		int ret = read(fd, compare, sizeof(compare));
-
-		if (ret <= 0 || ret > size || memcmp(buffer, compare, ret))
-			return -1;
-		size -= ret;
-		buffer += ret;
-	}
-	return 0;
-}
-
-static int compare_data(struct cache_entry *ce, unsigned long expected_size)
+static int compare_data(struct cache_entry *ce, struct stat *st)
 {
 	int match = -1;
 	int fd = open(ce->name, O_RDONLY);
 
 	if (fd >= 0) {
-		void *buffer;
-		unsigned long size;
-		char type[20];
-
-		buffer = read_sha1_file(ce->sha1, type, &size);
-		if (buffer) {
-			if (size == expected_size && !strcmp(type, "blob"))
-				match = match_data(fd, buffer, size);
-			free(buffer);
-		}
+		unsigned char sha1[20];
+		if (!index_fd(sha1, fd, st, 0, NULL))
+			match = memcmp(sha1, ce->sha1, 20);
 		close(fd);
 	}
 	return match;
@@ -184,7 +168,7 @@ static struct cache_entry *refresh_entry(struct cache_entry *ce)
 
 	switch (st.st_mode & S_IFMT) {
 	case S_IFREG:
-		if (compare_data(ce, st.st_size))
+		if (compare_data(ce, &st))
 			return ERR_PTR(-EINVAL);
 		break;
 	case S_IFLNK:
@@ -380,6 +364,10 @@ int main(int argc, char **argv)
 				if (add_cacheinfo(argv[i+1], argv[i+2], argv[i+3]))
 					die("git-update-cache: --cacheinfo cannot add %s", argv[i+3]);
 				i += 3;
+				continue;
+			}
+			if (!strcmp(path, "--info-only")) {
+				info_only = 1;
 				continue;
 			}
 			if (!strcmp(path, "--force-remove")) {

@@ -102,34 +102,6 @@ char *get_index_file(void)
 	return git_index_file;
 }
 
-char *git_path(const char *fmt, ...)
-{
-	static char pathname[PATH_MAX], *ret;
-	va_list args;
-	int len;
-
-	if (!git_dir)
-		setup_git_env();
-	len = strlen(git_dir);
-	if (len > PATH_MAX-100)
-		return "pad-path";
-	memcpy(pathname, git_dir, len);
-	if (len && git_dir[len-1] != '/')
-		pathname[len++] = '/';
-	va_start(args, fmt);
-	vsnprintf(pathname + len, sizeof(pathname) - len, fmt, args);
-	va_end(args);
-	ret = pathname;
-
-	/* Clean it up */
-	if (!memcmp(pathname, "./", 2)) {
-		ret += 2;
-		while (*ret == '/')
-			ret++;
-	}
-	return ret;
-}
-
 int safe_create_leading_directories(char *path)
 {
 	char *pos = path;
@@ -1128,12 +1100,12 @@ void *read_object_with_reference(const unsigned char *sha1,
 	}
 }
 
-static char *write_sha1_file_prepare(void *buf,
-				     unsigned long len,
-				     const char *type,
-				     unsigned char *sha1,
-				     unsigned char *hdr,
-				     int *hdrlen)
+char *write_sha1_file_prepare(void *buf,
+			      unsigned long len,
+			      const char *type,
+			      unsigned char *sha1,
+			      unsigned char *hdr,
+			      int *hdrlen)
 {
 	SHA_CTX c;
 
@@ -1327,11 +1299,13 @@ int has_sha1_file(const unsigned char *sha1)
 	return find_pack_entry(sha1, &e);
 }
 
-int index_fd(unsigned char *sha1, int fd, struct stat *st)
+int index_fd(unsigned char *sha1, int fd, struct stat *st, int write_object, const char *type)
 {
 	unsigned long size = st->st_size;
 	void *buf;
 	int ret;
+	unsigned char hdr[50];
+	int hdrlen;
 
 	buf = "";
 	if (size)
@@ -1340,7 +1314,14 @@ int index_fd(unsigned char *sha1, int fd, struct stat *st)
 	if ((int)(long)buf == -1)
 		return -1;
 
-	ret = write_sha1_file(buf, size, "blob", sha1);
+	if (!type)
+		type = "blob";
+	if (write_object)
+		ret = write_sha1_file(buf, size, type, sha1);
+	else {
+		write_sha1_file_prepare(buf, size, type, sha1, hdr, &hdrlen);
+		ret = 0;
+	}
 	if (size)
 		munmap(buf, size);
 	return ret;
