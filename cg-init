@@ -10,13 +10,30 @@
 #
 # If `cg-init` is run in a non-empty directory files in the top and
 # sub directory will automatically be added.
+#
+# OPTIONS
+# -------
+# -N::
+#	Only update the cache: do not copy the data into the object database.
+#	This is for special purposes when you might not actually _have_ any
+#	object database. This option is normally not interesting.
 
-USAGE="cg-init"
+USAGE="cg-init [-N]"
 _git_repo_unneeded=1
 
 . ${COGITO_LIB}cg-Xlib
 
-uri=$1
+
+infoonly=
+while optparse; do
+	if optparse -N; then
+		infoonly=-N
+	else
+		optfail
+	fi
+done
+
+uri=$ARGV
 
 [ -e $_git ] && die "$_git already exists"
 
@@ -38,7 +55,7 @@ if [ "$uri" ]; then
 	echo "Cloned (origin $uri available as branch \"origin\")"
 else
 	git-read-tree # Seed the dircache
-	find * \( -type f -o -type l \) -print0 | xargs -0r cg-add
+	find * \( -type f -o -type l \) -print0 | xargs -0r cg-add ${infoonly}
 	cg-commit -C -m"Initial commit" -E
 fi
 
