@@ -4,6 +4,8 @@
 # cogito.]
 #
 
+. git-sh-setup-script || die "Not a git archive"
+
 merge_repo=$1
 
 merge_name=$(echo "$1" | sed 's:\.git/*$::')
@@ -19,12 +21,9 @@ then
    merge_head="refs/${type}s/$2"
 fi
 
-: ${GIT_DIR=.git}
-: ${GIT_OBJECT_DIRECTORY="${SHA1_FILE_DIRECTORY-"$GIT_DIR/objects"}"}
-
 git-fetch-script "$merge_repo" "$merge_head" || exit 1
 
 git-resolve-script \
 	"$(cat "$GIT_DIR"/HEAD)" \
 	"$(cat "$GIT_DIR"/FETCH_HEAD)" \
-	"$merge_name"
+	"Merge $merge_name"

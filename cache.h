@@ -139,7 +139,7 @@ extern int remove_cache_entry_at(int pos);
 extern int remove_file_from_cache(char *path);
 extern int ce_same_name(struct cache_entry *a, struct cache_entry *b);
 extern int ce_match_stat(struct cache_entry *ce, struct stat *st);
-extern int index_fd(unsigned char *sha1, int fd, struct stat *st);
+extern int index_fd(unsigned char *sha1, int fd, struct stat *st, int write_object, const char *type);
 extern void fill_stat_cache_info(struct cache_entry *ce, struct stat *st);
 
 struct cache_file {
@@ -159,6 +159,7 @@ extern void rollback_index_file(struct cache_file *);
 #define TYPE_CHANGED    0x0040
 
 /* Return a statically allocated filename matching the sha1 signature */
+extern char *mkpath(const char *fmt, ...);
 extern char *git_path(const char *fmt, ...);
 extern char *sha1_file_name(const unsigned char *sha1);
 
@@ -172,6 +173,12 @@ extern int sha1_object_info(const unsigned char *, char *, unsigned long *);
 extern void * unpack_sha1_file(void *map, unsigned long mapsize, char *type, unsigned long *size);
 extern void * read_sha1_file(const unsigned char *sha1, char *type, unsigned long *size);
 extern int write_sha1_file(void *buf, unsigned long len, const char *type, unsigned char *return_sha1);
+extern char *write_sha1_file_prepare(void *buf,
+				     unsigned long len,
+				     const char *type,
+				     unsigned char *sha1,
+				     unsigned char *hdr,
+				     int *hdrlen);
 
 extern int check_sha1_signature(const unsigned char *sha1, void *buf, unsigned long size, const char *type);
 
