@@ -39,6 +39,12 @@
 #	the tree is the same as the last time you committed, no changes
 #	happenned.
 #
+# -N::
+#	Don't add the files to the object database, just update the caches
+#	and the commit information. This is for special purposes when you
+#	might not actually _have_ any object database. This option is
+#	normally not interesting.
+#
 # FILES
 # -----
 # $GIT_DIR/author::
@@ -103,11 +109,16 @@ fi
 force=
 forceeditor=
 ignorecache=
+infoonly=
 commitalways=
+nocheck=
 msgs=()
 while optparse; do
 	if optparse -C; then
 		ignorecache=1
+	elif optparse -N; then
+		nocheck=--no-check
+		infoonly=--info-only
 	elif optparse -e; then
 		forceeditor=1
 	elif optparse -E; then
@@ -278,9 +289,9 @@ precommit_update () {
 		eval "queue$op[\${#queue$op[@]}]=\"\$fname\""
 	done
 	# XXX: Do we even need to do the --add and --remove update-caches?
-	[ "$queueN" ] && { git-update-cache --add -- "${queueN[@]}" || return 1; }
+	[ "$queueN" ] && { git-update-cache --add ${infoonly} -- "${queueN[@]}" || return 1; }
 	[ "$queueD" ] && { git-update-cache --force-remove -- "${queueD[@]}" || return 1; }
-	[ "$queueM" ] && { git-update-cache -- "${queueM[@]}" || return 1; }
+	[ "$queueM" ] && { git-update-cache ${infoonly} -- "${queueM[@]}" || return 1; }
 	return 0
 }
 
@@ -300,7 +311,7 @@ if [ -s "$_git/HEAD" ]; then
 	oldheadstr="-p $oldhead"
 fi
 
-treeid=$(git-write-tree)
+treeid=$(git-write-tree ${nocheck})
 [ "$treeid" ] || die "git-write-tree failed"
 if [ ! "$force" ] && [ ! "$merging" ] && [ "$oldhead" ] &&
    [ "$treeid" = "$(tree-id)" ]; then
