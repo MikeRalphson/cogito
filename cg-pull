@@ -272,13 +272,10 @@ fi
 [ "$rsyncerr" ] && die "unable to get the head pointer of branch $rembranch"
 
 new_head=$(cat "$_git/refs/heads/$name")
-if [ ! "$force" ] && [ "$orig_head" = "$new_head" ]; then
-	echo "Up to date."
-	exit
+if [ "$force" ] || [ "$orig_head" != "$new_head" ]; then
+	[ -d $_git_objects ] || mkdir -p $_git_objects
+	$pull "$name" "$uri" || die "objects pull failed"
 fi
-
-[ -d $_git_objects ] || mkdir -p $_git_objects
-$pull "$name" "$uri" || die "objects pull failed"
 
 # FIXME: Warn about conflicting tag names?
 # XXX: We now throw stderr to /dev/null since not all repositories
