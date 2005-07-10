@@ -242,7 +242,7 @@ if tty -s; then
 					echo "Commit message not modified, commit aborted" >&2
 					if [ "$merging" ]; then
 						echo "Note that the merge is NOT aborted - you can cg-commit again" >&2
-						echo "cg-cancel will abort the ongoing merge" >&2
+						echo "cg-reset will abort the ongoing merge" >&2
 					fi
 					exit 1
 				elif [ "$choice" = "c" ]; then

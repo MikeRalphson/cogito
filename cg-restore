@@ -11,7 +11,7 @@
 # state as of the last commit (including bringing files removed with
 # `cg-rm` back to life; FIXME: does not do that part yet).
 #
-# This command is complementary to the `cg-cancel` command, which
+# This command is complementary to the `cg-reset` command, which
 # forcefully abandons all the changes in the working tree and
 # restores everything to a proper state (including unseeking,
 # cancelling merge in progress and rebuilding indexes).

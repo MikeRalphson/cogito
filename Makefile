@@ -70,7 +70,7 @@ PROG=   git-update-cache git-diff-files git-init-db git-write-tree \
 	git-show-index
 
 SCRIPT=	commit-id tree-id parent-id cg-add cg-admin-lsobj cg-admin-uncommit \
-	cg-branch-add cg-branch-ls cg-cancel cg-clone cg-commit cg-diff \
+	cg-branch-add cg-branch-ls cg-reset cg-clone cg-commit cg-diff \
 	cg-export cg-help cg-init cg-log cg-merge cg-mkpatch cg-patch \
 	cg-pull cg-restore cg-rm cg-seek cg-status cg-tag cg-tag-ls cg-update \
 	cg cg-admin-ls cg-push cg-branch-chg cg-info
@@ -202,6 +202,8 @@ install-git: $(PROG) $(SCRIPTS)
 install-cogito: $(SCRIPT) $(LIB_SCRIPT) $(GEN_SCRIPT)
 	$(INSTALL) -m755 -d $(DESTDIR)$(bindir)
 	$(INSTALL) $(SCRIPT) $(GEN_SCRIPT) $(DESTDIR)$(bindir)
+	rm -f $(DESTDIR)$(bindir)/cg-cancel
+	ln -s cg-reset $(DESTDIR)$(bindir)/cg-cancel
 	$(INSTALL) -m755 -d $(DESTDIR)$(libdir)
 	$(INSTALL) $(LIB_SCRIPT) $(DESTDIR)$(libdir)
 	cd $(DESTDIR)$(bindir); \

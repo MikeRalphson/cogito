@@ -6,7 +6,7 @@
 # It will push your commits to the remote repository, provided that
 # your commits follow the last commit in the remote repository.
 # Note that if the remote repository is associated with a working
-# tree copy, this command won't update that. Use cg-cancel at the
+# tree copy, this command won't update that. Use cg-reset at the
 # remote side to bring it in sync (but throw away any local changes
 # in that tree).
 #
