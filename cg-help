@@ -73,6 +73,7 @@ ADVANCED_COMMANDS="$(ls $bin_path/cg-admin-*)"
 print_command_listing()
 {
 	for command in "$@"; do
+		[ -f "$command" -a ! -L "$command" ] || continue
 		cmdname=$(basename $command)
 
 		usage=$(sed -n '/^USAGE=/,0s/.*"\(cg-.*\)"/\1/p' < $command)
