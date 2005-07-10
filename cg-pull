@@ -294,13 +294,14 @@ $fetch -i -s -u -d "$uri/refs/tags" "$_git/refs/tags" || rsyncerr=1
 	for tag in *; do
 		[ "$tag" = "*" ] && break
 		tagid=$(cat $tag)
-		tagfile=objects/${tagid:0:2}/${tagid:2}
-		[ -s "../../$tagfile" ] && continue
+		GIT_DIR=../../../$_git git-cat-file -t "$tagid" >/dev/null 2>&1 && continue
 		echo -n "Missing object of tag $tag... "
+		# In case it's not in a packfile...
+		tagfile=objects/${tagid:0:2}/${tagid:2}
 		if $fetch -i -s "$uri/$tagfile" "../../$tagfile" 2>/dev/null >&2; then
 			echo "retrieved"
 		else
-			echo "different source (obsolete tag?)"
+			echo "unable to retrieve"
 		fi
 	done
 )
