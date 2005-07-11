@@ -487,8 +487,7 @@ int check_sha1_signature(const unsigned char *sha1, void *map, unsigned long siz
 }
 
 static void *map_sha1_file_internal(const unsigned char *sha1,
-				    unsigned long *size,
-				    int say_error)
+				    unsigned long *size)
 {
 	struct stat st;
 	void *map;
@@ -496,8 +495,6 @@ static void *map_sha1_file_internal(const unsigned char *sha1,
 	char *filename = find_sha1_file(sha1, &st);
 
 	if (!filename) {
-		if (say_error)
-			error("cannot map sha1 file %s", sha1_to_hex(sha1));
 		return NULL;
 	}
 
@@ -511,8 +508,6 @@ static void *map_sha1_file_internal(const unsigned char *sha1,
 				break;
 		/* Fallthrough */
 		case 0:
-			if (say_error)
-				perror(filename);
 			return NULL;
 		}
 
@@ -527,11 +522,6 @@ static void *map_sha1_file_internal(const unsigned char *sha1,
 		return NULL;
 	*size = st.st_size;
 	return map;
-}
-
-void *map_sha1_file(const unsigned char *sha1, unsigned long *size)
-{
-	return map_sha1_file_internal(sha1, size, 1);
 }
 
 int unpack_sha1_header(z_stream *stream, void *map, unsigned long mapsize, void *buffer, unsigned long size)
@@ -1007,7 +997,7 @@ int sha1_object_info(const unsigned char *sha1, char *type, unsigned long *sizep
 	z_stream stream;
 	char hdr[128];
 
-	map = map_sha1_file_internal(sha1, &mapsize, 0);
+	map = map_sha1_file_internal(sha1, &mapsize);
 	if (!map) {
 		struct pack_entry e;
 
@@ -1046,7 +1036,7 @@ void * read_sha1_file(const unsigned char *sha1, char *type, unsigned long *size
 	unsigned long mapsize;
 	void *map, *buf;
 
-	map = map_sha1_file_internal(sha1, &mapsize, 0);
+	map = map_sha1_file_internal(sha1, &mapsize);
 	if (map) {
 		buf = unpack_sha1_file(map, mapsize, type, size);
 		munmap(map, mapsize);
@@ -1218,6 +1208,65 @@ int write_sha1_file(void *buf, unsigned long len, const char *type, unsigned cha
 		/* FIXME!!! Collision check here ? */
 	}
 
+	return 0;
+}
+
+int write_sha1_to_fd(int fd, const unsigned char *sha1)
+{
+	ssize_t size;
+	unsigned long objsize;
+	int posn = 0;
+	void *buf = map_sha1_file_internal(sha1, &objsize);
+	z_stream stream;
+	if (!buf) {
+		unsigned char *unpacked;
+		unsigned long len;
+		char type[20];
+		char hdr[50];
+		int hdrlen;
+		// need to unpack and recompress it by itself
+		unpacked = read_packed_sha1(sha1, type, &len);
+
+		hdrlen = sprintf(hdr, "%s %lu", type, len) + 1;
+
+		/* Set it up */
+		memset(&stream, 0, sizeof(stream));
+		deflateInit(&stream, Z_BEST_COMPRESSION);
+		size = deflateBound(&stream, len + hdrlen);
+		buf = xmalloc(size);
+
+		/* Compress it */
+		stream.next_out = buf;
+		stream.avail_out = size;
+		
+		/* First header.. */
+		stream.next_in = (void *)hdr;
+		stream.avail_in = hdrlen;
+		while (deflate(&stream, 0) == Z_OK)
+			/* nothing */;
+
+		/* Then the data itself.. */
+		stream.next_in = unpacked;
+		stream.avail_in = len;
+		while (deflate(&stream, Z_FINISH) == Z_OK)
+			/* nothing */;
+		deflateEnd(&stream);
+		
+		objsize = stream.total_out;
+	}
+
+	do {
+		size = write(fd, buf + posn, objsize - posn);
+		if (size <= 0) {
+			if (!size) {
+				fprintf(stderr, "write closed");
+			} else {
+				perror("write ");
+			}
+			return -1;
+		}
+		posn += size;
+	} while (posn < objsize);
 	return 0;
 }
 
