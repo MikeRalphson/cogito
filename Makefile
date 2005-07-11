@@ -231,6 +231,10 @@ dist: cogito.spec
 	@rmdir $(tarname)
 	gzip -9 $(tarname).tar
 
+Portfile: Portfile.in $(VERSION) dist
+	sed -e 's/@@VERSION@@/$(shell cat $(VERSION) | cut -d"-" -f2)/g' < Portfile.in > Portfile
+	echo "checksums md5 " `md5sum $(tarname).tar.gz | cut -d ' ' -f 1` >> Portfile
+
 clean:
 	rm -f *.o mozilla-sha1/*.o ppc/*.o $(PROG) $(GEN_SCRIPT) $(LIB_FILE)
 	$(MAKE) -C Documentation/ clean
