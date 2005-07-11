@@ -33,7 +33,7 @@ while optparse; do
 	fi
 done
 
-uri=$ARGV
+uri=$ARGS
 
 [ -e $_git ] && die "$_git already exists"
 
