@@ -111,13 +111,13 @@ forceeditor=
 ignorecache=
 infoonly=
 commitalways=
-nocheck=
+missingok=
 msgs=()
 while optparse; do
 	if optparse -C; then
 		ignorecache=1
 	elif optparse -N; then
-		nocheck=--no-check
+		missingok=--missing-ok
 		infoonly=--info-only
 	elif optparse -e; then
 		forceeditor=1
@@ -311,7 +311,7 @@ if [ -s "$_git/HEAD" ]; then
 	oldheadstr="-p $oldhead"
 fi
 
-treeid=$(git-write-tree ${nocheck})
+treeid=$(git-write-tree ${missingok})
 [ "$treeid" ] || die "git-write-tree failed"
 if [ ! "$force" ] && [ ! "$merging" ] && [ "$oldhead" ] &&
    [ "$treeid" = "$(tree-id)" ]; then
