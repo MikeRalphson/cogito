@@ -235,4 +235,5 @@ fi
 export BROKEN_MKTEMP=1
 del=$($(which mktemp) -t 2>/dev/null) && { rm $del; export BROKEN_MKTEMP=; }
 has_stat=$(which stat 2>/dev/null)
+[ "$has_stat" ] && $has_stat -c %s / 2>/dev/null >&2 || has_stat=
 has_gnudate=$(date -Rud "1970-01-01 UTC" 2>/dev/null)
