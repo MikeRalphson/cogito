@@ -53,7 +53,7 @@ pull_progress() {
 		object=
 
 		case "$line" in
-		link*|symlink*|\
+		link*|symlink*|copy*|\
 		"got "[a-f0-9][a-f0-9][a-f0-9][a-f0-9][a-f0-9][a-f0-9]*)
 			# Convert the sha to an object path
 			object=$(echo "$line" | sed 's,.* \([a-f0-9][a-f0-9]\),\1/,')
@@ -219,7 +219,8 @@ fetch_local () {
 
 	cp_flags_l="-va"
 	if [ "$1" = "-u" ]; then
-		cp_flags_l="$cp_flags_l -lu"
+		cp_flags_l="$cp_flags_l -u$can_hardlink"
+		suggest_hardlink=
 		shift
 	fi
 
@@ -256,6 +257,14 @@ else
 	[ -d $uri/.git ] && uri=$uri/.git
 	fetch=fetch_local
 	pull=pull_local
+
+	# See if we can hardlink and drop "l" if not.
+	can_hardlink=
+	sample_file=$(find $uri -type f -print | head -n 1)
+	rm -f $_git/.,,lntest
+	ln "$sample_file" "$_git/.,,lntest" 2>/dev/null && can_hardlink=l
+	echo $can_hardlink
+	rm -f $_git/.,,lntest
 fi
 
 
