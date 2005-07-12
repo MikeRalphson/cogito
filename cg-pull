@@ -238,7 +238,9 @@ fetch_local () {
 }
 
 pull_local () {
-	(git-local-pull -a -l -v "$(cat "$_git/refs/heads/$1")" "$2" 2>&1 /dev/null) | pull_progress
+	# git-local-pull is currently broken w.r.t. packfiles
+	#(git-local-pull -a -l -v "$(cat "$_git/refs/heads/$1")" "$2" 2>&1 /dev/null) | pull_progress
+	fetch_local -s -u -d "$2/objects" "$_git_objects" | sed 's/`.*\/\(..\/[^\/]*\)'\'' -> .*/\1/' | pull_progress
 	return ${PIPESTATUS[0]}
 }
 
