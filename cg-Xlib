@@ -234,6 +234,16 @@ has_gnudate=$(date -Rud "1970-01-01 UTC" 2>/dev/null)
 
 
 _git=${GIT_DIR:-.git}
+if [ ! "$GIT_DIR" ] && [ ! -d $_git ]; then
+	rootpath=.
+	# while not /
+	while [ ! -d $rootpath/.git ] && [ "$(stat -c %i $rootpath)" != "$(stat -c %i $rootpath/..)" ]; do
+		rootpath=../$rootpath
+	done
+	if [ -d $rootpath/.git ]; then
+		cd "$rootpath"
+	fi
+fi
 _git_objects="${GIT_OBJECT_DIRECTORY:-$_git/objects}"
 
 
