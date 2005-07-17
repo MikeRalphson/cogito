@@ -269,7 +269,8 @@ grep -v ^CG: $LOGMSG2 | git-stripspace >$LOGMSG
 rm $LOGMSG2
 
 
-precommit_update () {
+precommit_update()
+{
 	queueN=(); queueD=(); queueM=();
 	for file in "$@"; do
 		op=${file%% *}

@@ -42,12 +42,6 @@ USAGE="cg-diff [-c] [-m] [-p] [-r FROM_ID[:TO_ID]] [FILE]..."
 . ${COGITO_LIB}cg-Xlib
 
 
-id1=" "
-id2=" "
-parent=
-opt_color=
-mergebase=
-
 # TODO: Make cg-log use this too.
 setup_colors()
 {
@@ -60,34 +54,8 @@ setup_colors()
 	eval $C
 }
 
-while optparse; do
-	if optparse -c; then
-		opt_color=1
-		setup_colors
-	elif optparse -p; then
-		parent=1
-	elif optparse -r=; then
-		if echo "$OPTARG" | fgrep -q '..'; then
-			id2=${OPTARG#*..}
-			[ "$id2" ] || log_end="HEAD"
-			id1=${OPTARG%..*}
-		elif echo "$OPTARG" | grep -q ':'; then
-			id2=${OPTARG#*:}
-			[ "$id2" ] || log_end="HEAD"
-			id1=${OPTARG%:*}
-		elif [ "$id1" = " " ]; then
-			id1="$OPTARG"
-		else
-			id2="$OPTARG"
-		fi
-	elif optparse -m; then
-		mergebase=1
-	else
-		optfail
-	fi
-done
-
-colorize() {
+colorize()
+{
 	if [ "$opt_color" ]; then
 		gawk '
 		{ if (/^(Index:|diff --git) /)
@@ -120,6 +88,40 @@ colorize() {
 		cat
 	fi
 }
+
+
+id1=" "
+id2=" "
+parent=
+opt_color=
+mergebase=
+
+while optparse; do
+	if optparse -c; then
+		opt_color=1
+		setup_colors
+	elif optparse -p; then
+		parent=1
+	elif optparse -r=; then
+		if echo "$OPTARG" | fgrep -q '..'; then
+			id2=${OPTARG#*..}
+			[ "$id2" ] || log_end="HEAD"
+			id1=${OPTARG%..*}
+		elif echo "$OPTARG" | grep -q ':'; then
+			id2=${OPTARG#*:}
+			[ "$id2" ] || log_end="HEAD"
+			id1=${OPTARG%:*}
+		elif [ "$id1" = " " ]; then
+			id1="$OPTARG"
+		else
+			id2="$OPTARG"
+		fi
+	elif optparse -m; then
+		mergebase=1
+	else
+		optfail
+	fi
+done
 
 if [ "$parent" ]; then
 	id2="$id1"

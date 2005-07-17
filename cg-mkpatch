@@ -38,12 +38,8 @@ USAGE="cg-mkpatch [-m] [-s] [-r FROM_ID[:TO_ID]]"
 
 . ${COGITO_LIB}cg-Xlib
 
-omit_header=
-log_start=
-log_end=
-mergebase=
-
-showpatch () {
+showpatch()
+{
 	header=$(mktemp -t gitpatch.XXXXXX)
 	patch=$(mktemp -t gitpatch.XXXXXX)
 	id=$1
@@ -78,6 +74,11 @@ showpatch () {
 	rm $header $patch
 }
 
+
+omit_header=
+log_start=
+log_end=
+mergebase=
 
 while optparse; do
 	if optparse -s; then

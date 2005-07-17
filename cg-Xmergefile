@@ -25,12 +25,14 @@
 . ${COGITO_LIB}cg-Xlib
 
 
-error () {
+error()
+{
 	echo "MERGE ERROR: $@" >&2
 	return 1
 }
 
-warning () {
+warning()
+{
 	echo "MERGE WARNING: $@" >&2
 }
 

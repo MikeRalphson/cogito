@@ -12,16 +12,19 @@ _git=${GIT_DIR:-.git}
 _git_objects=${GIT_OBJECT_DIRECTORY:-$_git/objects}
 
 
-die () {
+die()
+{
 	echo $_cg_cmd: $@ >&2
 	exit 1
 }
 
-usage() {
+usage()
+{
 	die "usage: $USAGE"
 }
 
-pager () {
+pager()
+{
 	local line
 	# Invoke pager only if there's any actual output
 	if read -r line; then
@@ -29,7 +32,8 @@ pager () {
 	fi
 }
 
-mktemp () {
+mktemp()
+{
 	if [ ! "$BROKEN_MKTEMP" ]; then
 		$(which mktemp) "$@"
 		return
@@ -49,7 +53,8 @@ mktemp () {
 	$(which mktemp) $dirarg $prefix"$1"
 }
 
-stat () {
+stat()
+{
 	if [ "$1" != "-c" ] || [ "$2" != "%s" ]; then
 		echo "INTERNAL ERROR: Unsupported stat call $@" >&2
 		return 1
@@ -63,7 +68,8 @@ stat () {
 	ls -l "$3" | awk '{ print $5 }'
 }
 
-showdate () {
+showdate()
+{
 	local secs=$1 tzhours=${2:0:3} tzmins=${2:0:1}${2:3} format="$3"
 	# bash doesn't like leading zeros
 	[ "${tzhours:1:1}" = 0 ] && tzhours=${2:0:1}${2:2:1}
@@ -77,7 +83,8 @@ showdate () {
 }
 
 # Usage: tree_timewarp [--no-head-update] DIRECTION_STR ROLLBACK_BOOL BASE BRANCH
-tree_timewarp () {
+tree_timewarp()
+{
 	local no_head_update=
 	if [ "$1" = "--no-head-update" ]; then
 		no_head_update=1
@@ -124,12 +131,14 @@ tree_timewarp () {
 	git-update-cache --refresh >/dev/null
 }
 
-update_index () {
+update_index()
+{
 	git-update-cache --refresh | sed 's/needs update$/locally modified/'
 }
 
 
-print_help () {
+print_help()
+{
 	which "cg-$1" >/dev/null 2>&1 || exit 1
 	sed -n '/^USAGE=/,0s/.*"\(.*\)"/Usage: \1/p' < $(which cg-$1) 
 	echo
@@ -155,23 +164,26 @@ if [ -t 1 -a -e "$HOME/.cgrc" ]; then
 	ARGS=($_cg_defaults1 $_cg_defaults2 "${ARGS[@]}")
 fi
 
-
-optshift() {
+optshift()
+{
 	unset ARGS[$ARGPOS]
 	ARGS=("${ARGS[@]}")
 	[ -z "$1" -o -n "${ARGS[$ARGPOS]}" ] ||
 		die "option \`$1' requires an argument"
 }
 
-optfail() {
+optfail()
+{
 	die "unrecognized option \`${ARGS[$ARGPOS]}'"
 }
 
-optconflict() {
+optconflict()
+{
 	die "conflicting option \`$CUROPT'"
 }
 
-optparse() {
+optparse()
+{
 	unset OPTARG
 	if [ -z "$1" ]; then
 		case ${ARGS[$ARGPOS]} in

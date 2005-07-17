@@ -19,31 +19,9 @@ USAGE="cg-pull [-f] [-v] [BRANCH_NAME]"
 
 . ${COGITO_LIB}cg-Xlib
 
-force=
-verbose=
-while optparse; do
-	if optparse -f; then
-		force=1
-	elif optparse -v; then
-		verbose=1
-	else
-		optfail
-	fi
-done
 
-name=${ARGS[0]}
-
-[ "$name" ] || { [ -s $_git/refs/heads/origin ] && name=origin; }
-[ "$name" ] || die "where to pull from?"
-uri=$(cat "$_git/branches/$name" 2>/dev/null) || die "unknown branch: $name"
-
-rembranch=$_git_head
-if echo "$uri" | grep -q '#'; then
-	rembranch=$(echo $uri | cut -d '#' -f 2)
-	uri=$(echo $uri | cut -d '#' -f 1)
-fi
-
-pull_progress() {
+pull_progress()
+{
 	percentage=""
 	objects=0
 	last_objects=0
@@ -87,7 +65,8 @@ pull_progress() {
 	[ "$last_objects" != "$objects" ] && echo
 }
 
-fetch_rsync () {
+fetch_rsync()
+{
 	redir=
 	if [ "$1" = "-i" ]; then # ignore-errors
 		redir="2>/dev/null"
@@ -118,13 +97,15 @@ fetch_rsync () {
 	return ${PIPESTATUS[0]}
 }
 
-pull_rsync () {
+pull_rsync()
+{
 	fetch_rsync -s -u -d "$2/objects" "$_git_objects" | pull_progress
 	return ${PIPESTATUS[0]}
 }
 
 
-fetch_http () {
+fetch_http()
+{
 	[ "$1" = "-i" ] && shift
 	[ "$1" = "-s" ] && shift
 
@@ -166,13 +147,15 @@ fetch_http () {
 	return $ret
 }
 
-pull_http () {
+pull_http()
+{
 	(git-http-pull -a -v "$(cat "$_git/refs/heads/$1")" "$2/" 2>&1 /dev/null) | pull_progress
 	return ${PIPESTATUS[0]}
 }
 
 
-fetch_ssh () {
+fetch_ssh()
+{
 	[ "$1" = "-i" ] && shift
 	[ "$1" = "-s" ] && shift
 
@@ -202,7 +185,8 @@ fetch_ssh () {
 	scp $scp_flags "$src" "$dest"
 }
 
-pull_ssh () {
+pull_ssh()
+{
 	# git-ssh-pull would theoretically take git+ssh://-style URL, but
 	# it is buggy and won't process it correctly, so let's just
 	# preprocess it to some easier-to-take form.
@@ -213,7 +197,8 @@ pull_ssh () {
 }
 
 
-fetch_local () {
+fetch_local()
+{
 	[ "$1" = "-i" ] && shift
 	[ "$1" = "-s" ] && shift
 
@@ -236,10 +221,37 @@ fetch_local () {
 	cp $cp_flags_l "$src" "$dest"
 }
 
-pull_local () {
+pull_local()
+{
 	(git-local-pull -a -l -v "$(cat "$_git/refs/heads/$1")" "$2" 2>&1 /dev/null) | pull_progress
 	return ${PIPESTATUS[0]}
 }
+
+
+force=
+verbose=
+while optparse; do
+	if optparse -f; then
+		force=1
+	elif optparse -v; then
+		verbose=1
+	else
+		optfail
+	fi
+done
+
+name=${ARGS[0]}
+
+[ "$name" ] || { [ -s $_git/refs/heads/origin ] && name=origin; }
+[ "$name" ] || die "where to pull from?"
+uri=$(cat "$_git/branches/$name" 2>/dev/null) || die "unknown branch: $name"
+
+rembranch=$_git_head
+if echo "$uri" | grep -q '#'; then
+	rembranch=$(echo $uri | cut -d '#' -f 2)
+	uri=$(echo $uri | cut -d '#' -f 1)
+fi
+
 
 if echo "$uri" | grep -q "^http://"; then
 	fetch=fetch_http

@@ -42,13 +42,15 @@ USAGE="cg-merge [-c] [-b BASE_COMMIT] BRANCH_NAME"
 . ${COGITO_LIB}cg-Xlib
 
 
-prehook () {
+prehook()
+{
 	if [ -x $_git/hooks/merge-pre ]; then
 		$_git/hooks/merge-pre "$branchname" "$base" "$head" "$branch" "$@" || die "merge cancelled by hook"
 	fi
 }
 
-posthook () {
+posthook()
+{
 	if [ -x $_git/hooks/merge-post ]; then
 		$_git/hooks/merge-post "$branchname" "$base" "$head" "$branch" "$@"
 	fi

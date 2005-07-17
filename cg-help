@@ -21,7 +21,8 @@ _git_repo_unneeded=1
 
 . ${COGITO_LIB}cg-Xlib
 
-setup_colors() {
+setup_colors()
+{
 	local color_none="$(tput op)"
 	local emphasize="$(tput setaf 1)"
 	local desclist="$(tput setaf 3)"
@@ -43,6 +44,21 @@ setup_colors() {
 	s/^Copyright .*/$copyright&$color_none/
 	"
 }
+
+print_command_listing()
+{
+	for command in "$@"; do
+		cmdname=$(basename $command)
+
+		usage=$(sed -n '/^USAGE=/,0s/.*"\(cg-.*\)"/\1/p' < $command)
+		# Some minimal sanity check that we didn't pick up some
+		# random binary named cg-*
+		[ "$usage" ] || continue
+		usage=$(echo "$usage" | sed 's/^cg-[^ ]*//')
+		printf "	%-17s %s\n" "$cmdname" "$usage"
+	done
+}
+
 
 apply_colors=
 while optparse; do
@@ -69,20 +85,6 @@ bin_path="$(dirname $0)"
 
 REGULAR_COMMANDS="$(ls $bin_path/cg-* | grep -v cg-admin- | grep -v cg-X)"
 ADVANCED_COMMANDS="$(ls $bin_path/cg-admin-*)"
-
-print_command_listing()
-{
-	for command in "$@"; do
-		cmdname=$(basename $command)
-
-		usage=$(sed -n '/^USAGE=/,0s/.*"\(cg-.*\)"/\1/p' < $command)
-		# Some minimal sanity check that we didn't pick up some
-		# random binary named cg-*
-		[ "$usage" ] || continue
-		usage=$(echo "$usage" | sed 's/^cg-[^ ]*//')
-		printf "	%-17s %s\n" "$cmdname" "$usage"
-	done
-}
 
 
 colorize <<__END__
