@@ -50,4 +50,8 @@ mkdir -p $_git/branches
 [ -s "$_git/branches/$name" ] && die "branch already exists"
 [ -s "$_git/refs/heads/$name" ] && echo "warning: I already have head of this branch" >&2
 
+if ! echo "$location" | grep -q ":" ; then
+	location=$(normpath $(echo "$location" | sed -e "s#^[^/]#$(pwd)\/&#"))
+fi
+
 echo "$location" >$_git/branches/$name
