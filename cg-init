@@ -27,7 +27,7 @@ done
 
 [ -e $_git ] && die "$_git already exists"
 
-trap "rm -rf $_git" SIGTERM EXIT
+trap "rm -rf $_git; die \"interrupted\"" SIGINT SIGTERM
 
 git-init-db
 mkdir $_git/branches
@@ -39,5 +39,4 @@ if ! [ "$no_initial_commit" ]; then
 	cg-commit -C -m"Initial commit" -E
 fi
 
-trap "" SIGTERM EXIT
 exit 0
