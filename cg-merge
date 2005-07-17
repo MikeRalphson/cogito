@@ -18,10 +18,42 @@
 # -c::
 #	Parameter specifies that you want to have tree merge never
 #	autocomitted, but want to review and commit it manually.
+#
+# FILES
+# -----
+# $GIT_DIR/hooks/merge-pre::
+#	If the file exists and is executable it will be executed right
+#	before the merge itself happens. The script is passed those
+#	arguments:
+#		BRANCHNAME BASE CURHEAD MERGEDHEAD MERGETYPE
+#	MERGETYPE is either "forward" or "tree". The merge is
+#	cancelled if the script returns non-zero exit code.
+#
+# $GIT_DIR/hooks/merge-post::
+#	If the file exists and is executable it will be executed after
+#	the merge is done. The script is passed those arguments:
+#		BRANCHNAME BASE CURHEAD MERGEDHEAD MERGETYPE STATUS
+#	MERGETYPE is either "forward" or "tree". For "forward", the
+#	STATUS is always "ok", while for "tree" the STATUS can be
+#	"localchanges", "conflicts", "nocommit", or "ok".
 
 USAGE="cg-merge [-c] [-b BASE_COMMIT] BRANCH_NAME"
 
 . ${COGITO_LIB}cg-Xlib
+
+
+prehook () {
+	if [ -x $_git/hooks/merge-pre ]; then
+		$_git/hooks/merge-pre "$branchname" "$base" "$head" "$branch" "$@" || die "merge cancelled by hook"
+	fi
+}
+
+posthook () {
+	if [ -x $_git/hooks/merge-post ]; then
+		$_git/hooks/merge-post "$branchname" "$base" "$head" "$branch" "$@"
+	fi
+}
+
 
 head=$(commit-id) || exit 1
 
@@ -65,7 +97,9 @@ if [ "$head" = "$base" ]; then
 	echo "Fast-forwarding $base -> $branch" >&2
 	echo -e "\ton top of $head..." >&2
 
+	prehook forward
 	tree_timewarp "forward" "yes, rollback (or rather rollforth) the tree!" $base $branch
+	posthook forward ok
 
 	exit 0
 fi
@@ -77,8 +111,13 @@ echo "Merging $base -> $branch" >&2
 echo -e "\tto $head..." >&2
 
 
-git-read-tree -u -m $(tree-id $base) $(tree-id $head) $(tree-id $branch) ||
-	die "git-read-tree failed (merge likely blocked by local changes)"
+prehook tree
+
+if ! git-read-tree -u -m $(tree-id $base) $(tree-id $head) $(tree-id $branch); then
+	echo "cg-merge: git-read-tree failed (merge likely blocked by local changes)" >&2
+	posthook tree localchanges
+	exit 1
+fi
 
 echo $base >>$_git/merge-base
 echo $branch >>$_git/merging
@@ -120,13 +159,20 @@ if ! git-merge-cache -o ${COGITO_LIB}cg-Xmergefile -a || [ "$careful" ]; then
 
 	Conflicts during merge. Do cg-commit after resolving them.
 __END__
+	posthook tree conflicts
 	exit 2
 fi
 git-checkout-cache -f -u -a
 
 echo
 readtree=
-cg-commit -C || { readtree=1 ; echo "cg-merge: COMMIT FAILED, retry manually" >&2; }
+if ! cg-commit -C; then
+	readtree=1
+	echo "cg-merge: COMMIT FAILED, retry manually" >&2
+	posthook tree nocommit
+fi
 
 [ "$readtree" ] && git-read-tree -m HEAD
 update_index
+
+posthook tree ok
