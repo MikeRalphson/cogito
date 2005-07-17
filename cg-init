@@ -3,11 +3,6 @@
 # Initialize a GIT repository.
 # Copyright (c) Petr Baudis, 2005
 #
-# Takes an optional parameter which will make it "clone" a specified
-# remote repository. Note that this usage is 'DEPRECATED'. Instead use
-# `cg-clone` (possibly with the `-s` parameter) for doing this. This
-# functionality will go away from `cg-init` soon.
-#
 # If `cg-init` is run in a non-empty directory files in the top and
 # sub directory will automatically be added.
 #
@@ -30,8 +25,6 @@ while optparse; do
 	fi
 done
 
-uri=${ARGS[0]}
-
 [ -e $_git ] && die "$_git already exists"
 
 trap "rm -rf $_git" SIGTERM EXIT
@@ -40,22 +33,10 @@ git-init-db
 mkdir $_git/branches
 touch $_git/refs/heads/master
 
-if [ "$uri" ]; then
-	cg-branch-add origin "$uri"
-	cg-pull origin || die "pull failed"
-
-	cp $_git/refs/heads/origin $_git/refs/heads/master
-	git-read-tree HEAD
-	git-checkout-cache -a
-	git-update-cache --refresh
-
-	echo "Cloned (origin $uri available as branch \"origin\")"
-else
-	git-read-tree # Seed the dircache
-	if ! [ "$no_initial_commit" ]; then
-		find * \( -type f -o -type l \) -print0 | xargs -0r cg-add
-		cg-commit -C -m"Initial commit" -E
-	fi
+git-read-tree # Seed the dircache
+if ! [ "$no_initial_commit" ]; then
+	find * \( -type f -o -type l \) -print0 | xargs -0r cg-add
+	cg-commit -C -m"Initial commit" -E
 fi
 
 trap "" SIGTERM EXIT

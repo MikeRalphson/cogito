@@ -58,10 +58,16 @@ else
 	dir=.
 fi
 
-trap ":" SIGINT SIGTERM
-if ! cg-init $location; then
-	ret=$?
-	cd .. && rmdir $dir
-	exit $ret
-fi
+
+trap "cd .. && rm -rf $dir; echo; die \"interrupted\"" SIGINT SIGTERM
+
+cg-init -I
+cg-branch-add origin "$location"
+cg-pull origin || die "pull failed"
+
+cp $_git/refs/heads/origin $_git/refs/heads/master
+git-read-tree HEAD
+git-checkout-cache -a
+git-update-cache --refresh
+
 echo "Cloned to $dir/ (origin $location available as branch \"origin\")"
