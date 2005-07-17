@@ -69,6 +69,33 @@ stat()
 	fi
 }
 
+normpath()
+{
+	local inp="$1"
+	local path path2
+	path=()
+	path2=()
+
+	while [[ "$inp" == */* ]]; do
+		path[${#path[@]}]="${inp%%/*}"
+		inp="${inp#*/}"
+	done
+	path[${#path[@]}]="$inp"
+	for (( i=0; $i < ${#path[@]}; i++ )); do
+		[ "${path[$i]}" = "." ] && continue
+		if [ "${path[$i]}" = ".." ]; then
+			[ "${#path2[@]}" -gt 0 ] && unset path2[$((${#path2[@]} - 1))]
+			continue
+		fi
+		path2[${#path2[@]}]="${path[$i]}"
+	done
+	for (( i=0; $i < ${#path2[@]}; i++ )); do
+		echo -n "${path2[$i]}"
+		[ $i -lt $((${#path2[@]} - 1)) ] && echo -n /
+	done
+	echo
+}
+
 showdate()
 {
 	local secs=$1 tzhours=${2:0:3} tzmins=${2:0:1}${2:3} format="$3"
