@@ -27,7 +27,7 @@ mkdir $_git/branches
 touch $_git/refs/heads/master
 
 if [ "$uri" ]; then
-	echo "$uri" >$_git/branches/origin
+	cg-branch-add origin "$uri"
 	cg-pull origin || die "pull failed"
 
 	cp $_git/refs/heads/origin $_git/refs/heads/master
