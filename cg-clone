@@ -58,7 +58,10 @@ else
 	dir=.
 fi
 
-trap "rm -rf $dir" SIGTERM EXIT
-cg-init $location || exit $?
-trap "" SIGTERM EXIT
+trap ":" SIGINT SIGTERM
+if ! cg-init $location; then
+	ret=$?
+	cd .. && rmdir $dir
+	exit $ret
+fi
 echo "Cloned to $dir/ (origin $location available as branch \"origin\")"
