@@ -8,9 +8,6 @@
 
 _cg_cmd=${0##*/}
 
-_git=${GIT_DIR:-.git}
-_git_objects=${GIT_OBJECT_DIRECTORY:-$_git/objects}
-
 
 die()
 {
@@ -55,7 +52,7 @@ mktemp()
 
 stat()
 {
-	if [ "$1" != "-c" ] || [ "$2" != "%s" ]; then
+	if [ "$1" != "-c" ] || [ "$2" != "%s" -a "$2" != "%i" ]; then
 		echo "INTERNAL ERROR: Unsupported stat call $@" >&2
 		return 1
 	fi
@@ -65,7 +62,11 @@ stat()
 	fi
 
 	# It's always -c '%s' now.
-	ls -l "$3" | awk '{ print $5 }'
+	if [ "$2" = "%s" ]; then
+		ls -l "$3" | awk '{ print $5 }'
+	elif [ "$2" = "%i" ]; then
+		ls -lid "$3" | awk '{ print $1 }'
+	fi
 }
 
 showdate()
@@ -226,6 +227,16 @@ optparse()
 }
 
 
+export BROKEN_MKTEMP=1
+del=$($(which mktemp) -t 2>/dev/null) && { rm $del; export BROKEN_MKTEMP=; }
+has_stat=$(which stat 2>/dev/null)
+has_gnudate=$(date -Rud "1970-01-01 UTC" 2>/dev/null)
+
+
+_git=${GIT_DIR:-.git}
+_git_objects="${GIT_OBJECT_DIRECTORY:-$_git/objects}"
+
+
 # Check if we have something to work on, unless the script can do w/o it.
 if [ ! "$_git_repo_unneeded" ]; then
 	if [ ! -d "$_git" ]; then
@@ -243,9 +254,3 @@ fi
 
 # Compatibility hacks:
 # Fortunately none as of now.
-
-
-export BROKEN_MKTEMP=1
-del=$($(which mktemp) -t 2>/dev/null) && { rm $del; export BROKEN_MKTEMP=; }
-has_stat=$(which stat 2>/dev/null)
-has_gnudate=$(date -Rud "1970-01-01 UTC" 2>/dev/null)
