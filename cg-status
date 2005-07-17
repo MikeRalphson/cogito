@@ -1,11 +1,14 @@
 #!/usr/bin/env bash
 #
-# Show status of entries in your working tree.
+# Show status of your working tree.
 # Copyright (c) Petr Baudis, 2005
+# Copyright (c) Pavel Roskin 2005
 #
-# Print of files in the working tree.
+# The output includes the list of branches and merge status.
+# Current branch is marked by ">".
 #
-# The output has the following format:
+# Then, the files in the working tree are printed out. The output has
+# the following format:
 #
 #	<status flag> <file>
 #
@@ -16,6 +19,16 @@
 # M::
 #	'<file>' has been touched or modified.
 #
+# OPTIONS
+# -------
+# If neither -g or -w is passed, both is shown; otherwise, only the
+# corresponding parts are shown.
+# -g::
+#	Show the GIT repository information.
+#
+# -w::
+#	Show the working tree file list.
+#
 # FILES
 # -----
 # $GIT_DIR/exclude::
@@ -24,28 +37,92 @@
 #	each line contains a pattern for a file or group of files
 #	to exclude.
 
-USAGE="cg-status"
+USAGE="cg-status [-g] [-w]"
 
 . ${COGITO_LIB}cg-Xlib
 
-[ 0 -eq $# ] || die "no arguments allowed"
-
-EXCLUDEFILE=$_git/exclude
-EXCLUDE=
-if [ -f $EXCLUDEFILE ]; then
-	EXCLUDE="--exclude-from=$EXCLUDEFILE"
+gitstatus=
+workstatus=
+while optparse; do
+	if optparse -g; then
+		gitstatus=1
+	elif optparse -w; then
+		workstatus=1
+	else
+		optfail
+	fi
+done
+if [ ! "$gitstatus" ] && [ ! "$workstatus" ]; then
+	gitstatus=1
+	workstatus=1
 fi
 
-git-update-cache --refresh > /dev/null
 
-git-ls-files --others --exclude='*.[ao]' --exclude='.*' --exclude=tags \
-	--exclude='*~' --exclude='#*' \
-	--exclude=',,merge*' $EXCLUDE | sed 's,^,? ,'
 
-git-diff-cache HEAD | cut -f5- -d' ' | 
-while IFS=$'\t' read -r mode file; do
-	if [ "$mode" = D ]; then
-		[ "$(git-diff-files "$file")" ] && mode=!
+if [ "$gitstatus" ]; then
+	mkdir -p $_git/refs/heads
+	[ "$(find $_git/refs/heads -follow -type f)" ] \
+	       || die "List of heads is empty."
+
+
+	[ -s "$_git/head-name" ] && echo "Head: $(cat "$_git/head-name")"
+	[ -s "$_git/branch-name" ] && echo "Branch (informal): $(cat "$_git/branch-name")"
+
+	headlink=$(readlink $_git/HEAD)
+	if [ ! "$headlink" ]; then
+		headsha1=$(cat $_git/HEAD)
+		echo "Seeked at: $headsha1"
 	fi
-	echo "$mode $file"
-done
+
+	echo "Heads:"
+	for head in $_git/refs/heads/*; do
+		headsha1=$(cat $head)
+		headname=$(basename $head)
+		if [ "$headname" = "$_git_head" ]; then
+			echo "   >$headname $headsha1"
+		else
+			echo "    $headname $headsha1"
+		fi
+	done
+
+	if [ -s "$_git/merging" ]; then
+		tmp=$(cat "$_git/merging")
+		echo "Merging: $(cat "$_git/merging") ($(cat "$_git/merging-sym"))"
+		echo "Merge base: $(cat "$_git/merge-base")"
+	fi
+
+	if [ -s "$_git/blocked" ]; then
+		echo "Changes recording BLOCKED:"
+		sed 's/^/    /' "$_git/blocked"
+	fi
+fi
+
+
+
+if [ "$gitstatus" ] && [ "$workstatus" ]; then
+	echo
+fi
+
+
+
+if [ "$workstatus" ]; then
+	EXCLUDEFILE=$_git/exclude
+	EXCLUDE=
+	if [ -f $EXCLUDEFILE ]; then
+		EXCLUDE="--exclude-from=$EXCLUDEFILE"
+	fi
+
+	git-update-cache --refresh > /dev/null
+
+	git-ls-files --others --exclude='*.[ao]' --exclude='.*' --exclude=tags \
+		--exclude='*~' --exclude='#*' \
+		--exclude=',,merge*' $EXCLUDE | sed 's,^,? ,'
+
+	git-diff-cache HEAD | cut -f5- -d' ' | 
+	while IFS=$'\t' read -r mode file; do
+		if [ "$mode" = D ]; then
+			[ "$(git-diff-files "$file")" ] && mode=!
+		fi
+		echo "$mode $file"
+	done
+fi
