@@ -256,11 +256,22 @@ optparse()
 }
 
 
+
+# Optional tools detection/stubbing
+
 export BROKEN_MKTEMP=1
 del=$($(which mktemp) -t 2>/dev/null) && { rm $del; export BROKEN_MKTEMP=; }
-has_stat=$(which stat 2>/dev/null)
-[ "$has_stat" ] && $has_stat -c %s / 2>/dev/null >&2 || has_stat=
+
+has_stat=
+for stat in "$(which stat)" "$(which gnustat)" "$(which gstat)"; do
+	if [ "$stat" ] && $stat -c %s / >/dev/null; then
+		has_stat=$stat
+		break
+	fi
+done 2>/dev/null
+
 has_gnudate=$(date -Rud "1970-01-01 UTC" 2>/dev/null)
+
 
 
 _git=${GIT_DIR:-.git}
@@ -301,5 +312,5 @@ if [ "$_git_requires_root" ] && [ "$_git_relpath" ]; then
 fi
 
 
-# Compatibility hacks:
+# Backward compatibility hacks:
 # Fortunately none as of now.
