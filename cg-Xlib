@@ -71,7 +71,8 @@ stat()
 
 normpath()
 {
-	local inp="$1"
+local inp
+while read inp; do
 	local path path2
 	path=()
 	path2=()
@@ -94,6 +95,7 @@ normpath()
 		[ $i -lt $((${#path2[@]} - 1)) ] && echo -n /
 	done
 	echo
+done
 }
 
 showdate()
@@ -268,7 +270,7 @@ if [ ! "$GIT_DIR" ] && [ ! -d $_git ]; then
 		rootpath=../$rootpath
 	done
 	if [ -d $rootpath/.git ]; then
-		mainpath="$(normpath "$(pwd)/$rootpath")"
+		mainpath="$(echo "$(pwd)/$rootpath" | normpath)"
 		_git_relpath=$(pwd)
 		export _git_relpath=${_git_relpath:$((${#mainpath}+1))}
 		cd "$rootpath"
