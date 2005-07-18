@@ -9,9 +9,9 @@
 # OPTIONS
 # -------
 # -n::
-#	Do not delete the files
-#	from the tree physically, if they are still there. So it effectively
-#	just makes Cogito to stop caring about the file.
+#	Do not delete the files from the tree physically, if they are
+#	still there. So it effectively just makes Cogito to stop caring
+#	about the file.
 
 USAGE="cg-rm [-n] FILE..."
 
