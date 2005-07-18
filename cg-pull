@@ -32,7 +32,6 @@ while optparse; do
 done
 
 name=${ARGS[0]}
-
 [ "$name" ] || { [ -s $_git/refs/heads/origin ] && name=origin; }
 [ "$name" ] || die "where to pull from?"
 uri=$(cat "$_git/branches/$name" 2>/dev/null) || die "unknown branch: $name"
