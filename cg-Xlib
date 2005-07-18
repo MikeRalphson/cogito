@@ -269,8 +269,8 @@ if [ ! "$GIT_DIR" ] && [ ! -d $_git ]; then
 	done
 	if [ -d $rootpath/.git ]; then
 		mainpath="$(normpath "$(pwd)/$rootpath")"
-		_relpath=$(pwd)
-		export _relpath=${_relpath:$((${#mainpath}+1))}
+		_git_relpath=$(pwd)
+		export _git_relpath=${_git_relpath:$((${#mainpath}+1))}
 		cd "$rootpath"
 	fi
 fi
@@ -292,7 +292,7 @@ if [ ! "$_git_repo_unneeded" ]; then
 fi
 
 # Check if the script requires to be called from the workdir root.
-if [ "$_git_requires_root" ] && [ "$_relpath" ]; then
+if [ "$_git_requires_root" ] && [ "$_git_relpath" ]; then
 	echo "This command can be ran only from the project root" >&2
 	exit 1
 fi
