@@ -9,7 +9,7 @@
 # BREAK YOUR LOCAL DIFFS! show-diff and anything using it will likely randomly
 # break unless your underlying filesystem supports those sub-second times
 # (my ext3 doesn't).
-GIT_VERSION=0.99
+GIT_VERSION=0.99.1
 
 COPTS=-O2
 CFLAGS=-g $(COPTS) -Wall
@@ -21,6 +21,7 @@ bin=$(prefix)/bin
 CC=gcc
 AR=ar
 INSTALL=install
+RPMBUILD=rpmbuild
 
 #
 # sparse is architecture-neutral, which means that we need to tell it
@@ -35,7 +36,7 @@ SCRIPTS=git git-apply-patch-script git-merge-one-file-script git-prune-script \
 	git-reset-script git-add-script git-checkout-script git-clone-script \
 	gitk git-cherry git-rebase-script git-relink-script git-repack-script \
 	git-format-patch-script git-sh-setup-script git-push-script \
-	git-branch-script
+	git-branch-script git-parse-remote
 
 PROG=   git-update-cache git-diff-files git-init-db git-write-tree \
 	git-read-tree git-commit-tree git-cat-file git-fsck-cache \
@@ -48,7 +49,7 @@ PROG=   git-update-cache git-diff-files git-init-db git-write-tree \
 	git-diff-stages git-rev-parse git-patch-id git-pack-objects \
 	git-unpack-objects git-verify-pack git-receive-pack git-send-pack \
 	git-prune-packed git-fetch-pack git-upload-pack git-clone-pack \
-	git-show-index
+	git-show-index git-daemon git-var
 
 all: $(PROG)
 
@@ -58,7 +59,7 @@ install: $(PROG) $(SCRIPTS)
 
 LIB_OBJS=read-cache.o sha1_file.o usage.o object.o commit.o tree.o blob.o \
 	 tag.o date.o index.o diff-delta.o patch-delta.o entry.o path.o \
-	 epoch.o refs.o csum-file.o pack-check.o pkt-line.o connect.o
+	 epoch.o refs.o csum-file.o pack-check.o pkt-line.o connect.o ident.o
 LIB_FILE=libgit.a
 LIB_H=cache.h object.h blob.h tree.h commit.h tag.h delta.h epoch.h csum-file.h \
 	pack.h pkt-line.h refs.h
@@ -148,6 +149,7 @@ git-receive-pack: receive-pack.c
 git-send-pack: send-pack.c
 git-prune-packed: prune-packed.c
 git-fetch-pack: fetch-pack.c
+git-var: var.c
 
 git-http-pull: LIBS += -lcurl
 git-rev-list: LIBS += -lssl
@@ -172,26 +174,33 @@ diffcore-break.o : $(LIB_H) diffcore.h
 diffcore-order.o : $(LIB_H) diffcore.h
 epoch.o: $(LIB_H)
 
-git.spec: git.spec.in
+git-core.spec: git-core.spec.in Makefile
 	sed -e 's/@@VERSION@@/$(GIT_VERSION)/g' < $< > $@
 
-GIT_TARNAME=git-$(GIT_VERSION)
-dist: git.spec git-tar-tree
+GIT_TARNAME=git-core-$(GIT_VERSION)
+dist: git-core.spec git-tar-tree
 	./git-tar-tree HEAD $(GIT_TARNAME) > $(GIT_TARNAME).tar
 	@mkdir -p $(GIT_TARNAME)
-	@cp git.spec $(GIT_TARNAME)
-	tar rf $(GIT_TARNAME).tar $(GIT_TARNAME)/git.spec
+	@cp git-core.spec $(GIT_TARNAME)
+	tar rf $(GIT_TARNAME).tar $(GIT_TARNAME)/git-core.spec
 	@rm -rf $(GIT_TARNAME)
-	gzip -9 $(GIT_TARNAME).tar
+	gzip -f -9 $(GIT_TARNAME).tar
 
 rpm: dist
-	rpmbuild -ta git-$(GIT_VERSION).tar.gz
+	$(RPMBUILD) -ta git-core-$(GIT_VERSION).tar.gz
 
 test: all
 	$(MAKE) -C t/ all
 
+doc:
+	$(MAKE) -C Documentation all
+
+install-doc:
+	$(MAKE) -C Documentation install
+
 clean:
 	rm -f *.o mozilla-sha1/*.o ppc/*.o $(PROG) $(LIB_FILE)
+	rm -f git-core-*.tar.gz git-core.spec
 	$(MAKE) -C Documentation/ clean
 
 backup: clean

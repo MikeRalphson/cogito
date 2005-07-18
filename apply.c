@@ -32,7 +32,8 @@ static int summary = 0;
 static int check = 0;
 static int apply = 1;
 static int show_files = 0;
-static const char apply_usage[] = "git-apply [--stat] [--summary] [--check] [--show-files] <patch>";
+static const char apply_usage[] =
+"git-apply [--no-merge] [--stat] [--summary] [--check] [--index] [--apply] [--show-files] <patch>...";
 
 /*
  * For "diff-stat" like behaviour, we keep track of the biggest change
@@ -1143,7 +1144,7 @@ static void show_rename_copy(struct patch *p)
 	 */
 	if (old != p->old_name)
 		printf(" %s %.*s{%s => %s} (%d%%)\n", renamecopy,
-		       old - p->old_name, p->old_name,
+		       (int)(old - p->old_name), p->old_name,
 		       old, new, p->score);
 	else
 		printf(" %s %s => %s (%d%%)\n", renamecopy,
@@ -1245,31 +1246,65 @@ static void create_subdirectories(const char *path)
 	free(buf);
 }
 
+static int try_create_file(const char *path, unsigned int mode, const char *buf, unsigned long size)
+{
+	int fd;
+
+	if (S_ISLNK(mode))
+		return symlink(buf, path);
+	fd = open(path, O_CREAT | O_EXCL | O_WRONLY | O_TRUNC, (mode & 0100) ? 0777 : 0666);
+	if (fd < 0)
+		return -1;
+	while (size) {
+		int written = write(fd, buf, size);
+		if (written < 0) {
+			if (errno == EINTR || errno == EAGAIN)
+				continue;
+			die("writing file %s: %s", path, strerror(errno));
+		}
+		if (!written)
+			die("out of space writing file %s", path);
+		buf += written;
+		size -= written;
+	}
+	if (close(fd) < 0)
+		die("closing file %s: %s", path, strerror(errno));
+	return 0;
+}
+
 /*
  * We optimistically assume that the directories exist,
  * which is true 99% of the time anyway. If they don't,
  * we create them and try again.
  */
-static int create_regular_file(const char *path, unsigned int mode)
+static void create_one_file(const char *path, unsigned mode, const char *buf, unsigned long size)
 {
-	int ret = open(path, O_WRONLY | O_CREAT | O_TRUNC, mode);
+	if (!try_create_file(path, mode, buf, size))
+		return;
 
-	if (ret < 0 && errno == ENOENT) {
+	if (errno == ENOENT) {
 		create_subdirectories(path);
-		ret = open(path, O_WRONLY | O_CREAT | O_TRUNC, mode);
+		if (!try_create_file(path, mode, buf, size))
+			return;
 	}
-	return ret;
-}
 
-static int create_symlink(const char *buf, const char *path)
-{
-	int ret = symlink(buf, path);
+	if (errno == EEXIST) {
+		unsigned int nr = getpid();
 
-	if (ret < 0 && errno == ENOENT) {
-		create_subdirectories(path);
-		ret = symlink(buf, path);
+		for (;;) {
+			const char *newpath;
+			newpath = mkpath("%s~%u", path, nr);
+			if (!try_create_file(newpath, mode, buf, size)) {
+				if (!rename(newpath, path))
+					return;
+				unlink(newpath);
+				break;
+			}
+			if (errno != EEXIST)
+				break;
+		}			
 	}
-	return ret;
+	die("unable to write file %s mode %o", path, mode);
 }
 
 static void create_file(struct patch *patch)
@@ -1281,28 +1316,8 @@ static void create_file(struct patch *patch)
 
 	if (!mode)
 		mode = S_IFREG | 0644;
-	if (S_ISREG(mode)) {
-		int fd;
-		mode = (mode & 0100) ? 0777 : 0666;
-		fd = create_regular_file(path, mode);
-		if (fd < 0)
-			die("unable to create file %s (%s)", path, strerror(errno));
-		if (write(fd, buf, size) != size)
-			die("unable to write file %s", path);
-		close(fd);
-		add_index_file(path, mode, buf, size);
-		return;
-	}
-	if (S_ISLNK(mode)) {
-		if (size && buf[size-1] == '\n')
-			size--;
-		buf[size] = 0;
-		if (create_symlink(buf, path) < 0)
-			die("unable to write symlink %s", path);
-		add_index_file(path, mode, buf, size);
-		return;
-	}
-	die("unable to write file mode %o", mode);
+	create_one_file(path, mode, buf, size);	
+	add_index_file(path, mode, buf, size);
 }
 
 static void write_out_one_result(struct patch *patch)
@@ -1410,6 +1425,7 @@ int main(int argc, char **argv)
 			read_stdin = 0;
 			continue;
 		}
+		/* NEEDSWORK: this does not do anything at this moment. */
 		if (!strcmp(arg, "--no-merge")) {
 			merge_patch = 0;
 			continue;

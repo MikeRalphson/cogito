@@ -2,15 +2,10 @@
 #include "refs.h"
 #include "pkt-line.h"
 
-static const char send_pack_usage[] = "git-send-pack [--exec=other] destination [heads]*";
+static const char send_pack_usage[] =
+"git-send-pack [--exec=git-receive-pack] [host:]directory [heads]*";
 static const char *exec = "git-receive-pack";
-
-struct ref {
-	struct ref *next;
-	unsigned char old_sha1[20];
-	unsigned char new_sha1[20];
-	char name[0];
-};
+static int send_all = 0;
 
 static int is_zero_sha1(const unsigned char *sha1)
 {
@@ -136,15 +131,24 @@ static int ref_newer(const unsigned char *new_sha1, const unsigned char *old_sha
 
 static int local_ref_nr_match;
 static char **local_ref_match;
-static struct ref **local_ref_list;
+static struct ref *local_ref_list;
+static struct ref **local_last_ref;
 
 static int try_to_match(const char *refname, const unsigned char *sha1)
 {
 	struct ref *ref;
 	int len;
 
-	if (!path_match(refname, local_ref_nr_match, local_ref_match))
-		return 0;
+	if (!path_match(refname, local_ref_nr_match, local_ref_match)) {
+		if (!send_all)
+			return 0;
+
+		/* If we have it listed already, skip it */
+		for (ref = local_ref_list ; ref ; ref = ref->next) {
+			if (!strcmp(ref->name, refname))
+				return 0;
+		}
+	}
 
 	len = strlen(refname)+1;
 	ref = xmalloc(sizeof(*ref) + len);
@@ -152,43 +156,19 @@ static int try_to_match(const char *refname, const unsigned char *sha1)
 	memcpy(ref->new_sha1, sha1, 20);
 	memcpy(ref->name, refname, len);
 	ref->next = NULL;
-	*local_ref_list = ref;
-	local_ref_list = &ref->next;
+	*local_last_ref = ref;
+	local_last_ref = &ref->next;
 	return 0;
 }
 
 static int send_pack(int in, int out, int nr_match, char **match)
 {
-	struct ref *ref_list = NULL, **last_ref = &ref_list;
+	struct ref *ref_list, **last_ref;
 	struct ref *ref;
 	int new_refs;
 
-	/*
-	 * Read all the refs from the other end
-	 */
-	for (;;) {
-		unsigned char old_sha1[20];
-		static char buffer[1000];
-		char *name;
-		int len;
-
-		len = packet_read_line(in, buffer, sizeof(buffer));
-		if (!len)
-			break;
-		if (buffer[len-1] == '\n')
-			buffer[--len] = 0;
-
-		if (len < 42 || get_sha1_hex(buffer, old_sha1) || buffer[40] != ' ')
-			die("protocol error: expected sha/ref, got '%s'", buffer);
-		name = buffer + 41;
-		ref = xmalloc(sizeof(*ref) + len - 40);
-		memcpy(ref->old_sha1, old_sha1, 20);
-		memset(ref->new_sha1, 0, 20);
-		memcpy(ref->name, buffer + 41, len - 40);
-		ref->next = NULL;
-		*last_ref = ref;
-		last_ref = &ref->next;
-	}
+	/* First we get all heads, whether matching or not.. */
+	last_ref = get_remote_heads(in, &ref_list, 0, NULL);
 
 	/*
 	 * Go through the refs, see if we want to update
@@ -224,7 +204,8 @@ static int send_pack(int in, int out, int nr_match, char **match)
 	if (nr_match) {
 		local_ref_nr_match = nr_match;
 		local_ref_match = match;
-		local_ref_list = last_ref;
+		local_ref_list = ref_list;
+		local_last_ref = last_ref;
 		for_each_ref(try_to_match);
 	}
 
@@ -259,19 +240,26 @@ int main(int argc, char **argv)
 	pid_t pid;
 
 	argv++;
-	for (i = 1; i < argc; i++) {
-		char *arg = *argv++;
+	for (i = 1; i < argc; i++, argv++) {
+		char *arg = *argv;
 
 		if (*arg == '-') {
 			if (!strncmp(arg, "--exec=", 7)) {
 				exec = arg + 7;
 				continue;
 			}
+			if (!strcmp(arg, "--all")) {
+				send_all = 1;
+				continue;
+			}
 			usage(send_pack_usage);
 		}
-		dest = arg;
+		if (!dest) {
+			dest = arg;
+			continue;
+		}
 		heads = argv;
-		nr_heads = argc - i -1;
+		nr_heads = argc - i;
 		break;
 	}
 	if (!dest)

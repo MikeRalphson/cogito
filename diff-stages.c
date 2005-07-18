@@ -5,7 +5,8 @@
 #include "cache.h"
 #include "diff.h"
 
-static int diff_output_format = DIFF_FORMAT_HUMAN;
+static int diff_output_format = DIFF_FORMAT_RAW;
+static int diff_line_termination = '\n';
 static int detect_rename = 0;
 static int find_copies_harder = 0;
 static int diff_setup_opt = 0;
@@ -17,7 +18,8 @@ static const char *orderfile = NULL;
 static const char *diff_filter = NULL;
 
 static char *diff_stages_usage =
-"git-diff-stages [-p] [-r] [-z] [-R] [-B] [-M] [-C] [--find-copies-harder] [-O<orderfile>] [-S<string>] [--pickaxe-all] <stage1> <stage2> [<path>...]";
+"git-diff-stages [<common diff options>] <stage1> <stage2> [<path>...]"
+COMMON_DIFF_OPTIONS_HELP;
 
 static void diff_stages(int stage1, int stage2)
 {
@@ -67,7 +69,7 @@ int main(int ac, const char **av)
 		const char *arg = av[1];
 		if (!strcmp(arg, "-r"))
 			; /* as usual */
-		else if (!strcmp(arg, "-p"))
+		else if (!strcmp(arg, "-p") || !strcmp(arg, "-u"))
 			diff_output_format = DIFF_FORMAT_PATCH;
 		else if (!strncmp(arg, "-B", 2)) {
 			if ((diff_break_opt = diff_scoreopt_parse(arg)) == -1)
@@ -86,7 +88,9 @@ int main(int ac, const char **av)
 		else if (!strcmp(arg, "--find-copies-harder"))
 			find_copies_harder = 1;
 		else if (!strcmp(arg, "-z"))
-			diff_output_format = DIFF_FORMAT_MACHINE;
+			diff_line_termination = 0;
+		else if (!strcmp(arg, "--name-only"))
+			diff_output_format = DIFF_FORMAT_NAME;
 		else if (!strcmp(arg, "-R"))
 			diff_setup_opt |= DIFF_SETUP_REVERSE;
 		else if (!strncmp(arg, "-S", 2))
@@ -121,6 +125,6 @@ int main(int ac, const char **av)
 		     diff_break_opt,
 		     orderfile,
 		     diff_filter);
-	diff_flush(diff_output_format);
+	diff_flush(diff_output_format, diff_line_termination);
 	return 0;
 }
