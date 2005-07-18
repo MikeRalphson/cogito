@@ -14,8 +14,8 @@ long_description  The git core, developed by Linus Torvalds provides \
 homepage          http://kernel.org/pub/software/scm/cogito/
 master_sites      http://kernel.org/pub/software/scm/cogito/
 configure	  {}
-depends_lib       bin:gcp:coreutils
-depends_lib       bin:gnuxargs:findutils
+depends_lib       bin:gstat:coreutils
+depends_lib	  lib:libz.dylib:zlib
 build.type        gnu
 destroot.type     gnu
 destroot.destdir  prefix=${prefix} DESTDIR=${destroot}
