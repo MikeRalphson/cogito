@@ -45,6 +45,8 @@ The following tools are optional but strongly recommended:
 
 	libcrypto (OpenSSL)
 	rsync
+	gnu coreutils (the gnu versions of stat, date and cp are
+	           preferred over the BSD variants)
 
 
         Starting a Fresh GIT Repository
