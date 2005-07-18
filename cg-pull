@@ -304,7 +304,7 @@ $fetch -i -s -u -d "$uri/refs/tags" "$_git/refs/tags" || rsyncerr=1
 	for tag in *; do
 		[ "$tag" = "*" ] && break
 		tagid=$(cat $tag)
-		GIT_DIR=../../../$_git git-cat-file -t "$tagid" >/dev/null 2>&1 && continue
+		GIT_DIR=../.. git-cat-file -t "$tagid" >/dev/null 2>&1 && continue
 		echo -n "Missing object of tag $tag... "
 		# In case it's not in a packfile...
 		tagfile=objects/${tagid:0:2}/${tagid:2}
