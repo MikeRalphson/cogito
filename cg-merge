@@ -38,8 +38,9 @@ while optparse; do
 	fi
 done
 
-[ "$ARGS" ] || usage
 branchname="${ARGS[0]}"
+[ "$branchname" ] || { [ -s $_git/refs/heads/origin ] && branchname=origin; }
+[ "$branchname" ] || die "what to merge?"
 branch=$(commit-id "$branchname") || exit 1
 
 [ "$base" ] || base=$(git-merge-base "$head" "$branch")
