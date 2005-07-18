@@ -38,6 +38,7 @@
 #	environment variable to allow displaying of colorized output.
 
 USAGE="cg-diff [-c] [-m] [-p] [-r FROM_ID[:TO_ID]] [FILE]..."
+_git_requires_root=1
 
 . ${COGITO_LIB}cg-Xlib
 

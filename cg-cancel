@@ -13,6 +13,7 @@
 # last commit.
 
 USAGE="cg-cancel"
+_git_requires_root=1
 
 . ${COGITO_LIB}cg-Xlib
 

@@ -291,6 +291,12 @@ if [ ! "$_git_repo_unneeded" ]; then
 	[ -L "$_git/HEAD" ] && _git_head="$(basename "$(readlink "$_git/HEAD")")"
 fi
 
+# Check if the script requires to be called from the workdir root.
+if [ "$_git_requires_root" ] && [ "$_relpath" ]; then
+	echo "This command can be ran only from the project root" >&2
+	exit 1
+fi
+
 
 # Compatibility hacks:
 # Fortunately none as of now.

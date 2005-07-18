@@ -14,6 +14,7 @@
 #	Force the complete pull even if the heads are the same.
 
 USAGE="cg-update [-f] [BRANCH_NAME]"
+_git_requires_root=1
 
 . ${COGITO_LIB}cg-Xlib
 

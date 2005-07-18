@@ -17,6 +17,7 @@
 # cancelling merge in progress and rebuilding indexes).
 
 USAGE="cg-restore [FILE]..."
+_git_requires_root=1
 
 . ${COGITO_LIB}cg-Xlib
 

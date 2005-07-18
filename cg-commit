@@ -85,6 +85,7 @@
 #	The editor used for entering revision log information.
 
 USAGE="cg-commit [-mMESSAGE]... [-C] [-e | -E] [FILE]... [< MESSAGE]"
+_git_requires_root=1
 
 . ${COGITO_LIB}cg-Xlib
 

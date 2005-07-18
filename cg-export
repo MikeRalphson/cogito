@@ -11,6 +11,7 @@
 # to be directory names, and the tree is exported to the given directory.
 
 USAGE="cg-export DESTFILE [TREE_ID]"
+_git_requires_root=1
 
 . ${COGITO_LIB}cg-Xlib
 

@@ -29,6 +29,7 @@
 # you pushed the commit out it's etched to history, live with that.
 
 USAGE="cg-admin-uncommit [-t] [COMMIT_ID]"
+_git_requires_root=1
 
 . ${COGITO_LIB}cg-Xlib
 

@@ -15,6 +15,7 @@
 # them.
 
 USAGE="cg-add FILE..."
+_git_requires_root=1
 
 . ${COGITO_LIB}cg-Xlib
 

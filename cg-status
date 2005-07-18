@@ -38,6 +38,7 @@
 #	to exclude.
 
 USAGE="cg-status [-g] [-w]"
+_git_requires_root=1
 
 . ${COGITO_LIB}cg-Xlib
 

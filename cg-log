@@ -69,6 +69,7 @@
 #	$ cg-log -r releasetag-0.9:releasetag-0.10
 
 USAGE="cg-log [-c] [-f] [-m] [-s] [-uUSERNAME] [-r FROM_ID[:TO_ID]] FILE..."
+_git_requires_root=1
 
 . ${COGITO_LIB}cg-Xlib
 # Try to fix the annoying "Broken pipe" output. May not help, but apparently
