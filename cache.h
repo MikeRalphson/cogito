@@ -42,6 +42,16 @@
 #endif
 
 /*
+ * Intensive research over the course of many years has shown that
+ * port 9418 is totally unused by anything else. Or
+ *
+ *	Your search - "port 9418" - did not match any documents.
+ *
+ * as www.google.com puts it.
+ */
+#define DEFAULT_GIT_PORT 9418
+
+/*
  * Environment variables transition.
  * We accept older names for now but warn.
  */
@@ -139,6 +149,7 @@ extern int remove_cache_entry_at(int pos);
 extern int remove_file_from_cache(char *path);
 extern int ce_same_name(struct cache_entry *a, struct cache_entry *b);
 extern int ce_match_stat(struct cache_entry *ce, struct stat *st);
+extern int ce_path_match(const struct cache_entry *ce, const char **pathspec);
 extern int index_fd(unsigned char *sha1, int fd, struct stat *st, int write_object, const char *type);
 extern void fill_stat_cache_info(struct cache_entry *ce, struct stat *st);
 
@@ -182,7 +193,7 @@ extern char *write_sha1_file_prepare(void *buf,
 extern int check_sha1_signature(const unsigned char *sha1, void *buf, unsigned long size, const char *type);
 
 /* Read a tree into the cache */
-extern int read_tree(void *buffer, unsigned long size, int stage);
+extern int read_tree(void *buffer, unsigned long size, int stage, const char **paths);
 
 extern int write_sha1_from_fd(const unsigned char *sha1, int fd);
 extern int write_sha1_to_fd(int fd, const unsigned char *sha1);
@@ -209,8 +220,13 @@ extern void *read_object_with_reference(const unsigned char *sha1,
 					unsigned char *sha1_ret);
 
 const char *show_date(unsigned long time, int timezone);
-void parse_date(char *date, char *buf, int bufsize);
+void parse_date(const char *date, char *buf, int bufsize);
 void datestamp(char *buf, int bufsize);
+
+extern int setup_ident(void);
+extern char *get_ident(const char *name, const char *email, const char *date_str);
+extern char *git_author_info(void);
+extern char *git_committer_info(void);
 
 static inline void *xmalloc(size_t size)
 {
@@ -270,10 +286,18 @@ struct pack_entry {
 	struct packed_git *p;
 };
 
+struct ref {
+	struct ref *next;
+	unsigned char old_sha1[20];
+	unsigned char new_sha1[20];
+	char name[0];
+};
+
 extern int git_connect(int fd[2], char *url, const char *prog);
 extern int finish_connect(pid_t pid);
 extern int path_match(const char *path, int nr, char **match);
 extern int get_ack(int fd, unsigned char *result_sha1);
+extern struct ref **get_remote_heads(int in, struct ref **list, int nr_match, char **match);
 
 extern void prepare_packed_git(void);
 extern int use_packed_git(struct packed_git *);
