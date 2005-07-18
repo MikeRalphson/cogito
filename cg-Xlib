@@ -106,7 +106,7 @@ showdate()
 	secs=$(($secs + $tzhours * 3600 + $tzmins * 60))
 	[ "$format" ] || format="+%a, %d %b %Y %H:%M:%S $2"
 	if [ "$has_gnudate" ]; then
-		LANG=C date -ud "1970-01-01 UTC + $secs sec" "$format"
+		LANG=C $has_gnudate -ud "1970-01-01 UTC + $secs sec" "$format"
 	else
 		LANG=C date -u -r $secs "$format"
 	fi
@@ -270,7 +270,13 @@ for stat in "$(which stat)" "$(which gnustat)" "$(which gstat)"; do
 	fi
 done 2>/dev/null
 
-has_gnudate=$(date -Rud "1970-01-01 UTC" 2>/dev/null)
+has_gnudate=
+for date in "$(which date)" "$(which gnudate)" "$(which gdate)"; do
+	if [ "$date" ] && $date -Rud "1970-01-01 UTC" >/dev/null; then
+		has_gnudate=$date
+		break
+	fi
+done 2>/dev/null
 
 
 
