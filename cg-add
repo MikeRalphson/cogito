@@ -15,19 +15,18 @@
 # them.
 
 USAGE="cg-add FILE..."
-_git_requires_root=1
 
 . ${COGITO_LIB}cg-Xlib
 
 [ "$1" ] || usage
 
 TMPFILE=$(mktemp -t gitadd.XXXXXX) || exit 1
-find "$@" -type f -print0 > $TMPFILE || {
+( cd ${_git_relpath:-.} && find "$@" -type f -print ) > $TMPFILE || {
 	die "not all files exist, nothing added"
 	rm $TMPFILE
 }
 
-cat $TMPFILE | tr '\0' '\n' | sed 's/^/Adding file /'
-cat $TMPFILE | xargs -0r git-update-cache --add --
+cat $TMPFILE | sed 's/^/Adding file /'
+cat $TMPFILE | sed "s|^|${_git_relpath:-.}/|" | normpath | tr '\n' '\0' | xargs -0r git-update-cache --add --
 
 rm $TMPFILE

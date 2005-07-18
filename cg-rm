@@ -14,7 +14,6 @@
 #	just makes Cogito to stop caring about the file.
 
 USAGE="cg-rm [-n] FILE..."
-_git_requires_root=1
 
 . ${COGITO_LIB}cg-Xlib
 
@@ -26,5 +25,11 @@ fi
 
 [ "$1" ] || usage
 
-[ "$no_delete" ] || rm -f "$@"
-git-update-cache --force-remove -- "$@"
+TMPFILE=$(mktemp -t gitrm.XXXXXX) || exit 1
+( cd ${_git_relpath:-.} && find "$@" -type f -print 2>/dev/null ) > $TMPFILE
+
+cat $TMPFILE | sed 's/^/Removing file /'
+[ "$no_delete" ] || ( cd ${_git_relpath:-.} && rm -f "$@" )
+cat $TMPFILE | sed "s|^|${_git_relpath:-.}/|" | normpath | tr '\n' '\0' | xargs -0r git-update-cache --force-remove --
+
+rm $TMPFILE
