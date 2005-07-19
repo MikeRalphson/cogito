@@ -36,6 +36,11 @@
 #	show status for. The format is similar to the `dontdiff` file;
 #	each line contains a pattern for a file or group of files
 #	to exclude.
+#
+# .gitignore::
+#	.gitignore in the working tree will be used as an exclude file.
+#	The excludes are applied from the project root approaching the
+#	current subdirectory.
 
 USAGE="cg-status [-g] [-w]"
 _git_requires_root=1
@@ -112,6 +117,16 @@ if [ "$workstatus" ]; then
 	if [ -f $EXCLUDEFILE ]; then
 		EXCLUDE="--exclude-from=$EXCLUDEFILE"
 	fi
+	{
+		path="${_git_relpath:-.}/"
+		dir=
+		[ -r .gitignore ] && EXCLUDE="$EXCLUDE --exclude-from=.gitignore"
+		while [[ "$path" == */* ]]; do
+			dir="${dir:-.}/${path%%/*}"
+			path="${path#*/}"
+			[ -r $dir/.gitignore ] && EXCLUDE="$EXCLUDE --exclude-from=$dir/.gitignore"
+		done
+	}
 
 	git-update-cache --refresh > /dev/null
 
