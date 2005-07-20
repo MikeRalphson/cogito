@@ -17,7 +17,7 @@
 # -------
 # -C::
 #	Make `cg-commit` ignore the cache and just commit the thing as-is.
-#	Note, this is used internally by Cogito when merging. This option
+#	Note, this is used internally by 'Cogito' when merging. This option
 #	does not make sense when files are given on the command line.
 #
 # -mMESSAGE::

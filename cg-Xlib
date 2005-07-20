@@ -172,7 +172,7 @@ print_help()
 	which "cg-$1" >/dev/null 2>&1 || exit 1
 	sed -n '/^USAGE=/,0s/.*"\(.*\)"/Usage: \1/p' < $(which cg-$1) 
 	echo
-	cat $(which cg-$1) | sed -n '3,/^$/s/^# *//p'
+	sed -n '3,/^$/s/^# *//p' < $(which cg-$1)
 	exit
 }
 

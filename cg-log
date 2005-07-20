@@ -14,7 +14,7 @@
 # cg-log then displays only changes in those files.
 #
 # -c::
-#	Colorize to the output. The used colors are listed below together
+#	Colorize the output. The used colors are listed below together
 #	with information about which log output (summary, full or both)
 #	they apply to:
 #		- `author`:	'cyan'		(both)
