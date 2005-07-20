@@ -15,25 +15,39 @@
 # forcefully abandons all the changes in the working tree and
 # restores everything to a proper state (including unseeking,
 # cancelling merge in progress and rebuilding indexes).
+#
+# OPTIONS
+# -------
+# -f::
+#	Restore even locally modified files to the version as of
+#	the last commit. Take care!
 
-USAGE="cg-restore [FILE]..."
+USAGE="cg-restore [-f] [FILE]..."
 _git_requires_root=1
 
 . ${COGITO_LIB}cg-Xlib
 
+force=
+while optparse; do
+	if optparse -f; then
+		force=-f
+	else
+		optfail
+	fi
+done
+
 ret=0
 
-if [ "$1" ]; then
-	while [ "$1" ]; do
-		git-checkout-cache "$1" || ret=1
-		shift
+if [ "$ARGS" ]; then
+	for file in "${ARGS[@]}"; do
+		git-checkout-cache $force "$file" || ret=1
 	done
 else
 	if [ "$(git-ls-files --deleted)" ]; then
 		echo "Recovering files:"
 		git-ls-files --deleted | sed "s/^/$(echo -e "\t")/"
 	fi
-	git-checkout-cache -q -a
+	git-checkout-cache -q -a $force
 fi
 
 update_index || ret=1
