@@ -43,7 +43,6 @@
 #	current subdirectory.
 
 USAGE="cg-status [-g] [-w]"
-_git_requires_root=1
 
 . ${COGITO_LIB}cg-Xlib
 
@@ -132,13 +131,16 @@ if [ "$workstatus" ]; then
 
 	git-ls-files --others --exclude='*.[ao]' --exclude='.*' --exclude=tags \
 		--exclude='*~' --exclude='#*' \
-		--exclude=',,merge*' $EXCLUDE | sed 's,^,? ,'
+		--exclude=',,merge*' $EXCLUDE |
+		{ if [ "$_git_relpath" ]; then sed -n "s/^$_git_relpath\///p"; else cat; fi } |
+		sed 's,^,? ,'
 
-	git-diff-cache HEAD | cut -f5- -d' ' | 
+	git-diff-cache HEAD $_git_relpath | cut -f5- -d' ' | 
 	while IFS=$'\t' read -r mode file; do
 		if [ "$mode" = D ]; then
 			[ "$(git-diff-files "$file")" ] && mode=!
 		fi
+		[ "$_git_relpath" ] && file="${file#$_git_relpath/}"
 		echo "$mode $file"
 	done
 fi
