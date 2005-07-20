@@ -121,14 +121,14 @@ fetch_http()
 	directory=
 	if [ "$1" = "-d" ]; then
 		wget_flags="$wget_flags -r -l 1 -np -nd -P"
-		directory=1
+		directory=/
 		shift
 	else
 		wget_flags="$wget_flags -O"
 	fi
 
 	src="$1"
-	dest="$2"
+	dest="$2$directory"
 
 	[ "$update" ] && ! [ "$directory" ] && [ -e "$dest" ] && return 1
 
