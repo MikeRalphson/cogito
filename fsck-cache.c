@@ -312,8 +312,10 @@ static int fsck_handle_ref(const char *refname, const unsigned char *sha1)
 
 	obj = lookup_object(sha1);
 	if (!obj) {
-		if (!standalone && has_sha1_file(sha1))
+		if (!standalone && has_sha1_file(sha1)) {
+			default_refs++;
 			return 0; /* it is in a pack */
+		}
 		error("%s: invalid sha1 pointer %s", refname, sha1_to_hex(sha1));
 		/* We'll continue with the rest despite the error.. */
 		return 0;
@@ -414,9 +416,11 @@ int main(int argc, char **argv)
 		struct packed_git *p;
 		prepare_alt_odb();
 		for (j = 0; alt_odb[j].base; j++) {
-			alt_odb[j].name[-1] = 0; /* was slash */
-			fsck_object_dir(alt_odb[j].base);
-			alt_odb[j].name[-1] = '/';
+			char namebuf[PATH_MAX];
+			int namelen = alt_odb[j].name - alt_odb[j].base;
+			memcpy(namebuf, alt_odb[j].base, namelen);
+			namebuf[namelen - 1] = 0;
+			fsck_object_dir(namebuf);
 		}
 		prepare_packed_git();
 		for (p = packed_git; p; p = p->next)

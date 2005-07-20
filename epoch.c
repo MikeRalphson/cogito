@@ -255,11 +255,11 @@ static int find_base_for_list(struct commit_list *list, struct commit **boundary
 
 				if (!parent_node) {
 					parent_node = new_mass_counter(parent, &distribution);
-					insert_by_date(&pending, parent);
+					insert_by_date(parent, &pending);
 					commit_list_insert(parent, &cleaner);
 				} else {
 					if (!compare(&parent_node->pending, get_zero()))
-						insert_by_date(&pending, parent);
+						insert_by_date(parent, &pending);
 					add(&parent_node->pending, &parent_node->pending, &distribution);
 				}
 			}
@@ -499,7 +499,7 @@ static int emit_stack(struct commit_list **stack, emitter_func emitter, int incl
 		if (*stack || include_last) {
 			if (!*stack) 
 				next->object.flags |= BOUNDARY;
-			action = (*emitter) (next);
+			action = emitter(next);
 		}
 	}
 
@@ -545,7 +545,7 @@ static int sort_in_merge_order(struct commit *head_of_epoch, emitter_func emitte
 				if (next->object.flags & UNINTERESTING) {
 					action = STOP;
 				} else {
-					action = (*emitter) (next);
+					action = emitter(next);
 				}
 				if (action != STOP) {
 					next = next->parents->item;
@@ -562,7 +562,7 @@ static int sort_in_merge_order(struct commit *head_of_epoch, emitter_func emitte
 	}
 
 	if (next && (action != STOP) && !ret) {
-		(*emitter) (next);
+		emitter(next);
 	}
 
 	return ret;
@@ -582,14 +582,8 @@ int sort_list_in_merge_order(struct commit_list *list, emitter_func emitter)
 	int action = CONTINUE;
 	struct commit_list *reversed = NULL;
 
-	for (; list; list = list->next) {
-		struct commit *next = list->item;
-
-		if (!(next->object.flags & DUPCHECK)) {
-			next->object.flags |= DUPCHECK;
-			commit_list_insert(list->item, &reversed);
-		}
-	}
+	for (; list; list = list->next)
+		commit_list_insert(list->item, &reversed);
 
 	if (!reversed)
 		return ret;
@@ -612,7 +606,7 @@ int sort_list_in_merge_order(struct commit_list *list, emitter_func emitter)
 		while (reversed) {
 			struct commit * next = pop_commit(&reversed);
 
-			if (!(next->object.flags & VISITED)) {
+			if (!(next->object.flags & VISITED) && next!=base) {
 				sort_first_epoch(next, &stack);
 				if (reversed) {
 					/*

@@ -17,9 +17,9 @@
 #
 # 1. Local path - note that pulling will hardlink the objects, not copy them.
 # 2. rsync - either `rsync://host/path` or `host:/path` (the latter can change)
-#    THE rsync REPOSITORY ACCESS METHOD IS DEPRECATED AND WILL BE REMOVED
-#    IN THE FUTURE!
 # 3. HTTP - `http://host/path`
+#    Note that this does not work for repository containing packed files!
+#    (e.g. the current Linus' Linux Kernel repository)
 # 4. SSH - `git+ssh://host/path` or `git+ssh://user@host/path` - note that
 #    the path must be absolute.
 #

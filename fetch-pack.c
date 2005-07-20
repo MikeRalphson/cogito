@@ -3,26 +3,9 @@
 #include "pkt-line.h"
 #include <sys/wait.h>
 
-static const char fetch_pack_usage[] = "git-fetch-pack [host:]directory [heads]* < mycommitlist";
+static int quiet;
+static const char fetch_pack_usage[] = "git-fetch-pack [-q] [--exec=upload-pack] [host:]directory [heads]* < mycommitlist";
 static const char *exec = "git-upload-pack";
-
-static int get_ack(int fd, unsigned char *result_sha1)
-{
-	static char line[1000];
-	int len = packet_read_line(fd, line, sizeof(line));
-
-	if (!len)
-		die("git-fetch-pack: expected ACK/NAK, got EOF");
-	if (line[len-1] == '\n')
-		line[--len] = 0;
-	if (!strcmp(line, "NAK"))
-		return 0;
-	if (!strncmp(line, "ACK ", 3)) {
-		if (!get_sha1_hex(line+4, result_sha1))
-			return 1;
-	}
-	die("git-fetch_pack: expected ACK/NAK, got '%s'", line);
-}
 
 static int find_common(int fd[2], unsigned char *result_sha1, unsigned char *remote)
 {
@@ -70,92 +53,38 @@ static int find_common(int fd[2], unsigned char *result_sha1, unsigned char *rem
 	return retval;
 }
 
-static int get_old_sha1(const char *refname, unsigned char *sha1)
-{
-	static char pathname[PATH_MAX];
-	const char *git_dir;
-	int fd, ret;
-
-	git_dir = gitenv(GIT_DIR_ENVIRONMENT) ? : DEFAULT_GIT_DIR_ENVIRONMENT;
-	snprintf(pathname, sizeof(pathname), "%s/%s", git_dir, refname);
-	fd = open(pathname, O_RDONLY);
-	ret = -1;
-	if (fd >= 0) {
-		char buffer[60];
-		if (read(fd, buffer, sizeof(buffer)) >= 40)
-			ret = get_sha1_hex(buffer, sha1);
-		close(fd);
-	}
-	return ret;
-}
-
-static int check_ref(const char *refname, const unsigned char *sha1)
-{
-	unsigned char mysha1[20];
-	char oldhex[41];
-
-	if (get_old_sha1(refname, mysha1) < 0)
-		memset(mysha1, 0, 20);
-
-	if (!memcmp(sha1, mysha1, 20)) {
-		fprintf(stderr, "%s: unchanged\n", refname);
-		return 0;
-	}
-	
-	memcpy(oldhex, sha1_to_hex(mysha1), 41);
-	fprintf(stderr, "%s: %s (%s)\n", refname, sha1_to_hex(sha1), oldhex);
-	return 1;
-}
-
-static int get_remote_heads(int fd, int nr_match, char **match, unsigned char *result)
-{
-	int count = 0;
-
-	for (;;) {
-		static char line[1000];
-		unsigned char sha1[20];
-		char *refname;
-		int len;
-
-		len = packet_read_line(fd, line, sizeof(line));
-		if (!len)
-			break;
-		if (line[len-1] == '\n')
-			line[--len] = 0;
-		if (len < 42 || get_sha1_hex(line, sha1))
-			die("git-fetch-pack: protocol error - expected ref descriptor, got '%sä'", line);
-		refname = line+41;
-		if (nr_match && !path_match(refname, nr_match, match))
-			continue;
-		if (check_ref(refname, sha1)) {
-			count++;
-			memcpy(result, sha1, 20);
-		}
-	}
-	return count;
-}
-
+/*
+ * Eventually we'll want to be able to fetch multiple heads.
+ *
+ * Right now we'll just require a single match.
+ */
 static int fetch_pack(int fd[2], int nr_match, char **match)
 {
-	unsigned char sha1[20], remote[20];
-	int heads, status;
+	struct ref *ref;
+	unsigned char sha1[20];
+	int status;
 	pid_t pid;
 
-	heads = get_remote_heads(fd[0], nr_match, match, remote);
-	if (heads != 1) {
+	get_remote_heads(fd[0], &ref, nr_match, match);
+	if (!ref) {
 		packet_flush(fd[1]);
-		die(heads ? "multiple remote heads" : "no matching remote head");
+		die("no matching remote head");
 	}
-	if (find_common(fd, sha1, remote) < 0)
+	if (ref->next) {
+		packet_flush(fd[1]);
+		die("multiple remote heads");
+	}
+	if (find_common(fd, sha1, ref->old_sha1) < 0)
 		die("git-fetch-pack: no common commits");
 	pid = fork();
 	if (pid < 0)
 		die("git-fetch-pack: unable to fork off git-unpack-objects");
 	if (!pid) {
-		close(fd[1]);
 		dup2(fd[0], 0);
 		close(fd[0]);
-		execlp("git-unpack-objects", "git-unpack-objects", NULL);
+		close(fd[1]);
+		execlp("git-unpack-objects", "git-unpack-objects",
+		       quiet ? "-q" : NULL, NULL);
 		die("git-unpack-objects exec failed");
 	}
 	close(fd[0]);
@@ -168,7 +97,7 @@ static int fetch_pack(int fd[2], int nr_match, char **match)
 		int code = WEXITSTATUS(status);
 		if (code)
 			die("git-unpack-objects died with error code %d", code);
-		puts(sha1_to_hex(remote));
+		puts(sha1_to_hex(ref->old_sha1));
 		return 0;
 	}
 	if (WIFSIGNALED(status)) {
@@ -191,7 +120,10 @@ int main(int argc, char **argv)
 		char *arg = argv[i];
 
 		if (*arg == '-') {
-			/* Arguments go here */
+			if (!strncmp("--exec=", arg, 7)) {
+				exec = arg + 7;
+				continue;
+			}
 			usage(fetch_pack_usage);
 		}
 		dest = arg;

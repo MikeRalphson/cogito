@@ -13,6 +13,8 @@ static int single_rev = 0;
 static int revs_only = 0;
 static int do_rev_argument = 1;
 static int output_revs = 0;
+static int flags_only = 0;
+static int no_flags = 0;
 
 #define NORMAL 0
 #define REVERSED 1
@@ -64,6 +66,8 @@ static void show_rev_arg(char *rev)
 
 static void show_norev(char *norev)
 {
+	if (flags_only)
+		return;
 	if (revs_only)
 		return;
 	puts(norev);
@@ -71,6 +75,8 @@ static void show_norev(char *norev)
 
 static void show_arg(char *arg)
 {
+	if (no_flags)
+		return;
 	if (do_rev_argument && is_rev_argument(arg))
 		show_rev_arg(arg);
 	else
@@ -91,6 +97,10 @@ static int get_parent(char *name, unsigned char *result, int idx)
 		return -1;
 	if (parse_commit(commit))
 		return -1;
+	if (!idx) {
+		memcpy(result, commit->object.sha1, 20);
+		return 0;
+	}
 	p = commit->parents;
 	while (p) {
 		if (!--idx) {
@@ -232,7 +242,7 @@ static int get_extended_sha1(char *name, unsigned char *sha1)
 	int len = strlen(name);
 
 	parent = 1;
-	if (len > 2 && name[len-1] >= '1' && name[len-1] <= '9') {
+	if (len > 2 && name[len-1] >= '0' && name[len-1] <= '9') {
 		parent = name[len-1] - '0';
 		len--;
 	}
@@ -302,6 +312,14 @@ int main(int argc, char **argv)
 			}
 			if (!strcmp(arg, "--no-revs")) {
 				no_revs = 1;
+				continue;
+			}
+			if (!strcmp(arg, "--flags")) {
+				flags_only = 1;
+				continue;
+			}
+			if (!strcmp(arg, "--no-flags")) {
+				no_flags = 1;
 				continue;
 			}
 			if (!strcmp(arg, "--verify")) {

@@ -2,7 +2,8 @@
 #include "diff.h"
 
 static int cached_only = 0;
-static int diff_output_format = DIFF_FORMAT_HUMAN;
+static int diff_output_format = DIFF_FORMAT_RAW;
+static int diff_line_termination = '\n';
 static int match_nonexisting = 0;
 static int detect_rename = 0;
 static int find_copies_harder = 0;
@@ -87,11 +88,14 @@ static int show_modified(struct cache_entry *old,
 	return 0;
 }
 
-static int diff_cache(struct cache_entry **ac, int entries)
+static int diff_cache(struct cache_entry **ac, int entries, const char **pathspec)
 {
 	while (entries) {
 		struct cache_entry *ce = *ac;
 		int same = (entries > 1) && ce_same_name(ce, ac[1]);
+
+		if (!ce_path_match(ce, pathspec))
+			goto skip_entry;
 
 		switch (ce_stage(ce)) {
 		case 0:
@@ -130,6 +134,7 @@ static int diff_cache(struct cache_entry **ac, int entries)
 			die("impossible cache entry stage");
 		}
 
+skip_entry:
 		/*
 		 * Ignore all the different stages for this file,
 		 * we've handled the relevant cases now.
@@ -159,7 +164,9 @@ static void mark_merge_entries(void)
 }
 
 static const char *diff_cache_usage =
-"git-diff-cache [-p] [-r] [-z] [-m] [--cached] [-R] [-B] [-M] [-C] [--find-copies-harder] [-O<orderfile>] [-S<string>] [--pickaxe-all] <tree-ish> [<path>...]";
+"git-diff-cache [-m] [--cached] "
+"[<common diff options>] <tree-ish> [<path>...]"
+COMMON_DIFF_OPTIONS_HELP;
 
 int main(int argc, const char **argv)
 {
@@ -193,7 +200,8 @@ int main(int argc, const char **argv)
 			/* We accept the -r flag just to look like git-diff-tree */
 			continue;
 		}
-		if (!strcmp(arg, "-p")) {
+		/* We accept the -u flag as a synonym for "-p" */
+		if (!strcmp(arg, "-p") || !strcmp(arg, "-u")) {
 			diff_output_format = DIFF_FORMAT_PATCH;
 			continue;
 		}
@@ -219,7 +227,11 @@ int main(int argc, const char **argv)
 			continue;
 		}
 		if (!strcmp(arg, "-z")) {
-			diff_output_format = DIFF_FORMAT_MACHINE;
+			diff_line_termination = 0;
+			continue;
+		}
+		if (!strcmp(arg, "--name-only")) {
+			diff_output_format = DIFF_FORMAT_NAME;
 			continue;
 		}
 		if (!strcmp(arg, "-R")) {
@@ -267,16 +279,16 @@ int main(int argc, const char **argv)
 	tree = read_object_with_reference(sha1, "tree", &size, NULL);
 	if (!tree)
 		die("bad tree object %s", tree_name);
-	if (read_tree(tree, size, 1))
+	if (read_tree(tree, size, 1, pathspec))
 		die("unable to read tree object %s", tree_name);
 
-	ret = diff_cache(active_cache, active_nr);
+	ret = diff_cache(active_cache, active_nr, pathspec);
 
-	diffcore_std(pathspec ? : NULL,
+	diffcore_std(pathspec,
 		     detect_rename, diff_score_opt,
 		     pickaxe, pickaxe_opts,
 		     diff_break_opt,
 		     orderfile, diff_filter);
-	diff_flush(diff_output_format);
+	diff_flush(diff_output_format, diff_line_termination);
 	return ret;
 }

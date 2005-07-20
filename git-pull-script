@@ -4,27 +4,13 @@
 # cogito.]
 #
 
-merge_repo=$1
+. git-sh-setup-script || die "Not a git archive"
+. git-parse-remote "$@"
+merge_name="$_remote_name"
 
-merge_name=$(echo "$1" | sed 's:\.git/*$::')
-merge_head=HEAD
-type=head
-if [ "$2" = "tag" ]; then
-   type=tag
-   shift
-fi
-if [ "$2" ]
-then
-   merge_name="$type '$2' of $merge_name"
-   merge_head="refs/${type}s/$2"
-fi
-
-: ${GIT_DIR=.git}
-: ${GIT_OBJECT_DIRECTORY="${SHA1_FILE_DIRECTORY-"$GIT_DIR/objects"}"}
-
-git-fetch-script "$merge_repo" "$merge_head" || exit 1
+git-fetch-script "$@" || exit 1
 
 git-resolve-script \
 	"$(cat "$GIT_DIR"/HEAD)" \
 	"$(cat "$GIT_DIR"/FETCH_HEAD)" \
-	"$merge_name"
+	"Merge $merge_name"

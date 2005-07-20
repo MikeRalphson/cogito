@@ -7,9 +7,12 @@
 #include "diff.h"
 
 static const char *diff_files_usage =
-"git-diff-files [-p] [-q] [-r] [-z] [-R] [-B] [-M] [-C] [--find-copies-harder] [-O<orderfile>] [-S<string>] [--pickaxe-all] [<path>...]";
+"git-diff-files [-q] "
+"[<common diff options>] [<path>...]"
+COMMON_DIFF_OPTIONS_HELP;
 
-static int diff_output_format = DIFF_FORMAT_HUMAN;
+static int diff_output_format = DIFF_FORMAT_RAW;
+static int diff_line_termination = '\n';
 static int detect_rename = 0;
 static int find_copies_harder = 0;
 static int diff_setup_opt = 0;
@@ -41,11 +44,12 @@ static void show_modified(int oldmode, int mode,
 int main(int argc, const char **argv)
 {
 	static const unsigned char null_sha1[20] = { 0, };
+	const char **pathspec;
 	int entries = read_cache();
 	int i;
 
 	while (1 < argc && argv[1][0] == '-') {
-		if (!strcmp(argv[1], "-p"))
+		if (!strcmp(argv[1], "-p") || !strcmp(argv[1], "-u"))
 			diff_output_format = DIFF_FORMAT_PATCH;
 		else if (!strcmp(argv[1], "-q"))
 			silent = 1;
@@ -54,7 +58,9 @@ int main(int argc, const char **argv)
 		else if (!strcmp(argv[1], "-s"))
 			; /* no-op */
 		else if (!strcmp(argv[1], "-z"))
-			diff_output_format = DIFF_FORMAT_MACHINE;
+			diff_line_termination = 0;
+		else if (!strcmp(argv[1], "--name-only"))
+			diff_output_format = DIFF_FORMAT_NAME;
 		else if (!strcmp(argv[1], "-R"))
 			diff_setup_opt |= DIFF_SETUP_REVERSE;
 		else if (!strncmp(argv[1], "-S", 2))
@@ -89,6 +95,9 @@ int main(int argc, const char **argv)
 		argv++; argc--;
 	}
 
+	/* Do we have a pathspec? */
+	pathspec = (argc > 1) ? argv + 1 : NULL;
+
 	if (find_copies_harder && detect_rename != DIFF_DETECT_COPY)
 		usage(diff_files_usage);
 
@@ -107,6 +116,9 @@ int main(int argc, const char **argv)
 		unsigned int oldmode;
 		struct cache_entry *ce = active_cache[i];
 		int changed;
+
+		if (!ce_path_match(ce, pathspec))
+			continue;
 
 		if (ce_stage(ce)) {
 			show_unmerge(ce->name);
@@ -135,11 +147,11 @@ int main(int argc, const char **argv)
 			      ce->sha1, (changed ? null_sha1 : ce->sha1),
 			      ce->name);
 	}
-	diffcore_std((1 < argc) ? argv + 1 : NULL,
+	diffcore_std(pathspec, 
 		     detect_rename, diff_score_opt,
 		     pickaxe, pickaxe_opts,
 		     diff_break_opt,
 		     orderfile, diff_filter);
-	diff_flush(diff_output_format);
+	diff_flush(diff_output_format, diff_line_termination);
 	return 0;
 }

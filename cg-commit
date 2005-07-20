@@ -39,6 +39,12 @@
 #	the tree is the same as the last time you committed, no changes
 #	happenned.
 #
+# -N::
+#	Don't add the files to the object database, just update the caches
+#	and the commit information. This is for special purposes when you
+#	might not actually _have_ any object database. This option is
+#	normally not interesting.
+#
 # FILES
 # -----
 # $GIT_DIR/author::
@@ -104,11 +110,16 @@ fi
 force=
 forceeditor=
 ignorecache=
+infoonly=
 commitalways=
+missingok=
 msgs=()
 while optparse; do
 	if optparse -C; then
 		ignorecache=1
+	elif optparse -N; then
+		missingok=--missing-ok
+		infoonly=--info-only
 	elif optparse -e; then
 		forceeditor=1
 	elif optparse -E; then
@@ -232,7 +243,7 @@ if tty -s; then
 					echo "Commit message not modified, commit aborted" >&2
 					if [ "$merging" ]; then
 						echo "Note that the merge is NOT aborted - you can cg-commit again" >&2
-						echo "cg-cancel will abort the ongoing merge" >&2
+						echo "cg-reset will abort the ongoing merge" >&2
 					fi
 					exit 1
 				elif [ "$choice" = "c" ]; then
@@ -279,10 +290,13 @@ precommit_update()
 		[ "$op" = "N" ] || [ "$op" = "D" ] || [ "$op" = "M" ] || op=M
 		eval "queue$op[\${#queue$op[@]}]=\"\$fname\""
 	done
+	oldIFS="$IFS"
+	IFS=$'\n'
 	# XXX: Do we even need to do the --add and --remove update-caches?
-	[ "$queueN" ] && { git-update-cache --add -- "${queueN[@]}" || return 1; }
-	[ "$queueD" ] && { git-update-cache --force-remove -- "${queueD[@]}" || return 1; }
-	[ "$queueM" ] && { git-update-cache -- "${queueM[@]}" || return 1; }
+	[ "$queueN" ] && { ( echo "${queueN[*]}" | tr \\n \\0 | xargs -0 git-update-cache --add ${infoonly} -- ) || return 1; }
+	[ "$queueD" ] && { ( echo "${queueD[*]}" | tr \\n \\0 | xargs -0 git-update-cache --force-remove -- ) || return 1;  }
+	[ "$queueM" ] && { ( echo "${queueM[*]}" | tr \\n \\0 | xargs -0 git-update-cache ${infoonly} -- ) || return 1; }
+	IFS="$oldIFS"
 	return 0
 }
 
@@ -302,7 +316,7 @@ if [ -s "$_git/HEAD" ]; then
 	oldheadstr="-p $oldhead"
 fi
 
-treeid=$(git-write-tree)
+treeid=$(git-write-tree ${missingok})
 [ "$treeid" ] || die "git-write-tree failed"
 if [ ! "$force" ] && [ ! "$merging" ] && [ "$oldhead" ] &&
    [ "$treeid" = "$(tree-id)" ]; then

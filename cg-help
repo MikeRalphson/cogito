@@ -48,6 +48,7 @@ setup_colors()
 print_command_listing()
 {
 	for command in "$@"; do
+		[ -f "$command" -a ! -L "$command" ] || continue
 		cmdname=$(basename $command)
 
 		usage=$(sed -n '/^USAGE=/,0s/.*"\(cg-.*\)"/\1/p' < $command)
@@ -85,7 +86,6 @@ bin_path="$(dirname $0)"
 
 REGULAR_COMMANDS="$(ls $bin_path/cg-* | grep -v cg-admin- | grep -v cg-X)"
 ADVANCED_COMMANDS="$(ls $bin_path/cg-admin-*)"
-
 
 colorize <<__END__
 The Cogito version control system  $(cg-version)

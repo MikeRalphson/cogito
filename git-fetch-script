@@ -1,47 +1,41 @@
 #!/bin/sh
 #
-destination=FETCH_HEAD
+. git-sh-setup-script || die "Not a git archive"
+. git-parse-remote "$@"
+merge_repo="$_remote_repo"
+merge_head="$_remote_head"
+merge_store="$_remote_store"
 
-merge_repo=$1
-merge_name=${2:-HEAD}
-if [ "$2" = "tag" ]; then
-	merge_name="refs/tags/$3"
-	destination="$merge_name"
-fi
+TMP_HEAD="$GIT_DIR/TMP_HEAD"
 
-: ${GIT_DIR=.git}
-: ${GIT_OBJECT_DIRECTORY="${SHA1_FILE_DIRECTORY-"$GIT_DIR/objects"}"}
+case "$merge_repo" in
+http://*)
+	head=$(wget -q -O - "$merge_repo/$merge_head") || exit 1
+	echo Fetching "$merge_head" using http
+	git-http-pull -v -a "$head" "$merge_repo/"
+	;;
+rsync://*)
+	rsync -L "$merge_repo/$merge_head" "$TMP_HEAD" || exit 1
+	head=$(git-rev-parse TMP_HEAD)
+	rm -f "$TMP_HEAD"
+	rsync -avz --ignore-existing "$merge_repo/objects/" "$GIT_OBJECT_DIRECTORY/"
+	;;
+*)
+	head=$(git-fetch-pack "$merge_repo" "$merge_head")
+	;;
+esac || exit 1
 
-download_one () {
-	# remote_path="$1" local_file="$2"
-	case "$1" in
-	http://*)
-		wget -q -O "$2" "$1" ;;
-	/*)
-		test -f "$1" && cat >"$2" "$1" ;;
-	*)
-		rsync -L "$1" "$2" ;;
-	esac
-}
+git-rev-parse --verify "$head" > /dev/null || exit 1
 
-download_objects () {
-	# remote_repo="$1" head_sha1="$2"
-	case "$1" in
-	http://*)
-		git-http-pull -a "$2" "$1/"
-		;;
-	/*)
-		git-local-pull -l -a "$2" "$1/"
-		;;
-	*)
-		rsync -avz --ignore-existing \
-			"$1/objects/." "$GIT_OBJECT_DIRECTORY"/.
-		;;
-	esac
-}
+case "$merge_store" in
+'')
+	;;
+*)
+	echo "$head" > "$GIT_DIR/$merge_store"
+esac &&
 
-echo "Getting remote $merge_name"
-download_one "$merge_repo/$merge_name" "$GIT_DIR/$destination" || exit 1
+# FETCH_HEAD is fed to git-resolve-script which will eventually be
+# passed to git-commit-tree as one of the parents.  Make sure we do
+# not give a tag object ID.
 
-echo "Getting object database"
-download_objects "$merge_repo" "$(cat "$GIT_DIR/$destination")" || exit 1
+git-rev-parse "$head^0" >"$GIT_DIR/FETCH_HEAD"

@@ -6,11 +6,10 @@ Summary:  	Git core and tools
 License: 	GPL
 Group: 		Development/Tools
 URL: 		http://kernel.org/pub/software/scm/cogito/
-Source: 	http://kernel.org/pub/software/scm/cogito/%{name}-%{version}.tar.bz2
-Obsoletes:	git
+Source: 	http://kernel.org/pub/software/scm/cogito/%{name}-%{version}.tar.gz
 BuildRequires:	zlib-devel, openssl-devel, curl-devel
 BuildRoot:	%{_tmppath}/%{name}-%{version}-root
-Prereq: 	sh-utils, diffutils, rcs, mktemp >= 1.5
+Prereq: 	sh-utils, diffutils, rsync, rcs, mktemp >= 1.5
 
 %description
 GIT comes in two layers. The bottom layer is merely an extremely fast
@@ -35,11 +34,20 @@ rm -rf $RPM_BUILD_ROOT
 
 %files
 %defattr(-,root,root)
-/usr/bin/*
-/usr/lib/cogito
+%{_bindir}/*
+%dir /usr/lib/cogito
+/usr/lib/cogito/*
 %doc README COPYING Documentation/*
 
 %changelog
+* Wed Jul 6 2005 Chris Wright <chris@osdl.org> 0.12-1
+- update spec file
+
+* Thu Jun 9 2005 Chris Wright <chrisw@osdl.org> 0.11.3-1
+- Add openssl patch from Dan Holmsand <holmsand@gmail.com>
+- Add cg-Xlib patch to fix showdate output
+- Update %files with changes inspired by Neil Horman <nhorman@redhat.com>
+
 * Mon May 9 2005 H. Peter Anvin <hpa@zytor.com> 0.10-1
 - New upstream revision
 - Rename spec file to cogito.spec

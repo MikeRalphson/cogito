@@ -10,16 +10,24 @@
 # -------
 # -I::
 #	Do not perform the initial commit.
+#
+# -N::
+#	Only update the cache: do not copy the data into the object database.
+#	This is for special purposes when you might not actually _have_ any
+#	object database. This option is normally not interesting.
 
-USAGE="cg-init [-I]"
+USAGE="cg-init [-I] [-N]"
 _git_repo_unneeded=1
 
 . ${COGITO_LIB}cg-Xlib
 
 no_initial_commit=
+infoonly=
 while optparse; do
 	if optparse -I; then
 		no_initial_commit=1
+	elif optparse -N; then
+		infoonly=-N
 	else
 		optfail
 	fi
@@ -35,8 +43,8 @@ touch $_git/refs/heads/master
 
 git-read-tree # Seed the dircache
 if ! [ "$no_initial_commit" ]; then
-	find * \( -type f -o -type l \) -print0 | xargs -0r cg-add
-	cg-commit -C -m"Initial commit" -E
+	find * \( -type f -o -type l \) -print0 | xargs -0r cg-add ${infoonly}
+	cg-commit -C -m"Initial commit" -E ${infoonly}
 fi
 
 exit 0

@@ -31,7 +31,7 @@ pull_progress()
 		object=
 
 		case "$line" in
-		link*|symlink*|\
+		link*|symlink*|copy*|\
 		"got "[a-f0-9][a-f0-9][a-f0-9][a-f0-9][a-f0-9][a-f0-9]*)
 			# Convert the sha to an object path
 			object=$(echo "$line" | sed 's,.* \([a-f0-9][a-f0-9]\),\1/,')
@@ -204,7 +204,8 @@ fetch_local()
 
 	cp_flags_l="-va"
 	if [ "$1" = "-u" ]; then
-		cp_flags_l="$cp_flags_l -lu"
+		cp_flags_l="$cp_flags_l -u$can_hardlink"
+		suggest_hardlink=
 		shift
 	fi
 
@@ -223,7 +224,9 @@ fetch_local()
 
 pull_local()
 {
-	(git-local-pull -a -l -v "$(cat "$_git/refs/heads/$1")" "$2" 2>&1 /dev/null) | pull_progress
+	# git-local-pull is currently broken w.r.t. packfiles
+	#(git-local-pull -a -l -v "$(cat "$_git/refs/heads/$1")" "$2" 2>&1 /dev/null) | pull_progress
+	fetch_local -s -u -d "$2/objects" "$_git_objects" | sed 's/`.*\/\(..\/[^\/]*\)'\'' -> .*/\1/' | pull_progress
 	return ${PIPESTATUS[0]}
 }
 
@@ -260,13 +263,22 @@ elif echo "$uri" | grep -q "^git+ssh://"; then
 	fetch=fetch_ssh
 	pull=pull_ssh
 elif echo "$uri" | grep -q ":"; then
-	echo "WARNING: The rsync access method is DEPRECATED and will be REMOVED soon!" >&2
+	# rsync is the only anonymous access method that works for packed files now.
+	# echo "WARNING: The rsync access method is DEPRECATED and will be REMOVED soon!" >&2
 	fetch=fetch_rsync
 	pull=pull_rsync
 else
 	[ -d $uri/.git ] && uri=$uri/.git
 	fetch=fetch_local
 	pull=pull_local
+
+	# See if we can hardlink and drop "l" if not.
+	can_hardlink=
+	sample_file=$(find $uri -type f -print | head -n 1)
+	rm -f $_git/.,,lntest
+	ln "$sample_file" "$_git/.,,lntest" 2>/dev/null && can_hardlink=l
+	echo $can_hardlink
+	rm -f $_git/.,,lntest
 fi
 
 
@@ -284,13 +296,10 @@ fi
 [ "$rsyncerr" ] && die "unable to get the head pointer of branch $rembranch"
 
 new_head=$(cat "$_git/refs/heads/$name")
-if [ ! "$force" ] && [ "$orig_head" = "$new_head" ]; then
-	echo "Up to date."
-	exit
+if [ "$force" ] || [ "$orig_head" != "$new_head" ]; then
+	[ -d $_git_objects ] || mkdir -p $_git_objects
+	$pull "$name" "$uri" || die "objects pull failed"
 fi
-
-[ -d $_git_objects ] || mkdir -p $_git_objects
-$pull "$name" "$uri" || die "objects pull failed"
 
 # FIXME: Warn about conflicting tag names?
 # XXX: We now throw stderr to /dev/null since not all repositories
@@ -308,13 +317,14 @@ $fetch -i -s -u -d "$uri/refs/tags" "$_git/refs/tags" || rsyncerr=1
 	for tag in *; do
 		[ "$tag" = "*" ] && break
 		tagid=$(cat $tag)
-		tagfile=objects/${tagid:0:2}/${tagid:2}
-		[ -s "../../$tagfile" ] && continue
+		GIT_DIR=../.. git-cat-file -t "$tagid" >/dev/null 2>&1 && continue
 		echo -n "Missing object of tag $tag... "
+		# In case it's not in a packfile...
+		tagfile=objects/${tagid:0:2}/${tagid:2}
 		if $fetch -i -s "$uri/$tagfile" "../../$tagfile" 2>/dev/null >&2; then
 			echo "retrieved"
 		else
-			echo "different source (obsolete tag?)"
+			echo "unable to retrieve"
 		fi
 	done
 )

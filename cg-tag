@@ -61,9 +61,9 @@ if [ "$sign" ]; then
 object $id
 type commit
 tag $name
+
 SIGEND
 	if [ "$description" ]; then
-		echo >>"$tagdir/tag"
 		echo "$description" >>"$tagdir/tag"
 		echo >>"$tagdir/tag"
 	fi

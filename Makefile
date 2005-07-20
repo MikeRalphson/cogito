@@ -53,7 +53,9 @@ SCRIPTS=git git-apply-patch-script git-merge-one-file-script git-prune-script \
 	git-fetch-script git-status-script git-commit-script \
 	git-log-script git-shortlog git-cvsimport-script git-diff-script \
 	git-reset-script git-add-script git-checkout-script git-clone-script \
-	gitk git-cherry git-rebase-script git-relink-script git-repack-script
+	gitk git-cherry git-rebase-script git-relink-script git-repack-script \
+	git-format-patch-script git-sh-setup-script git-push-script \
+	git-branch-script git-parse-remote
 
 PROG=   git-update-cache git-diff-files git-init-db git-write-tree \
 	git-read-tree git-commit-tree git-cat-file git-fsck-cache \
@@ -61,14 +63,15 @@ PROG=   git-update-cache git-diff-files git-init-db git-write-tree \
 	git-check-files git-ls-tree git-merge-base git-merge-cache \
 	git-unpack-file git-export git-diff-cache git-convert-cache \
 	git-http-pull git-ssh-push git-ssh-pull git-rev-list git-mktag \
-	git-diff-helper git-tar-tree git-local-pull git-write-blob \
-	git-get-tar-commit-id git-apply git-stripspace git-cvs2git \
+	git-diff-helper git-tar-tree git-local-pull git-hash-object \
+	git-get-tar-commit-id git-apply git-stripspace \
 	git-diff-stages git-rev-parse git-patch-id git-pack-objects \
 	git-unpack-objects git-verify-pack git-receive-pack git-send-pack \
-	git-prune-packed git-fetch-pack git-upload-pack
+	git-prune-packed git-fetch-pack git-upload-pack git-clone-pack \
+	git-show-index git-daemon git-var
 
 SCRIPT=	commit-id tree-id parent-id cg-add cg-admin-lsobj cg-admin-uncommit \
-	cg-branch-add cg-branch-ls cg-cancel cg-clone cg-commit cg-diff \
+	cg-branch-add cg-branch-ls cg-reset cg-clone cg-commit cg-diff \
 	cg-export cg-help cg-init cg-log cg-merge cg-mkpatch cg-patch \
 	cg-pull cg-restore cg-rm cg-seek cg-status cg-tag cg-tag-ls cg-update \
 	cg cg-admin-ls cg-push cg-branch-chg
@@ -82,14 +85,17 @@ VERSION= VERSION
 COMMON=	read-cache.o
 
 LIB_OBJS=read-cache.o sha1_file.o usage.o object.o commit.o tree.o blob.o \
-	 tag.o date.o index.o diff-delta.o patch-delta.o entry.o \
-	 epoch.o refs.o csum-file.o pack-check.o pkt-line.o connect.o
+	 tag.o date.o index.o diff-delta.o patch-delta.o entry.o path.o \
+	 epoch.o refs.o csum-file.o pack-check.o pkt-line.o connect.o ident.o
 LIB_FILE=libgit.a
 LIB_H=cache.h object.h blob.h tree.h commit.h tag.h delta.h epoch.h csum-file.h \
 	pack.h pkt-line.h refs.h
 
 LIB_H += strbuf.h
 LIB_OBJS += strbuf.o
+
+LIB_H += quote.h
+LIB_OBJS += quote.o 
 
 LIB_H += diff.h count-delta.h
 DIFF_OBJS = diff.o diffcore-rename.o diffcore-pickaxe.o diffcore-pathspec.o \
@@ -197,6 +203,8 @@ install-git: $(PROG) $(SCRIPTS)
 install-cogito: $(SCRIPT) $(LIB_SCRIPT) $(GEN_SCRIPT)
 	$(INSTALL) -m755 -d $(DESTDIR)$(bindir)
 	$(INSTALL) $(SCRIPT) $(GEN_SCRIPT) $(DESTDIR)$(bindir)
+	rm -f $(DESTDIR)$(bindir)/cg-cancel
+	ln -s cg-reset $(DESTDIR)$(bindir)/cg-cancel
 	$(INSTALL) -m755 -d $(DESTDIR)$(libdir)
 	$(INSTALL) $(LIB_SCRIPT) $(DESTDIR)$(libdir)
 	cd $(DESTDIR)$(bindir); \
@@ -223,6 +231,10 @@ dist: cogito.spec
 	@rm $(tarname)/cogito.spec
 	@rmdir $(tarname)
 	gzip -9 $(tarname).tar
+
+Portfile: Portfile.in $(VERSION) dist
+	sed -e 's/@@VERSION@@/$(shell cat $(VERSION) | cut -d"-" -f2)/g' < Portfile.in > Portfile
+	echo "checksums md5 " `md5sum $(tarname).tar.gz | cut -d ' ' -f 1` >> Portfile
 
 clean:
 	rm -f *.o mozilla-sha1/*.o ppc/*.o $(PROG) $(GEN_SCRIPT) $(LIB_FILE)

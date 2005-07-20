@@ -1,10 +1,12 @@
 #!/usr/bin/env bash
 #
-# Cancels current edits in the working tree.
+# Resets the state of the working tree.
 # Copyright (c) Petr Baudis, 2005
 #
 # Reverts the working tree to a consistent state before any changes to it
-# (including merges etc.) were done.
+# (including merges etc.) were done. This command will rebuild the state
+# of the tree according to the commit of .git/refs/heads/master, so if your
+# working tree got into basically any inconsistent state, this will cure it.
 #
 # Basically, this is the opposite of `cg-commit` in some sense.
 #
@@ -12,7 +14,7 @@
 # individual files in sync with their state at the time of the
 # last commit.
 
-USAGE="cg-cancel"
+USAGE="cg-reset"
 _git_requires_root=1
 
 . ${COGITO_LIB}cg-Xlib

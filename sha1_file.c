@@ -102,9 +102,27 @@ char *get_index_file(void)
 	return git_index_file;
 }
 
+int safe_create_leading_directories(char *path)
+{
+	char *pos = path;
+
+	while (pos) {
+		pos = strchr(pos, '/');
+		if (!pos)
+			break;
+		*pos = 0;
+		if (mkdir(path, 0777) < 0)
+			if (errno != EEXIST) {
+				*pos = '/';
+				return -1;
+			}
+		*pos++ = '/';
+	}
+	return 0;
+}
+
 int get_sha1(const char *str, unsigned char *sha1)
 {
-	static char pathname[PATH_MAX];
 	static const char *prefix[] = {
 		"",
 		"refs",
@@ -118,11 +136,8 @@ int get_sha1(const char *str, unsigned char *sha1)
 	if (!get_sha1_hex(str, sha1))
 		return 0;
 
-	if (!git_dir)
-		setup_git_env();
 	for (p = prefix; *p; p++) {
-		snprintf(pathname, sizeof(pathname), "%s/%s/%s",
-			 git_dir, *p, str);
+		char * pathname = git_path("%s/%s", *p, str);
 		if (!get_sha1_file(pathname, sha1))
 			return 0;
 	}
@@ -439,6 +454,7 @@ static void prepare_packed_git_one(char *objdir)
 		p->next = packed_git;
 		packed_git = p;
 	}
+	closedir(dir);
 }
 
 void prepare_packed_git(void)
@@ -471,8 +487,7 @@ int check_sha1_signature(const unsigned char *sha1, void *map, unsigned long siz
 }
 
 static void *map_sha1_file_internal(const unsigned char *sha1,
-				    unsigned long *size,
-				    int say_error)
+				    unsigned long *size)
 {
 	struct stat st;
 	void *map;
@@ -480,8 +495,6 @@ static void *map_sha1_file_internal(const unsigned char *sha1,
 	char *filename = find_sha1_file(sha1, &st);
 
 	if (!filename) {
-		if (say_error)
-			error("cannot map sha1 file %s", sha1_to_hex(sha1));
 		return NULL;
 	}
 
@@ -495,8 +508,6 @@ static void *map_sha1_file_internal(const unsigned char *sha1,
 				break;
 		/* Fallthrough */
 		case 0:
-			if (say_error)
-				perror(filename);
 			return NULL;
 		}
 
@@ -511,11 +522,6 @@ static void *map_sha1_file_internal(const unsigned char *sha1,
 		return NULL;
 	*size = st.st_size;
 	return map;
-}
-
-void *map_sha1_file(const unsigned char *sha1, unsigned long *size)
-{
-	return map_sha1_file_internal(sha1, size, 1);
 }
 
 int unpack_sha1_header(z_stream *stream, void *map, unsigned long mapsize, void *buffer, unsigned long size)
@@ -991,7 +997,7 @@ int sha1_object_info(const unsigned char *sha1, char *type, unsigned long *sizep
 	z_stream stream;
 	char hdr[128];
 
-	map = map_sha1_file_internal(sha1, &mapsize, 0);
+	map = map_sha1_file_internal(sha1, &mapsize);
 	if (!map) {
 		struct pack_entry e;
 
@@ -1029,14 +1035,17 @@ void * read_sha1_file(const unsigned char *sha1, char *type, unsigned long *size
 {
 	unsigned long mapsize;
 	void *map, *buf;
+	struct pack_entry e;
 
-	map = map_sha1_file_internal(sha1, &mapsize, 0);
+	if (find_pack_entry(sha1, &e))
+		return read_packed_sha1(sha1, type, size);
+	map = map_sha1_file_internal(sha1, &mapsize);
 	if (map) {
 		buf = unpack_sha1_file(map, mapsize, type, size);
 		munmap(map, mapsize);
 		return buf;
 	}
-	return read_packed_sha1(sha1, type, size);
+	return NULL;
 }
 
 void *read_object_with_reference(const unsigned char *sha1,
@@ -1084,12 +1093,12 @@ void *read_object_with_reference(const unsigned char *sha1,
 	}
 }
 
-static char *write_sha1_file_prepare(void *buf,
-				     unsigned long len,
-				     const char *type,
-				     unsigned char *sha1,
-				     unsigned char *hdr,
-				     int *hdrlen)
+char *write_sha1_file_prepare(void *buf,
+			      unsigned long len,
+			      const char *type,
+			      unsigned char *sha1,
+			      unsigned char *hdr,
+			      int *hdrlen)
 {
 	SHA_CTX c;
 
@@ -1205,6 +1214,65 @@ int write_sha1_file(void *buf, unsigned long len, const char *type, unsigned cha
 	return 0;
 }
 
+int write_sha1_to_fd(int fd, const unsigned char *sha1)
+{
+	ssize_t size;
+	unsigned long objsize;
+	int posn = 0;
+	void *buf = map_sha1_file_internal(sha1, &objsize);
+	z_stream stream;
+	if (!buf) {
+		unsigned char *unpacked;
+		unsigned long len;
+		char type[20];
+		char hdr[50];
+		int hdrlen;
+		// need to unpack and recompress it by itself
+		unpacked = read_packed_sha1(sha1, type, &len);
+
+		hdrlen = sprintf(hdr, "%s %lu", type, len) + 1;
+
+		/* Set it up */
+		memset(&stream, 0, sizeof(stream));
+		deflateInit(&stream, Z_BEST_COMPRESSION);
+		size = deflateBound(&stream, len + hdrlen);
+		buf = xmalloc(size);
+
+		/* Compress it */
+		stream.next_out = buf;
+		stream.avail_out = size;
+		
+		/* First header.. */
+		stream.next_in = (void *)hdr;
+		stream.avail_in = hdrlen;
+		while (deflate(&stream, 0) == Z_OK)
+			/* nothing */;
+
+		/* Then the data itself.. */
+		stream.next_in = unpacked;
+		stream.avail_in = len;
+		while (deflate(&stream, Z_FINISH) == Z_OK)
+			/* nothing */;
+		deflateEnd(&stream);
+		
+		objsize = stream.total_out;
+	}
+
+	do {
+		size = write(fd, buf + posn, objsize - posn);
+		if (size <= 0) {
+			if (!size) {
+				fprintf(stderr, "write closed");
+			} else {
+				perror("write ");
+			}
+			return -1;
+		}
+		posn += size;
+	} while (posn < objsize);
+	return 0;
+}
+
 int write_sha1_from_fd(const unsigned char *sha1, int fd)
 {
 	char *filename = sha1_file_name(sha1);
@@ -1278,16 +1346,18 @@ int has_sha1_file(const unsigned char *sha1)
 	struct stat st;
 	struct pack_entry e;
 
-	if (find_sha1_file(sha1, &st))
+	if (find_pack_entry(sha1, &e))
 		return 1;
-	return find_pack_entry(sha1, &e);
+	return find_sha1_file(sha1, &st) ? 1 : 0;
 }
 
-int index_fd(unsigned char *sha1, int fd, struct stat *st)
+int index_fd(unsigned char *sha1, int fd, struct stat *st, int write_object, const char *type)
 {
 	unsigned long size = st->st_size;
 	void *buf;
 	int ret;
+	unsigned char hdr[50];
+	int hdrlen;
 
 	buf = "";
 	if (size)
@@ -1296,7 +1366,14 @@ int index_fd(unsigned char *sha1, int fd, struct stat *st)
 	if ((int)(long)buf == -1)
 		return -1;
 
-	ret = write_sha1_file(buf, size, "blob", sha1);
+	if (!type)
+		type = "blob";
+	if (write_object)
+		ret = write_sha1_file(buf, size, type, sha1);
+	else {
+		write_sha1_file_prepare(buf, size, type, sha1, hdr, &hdrlen);
+		ret = 0;
+	}
 	if (size)
 		munmap(buf, size);
 	return ret;
