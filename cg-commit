@@ -287,13 +287,14 @@ precommit_update()
 	for file in "$@"; do
 		op=${file%% *}
 		fname=${file#* }
-		[ "$op" = "N" ] || [ "$op" = "D" ] || [ "$op" = "M" ] || op=M
+		[ "$op" = "N" ] && op=A # N is to be renamed to A
+		[ "$op" = "A" ] || [ "$op" = "D" ] || [ "$op" = "M" ] || op=M
 		eval "queue$op[\${#queue$op[@]}]=\"\$fname\""
 	done
 	oldIFS="$IFS"
 	IFS=$'\n'
 	# XXX: Do we even need to do the --add and --remove update-caches?
-	[ "$queueN" ] && { ( echo "${queueN[*]}" | tr \\n \\0 | xargs -0 git-update-cache --add ${infoonly} -- ) || return 1; }
+	[ "$queueA" ] && { ( echo "${queueA[*]}" | tr \\n \\0 | xargs -0 git-update-cache --add ${infoonly} -- ) || return 1; }
 	[ "$queueD" ] && { ( echo "${queueD[*]}" | tr \\n \\0 | xargs -0 git-update-cache --force-remove -- ) || return 1;  }
 	[ "$queueM" ] && { ( echo "${queueM[*]}" | tr \\n \\0 | xargs -0 git-update-cache ${infoonly} -- ) || return 1; }
 	IFS="$oldIFS"
