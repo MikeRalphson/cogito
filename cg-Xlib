@@ -281,7 +281,7 @@ done 2>/dev/null
 
 
 _git=${GIT_DIR:-.git}
-if [ ! "$GIT_DIR" ] && [ ! -d $_git ]; then
+if [ ! "$_git_repo_unneeded" ] && [ ! "$GIT_DIR" ] && [ ! -d $_git ]; then
 	rootpath=.
 	# while not /
 	while [ ! -d $rootpath/.git ] && [ "$(stat -c %i $rootpath)" != "$(stat -c %i $rootpath/..)" ]; do
