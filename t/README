@@ -74,6 +74,8 @@ First digit tells the family:
 	5 - the pull and exporting commands
 	6 - the revision tree commands (even e.g. merge-base)
 
+	9 - the Cogito Porcelain layer
+
 Second digit tells the particular command we are testing.
 
 Third digit (optionally) tells the particular switch or group of switches
