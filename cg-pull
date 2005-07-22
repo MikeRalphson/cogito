@@ -204,7 +204,7 @@ fetch_local()
 
 	cp_flags_l="-vdpR"
 	if [ "$1" = "-u" ]; then
-		cp_flags_l="$cp_flags_l -u$can_hardlink"
+		cp_flags_l="$cp_flags_l -fu$can_hardlink"
 		suggest_hardlink=
 		shift
 	fi
