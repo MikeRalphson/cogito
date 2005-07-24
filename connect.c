@@ -96,42 +96,59 @@ static enum protocol get_protocol(const char *name)
 	die("I don't handle protocol '%s'", name);
 }
 
-static void lookup_host(const char *host, struct sockaddr *in)
-{
-	struct addrinfo *res;
-	int ret;
-
-	ret = getaddrinfo(host, NULL, NULL, &res);
-	if (ret)
-		die("Unable to look up %s (%s)", host, gai_strerror(ret));
-	*in = *res->ai_addr;
-	freeaddrinfo(res);
-}
+#define STR_(s)	# s
+#define STR(s)	STR_(s)
 
 static int git_tcp_connect(int fd[2], const char *prog, char *host, char *path)
 {
-	struct sockaddr addr;
-	int port = DEFAULT_GIT_PORT, sockfd;
-	char *colon;
+	int sockfd = -1;
+	char *colon, *end;
+	char *port = STR(DEFAULT_GIT_PORT);
+	struct addrinfo hints, *ai0, *ai;
+	int gai;
 
-	colon = strchr(host, ':');
+	if (host[0] == '[') {
+		end = strchr(host + 1, ']');
+		if (end) {
+			*end = 0;
+			end++;
+			host++;
+		} else
+			end = host;
+	} else
+		end = host;
+	colon = strchr(end, ':');
+
 	if (colon) {
-		char *end;
-		unsigned long n = strtoul(colon+1, &end, 0);
-		if (colon[1] && !*end) {
-			*colon = 0;
-			port = n;
-		}
+		*colon = 0;
+		port = colon + 1;
 	}
 
-	lookup_host(host, &addr);
-	((struct sockaddr_in *)&addr)->sin_port = htons(port);
+	memset(&hints, 0, sizeof(hints));
+	hints.ai_socktype = SOCK_STREAM;
+	hints.ai_protocol = IPPROTO_TCP;
 
-	sockfd = socket(PF_INET, SOCK_STREAM, IPPROTO_IP);
+	gai = getaddrinfo(host, port, &hints, &ai);
+	if (gai)
+		die("Unable to look up %s (%s)", host, gai_strerror(gai));
+
+	for (ai0 = ai; ai; ai = ai->ai_next) {
+		sockfd = socket(ai->ai_family, ai->ai_socktype, ai->ai_protocol);
+		if (sockfd < 0)
+			continue;
+		if (connect(sockfd, ai->ai_addr, ai->ai_addrlen) < 0) {
+			close(sockfd);
+			sockfd = -1;
+			continue;
+		}
+		break;
+	}
+
+	freeaddrinfo(ai0);
+
 	if (sockfd < 0)
-		die("unable to create socket (%s)", strerror(errno));
-	if (connect(sockfd, (void *)&addr, sizeof(addr)) < 0)
-		die("unable to connect (%s)", strerror(errno));
+		die("unable to connect a socket (%s)", strerror(errno));
+
 	fd[0] = sockfd;
 	fd[1] = sockfd;
 	packet_write(sockfd, "%s %s\n", prog, path);

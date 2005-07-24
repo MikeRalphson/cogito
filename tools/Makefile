@@ -1,14 +1,26 @@
+#
+# Make Linus git-tools
+#
 CC=gcc
-CFLAGS=-Wall -O2
+COPTS=-O2
+CFLAGS=-g $(COPTS) -Wall
+INSTALL=install
 HOME=$(shell echo $$HOME)
+prefix=$(HOME)
+bin=$(prefix)/bin
+# dest=
 
-PROGRAMS=mailsplit mailinfo
-SCRIPTS=applymbox applypatch
+PROGRAMS=git-mailsplit git-mailinfo
+SCRIPTS=git-applymbox git-applypatch
+
+git-%: %.c
+	$(CC) $(CFLAGS) -o $@ $(filter %.c,$^)
 
 all: $(PROGRAMS)
 
 install: $(PROGRAMS) $(SCRIPTS)
-	cp -f $(PROGRAMS) $(SCRIPTS) $(HOME)/bin/
+	$(INSTALL) -m755 -d $(dest)$(bin)
+	$(INSTALL) $(PROGRAMS) $(SCRIPTS) $(dest)$(bin)
 
 clean:
 	rm -f $(PROGRAMS) *.o

@@ -36,7 +36,8 @@ SCRIPTS=git git-apply-patch-script git-merge-one-file-script git-prune-script \
 	git-reset-script git-add-script git-checkout-script git-clone-script \
 	gitk git-cherry git-rebase-script git-relink-script git-repack-script \
 	git-format-patch-script git-sh-setup-script git-push-script \
-	git-branch-script git-parse-remote
+	git-branch-script git-parse-remote git-verify-tag-script \
+	git-ls-remote-script git-clone-dumb-http git-rename-script
 
 PROG=   git-update-cache git-diff-files git-init-db git-write-tree \
 	git-read-tree git-commit-tree git-cat-file git-fsck-cache \
@@ -49,7 +50,8 @@ PROG=   git-update-cache git-diff-files git-init-db git-write-tree \
 	git-diff-stages git-rev-parse git-patch-id git-pack-objects \
 	git-unpack-objects git-verify-pack git-receive-pack git-send-pack \
 	git-prune-packed git-fetch-pack git-upload-pack git-clone-pack \
-	git-show-index git-daemon git-var
+	git-show-index git-daemon git-var git-peek-remote \
+	git-update-server-info git-show-rev-cache git-build-rev-cache
 
 all: $(PROG)
 
@@ -64,6 +66,9 @@ LIB_FILE=libgit.a
 LIB_H=cache.h object.h blob.h tree.h commit.h tag.h delta.h epoch.h csum-file.h \
 	pack.h pkt-line.h refs.h
 
+LIB_H += rev-cache.h
+LIB_OBJS += rev-cache.o
+
 LIB_H += strbuf.h
 LIB_OBJS += strbuf.o
 
@@ -75,6 +80,7 @@ LIB_OBJS += diff.o diffcore-rename.o diffcore-pickaxe.o diffcore-pathspec.o \
 	count-delta.o diffcore-break.o diffcore-order.o
 
 LIB_OBJS += gitenv.o
+LIB_OBJS += server-info.o
 
 LIBS = $(LIB_FILE)
 LIBS += -lz
@@ -150,6 +156,10 @@ git-send-pack: send-pack.c
 git-prune-packed: prune-packed.c
 git-fetch-pack: fetch-pack.c
 git-var: var.c
+git-peek-remote: peek-remote.c
+git-update-server-info: update-server-info.c
+git-build-rev-cache: build-rev-cache.c
+git-show-rev-cache: show-rev-cache.c
 
 git-http-pull: LIBS += -lcurl
 git-rev-list: LIBS += -lssl
@@ -163,6 +173,7 @@ object.o: $(LIB_H)
 read-cache.o: $(LIB_H)
 sha1_file.o: $(LIB_H)
 usage.o: $(LIB_H)
+rev-cache.o: $(LIB_H)
 strbuf.o: $(LIB_H)
 gitenv.o: $(LIB_H)
 entry.o: $(LIB_H)
@@ -195,12 +206,16 @@ test: all
 doc:
 	$(MAKE) -C Documentation all
 
+install-tools:
+	$(MAKE) -C tools install
+
 install-doc:
 	$(MAKE) -C Documentation install
 
 clean:
 	rm -f *.o mozilla-sha1/*.o ppc/*.o $(PROG) $(LIB_FILE)
 	rm -f git-core-*.tar.gz git-core.spec
+	$(MAKE) -C tools/ clean
 	$(MAKE) -C Documentation/ clean
 
 backup: clean
