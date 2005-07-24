@@ -73,10 +73,7 @@ tee $patchfifo | {
 		case $sign in
 		"---")
 			victim=$file
-			mode=$(echo $attrs | sed 's/.*mode:[0-7]*\([0-7]\{3\}\).*/\1/')
-			if [ "$mode" ] && [ "$mode" != "$attrs" ]; then
-				origmode=$mode
-			elif ! [ "$redzone" ]; then
+			if ! [ "$redzone" ]; then
 				origmode=
 			fi
 			;;
@@ -98,10 +95,7 @@ tee $patchfifo | {
 					continue
 				fi
 			fi
-			mode=$(echo $attrs | sed 's/.*mode:[0-7]*\([0-7]\{3\}\).*/\1/')
-			if [ "$mode" ] && [ "$mode" != "$attrs" ]; then
-				newmode=$mode
-			elif ! [ "$redzone" ]; then
+			if ! [ "$redzone" ]; then
 				newmode=
 			fi
 			if [ "$origmode" != "$newmode" ]; then
