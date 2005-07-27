@@ -106,7 +106,7 @@ showdate()
 	secs=$(($secs + $tzhours * 3600 + $tzmins * 60))
 	[ "$format" ] || format="+%a, %d %b %Y %H:%M:%S $2"
 	if [ "$has_gnudate" ]; then
-		LANG=C date -ud "1970-01-01 UTC + $secs sec" "$format"
+		LANG=C $has_gnudate -ud "1970-01-01 UTC + $secs sec" "$format"
 	else
 		LANG=C date -u -r $secs "$format"
 	fi
@@ -172,7 +172,7 @@ print_help()
 	which "cg-$1" >/dev/null 2>&1 || exit 1
 	sed -n '/^USAGE=/,0s/.*"\(.*\)"/Usage: \1/p' < $(which cg-$1) 
 	echo
-	cat $(which cg-$1) | sed -n '3,/^$/s/^# *//p'
+	sed -n '3,/^$/s/^# *//p' < $(which cg-$1)
 	exit
 }
 
@@ -256,15 +256,32 @@ optparse()
 }
 
 
+
+# Optional tools detection/stubbing
+
 export BROKEN_MKTEMP=1
 del=$($(which mktemp) -t 2>/dev/null) && { rm $del; export BROKEN_MKTEMP=; }
-has_stat=$(which stat 2>/dev/null)
-[ "$has_stat" ] && $has_stat -c %s / 2>/dev/null >&2 || has_stat=
-has_gnudate=$(date -Rud "1970-01-01 UTC" 2>/dev/null)
+
+has_stat=
+for stat in "$(which stat)" "$(which gnustat)" "$(which gstat)"; do
+	if [ "$stat" ] && $stat -c %s / >/dev/null; then
+		has_stat=$stat
+		break
+	fi
+done 2>/dev/null
+
+has_gnudate=
+for date in "$(which date)" "$(which gnudate)" "$(which gdate)"; do
+	if [ "$date" ] && $date -Rud "1970-01-01 UTC" >/dev/null; then
+		has_gnudate=$date
+		break
+	fi
+done 2>/dev/null
+
 
 
 _git=${GIT_DIR:-.git}
-if [ ! "$GIT_DIR" ] && [ ! -d $_git ]; then
+if [ ! "$_git_repo_unneeded" ] && [ ! "$GIT_DIR" ] && [ ! -d $_git ]; then
 	rootpath=.
 	# while not /
 	while [ ! -d $rootpath/.git ] && [ "$(stat -c %i $rootpath)" != "$(stat -c %i $rootpath/..)" ]; do
@@ -301,5 +318,5 @@ if [ "$_git_requires_root" ] && [ "$_git_relpath" ]; then
 fi
 
 
-# Compatibility hacks:
+# Backward compatibility hacks:
 # Fortunately none as of now.

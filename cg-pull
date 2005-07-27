@@ -121,14 +121,14 @@ fetch_http()
 	directory=
 	if [ "$1" = "-d" ]; then
 		wget_flags="$wget_flags -r -l 1 -np -nd -P"
-		directory=1
+		directory=/
 		shift
 	else
 		wget_flags="$wget_flags -O"
 	fi
 
 	src="$1"
-	dest="$2"
+	dest="$2$directory"
 
 	[ "$update" ] && ! [ "$directory" ] && [ -e "$dest" ] && return 1
 
@@ -202,9 +202,9 @@ fetch_local()
 	[ "$1" = "-i" ] && shift
 	[ "$1" = "-s" ] && shift
 
-	cp_flags_l="-va"
+	cp_flags_l="-vdpR"
 	if [ "$1" = "-u" ]; then
-		cp_flags_l="$cp_flags_l -u$can_hardlink"
+		cp_flags_l="$cp_flags_l -fu$can_hardlink"
 		suggest_hardlink=
 		shift
 	fi
@@ -249,7 +249,7 @@ name=${ARGS[0]}
 [ "$name" ] || die "where to pull from?"
 uri=$(cat "$_git/branches/$name" 2>/dev/null) || die "unknown branch: $name"
 
-rembranch=$_git_head
+rembranch=master
 if echo "$uri" | grep -q '#'; then
 	rembranch=$(echo $uri | cut -d '#' -f 2)
 	uri=$(echo $uri | cut -d '#' -f 1)

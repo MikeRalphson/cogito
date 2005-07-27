@@ -1,0 +1,31 @@
+This version of Cogito should work on OS X and other BSD variants.
+
+To install on OS X:
+
+1) Install darwinports (http://darwinports.opendarwin.org/) 2) type
+"make Portfile" 3) type "sudo port install"
+
+You may have to deal with md5 mismatches.  Either adjust the md5sum in
+your new Portfile or place the new tarball in
+/opt/local/var/db/dports/distfiles/cogito.
+
+Caveats:
+
+cg-pull on a local repository requires cp -u, a non-portable gnu
+extension.  This means that cg-pull, cg-clone and cg-update from a
+local repository are broken.
+
+Workaround #1: Use rsync for local clones.  I.e.  "cg-clone
+rsync://localhost/dir" instead of "cg-clone dir".  This loses the disk
+space savings of normally gained by cg-clone.
+
+Workaround #2: Use gnu cp.  "cd /opt/local/bin; sudo ln -s gcp cp".
+
+Recommendations:
+
+The gnu versions of "stat" and "date" are preferred over their BSD
+variants.
+
+"patch", "diff", "merge", "curl" and "rysnc" are required.  OS X.4
+includes recent versions of these tools.  If you are not running X.4,
+you may wish to check this.

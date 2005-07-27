@@ -22,6 +22,26 @@ _git_requires_root=1
 
 . ${COGITO_LIB}cg-Xlib
 
+redzone_border()
+{
+	[ "$redzone" ] || return
+
+	if [ "$origmode" != "$newmode" ]; then
+		if ! [ "$reverse" ]; then
+			tocm=$(echo "$file2" | sed 's/[^\/]*\///') #-p1
+			mode="$newmode"
+		else
+			tocm=$(echo "$file1" | sed 's/[^\/]*\///') #-p1
+			mode="$origmode"
+		fi
+		echo -ne "cm\0 $mode\000$tocm\0"
+	fi
+
+	redzone=
+	origmode=
+	newmode=
+}
+
 
 reverse=
 if [ "$1" = "-R" ]; then
@@ -49,15 +69,38 @@ tee $patchfifo | {
 	origmode=
 	newmode=
 
-	while read sign file attrs; do
-		if [ "$sign $file" = "diff --git" ]; then
+	while read line; do
+		if [ "${line:0:10}" = "diff --git" ]; then
+			redzone_border
+
+			cmd="$(echo "$line" | sed 's/^diff --git //')"
+			file1="$(bash -c 'echo $1' padding $cmd)"
+			file2="$(bash -c 'echo $2' padding $cmd)"
+
+			if [ "$file2" = "/dev/null" ]; then
+				torm=$(echo "$file1" | sed 's/[^\/]*\///') #-p1
+				if ! [ "$reverse" ]; then
+					(git-ls-files | fgrep -qx "$torm") && echo -ne "rm\0$torm\0"
+					continue
+				else
+					(git-ls-files | fgrep -qx "$torm") || echo -ne "add\0$torm\0"
+				fi
+			elif [ "$file1" = "/dev/null" ]; then
+				toadd=$(echo "$file2" | sed 's/^[^\/]*\///') #-p1
+				if ! [ "$reverse" ]; then
+					(git-ls-files | fgrep -qx "$toadd") || echo -ne "add\0$toadd\0"
+				else
+					(git-ls-files | fgrep -qx "$toadd") && echo -ne "rm\0$toadd\0"
+					continue
+				fi
+			fi
+
 			redzone=1
-			origmode=
-			newmode=
 			continue
 		fi
-		if [ "$redzone" ] && (echo $sign | grep -q '^[nod]'); then
-			mode=$(echo "$sign $file $attrs" | awk '
+
+		if [ "$redzone" ] && (echo "$line" | grep -q '^[nod]'); then
+			mode=$(echo "$line" | awk '
 				/^deleted file mode [0-9]+/ {print "-"$4}
 				/^old mode [0-9]+/ {print "-"$3}
 				/^new file mode [0-9]+/ {print "+"$4}
@@ -70,53 +113,8 @@ tee $patchfifo | {
 			fi
 			continue
 		fi
-		case $sign in
-		"---")
-			victim=$file
-			mode=$(echo $attrs | sed 's/.*mode:[0-7]*\([0-7]\{3\}\).*/\1/')
-			if [ "$mode" ] && [ "$mode" != "$attrs" ]; then
-				origmode=$mode
-			elif ! [ "$redzone" ]; then
-				origmode=
-			fi
-			;;
-		"+++")
-			if [ "$file" = "/dev/null" ]; then
-				torm=$(echo "$victim" | sed 's/[^\/]*\///') #-p1
-				if ! [ "$reverse" ]; then
-					(git-ls-files | fgrep -qx "$torm") && echo -ne "rm\0$torm\0"
-					continue
-				else
-					(git-ls-files | fgrep -qx "$torm") || echo -ne "add\0$torm\0"
-				fi
-			elif [ "$victim" = "/dev/null" ]; then
-				toadd=$(echo "$file" | sed 's/^[^\/]*\///') #-p1
-				if ! [ "$reverse" ]; then
-					(git-ls-files | fgrep -qx "$toadd") || echo -ne "add\0$toadd\0"
-				else
-					(git-ls-files | fgrep -qx "$toadd") && echo -ne "rm\0$toadd\0"
-					continue
-				fi
-			fi
-			mode=$(echo $attrs | sed 's/.*mode:[0-7]*\([0-7]\{3\}\).*/\1/')
-			if [ "$mode" ] && [ "$mode" != "$attrs" ]; then
-				newmode=$mode
-			elif ! [ "$redzone" ]; then
-				newmode=
-			fi
-			if [ "$origmode" != "$newmode" ]; then
-				if ! [ "$reverse" ]; then
-					tocm=$(echo "$file" | sed 's/[^\/]*\///') #-p1
-					mode="$newmode"
-				else
-					tocm=$(echo "$victim" | sed 's/[^\/]*\///') #-p1
-					mode="$oldmode"
-				fi
-				echo -ne "cm\0 $mode\000$tocm\0"
-			fi
-			;;
-		esac
 	done
+	redzone_border
 } >$todo
 
 wait

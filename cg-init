@@ -43,7 +43,7 @@ touch $_git/refs/heads/master
 
 git-read-tree # Seed the dircache
 if ! [ "$no_initial_commit" ]; then
-	find * \( -type f -o -type l \) -print0 | xargs -0r cg-add ${infoonly}
+	[ "$(ls)" ] && find * \( -type f -o -type l \) -print0 | xargs -0 cg-add ${infoonly}
 	cg-commit -C -m"Initial commit" -E ${infoonly}
 fi
 

@@ -14,7 +14,7 @@
 # OPTIONS
 # -------
 # -c::
-#	Colorize to the output.
+#	Colorize the output.
 
 USAGE="cg-help [-c] [cg-COMMAND | COMMAND]"
 _git_repo_unneeded=1
@@ -76,7 +76,8 @@ colorize() {
 
 if [ "$ARGS" ]; then
 	cmd=$(echo "${ARGS[0]}" | sed 's/^cg-//')
-	( print_help $cmd | colorize ) && exit
+	print_help $cmd | colorize
+	[ "${PIPESTATUS[0]}" -eq 0 ] && exit
 	echo "cg-help: no help available for command \"${ARGS[0]}\""
 	echo "Call cg-help without any arguments for the list of available commands"
 	exit 1
@@ -89,8 +90,6 @@ ADVANCED_COMMANDS="$(ls $bin_path/cg-admin-*)"
 
 colorize <<__END__
 The Cogito version control system  $(cg-version)
-
-Usage: cg-COMMAND [ARG]...
 
 Available commands:
 $(print_command_listing $REGULAR_COMMANDS)
