@@ -55,7 +55,9 @@ SCRIPTS=git git-apply-patch-script git-merge-one-file-script git-prune-script \
 	git-reset-script git-add-script git-checkout-script git-clone-script \
 	gitk git-cherry git-rebase-script git-relink-script git-repack-script \
 	git-format-patch-script git-sh-setup-script git-push-script \
-	git-branch-script git-parse-remote
+	git-branch-script git-parse-remote git-verify-tag-script \
+	git-ls-remote-script git-clone-dumb-http git-rename-script \
+	git-request-pull-script
 
 PROG=   git-update-cache git-diff-files git-init-db git-write-tree \
 	git-read-tree git-commit-tree git-cat-file git-fsck-cache \
@@ -68,7 +70,8 @@ PROG=   git-update-cache git-diff-files git-init-db git-write-tree \
 	git-diff-stages git-rev-parse git-patch-id git-pack-objects \
 	git-unpack-objects git-verify-pack git-receive-pack git-send-pack \
 	git-prune-packed git-fetch-pack git-upload-pack git-clone-pack \
-	git-show-index git-daemon git-var
+	git-show-index git-daemon git-var git-peek-remote \
+	git-update-server-info git-show-rev-cache git-build-rev-cache
 
 SCRIPT=	commit-id tree-id parent-id cg-add cg-admin-lsobj cg-admin-uncommit \
 	cg-branch-add cg-branch-ls cg-reset cg-clone cg-commit cg-diff \
@@ -91,6 +94,9 @@ LIB_FILE=libgit.a
 LIB_H=cache.h object.h blob.h tree.h commit.h tag.h delta.h epoch.h csum-file.h \
 	pack.h pkt-line.h refs.h
 
+LIB_H += rev-cache.h
+LIB_OBJS += rev-cache.o
+
 LIB_H += strbuf.h
 LIB_OBJS += strbuf.o
 
@@ -103,6 +109,7 @@ DIFF_OBJS = diff.o diffcore-rename.o diffcore-pickaxe.o diffcore-pathspec.o \
 LIB_OBJS += $(DIFF_OBJS) count-delta.o
 
 LIB_OBJS += gitenv.o
+LIB_OBJS += server-info.o
 
 LIBS = $(LIB_FILE)
 LIBS += -lz
@@ -193,8 +200,8 @@ doc:
 
 sedlibdir=$(shell echo $(libdir) | sed 's/\//\\\//g')
 
-.PHONY: install install-git install-cogito
-install: install-git install-cogito
+.PHONY: install install-git install-cogito install-tools install-doc
+install: install-git install-cogito install-tools
 
 install-git: $(PROG) $(SCRIPTS)
 	$(INSTALL) -m755 -d $(DESTDIR)$(bindir)
@@ -218,6 +225,12 @@ install-cogito: $(SCRIPT) $(LIB_SCRIPT) $(GEN_SCRIPT)
 		cat $$file.new > $$file; rm $$file.new; \
 	done
 
+install-tools:
+	$(MAKE) -C tools install
+
+install-doc:
+	$(MAKE) -C Documentation install
+
 uninstall:
 	cd $(DESTDIR)$(bindir) && rm -f $(PROG) $(SCRIPTS) $(SCRIPT) $(GEN_SCRIPT)
 	cd $(DESTDIR)$(libdir) && rm -f $(LIB_SCRIPT)
@@ -238,6 +251,7 @@ Portfile: Portfile.in $(VERSION) dist
 
 clean:
 	rm -f *.o mozilla-sha1/*.o ppc/*.o $(PROG) $(GEN_SCRIPT) $(LIB_FILE)
+	$(MAKE) -C tools/ clean
 	$(MAKE) -C Documentation/ clean
 
 backup: clean
