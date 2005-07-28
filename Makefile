@@ -9,7 +9,7 @@
 # BREAK YOUR LOCAL DIFFS! show-diff and anything using it will likely randomly
 # break unless your underlying filesystem supports those sub-second times
 # (my ext3 doesn't).
-GIT_VERSION=0.99.1
+GIT_VERSION=0.99.2
 
 COPTS=-O2
 CFLAGS=-g $(COPTS) -Wall
@@ -37,7 +37,8 @@ SCRIPTS=git git-apply-patch-script git-merge-one-file-script git-prune-script \
 	gitk git-cherry git-rebase-script git-relink-script git-repack-script \
 	git-format-patch-script git-sh-setup-script git-push-script \
 	git-branch-script git-parse-remote git-verify-tag-script \
-	git-ls-remote-script git-clone-dumb-http git-rename-script
+	git-ls-remote-script git-clone-dumb-http git-rename-script \
+	git-request-pull-script
 
 PROG=   git-update-cache git-diff-files git-init-db git-write-tree \
 	git-read-tree git-commit-tree git-cat-file git-fsck-cache \

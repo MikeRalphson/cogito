@@ -16,6 +16,7 @@ static int show_tags = 0;
 static int show_unreachable = 0;
 static int standalone = 0;
 static int check_full = 0;
+static int check_strict = 0;
 static int keep_cache_objects = 0; 
 static unsigned char head_sha1[20];
 
@@ -108,13 +109,19 @@ static int verify_ordered(struct tree_entry_list *a, struct tree_entry_list *b)
 
 static int fsck_tree(struct tree *item)
 {
+	int retval;
 	int has_full_path = 0;
+	int has_zero_pad = 0;
+	int has_bad_modes = 0;
+	int has_dup_entries = 0;
+	int not_properly_sorted = 0;
 	struct tree_entry_list *entry, *last;
 
 	last = NULL;
 	for (entry = item->entries; entry; entry = entry->next) {
 		if (strchr(entry->name, '/'))
 			has_full_path = 1;
+		has_zero_pad |= entry->zeropad;
 
 		switch (entry->mode) {
 		/*
@@ -131,24 +138,20 @@ static int fsck_tree(struct tree *item)
 		 * bits..
 		 */
 		case S_IFREG | 0664:
-			break;
+			if (!check_strict)
+				break;
 		default:
-			printf("tree %s has entry %o %s\n",
-				sha1_to_hex(item->object.sha1),
-				entry->mode, entry->name);
+			has_bad_modes = 1;
 		}
 
 		if (last) {
 			switch (verify_ordered(last, entry)) {
 			case TREE_UNORDERED:
-				fprintf(stderr, "tree %s not ordered\n",
-					sha1_to_hex(item->object.sha1));
-				return -1;
+				not_properly_sorted = 1;
+				break;
 			case TREE_HAS_DUPS:
-				fprintf(stderr, "tree %s has duplicate entries for '%s'\n",
-					sha1_to_hex(item->object.sha1),
-					entry->name);
-				return -1;
+				has_dup_entries = 1;
+				break;
 			default:
 				break;
 			}
@@ -157,17 +160,54 @@ static int fsck_tree(struct tree *item)
 		last = entry;
 	}
 
+	retval = 0;
 	if (has_full_path) {
 		fprintf(stderr, "warning: git-fsck-cache: tree %s "
 			"has full pathnames in it\n", 
 			sha1_to_hex(item->object.sha1));
 	}
-
-	return 0;
+	if (has_zero_pad) {
+		fprintf(stderr, "warning: git-fsck-cache: tree %s "
+			"has zero-padded file modes in it\n",
+			sha1_to_hex(item->object.sha1));
+	}
+	if (has_bad_modes) {
+		fprintf(stderr, "warning: git-fsck-cache: tree %s "
+			"has bad file modes in it\n",
+			sha1_to_hex(item->object.sha1));
+	}
+	if (has_dup_entries) {
+		fprintf(stderr, "error: git-fsck-cache: tree %s "
+			"has duplicate file entries\n",
+			sha1_to_hex(item->object.sha1));
+		retval = -1;
+	}
+	if (not_properly_sorted) {
+		fprintf(stderr, "error: git-fsck-cache: tree %s "
+			"is not properly sorted\n",
+			sha1_to_hex(item->object.sha1));
+		retval = -1;
+	}
+	return retval;
 }
 
 static int fsck_commit(struct commit *commit)
 {
+	char *buffer = commit->buffer;
+	unsigned char sha1[20];
+
+	if (memcmp(buffer, "tree ", 5))
+		return -1;
+	if (get_sha1_hex(buffer+5, sha1) || buffer[45] != '\n')
+		return -1;
+	buffer += 46;
+	while (!memcmp(buffer, "parent ", 7)) {
+		if (get_sha1_hex(buffer+7, sha1) || buffer[47] != '\n')
+			return -1;
+		buffer += 48;
+	}
+	if (memcmp(buffer, "author ", 7))
+		return -1;
 	free(commit->buffer);
 	commit->buffer = NULL;
 	if (!commit->tree)
@@ -400,8 +440,12 @@ int main(int argc, char **argv)
 			check_full = 1;
 			continue;
 		}
+		if (!strcmp(arg, "--strict")) {
+			check_strict = 1;
+			continue;
+		}
 		if (*arg == '-')
-			usage("git-fsck-cache [--tags] [[--unreachable] [--cache] [--standalone | --full] <head-sha1>*]");
+			usage("git-fsck-cache [--tags] [--root] [[--unreachable] [--cache] [--standalone | --full] [--strict] <head-sha1>*]");
 	}
 
 	if (standalone && check_full)
