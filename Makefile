@@ -44,7 +44,7 @@ INSTALL?=install
 
 # sparse is architecture-neutral, which means that we need to tell it
 # explicitly what architecture to check for. Fix this up for yours..
-SPARSE_FLAGS=-D__BIG_ENDIAN__ -D__powerpc__
+SPARSE_FLAGS?=-D__BIG_ENDIAN__ -D__powerpc__
 
 
 
