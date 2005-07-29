@@ -142,7 +142,7 @@ fi
 filter=$(mktemp -t gitdiff.XXXXXX)
 [ "$_git_relpath" -a ! "$ARGS" ] && echo "$_git_relpath" >>$filter
 for file in "${ARGS[@]}"; do
-	echo "${_git_relpath:-.}/$file" >>$filter
+	echo "${_git_relpath}$file" >>$filter
 done
 
 if [ "$id2" = " " ]; then

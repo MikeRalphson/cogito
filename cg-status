@@ -117,7 +117,7 @@ if [ "$workstatus" ]; then
 		EXCLUDE="--exclude-from=$EXCLUDEFILE"
 	fi
 	{
-		path="${_git_relpath:-.}/"
+		path="$_git_relpath"
 		dir=
 		[ -r .gitignore ] && EXCLUDE="$EXCLUDE --exclude-from=.gitignore"
 		while [[ "$path" == */* ]]; do
@@ -132,7 +132,7 @@ if [ "$workstatus" ]; then
 	git-ls-files --others --exclude='*.[ao]' --exclude='.*' --exclude=tags \
 		--exclude='*~' --exclude='#*' \
 		--exclude=',,merge*' $EXCLUDE |
-		{ if [ "$_git_relpath" ]; then sed -n "s/^$_git_relpath\///p"; else cat; fi } |
+		{ if [ "$_git_relpath" ]; then sed -n "s|^$_git_relpath||p"; else cat; fi } |
 		sed 's,^,? ,'
 
 	git-diff-cache HEAD $_git_relpath | cut -f5- -d' ' | 
@@ -140,7 +140,7 @@ if [ "$workstatus" ]; then
 		if [ "$mode" = D ]; then
 			[ "$(git-diff-files "$file")" ] && mode=!
 		fi
-		[ "$_git_relpath" ] && file="${file#$_git_relpath/}"
+		[ "$_git_relpath" ] && file="${file#$_git_relpath}"
 		echo "$mode $file"
 	done
 fi

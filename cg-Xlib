@@ -289,7 +289,7 @@ if [ ! "$_git_repo_unneeded" ] && [ ! "$GIT_DIR" ] && [ ! -d $_git ]; then
 	done
 	if [ -d $rootpath/.git ]; then
 		mainpath="$(echo "$(pwd)/$rootpath" | normpath)"
-		_git_relpath=$(pwd)
+		_git_relpath=$(pwd)/
 		export _git_relpath=${_git_relpath:$((${#mainpath}+1))}
 		cd "$rootpath"
 	fi

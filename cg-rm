@@ -30,6 +30,6 @@ TMPFILE=$(mktemp -t gitrm.XXXXXX) || exit 1
 
 cat $TMPFILE | sed 's/^/Removing file /'
 [ "$no_delete" ] || ( cd ${_git_relpath:-.} && rm -f "$@" )
-cat $TMPFILE | sed "s|^|${_git_relpath:-.}/|" | normpath | tr '\n' '\0' | xargs -0r git-update-cache --force-remove --
+cat $TMPFILE | sed "s|^|$_git_relpath|" | normpath | tr '\n' '\0' | xargs -0r git-update-cache --force-remove --
 
 rm $TMPFILE
