@@ -127,7 +127,7 @@ echo $base >>$_git/merge-base
 echo $branch >>$_git/merging
 echo $branchname >>$_git/merging-sym
 
-if ! git-merge-cache -o ${COGITO_LIB}cg-Xmergefile -a || [ "$careful" ]; then
+if ! git-merge-cache -o -q ${COGITO_LIB}cg-Xmergefile -a || [ "$careful" ]; then
 	# "Resolve" merges still in the cache (conflicts).
 	# We will resolve only those caught by merge-cache;
 	# that is "three-way conflicts". Others should still
