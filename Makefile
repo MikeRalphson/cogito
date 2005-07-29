@@ -94,7 +94,7 @@ LIB_H=cache.h object.h blob.h tree.h commit.h tag.h delta.h epoch.h csum-file.h 
 	pack.h pkt-line.h refs.h
 LIB_OBJS=read-cache.o sha1_file.o usage.o object.o commit.o tree.o blob.o \
 	 tag.o date.o index.o diff-delta.o patch-delta.o entry.o path.o \
-	 epoch.o refs.o csum-file.o pack-check.o pkt-line.o connect.o ident.o
+	 refs.o csum-file.o pack-check.o pkt-line.o connect.o ident.o
 
 LIB_H += rev-cache.h
 LIB_OBJS += rev-cache.o
@@ -118,7 +118,6 @@ LIBS += -lz
 
 ifndef NO_OPENSSL
 	LIB_OBJS += epoch.o
-	LIB_H += epoch.h
 else
 	CFLAGS += '-DNO_OPENSSL'
 	MOZILLA_SHA1=1
