@@ -33,10 +33,10 @@ CFLAGS?=-g -O2
 CFLAGS+=-Wall $(DEFINES)
 
 # Should be changed to /usr/local
-prefix?=$(HOME)
+prefix=$(HOME)
 
-bindir?=$(prefix)/bin
-libdir?=$(prefix)/lib/cogito
+bindir=$(prefix)/bin
+libdir=$(prefix)/lib/cogito
 
 CC?=gcc
 AR?=ar
