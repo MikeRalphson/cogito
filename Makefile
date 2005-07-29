@@ -254,19 +254,21 @@ uninstall:
 
 ### Maintainer's dist rules
 
-tarname=$(shell cat $(VERSION))
+cogito.spec: cogito.spec.in $(VERSION)
+	sed -e 's/@@VERSION@@/$(shell cat $(VERSION) | cut -d"-" -f2)/g' < $< > $@
+
+GIT_TARNAME=$(shell cat $(VERSION))
 dist: cogito.spec
-	cg-export $(tarname).tar
-	@mkdir $(tarname)
-	@cp cogito.spec $(tarname)
-	tar rf $(tarname).tar $(tarname)/cogito.spec
-	@rm $(tarname)/cogito.spec
-	@rmdir $(tarname)
-	gzip -9 $(tarname).tar
+	cg-export $(GIT_TARNAME).tar
+	@mkdir -p $(GIT_TARNAME)
+	@cp cogito.spec $(GIT_TARNAME)
+	tar rf $(GIT_TARNAME).tar $(GIT_TARNAME)/cogito.spec
+	@rm -rf $(GIT_TARNAME)
+	gzip -f -9 $(GIT_TARNAME).tar
 
 Portfile: Portfile.in $(VERSION) dist
 	sed -e 's/@@VERSION@@/$(shell cat $(VERSION) | cut -d"-" -f2)/g' < Portfile.in > Portfile
-	echo "checksums md5 " `md5sum $(tarname).tar.gz | cut -d ' ' -f 1` >> Portfile
+	echo "checksums md5 " `md5sum $(GIT_TARNAME).tar.gz | cut -d ' ' -f 1` >> Portfile
 
 backup: clean
 	cd .. ; tar czvf dircache.tar.gz dir-cache
@@ -277,5 +279,6 @@ backup: clean
 
 clean:
 	rm -f *.o mozilla-sha1/*.o ppc/*.o $(PROG) $(GEN_SCRIPT) $(LIB_FILE)
+	rm -f cogito-*.tar.gz cogito.spec
 	$(MAKE) -C tools/ clean
 	$(MAKE) -C Documentation/ clean
