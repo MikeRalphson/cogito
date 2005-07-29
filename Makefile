@@ -42,11 +42,15 @@ CC?=gcc
 AR?=ar
 INSTALL?=install
 
-#
 # sparse is architecture-neutral, which means that we need to tell it
 # explicitly what architecture to check for. Fix this up for yours..
-#
 SPARSE_FLAGS=-D__BIG_ENDIAN__ -D__powerpc__
+
+
+
+### --- END CONFIGURATION SECTION ---
+
+
 
 SCRIPTS=git git-apply-patch-script git-merge-one-file-script git-prune-script \
 	git-pull-script git-tag-script git-resolve-script git-whatchanged \
@@ -85,14 +89,12 @@ GEN_SCRIPT= cg-version
 
 VERSION= VERSION
 
-COMMON=	read-cache.o
-
-LIB_OBJS=read-cache.o sha1_file.o usage.o object.o commit.o tree.o blob.o \
-	 tag.o date.o index.o diff-delta.o patch-delta.o entry.o path.o \
-	 epoch.o refs.o csum-file.o pack-check.o pkt-line.o connect.o ident.o
 LIB_FILE=libgit.a
 LIB_H=cache.h object.h blob.h tree.h commit.h tag.h delta.h epoch.h csum-file.h \
 	pack.h pkt-line.h refs.h
+LIB_OBJS=read-cache.o sha1_file.o usage.o object.o commit.o tree.o blob.o \
+	 tag.o date.o index.o diff-delta.o patch-delta.o entry.o path.o \
+	 epoch.o refs.o csum-file.o pack-check.o pkt-line.o connect.o ident.o
 
 LIB_H += rev-cache.h
 LIB_OBJS += rev-cache.o
@@ -136,29 +138,26 @@ endif
 
 CFLAGS += '-DSHA1_HEADER=$(SHA1_HEADER)'
 
+
+
+### Build rules
+
 .PHONY: all git cogito
 all: git cogito
+
+
 git: $(PROG)
-cogito: $(GEN_SCRIPT)
-
-test-delta: test-delta.c diff-delta.o patch-delta.o
-	$(CC) $(CFLAGS) -o $@ $^
-
-check:
-	for i in *.c; do sparse $(CFLAGS) $(SPARSE_FLAGS) $$i; done
-
-test-date: test-date.c date.o
-	$(CC) $(CFLAGS) -o $@ test-date.c date.o
 
 git-%: %.o $(LIB_FILE)
 	$(CC) $(CFLAGS) -o $@ $(filter %.o,$^) $(LIBS)
 
-git-rev-list: LIBS += -lssl
-git-http-pull: LIBS += -lcurl
 git-http-pull: pull.o
 git-local-pull: pull.o
 git-ssh-pull: pull.o rsh.o
 git-ssh-push: rsh.o
+
+git-http-pull: LIBS += -lcurl
+git-rev-list: LIBS += -lssl
 
 $(LIB_OBJS): $(LIB_H)
 $(DIFF_OBJS): diffcore.h
@@ -166,6 +165,8 @@ $(DIFF_OBJS): diffcore.h
 $(LIB_FILE): $(LIB_OBJS)
 	$(AR) rcs $@ $(LIB_OBJS)
 
+
+cogito: $(GEN_SCRIPT)
 
 ifneq (,$(wildcard .git))
 GIT_HEAD=.git/HEAD
@@ -189,14 +190,28 @@ cg-version: $(VERSION) $(GIT_HEAD) Makefile
 	@echo "echo \"$(shell cat $(VERSION))$(GIT_HEAD_ID)\"" >> $@
 	@chmod +x $@
 
-cogito.spec: cogito.spec.in $(VERSION)
-	sed -e 's/@@VERSION@@/$(shell cat $(VERSION) | cut -d"-" -f2)/g' < $< > $@
+doc:
+	$(MAKE) -C Documentation all
+
+
+
+### Testing rules
 
 test: all
 	$(MAKE) -C t/ all
 
-doc:
-	$(MAKE) -C Documentation/ all
+test-date: test-date.c date.o
+	$(CC) $(CFLAGS) -o $@ test-date.c date.o
+
+test-delta: test-delta.c diff-delta.o patch-delta.o
+	$(CC) $(CFLAGS) -o $@ $^
+
+check:
+	for i in *.c; do sparse $(CFLAGS) $(SPARSE_FLAGS) $$i; done
+
+
+
+### Installation rules
 
 sedlibdir=$(shell echo $(libdir) | sed 's/\//\\\//g')
 
@@ -235,6 +250,10 @@ uninstall:
 	cd $(DESTDIR)$(bindir) && rm -f $(PROG) $(SCRIPTS) $(SCRIPT) $(GEN_SCRIPT)
 	cd $(DESTDIR)$(libdir) && rm -f $(LIB_SCRIPT)
 
+
+
+### Maintainer's dist rules
+
 tarname=$(shell cat $(VERSION))
 dist: cogito.spec
 	cg-export $(tarname).tar
@@ -249,10 +268,14 @@ Portfile: Portfile.in $(VERSION) dist
 	sed -e 's/@@VERSION@@/$(shell cat $(VERSION) | cut -d"-" -f2)/g' < Portfile.in > Portfile
 	echo "checksums md5 " `md5sum $(tarname).tar.gz | cut -d ' ' -f 1` >> Portfile
 
+backup: clean
+	cd .. ; tar czvf dircache.tar.gz dir-cache
+
+
+
+### Cleaning rules
+
 clean:
 	rm -f *.o mozilla-sha1/*.o ppc/*.o $(PROG) $(GEN_SCRIPT) $(LIB_FILE)
 	$(MAKE) -C tools/ clean
 	$(MAKE) -C Documentation/ clean
-
-backup: clean
-	cd .. ; tar czvf dircache.tar.gz dir-cache
