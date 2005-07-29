@@ -147,6 +147,7 @@ all: git cogito
 
 git: $(PROG)
 
+.PRECIOUS: %.o
 git-%: %.o $(LIB_FILE)
 	$(CC) $(CFLAGS) -o $@ $(filter %.o,$^) $(LIBS)
 
