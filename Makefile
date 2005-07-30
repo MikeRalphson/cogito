@@ -120,7 +120,11 @@ ifdef PPC_SHA1
   LIB_OBJS += ppc/sha1.o ppc/sha1ppc.o
 else
   SHA1_HEADER=<openssl/sha.h>
+ifeq ($(shell uname -s),Darwin)
+  LIBS += -lcrypto -lssl
+else
   LIBS += -lcrypto
+endif
 endif
 endif
 
@@ -176,7 +180,7 @@ check:
 
 install: $(PROG) $(SCRIPTS)
 	$(INSTALL) -m755 -d $(dest)$(bindir)
-	$(INSTALL) $(PROG) $(SCRIPTS) $(dest)$(bin)
+	$(INSTALL) $(PROG) $(SCRIPTS) $(dest)$(bindir)
 
 install-tools:
 	$(MAKE) -C tools install
