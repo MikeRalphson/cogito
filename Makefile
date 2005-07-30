@@ -130,8 +130,12 @@ ifdef PPC_SHA1
 	SHA1_HEADER="ppc/sha1.h"
 	LIB_OBJS += ppc/sha1.o ppc/sha1ppc.o
 else
-	SHA1_HEADER=<openssl/sha.h>
-	LIBS += -lcrypto
+  SHA1_HEADER=<openssl/sha.h>
+ifeq ($(shell uname -s),Darwin)
+  LIBS += -lcrypto -lssl
+else
+  LIBS += -lcrypto
+endif
 endif
 endif
 
@@ -153,7 +157,7 @@ git-%: %.o $(LIB_FILE)
 
 git-http-pull: pull.o
 git-local-pull: pull.o
-git-ssh-pull: pull.o rsh.o
+git-ssh-pull: rsh.o pull.o
 git-ssh-push: rsh.o
 
 git-http-pull: LIBS += -lcurl
