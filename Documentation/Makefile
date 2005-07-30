@@ -48,13 +48,13 @@ clean:
 	rm -f *.xml *.html *.1 *.7 cg-*.txt cogito.txt
 
 %.html : %.txt
-	asciidoc -b xhtml11 -d manpage $<
+	asciidoc -b xhtml11 -d manpage -f asciidoc.conf $<
 
 %.1 %.7 : %.xml
 	xmlto man $<
 
 %.xml : %.txt
-	asciidoc -b docbook -d manpage $<
+	asciidoc -b docbook -d manpage -f asciidoc.conf $<
 
 cogito.txt : make-cogito-asciidoc
 	./make-cogito-asciidoc > $@
