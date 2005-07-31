@@ -84,9 +84,9 @@ if [ "$gitstatus" ]; then
 		headsha1=$(cat $head)
 		headname=$(basename $head)
 		if [ "$headname" = "$_git_head" ]; then
-			echo "   >$headname $headsha1"
+			echo -e "   >$headname\t$headsha1"
 		else
-			echo "    $headname $headsha1"
+			echo -e "    $headname\t$headsha1"
 		fi
 	done
 
