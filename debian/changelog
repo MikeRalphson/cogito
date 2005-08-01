@@ -1,0 +1,6 @@
+cogito (0.12.1-1) stable; urgency=low
+
+  * new version 0.12.1 (needed in order check out Linus' git trees).
+
+ -- Holger Eitzenberger <holger@my-eitzenberger.de>  Mon, 01 Aug 2005 20:00:00 -0200
+

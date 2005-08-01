@@ -1,0 +1,15 @@
+Source: cogito
+Section: devel
+Priority: optional
+Maintainer: Holger Eitzenberger <holger@my-eitzenberger.de>
+Build-Depends: debhelper (>= 4.0.0), dpatch, asciidoc, xmlto
+Standards-Version: 3.6.1
+
+Package: cogito
+Architecture: any
+Depends: git-core, ${shlibs:Depends}, patch, diff, rcs
+Recommends: rsync, curl, wget, rsh-client
+Description: version control system
+ Cogito is the user-friendly front-end to the GIT directory content
+ manager.  This package includes both the low-level GIT tools and the
+ high-level Cogito programs.

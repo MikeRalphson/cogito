@@ -1,0 +1,28 @@
+#!/bin/sh
+
+# exit if any test fails
+set -e
+
+
+DSC=$(ls -1 ../*.dsc | sort | tail -1)
+if [ -z "$DSC" ]; then
+    echo no .dsc file found
+    exit 1
+fi
+
+DEB=$(ls -1 ../*.deb | sort | tail -1)
+if [ -z "$DEB" ]; then
+    echo no .deb file found
+    exit 1
+fi
+
+echo using .dsc file $DSC
+echo using .deb file $DEB
+
+
+dscverify --keyring ~/.gnupg/pubring.gpg $DSC
+sudo pbuilder build $DSC
+
+lintian -i $DEB
+linda -i $DEB
+

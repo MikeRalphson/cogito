@@ -1,0 +1,12 @@
+#!/bin/sh
+
+
+UPSTREAM=$( dpkg-parsechangelog | perl -ne '/^Version: (.*)-\d+/ && print "$1\n";' )
+echo upstream version is ${UPSTREAM}
+
+
+# this is ok because our stuff's limited to the debian/ directory
+cg-export ../cogito-${UPSTREAM}.tar.gz origin
+mv ../cogito-${UPSTREAM}.tar.gz ../cogito_${UPSTREAM}.orig.tar.gz
+
+

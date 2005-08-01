@@ -1,0 +1,21 @@
+cogito for Debian
+-----------------
+
+GIT is Linus Torvald's directory content manager.  Cogito is Petr "Pasky"
+Baudis' distributed revision control system on top of GIT.
+
+The changes from the upstream are:
+
+    * don't install the 'git' and 'cg' commands (to avoid conflicts with
+      the git and cgvg debian packages)
+
+    * make & install docs in .txt format
+
+    * minor tweaks to the docs (sent to upstream, pending approval)
+
+
+Here is the list of GIT repositories available on kernel.org:
+    http://kernel.org/git/
+
+
+ -- Sebastian Kuzminsky <seb@highlab.com>, Thu,  5 May 2005 10:27:14 -0600
