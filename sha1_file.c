@@ -61,7 +61,8 @@ static int get_sha1_file(const char *path, unsigned char *result)
 	return get_sha1_hex(buffer, result);
 }
 
-static char *git_dir, *git_object_dir, *git_index_file, *git_refs_dir;
+static char *git_dir, *git_object_dir, *git_index_file, *git_refs_dir,
+	*git_graft_file;
 static void setup_git_env(void)
 {
 	git_dir = gitenv(GIT_DIR_ENVIRONMENT);
@@ -79,6 +80,9 @@ static void setup_git_env(void)
 		git_index_file = xmalloc(strlen(git_dir) + 7);
 		sprintf(git_index_file, "%s/index", git_dir);
 	}
+	git_graft_file = gitenv(GRAFT_ENVIRONMENT);
+	if (!git_graft_file)
+		git_graft_file = strdup(git_path("info/grafts"));
 }
 
 char *get_object_directory(void)
@@ -100,6 +104,13 @@ char *get_index_file(void)
 	if (!git_index_file)
 		setup_git_env();
 	return git_index_file;
+}
+
+char *get_graft_file(void)
+{
+	if (!git_graft_file)
+		setup_git_env();
+	return git_graft_file;
 }
 
 int safe_create_leading_directories(char *path)
@@ -197,6 +208,56 @@ char *sha1_file_name(const unsigned char *sha1)
 		name = base + len + 1;
 	}
 	fill_sha1_path(name, sha1);
+	return base;
+}
+
+char *sha1_pack_name(const unsigned char *sha1)
+{
+	static const char hex[] = "0123456789abcdef";
+	static char *name, *base, *buf;
+	int i;
+
+	if (!base) {
+		const char *sha1_file_directory = get_object_directory();
+		int len = strlen(sha1_file_directory);
+		base = xmalloc(len + 60);
+		sprintf(base, "%s/pack/pack-1234567890123456789012345678901234567890.pack", sha1_file_directory);
+		name = base + len + 11;
+	}
+
+	buf = name;
+
+	for (i = 0; i < 20; i++) {
+		unsigned int val = *sha1++;
+		*buf++ = hex[val >> 4];
+		*buf++ = hex[val & 0xf];
+	}
+	
+	return base;
+}
+
+char *sha1_pack_index_name(const unsigned char *sha1)
+{
+	static const char hex[] = "0123456789abcdef";
+	static char *name, *base, *buf;
+	int i;
+
+	if (!base) {
+		const char *sha1_file_directory = get_object_directory();
+		int len = strlen(sha1_file_directory);
+		base = xmalloc(len + 60);
+		sprintf(base, "%s/pack/pack-1234567890123456789012345678901234567890.idx", sha1_file_directory);
+		name = base + len + 11;
+	}
+
+	buf = name;
+
+	for (i = 0; i < 20; i++) {
+		unsigned int val = *sha1++;
+		*buf++ = hex[val >> 4];
+		*buf++ = hex[val & 0xf];
+	}
+	
 	return base;
 }
 
@@ -360,6 +421,14 @@ void unuse_packed_git(struct packed_git *p)
 
 int use_packed_git(struct packed_git *p)
 {
+	if (!p->pack_size) {
+		struct stat st;
+		// We created the struct before we had the pack
+		stat(p->pack_name, &st);
+		if (!S_ISREG(st.st_mode))
+			die("packfile %s not a regular file", p->pack_name);
+		p->pack_size = st.st_size;
+	}
 	if (!p->pack_base) {
 		int fd;
 		struct stat st;
@@ -387,8 +456,10 @@ int use_packed_git(struct packed_git *p)
 		 * this is cheap.
 		 */
 		if (memcmp((char*)(p->index_base) + p->index_size - 40,
-			   p->pack_base + p->pack_size - 20, 20))
+			   p->pack_base + p->pack_size - 20, 20)) {
+			      
 			die("packfile %s does not match index.", p->pack_name);
+		}
 	}
 	p->pack_last_used = pack_used_ctr++;
 	p->pack_use_cnt++;
@@ -424,6 +495,37 @@ struct packed_git *add_packed_git(char *path, int path_len)
 	p->pack_last_used = 0;
 	p->pack_use_cnt = 0;
 	return p;
+}
+
+struct packed_git *parse_pack_index(unsigned char *sha1)
+{
+	struct packed_git *p;
+	unsigned long idx_size;
+	void *idx_map;
+	char *path = sha1_pack_index_name(sha1);
+
+	if (check_packed_git_idx(path, &idx_size, &idx_map))
+		return NULL;
+
+	path = sha1_pack_name(sha1);
+
+	p = xmalloc(sizeof(*p) + strlen(path) + 2);
+	strcpy(p->pack_name, path);
+	p->index_size = idx_size;
+	p->pack_size = 0;
+	p->index_base = idx_map;
+	p->next = NULL;
+	p->pack_base = NULL;
+	p->pack_last_used = 0;
+	p->pack_use_cnt = 0;
+	memcpy(p->sha1, sha1, 20);
+	return p;
+}
+
+void install_packed_git(struct packed_git *pack)
+{
+	pack->next = packed_git;
+	packed_git = pack;
 }
 
 static void prepare_packed_git_one(char *objdir)
@@ -989,6 +1091,20 @@ static int find_pack_entry(const unsigned char *sha1, struct pack_entry *e)
 	return 0;
 }
 
+struct packed_git *find_sha1_pack(const unsigned char *sha1, 
+				  struct packed_git *packs)
+{
+	struct packed_git *p;
+	struct pack_entry e;
+
+	for (p = packs; p; p = p->next) {
+		if (find_pack_entry_one(sha1, &e, p))
+			return p;
+	}
+	return NULL;
+	
+}
+
 int sha1_object_info(const unsigned char *sha1, char *type, unsigned long *sizep)
 {
 	int status;
@@ -1333,6 +1449,22 @@ int write_sha1_from_fd(const unsigned char *sha1, int fd)
 	}
 	
 	return 0;
+}
+
+int has_pack_index(const unsigned char *sha1)
+{
+	struct stat st;
+	if (stat(sha1_pack_index_name(sha1), &st))
+		return 0;
+	return 1;
+}
+
+int has_pack_file(const unsigned char *sha1)
+{
+	struct stat st;
+	if (stat(sha1_pack_name(sha1), &st))
+		return 0;
+	return 1;
 }
 
 int has_sha1_pack(const unsigned char *sha1)

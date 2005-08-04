@@ -6,6 +6,9 @@
 # Define NO_OPENSSL environment variable if you do not have OpenSSL. You will
 # miss out git-rev-list --merge-order. This also implies MOZILLA_SHA1.
 #
+# Define NO_CURL if you do not have curl installed.  git-http-pull is not
+# built, and you cannot use http:// and https:// transports.
+#
 # Define PPC_SHA1 environment variable when running make to make use of
 # a bundled SHA1 routine optimized for PowerPC.
 
@@ -61,14 +64,16 @@ SCRIPTS=git git-apply-patch-script git-merge-one-file-script git-prune-script \
 	git-format-patch-script git-sh-setup-script git-push-script \
 	git-branch-script git-parse-remote git-verify-tag-script \
 	git-ls-remote-script git-clone-dumb-http git-rename-script \
-	git-request-pull-script
+	git-request-pull-script git-bisect-script
+
+SCRIPTS += git-count-objects-script
 
 PROG=   git-update-cache git-diff-files git-init-db git-write-tree \
 	git-read-tree git-commit-tree git-cat-file git-fsck-cache \
 	git-checkout-cache git-diff-tree git-rev-tree git-ls-files \
 	git-check-files git-ls-tree git-merge-base git-merge-cache \
 	git-unpack-file git-export git-diff-cache git-convert-cache \
-	git-http-pull git-ssh-push git-ssh-pull git-rev-list git-mktag \
+	git-ssh-push git-ssh-pull git-rev-list git-mktag \
 	git-diff-helper git-tar-tree git-local-pull git-hash-object \
 	git-get-tar-commit-id git-apply git-stripspace \
 	git-diff-stages git-rev-parse git-patch-id git-pack-objects \
@@ -76,6 +81,10 @@ PROG=   git-update-cache git-diff-files git-init-db git-write-tree \
 	git-prune-packed git-fetch-pack git-upload-pack git-clone-pack \
 	git-show-index git-daemon git-var git-peek-remote \
 	git-update-server-info git-show-rev-cache git-build-rev-cache
+
+ifndef NO_CURL
+PROG+= git-http-pull
+endif
 
 SCRIPT=	commit-id tree-id parent-id cg-add cg-admin-lsobj cg-admin-uncommit \
 	cg-branch-add cg-branch-ls cg-reset cg-clone cg-commit cg-diff \
@@ -99,6 +108,9 @@ LIB_OBJS=read-cache.o sha1_file.o usage.o object.o commit.o tree.o blob.o \
 LIB_H += rev-cache.h
 LIB_OBJS += rev-cache.o
 
+LIB_H += run-command.h
+LIB_OBJS += run-command.o
+
 LIB_H += strbuf.h
 LIB_OBJS += strbuf.o
 
@@ -118,9 +130,11 @@ LIBS += -lz
 
 ifndef NO_OPENSSL
 	LIB_OBJS += epoch.o
+	OPENSSL_LIBSSL=-lssl
 else
 	CFLAGS += '-DNO_OPENSSL'
 	MOZILLA_SHA1=1
+	OPENSSL_LIBSSL=
 endif
 ifdef MOZILLA_SHA1
 	SHA1_HEADER="mozilla-sha1/sha1.h"
@@ -161,7 +175,7 @@ git-ssh-pull: rsh.o pull.o
 git-ssh-push: rsh.o
 
 git-http-pull: LIBS += -lcurl
-git-rev-list: LIBS += -lssl
+git-rev-list: LIBS += $(OPENSSL_LIBSSL)
 
 $(LIB_OBJS): $(LIB_H)
 $(DIFF_OBJS): diffcore.h
