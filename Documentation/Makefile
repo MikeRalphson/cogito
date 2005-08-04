@@ -40,10 +40,6 @@ install:
 	$(INSTALL) $(DOC_MAN1) $(dest)/$(man1)
 	$(INSTALL) $(DOC_MAN7) $(dest)/$(man7)
 
-# 'include' dependencies
-git-diff-%.txt: diff-format.txt diff-options.txt
-	touch $@
-
 clean:
 	rm -f *.xml *.html *.1 *.7 cg-*.txt cogito.txt
 
