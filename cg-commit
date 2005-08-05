@@ -91,7 +91,6 @@
 #	The editor used for entering revision log information.
 
 USAGE="cg-commit [-mMESSAGE]... [-C] [-e | -E] [FILE]... [< MESSAGE]"
-_git_requires_root=1
 
 . ${COGITO_LIB}cg-Xlib
 
@@ -134,13 +133,21 @@ while optparse; do
 	fi
 done
 
-if [ "$ARGS" ]; then
+if [ "$ARGS" -o "$_git_relpath" ]; then
 	[ "$ignorecache" ] && die "-C and listing files to commit does not make sense"
 	[ -s $_git/merging ] && die "cannot commit individual files when merging"
 
-	eval commitfiles=($(git-diff-cache -r -m HEAD -- "${ARGS[@]}" | \
+	filter=$(mktemp -t gitci.XXXXXX)
+	[ "$_git_relpath" -a ! "$ARGS" ] && echo "$_git_relpath" >>$filter
+	for file in "${ARGS[@]}"; do
+		echo "${_git_relpath}$file" >>$filter
+	done
+
+	eval commitfiles=($(cat $filter | xargs git-diff-cache -r -m HEAD -- | \
 		sed 's/^\([^	]*\)\(.	.*\)\(	.*\)*$/"\2"/'))
 	customfiles=1
+
+	rm $filter
 
 else
 	# We bother with added/removed files here instead of updating
