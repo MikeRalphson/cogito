@@ -23,7 +23,6 @@
 #	the last commit. Take care!
 
 USAGE="cg-restore [-f] [FILE]..."
-_git_requires_root=1
 
 . ${COGITO_LIB}cg-Xlib
 
@@ -40,9 +39,10 @@ ret=0
 
 if [ "$ARGS" ]; then
 	for file in "${ARGS[@]}"; do
-		git-checkout-cache $force "$file" || ret=1
+		git-checkout-cache $force "${_git_relpath}$file" || ret=1
 	done
 else
+	[ "$_git_relpath" ] && die "cannot restore files en masse in subdirectories yet"
 	if [ "$(git-ls-files --deleted)" ]; then
 		echo "Recovering files:"
 		git-ls-files --deleted | sed "s/^/$(echo -e "\t")/"
