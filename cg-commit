@@ -353,7 +353,7 @@ if [ "$newhead" ]; then
 	if [ -x $_git/hooks/commit-post ]; then
 		# We just hope that for the initial commit, the user didn't
 		# manage to install the hook yet.
-		for merged in $(git-rev-tree $newhead ^$oldhead | sort -n | cut -d ' ' -f 2 | cut -d : -f 1); do
+		for merged in $(git-rev-list $newhead ^$oldhead | tac); do
 			$_git/hooks/commit-post $merged $branchname
 		done
 	fi
