@@ -114,24 +114,15 @@ if [ "$workstatus" ]; then
 	EXCLUDEFILE=$_git/exclude
 	EXCLUDE=
 	if [ -f $EXCLUDEFILE ]; then
-		EXCLUDE="--exclude-from=$EXCLUDEFILE"
+		EXCLUDE="$EXCLUDE --exclude-from=$EXCLUDEFILE"
 	fi
-	{
-		path="$_git_relpath"
-		dir=
-		[ -r .gitignore ] && EXCLUDE="$EXCLUDE --exclude-from=.gitignore"
-		while [[ "$path" == */* ]]; do
-			dir="${dir:-.}/${path%%/*}"
-			path="${path#*/}"
-			[ -r $dir/.gitignore ] && EXCLUDE="$EXCLUDE --exclude-from=$dir/.gitignore"
-		done
-	}
 
 	git-update-cache --refresh > /dev/null
 
 	git-ls-files --others --exclude='*.[ao]' --exclude='.*' --exclude=tags \
 		--exclude='*~' --exclude='#*' \
-		--exclude=',,merge*' $EXCLUDE |
+		--exclude=',,merge*' $EXCLUDE \
+		--exclude-per-directory=.gitignore |
 		{ if [ "$_git_relpath" ]; then sed -n "s|^$_git_relpath||p"; else cat; fi } |
 		sed 's,^,? ,'
 
