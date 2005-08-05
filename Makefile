@@ -116,6 +116,9 @@ dist: cogito.spec
 	@rm -rf $(GIT_TARNAME)
 	gzip -f -9 $(GIT_TARNAME).tar
 
+rpm: dist
+	rpmbuild -ta $(GIT_TARNAME).tar.gz
+
 Portfile: Portfile.in $(VERSION) dist
 	sed -e 's/@@VERSION@@/$(shell cat $(VERSION) | cut -d"-" -f2)/g' < Portfile.in > Portfile
 	echo "checksums md5 " `md5sum $(GIT_TARNAME).tar.gz | cut -d ' ' -f 1` >> Portfile
