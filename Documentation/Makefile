@@ -1,8 +1,8 @@
 CG_IGNORE=$(wildcard ../cg-X*)
 CG_SRC=$(filter-out $(CG_IGNORE), $(wildcard ../cg-*))
 
-MAN1_TXT=$(patsubst ../cg-%,cg-%.txt,$(CG_SRC)) $(wildcard git-*.txt)
-MAN7_TXT=cogito.txt git.txt
+MAN1_TXT=$(patsubst ../cg-%,cg-%.txt,$(CG_SRC))
+MAN7_TXT=cogito.txt
 
 DOC_HTML=$(patsubst %.txt,%.html,$(MAN1_TXT) $(MAN7_TXT))
 
