@@ -43,6 +43,8 @@ install:
 clean:
 	rm -f *.xml *.html *.1 *.7 cg-*.txt cogito.txt
 
+.PRECIOUS: %.txt
+
 %.html : %.txt
 	asciidoc -b xhtml11 -d manpage -f asciidoc.conf $<
 
