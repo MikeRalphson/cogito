@@ -117,7 +117,7 @@ if [ "$log_end" ]; then
 	id1=$(commit-id "$log_start") || exit 1
 	id2=$(commit-id "$log_end") || exit 1
 
-	git-rev-list $id2 ^$id1 | tac | while read id; do
+	git-rev-list --merge-order $id2 ^$id1 | tac | while read id; do
 		showpatch $id
 		echo
 		echo
