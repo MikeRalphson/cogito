@@ -7,4 +7,5 @@
 #
 # NOTE: Will return multiple SHA1s if ID is a commit with multiple parents.
 
-. ${COGITO_LIB}cg-Xnormid "$1"^
+normid=$(. ${COGITO_LIB}cg-Xnormid "$1"^)
+echo ${normid%% *}

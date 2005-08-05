@@ -19,7 +19,7 @@ id="$1"
 if [ "${id:(-1):1}" = "^" ]; then
 	# parent-id
 	id=$(commit-id "${id%^}") || exit 1
-	git-cat-file commit "$id" | awk '/^parent/{print $2};/^$/{exit}' || exit 1
+	git-cat-file commit "$id" | awk '/^parent/{print $2," "};/^$/{exit}' || exit 1
 	exit
 fi
 
@@ -44,6 +44,7 @@ elif [[ "$id" == [0-9a-f][0-9a-f][0-9a-f][0-9a-f]* ]]; then
 		id=$idpref${idmatch#$_git_objects/$idpref/}
 	elif [ ${#idmatch[*]} -gt 1 ]; then
 		echo "Ambiguous id: $id" >&2
+		echo "${idmatch[@]}" >&2
 		exit 1
 	fi
 fi
@@ -64,9 +65,11 @@ if [ ! "$valid" ]; then
 	exit 1
 fi
 
-if [ "$(git-cat-file -t "$id")" = "tag" ]; then
+type="$(git-cat-file -t "$id")"
+if [ "$type" = "tag" ]; then
 	id=$(git-cat-file tag "$id" | head -n 1)
 	id="${id#object }"
+	type=
 fi
 
-echo $id
+echo "$id $type"

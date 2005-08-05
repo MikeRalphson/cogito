@@ -7,7 +7,8 @@
 
 id="$1"
 normid=$(. ${COGITO_LIB}cg-Xnormid "$id") || exit 1
-type=$(git-cat-file -t "$normid")
+type=${normid#* }; [ "$type" ] || type=$(git-cat-file -t "$normid")
+normid=${normid% *}
 
 if [ "$type" = "commit" ]; then
 	normid=$(git-cat-file commit "$normid" | sed -e 's/tree //;q')
@@ -15,7 +16,7 @@ if [ "$type" = "commit" ]; then
 fi
 
 if [ "$type" != "tree" ]; then
-	echo "Invalid tree id: $id" >&2
+	echo "Invalid tree id: $normid" >&2
 	exit 1
 fi
 

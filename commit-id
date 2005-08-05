@@ -9,9 +9,11 @@
 
 id="$1"
 normid=$(. ${COGITO_LIB}cg-Xnormid "$id") || exit 1
+type=${normid#* }; [ "$type" ] || type=$(git-cat-file -t "$normid")
+normid=${normid% *}
 
-if [ "$(git-cat-file -t "$normid")" != "commit" ]; then
-	echo "Invalid commit id: $id" >&2
+if [ "$type" != "commit" ]; then
+	echo "Invalid commit id: $normid" >&2
 	exit 1
 fi
 
