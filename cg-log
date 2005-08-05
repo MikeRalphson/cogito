@@ -69,7 +69,6 @@
 #	$ cg-log -r releasetag-0.9:releasetag-0.10
 
 USAGE="cg-log [-c] [-f] [-m] [-s] [-uUSERNAME] [-r FROM_ID[:TO_ID]] FILE..."
-_git_requires_root=1
 
 . ${COGITO_LIB}cg-Xlib
 # Try to fix the annoying "Broken pipe" output. May not help, but apparently
@@ -145,11 +144,11 @@ process_commit_line()
 				return
 			fi
 		fi
-		if [ "$files" ]; then
+		if [ -s "$filter" ]; then
 			parent="${parents[0]}"
 			diff_ops=
 			[ "$parent" ] || diff_ops=--root
-			if ! [ "$(git-diff-tree -r $diff_ops $commit $parent "${files[@]}")" ]; then
+			if ! [ "$(cat $filter | xargs git-diff-tree -r $diff_ops $commit $parent)" ]; then
 				skip_commit=1
 				return
 			fi
@@ -277,7 +276,7 @@ while optparse; do
 		optfail
 	fi
 done
-files=("${ARGS[@]}")
+
 
 if [ "$mergebase" ]; then
 	[ "$log_start" ] || log_start="HEAD"
@@ -295,6 +294,19 @@ else
 	revls="git-rev-list --pretty=raw $id1"
 fi
 
+
+filter=$(mktemp -t gitlog.XXXXXX)
+# XXX: Semantic problem: Should cg-log without parameters in a subdirectory
+# list only changes concerning the subdirectory, or all the changes?
+# We follow the principle of least surprise now and list all the changes.
+# [ "$_git_relpath" -a ! "$ARGS" ] && echo "$_git_relpath" >>$filter
+for file in "${ARGS[@]}"; do
+	echo "${_git_relpath}$file" >>$filter
+done
+
 # LESS="S" will prevent less to wrap too long titles to multiple lines;
 # you can scroll horizontally.
 $revls | print_commit_log | LESS="S$LESS" pager
+
+rm $filter
+exit 0
