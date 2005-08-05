@@ -259,24 +259,28 @@ optparse()
 
 # Optional tools detection/stubbing
 
-export BROKEN_MKTEMP=1
-del=$($(which mktemp) -t 2>/dev/null) && { rm $del; export BROKEN_MKTEMP=; }
+if ! [ "$__cogito_subsequent" ]; then
+	export __cogito_subsequent=1
 
-has_stat=
-for stat in "$(which stat)" "$(which gnustat)" "$(which gstat)"; do
-	if [ "$stat" ] && $stat -c %s / >/dev/null; then
-		has_stat=$stat
-		break
-	fi
-done 2>/dev/null
+	export BROKEN_MKTEMP=1
+	del=$($(which mktemp) -t 2>/dev/null) && { rm $del; export BROKEN_MKTEMP=; }
 
-has_gnudate=
-for date in "$(which date)" "$(which gnudate)" "$(which gdate)"; do
-	if [ "$date" ] && $date -Rud "1970-01-01 UTC" >/dev/null; then
-		has_gnudate=$date
-		break
-	fi
-done 2>/dev/null
+	export has_stat=
+	for stat in "$(which stat)" "$(which gnustat)" "$(which gstat)"; do
+		if [ "$stat" ] && $stat -c %s / >/dev/null; then
+			export has_stat=$stat
+			break
+		fi
+	done 2>/dev/null
+
+	export has_gnudate=
+	for date in "$(which date)" "$(which gnudate)" "$(which gdate)"; do
+		if [ "$date" ] && $date -Rud "1970-01-01 UTC" >/dev/null; then
+			export has_gnudate=$date
+			break
+		fi
+	done 2>/dev/null
+fi
 
 
 
