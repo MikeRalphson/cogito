@@ -65,9 +65,9 @@ install: build
 	dh_clean -k 
 	dh_installdirs
 	$(MAKE) install DESTDIR=$(CURDIR)/debian/cogito
-	$(RM) $(DESTDIR)/usr/bin/{cg,git}
+	$(RM) $(DESTDIR)/usr/bin/cg
 	install -m 0644 Documentation/*.html $(DESTDIR)/usr/share/doc/cogito/html
-	install -m 0644 Documentation/{git*.txt,cogito.txt} $(DESTDIR)/usr/share/doc/cogito/txt
+	install -m 0644 Documentation/cogito.txt $(DESTDIR)/usr/share/doc/cogito/txt
 	install -m 0644 Documentation/*.7 $(DESTDIR)/usr/share/man/man7
 
 # Build architecture-independent files here.
