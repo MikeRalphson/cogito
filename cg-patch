@@ -22,9 +22,37 @@ _git_requires_root=1
 
 . ${COGITO_LIB}cg-Xlib
 
+redzone_reset()
+{
+	redzone=
+	origmode=
+	newmode=
+	op=
+}
+
 redzone_border()
 {
 	[ "$redzone" ] || return
+
+	if [ "$op" = "delete" ]; then
+		torm=$(echo "$file1" | sed 's/[^\/]*\///') #-p1
+		if ! [ "$reverse" ]; then
+			(git-ls-files | fgrep -qx "$torm") && echo -ne "rm\0$torm\0"
+			redzone_reset
+			return
+		else
+			(git-ls-files | fgrep -qx "$torm") || echo -ne "add\0$torm\0"
+		fi
+	elif [ "$op" = "add" ]; then
+		toadd=$(echo "$file2" | sed 's/^[^\/]*\///') #-p1
+		if ! [ "$reverse" ]; then
+			(git-ls-files | fgrep -qx "$toadd") || echo -ne "add\0$toadd\0"
+		else
+			(git-ls-files | fgrep -qx "$toadd") && echo -ne "rm\0$toadd\0"
+			redzone_reset
+			return
+		fi
+	fi
 
 	if [ "$origmode" != "$newmode" ]; then
 		if ! [ "$reverse" ]; then
@@ -37,9 +65,7 @@ redzone_border()
 		echo -ne "cm\0 $mode\000$tocm\0"
 	fi
 
-	redzone=
-	origmode=
-	newmode=
+	redzone_reset
 }
 
 
@@ -64,10 +90,7 @@ patch_args="-p1 -N"
 patch $patch_args <$patchfifo &
 
 tee $patchfifo | {
-	victim=
-	redzone=
-	origmode=
-	newmode=
+	redzone_reset
 
 	while read line; do
 		if [ "${line:0:10}" = "diff --git" ]; then
@@ -77,35 +100,24 @@ tee $patchfifo | {
 			file1="$(bash -c 'echo $1' padding $cmd)"
 			file2="$(bash -c 'echo $2' padding $cmd)"
 
-			if [ "$file2" = "/dev/null" ]; then
-				torm=$(echo "$file1" | sed 's/[^\/]*\///') #-p1
-				if ! [ "$reverse" ]; then
-					(git-ls-files | fgrep -qx "$torm") && echo -ne "rm\0$torm\0"
-					continue
-				else
-					(git-ls-files | fgrep -qx "$torm") || echo -ne "add\0$torm\0"
-				fi
-			elif [ "$file1" = "/dev/null" ]; then
-				toadd=$(echo "$file2" | sed 's/^[^\/]*\///') #-p1
-				if ! [ "$reverse" ]; then
-					(git-ls-files | fgrep -qx "$toadd") || echo -ne "add\0$toadd\0"
-				else
-					(git-ls-files | fgrep -qx "$toadd") && echo -ne "rm\0$toadd\0"
-					continue
-				fi
-			fi
-
 			redzone=1
 			continue
 		fi
 
 		if [ "$redzone" ] && (echo "$line" | grep -q '^[nod]'); then
 			mode=$(echo "$line" | awk '
-				/^deleted file mode [0-9]+/ {print "-"$4}
+				/^deleted file mode [0-9]+/ {print "D-"$4}
 				/^old mode [0-9]+/ {print "-"$3}
-				/^new file mode [0-9]+/ {print "+"$4}
+				/^new file mode [0-9]+/ {print "A+"$4}
 				/^new mode [0-9]+/ {print "+"$3}
 			')
+			if [ "${mode:0:1}" = "D" ]; then
+				op=delete
+				mode=${mode:1}
+			elif [ "${mode:0:1}" = "A" ]; then
+				op=add
+				mode=${mode:1}
+			fi
 			if [ "${mode:0:1}" = "-" ]; then
 				origmode=${mode:1}
 			elif [ "${mode:0:1}" = "+" ]; then

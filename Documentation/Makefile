@@ -1,8 +1,8 @@
 CG_IGNORE=$(wildcard ../cg-X*)
 CG_SRC=$(filter-out $(CG_IGNORE), $(wildcard ../cg-*))
 
-MAN1_TXT=$(patsubst ../cg-%,cg-%.txt,$(CG_SRC)) $(wildcard git-*.txt)
-MAN7_TXT=cogito.txt git.txt
+MAN1_TXT=$(patsubst ../cg-%,cg-%.txt,$(CG_SRC))
+MAN7_TXT=cogito.txt
 
 DOC_HTML=$(patsubst %.txt,%.html,$(MAN1_TXT) $(MAN7_TXT))
 
@@ -36,25 +36,23 @@ man1: $(DOC_MAN1)
 man7: $(DOC_MAN7)
 
 install:
-	$(INSTALL) -m755 -d $(dest)/$(man1) $(dest)/$(man7)
-	$(INSTALL) $(DOC_MAN1) $(dest)/$(man1)
-	$(INSTALL) $(DOC_MAN7) $(dest)/$(man7)
-
-# 'include' dependencies
-git-diff-%.txt: diff-format.txt diff-options.txt
-	touch $@
+	$(INSTALL) -m755 -d $(DESTDIR)/$(man1) $(DESTDIR)/$(man7)
+	$(INSTALL) $(DOC_MAN1) $(DESTDIR)/$(man1)
+	$(INSTALL) $(DOC_MAN7) $(DESTDIR)/$(man7)
 
 clean:
 	rm -f *.xml *.html *.1 *.7 cg-*.txt cogito.txt
 
+.PRECIOUS: %.txt
+
 %.html : %.txt
-	asciidoc -b xhtml11 -d manpage $<
+	asciidoc -b xhtml11 -d manpage -f asciidoc.conf $<
 
 %.1 %.7 : %.xml
 	xmlto man $<
 
 %.xml : %.txt
-	asciidoc -b docbook -d manpage $<
+	asciidoc -b docbook -d manpage -f asciidoc.conf $<
 
 cogito.txt : make-cogito-asciidoc
 	./make-cogito-asciidoc > $@

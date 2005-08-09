@@ -31,8 +31,9 @@
 #	$ cg-mkpatch -r releasetag-0.9:releasetag-0.10
 #
 # The output will be a contionuos dump of patches each separated by
-# the line
-# `!-------------------------------------------------------------flip-`
+# the line:
+#
+#	!-------------------------------------------------------------flip-
 
 USAGE="cg-mkpatch [-m] [-s] [-r FROM_ID[:TO_ID]]"
 _git_requires_root=1

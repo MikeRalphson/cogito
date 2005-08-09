@@ -40,7 +40,7 @@ CAPTION=$(echo "$HEADER" | head -n 1 | tr '[A-Z]' '[a-z]' | sed 's/\.$//')
 # were referenced as "`cg-command`". This way references from cg-* combos in
 # code listings will be ignored.
 BODY=$(echo "$HEADER" | sed '0,/^$/d' \
-		      | sed 's/`\(cg-[a-z-]\+\)`/link:\1.html[\1]/')
+		      | sed 's/`\(cg-[a-z-]\+\)`/gitlink:\1[1]/')
 
 DESCRIPTION=
 OPTIONS=
@@ -108,6 +108,6 @@ $COPYRIGHT
 
 SEE ALSO
 --------
-$COMMAND command is part of link:cogito.html[cogito(7)],
-a toolkit for managing link:git.html[git(1)] trees.
+$COMMAND command is part of gitlink:cogito[7],
+a toolkit for managing gitlink:git[7] trees.
 __END__

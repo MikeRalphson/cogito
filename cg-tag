@@ -61,6 +61,7 @@ if [ "$sign" ]; then
 object $id
 type commit
 tag $name
+tagger $(git-var GIT_COMMITTER_IDENT)
 
 SIGEND
 	if [ "$description" ]; then

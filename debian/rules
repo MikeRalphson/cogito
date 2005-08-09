@@ -1,22 +1,26 @@
 #!/usr/bin/make -f
+#
 # -*- makefile -*-
+#
+# Sample debian/rules that uses debhelper.
+# This file was originally written by Joey Hess and Craig Small.
+# As a special exception, when this file is copied by dh-make into a
+# dh-make output file, you may use that output file without restriction.
+# This special exception was added by Craig Small in version 0.37 of dh-make.
 
 # Uncomment this to turn on verbose mode.
 #export DH_VERBOSE=1
 
-CFLAGS = -g -Wall
-ifneq (,$(findstring noopt,$(DEB_BUILD_OPTIONS)))
-       CFLAGS += -O0
-else
-       CFLAGS += -O2
-endif
-export CFLAGS
+# these are used to override the variables in the upstream makefile
+export prefix = /usr
+export libdir = $(prefix)/share/cogito
 
-#
+DESTDIR = $(CURDIR)/debian/cogito
+
+
 # On PowerPC we compile against the hand-crafted assembly, on all
 # other architectures we compile against GPL'ed sha1 code lifted
-# from Mozilla.  OpenSSL is strangely licensed and best avoided
-# in Debian.
+# from Mozilla
 #
 HOST_ARCH=$(shell dpkg-architecture -qDEB_HOST_ARCH)
 ifeq (${HOST_ARCH},powerpc)
@@ -25,53 +29,62 @@ else
 	export MOZILLA_SHA1=YesPlease
 endif
 
+CFLAGS = -Wall -g
 
-PREFIX := /usr
-MANDIR := /usr/share/man/
+ifneq (,$(findstring noopt,$(DEB_BUILD_OPTIONS)))
+	CFLAGS += -O0
+else
+	CFLAGS += -O2
+endif
 
-SRC    := ./
-DOC    := Documentation/
-DESTDIR  := $(CURDIR)/debian/tmp
-DOC_DESTDIR := $(DESTDIR)/usr/share/doc/git-core/
-MAN_DESTDIR := $(DESTDIR)/$(MANDIR)
-
-build: debian/build-stamp
-debian/build-stamp:
+configure: configure-stamp
+configure-stamp:
 	dh_testdir
-	$(MAKE) all doc
-	touch debian/build-stamp
+	touch configure-stamp
 
-debian-clean:
+
+build: build-stamp
+
+build-stamp: configure-stamp 
+	dh_testdir
+	$(MAKE)
+	$(MAKE) -C Documentation html man
+	touch build-stamp
+
+clean:
 	dh_testdir
 	dh_testroot
-	rm -f debian/build-stamp
-	dh_clean
-
-clean: debian-clean
+	rm -f build-stamp configure-stamp
 	$(MAKE) clean
+	$(MAKE) -C Documentation clean
+	dh_clean 
 
 install: build
 	dh_testdir
 	dh_testroot
 	dh_clean -k 
-	dh_installdirs 
+	dh_installdirs
+	$(MAKE) install DESTDIR=$(CURDIR)/debian/cogito
+	$(RM) $(DESTDIR)/usr/bin/cg
+	install -m 0644 Documentation/*.html $(DESTDIR)/usr/share/doc/cogito/html
+	install -m 0644 Documentation/cogito.txt $(DESTDIR)/usr/share/doc/cogito/txt
+	install -m 0644 Documentation/*.7 $(DESTDIR)/usr/share/man/man7
 
-	make dest=$(DESTDIR) prefix=$(PREFIX) mandir=$(MANDIR) install install-doc
+# Build architecture-independent files here.
+binary-indep: build install
+# We have nothing to do by default.
 
-	mkdir -p $(DOC_DESTDIR)
-	find $(DOC) '(' -name '*.txt' -o -name '*.html' ')' -exec install {} $(DOC_DESTDIR) ';'
-
-	dh_install --list-missing --sourcedir=$(DESTDIR)
-
-binary: build install
+# Build architecture-dependent files here.
+binary-arch: build install
 	dh_testdir
 	dh_testroot
-	dh_installchangelogs
+	dh_installchangelogs 
 	dh_installdocs
 	dh_installexamples
+#	dh_install
 #	dh_installmenu
 #	dh_installdebconf	
-#	dh_installlogrotate	
+#	dh_installlogrotate
 #	dh_installemacsen
 #	dh_installpam
 #	dh_installmime
@@ -81,15 +94,16 @@ binary: build install
 	dh_installman
 	dh_link
 	dh_strip
-	dh_compress 
+	dh_compress
 	dh_fixperms
 #	dh_perl
 #	dh_python
-	dh_makeshlibs
+#	dh_makeshlibs
 	dh_installdeb
 	dh_shlibdeps
 	dh_gencontrol
 	dh_md5sums
 	dh_builddeb
 
-.PHONY: build clean binary install clean debian-clean
+binary: binary-indep binary-arch
+.PHONY: build clean binary-indep binary-arch binary install configure

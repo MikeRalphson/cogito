@@ -16,6 +16,10 @@
 #
 # ?::
 #	'<file>' is unknown.
+# A::
+#	'<file>' has been added.
+# D::
+#	'<file>' has been deleted.
 # M::
 #	'<file>' has been touched or modified.
 #
@@ -23,6 +27,7 @@
 # -------
 # If neither -g or -w is passed, both is shown; otherwise, only the
 # corresponding parts are shown.
+#
 # -g::
 #	Show the GIT repository information.
 #
@@ -37,7 +42,7 @@
 #	each line contains a pattern for a file or group of files
 #	to exclude.
 #
-# .gitignore::
+# $TREE_DIR/.gitignore::
 #	.gitignore in the working tree will be used as an exclude file.
 #	The excludes are applied from the project root approaching the
 #	current subdirectory.
@@ -84,9 +89,9 @@ if [ "$gitstatus" ]; then
 		headsha1=$(cat $head)
 		headname=$(basename $head)
 		if [ "$headname" = "$_git_head" ]; then
-			echo "   >$headname $headsha1"
+			echo -e "   >$headname\t$headsha1"
 		else
-			echo "    $headname $headsha1"
+			echo -e "    $headname\t$headsha1"
 		fi
 	done
 

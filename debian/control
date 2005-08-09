@@ -1,19 +1,15 @@
-Source: git-core
+Source: cogito
 Section: devel
 Priority: optional
-Maintainer: Linus Torvalds <torvalds@osdl.org>
-Build-Depends-Indep: libz-dev, libssl-dev, libcurl3-dev, asciidoc > 6.0.3, xmlto, debhelper (>= 4.0.0)
+Maintainer: Holger Eitzenberger <holger@my-eitzenberger.de>
+Build-Depends: debhelper (>= 4.0.0), dpatch, asciidoc, xmlto
 Standards-Version: 3.6.1
 
-Package: git-core
+Package: cogito
 Architecture: any
-Depends: ${shlibs:Depends}, ${misc:Depends}, patch, diff, rcs
-Recommends: rsync, curl, ssh
-Conflicts: git
-Description: The git content addressable filesystem
- GIT comes in two layers. The bottom layer is merely an extremely fast
- and flexible filesystem-based database designed to store directory trees
- with regard to their history. The top layer is a SCM-like tool which
- enables human beings to work with the database in a manner to a degree
- similar to other SCM tools (like CVS, BitKeeper or Monotone).
-
+Depends: git-core, ${shlibs:Depends}, patch, diff, rcs
+Recommends: rsync, curl, wget, rsh-client
+Description: version control system
+ Cogito is the user-friendly front-end to the GIT directory content
+ manager.  This package includes both the low-level GIT tools and the
+ high-level Cogito programs.
