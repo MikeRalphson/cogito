@@ -1,3 +1,12 @@
+cogito (0.13-1) stable; urgency=low
+
+  * New version.
+  * Cleaned up Debian files.
+  * Conflict with cgvg instead of not installing cg.
+  * Pass prefix=/usr to "make install".
+
+ -- Matthias Urlichs <smurf@debian.org>  Thu, 11 Aug 2005 12:17:32 +0200
+
 cogito (0.12.1-1) stable; urgency=low
 
   * new version 0.12.1 (needed in order check out Linus' git trees).

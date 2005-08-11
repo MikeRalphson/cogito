@@ -64,8 +64,8 @@ install: build
 	dh_testroot
 	dh_clean -k 
 	dh_installdirs
-	$(MAKE) install DESTDIR=$(CURDIR)/debian/cogito
-	$(RM) $(DESTDIR)/usr/bin/cg
+	$(MAKE) install DESTDIR=$(CURDIR)/debian/cogito prefix=/usr
+	# $(RM) $(DESTDIR)/usr/bin/cg
 	install -m 0644 Documentation/*.html $(DESTDIR)/usr/share/doc/cogito/html
 	install -m 0644 Documentation/cogito.txt $(DESTDIR)/usr/share/doc/cogito/txt
 	install -m 0644 Documentation/*.7 $(DESTDIR)/usr/share/man/man7
