@@ -45,7 +45,12 @@ USAGE="cg-diff [-c] [-m] [-p] [-r FROM_ID[:TO_ID]] [FILE]..."
 # TODO: Make cg-log use this too.
 setup_colors()
 {
-	local C="diffhdr=1;36:diffhdradd=1;32:diffadd=32:diffhdrmod=1;35:diffmod=35:diffhdrrem=1;31:diffrem=31:diffhunk=36:diffctx=34:diffcctx=33:default=0"
+	local C="diffhdr=1;36"
+	C="$C:diffhdradd=1;32:diffadd=32"
+	C="$C:diffhdrmod=1;35:diffmod=35"
+	C="$C:diffhdrrem=1;31:diffrem=31"
+	C="$C:diffhunk=36:diffctx=34"
+	C="$C:default=0"
 	[ -n "$COGITO_COLORS" ] && C="$C:$COGITO_COLORS"
 
 	C=${C//=/=\'$'\e'[}
@@ -58,29 +63,21 @@ colorize()
 {
 	if [ "$opt_color" ]; then
 		gawk '
-		{ if (/^(Index:|diff --git) /)
-		    print "'$coldiffhdr'" $0 "'$coldefault'"
-		  else if (/^======*$/)
+		{ if (/^(diff --git) /)
 		    print "'$coldiffhdr'" $0 "'$coldefault'"
 		  else if (/^\+\+\+/)
 		    print "'$coldiffhdradd'" $0 "'$coldefault'"
-		  else if (/^\*\*\*/)
-		    print "'$coldiffhdrmod'" $0 "'$coldefault'"
 		  else if (/^---/)
 		    print "'$coldiffhdrrem'" $0 "'$coldefault'"
 		  else if (/^(\+|new( file)? mode )/)
 		    print "'$coldiffadd'" $0 "'$coldefault'"
 		  else if (/^(-|(deleted file|old) mode )/)
 		    print "'$coldiffrem'" $0 "'$coldefault'"
-		  else if (/^!/)
-		    print "'$coldiffmod'" $0 "'$coldefault'"
 		  else if (/^@@ \-[0-9]+(,[0-9]+)? \+[0-9]+(,[0-9]+)? @@/)
 		    print gensub(/^(@@[^@]*@@)([ \t]*)(.*)/,
 		         "'$coldiffhunk'" "\\1" "'$coldefault'" \
 			 "\\2" \
 			 "'$coldiffctx'" "\\3" "'$coldefault'", "")
-		  else if (/^\*\*\*\*\*\*\*\*\*\*\*\*\*\*\*/)
-		    print "'$coldiffcctx'" $0 "'$coldefault'"
 		  else
 		    print
 		}'
