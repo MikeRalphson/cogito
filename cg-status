@@ -50,7 +50,7 @@
 #	The excludes are applied from the project root approaching the
 #	current subdirectory.
 
-USAGE="cg-status [-g] [-w]"
+USAGE="cg-status [-g] [-w] [-x]"
 
 . ${COGITO_LIB}cg-Xlib || exit 1
 
