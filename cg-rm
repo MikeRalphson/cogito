@@ -26,7 +26,9 @@ fi
 [ "$1" ] || usage
 
 TMPFILE=$(mktemp -t gitrm.XXXXXX) || exit 1
-( cd ${_git_relpath:-.} && find "$@" -type f -print 2>/dev/null ) > $TMPFILE
+for file in "$@"; do
+	echo "${_git_relpath}$file" >>$TMPFILE
+done
 
 cat $TMPFILE | sed 's/^/Removing file /'
 [ "$no_delete" ] || ( cd ${_git_relpath:-.} && rm -f "$@" )
