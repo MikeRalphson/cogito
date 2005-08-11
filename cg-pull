@@ -263,8 +263,7 @@ elif echo "$uri" | grep -q "^git+ssh://"; then
 	fetch=fetch_ssh
 	pull=pull_ssh
 elif echo "$uri" | grep -q ":"; then
-	# rsync is the only anonymous access method that works for packed files now.
-	# echo "WARNING: The rsync access method is DEPRECATED and will be REMOVED soon!" >&2
+	echo "WARNING: The rsync access method is DEPRECATED and will be REMOVED in the future!" >&2
 	fetch=fetch_rsync
 	pull=pull_rsync
 else
