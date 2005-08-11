@@ -92,7 +92,7 @@ fetch_rsync()
 		shift
 	fi
 
-	eval rsync $RSYNC_FLAGS $rsync_flags_l --whole-file -v -Lr \
+	eval rsync $RSYNC_FLAGS $rsync_flags_l -v -Lr \
 		"$1$appenduri" "$2$appenduri" $redir | $filter
 	return ${PIPESTATUS[0]}
 }
