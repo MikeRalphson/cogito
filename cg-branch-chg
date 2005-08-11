@@ -7,7 +7,7 @@
 
 USAGE="cg-branch-chg BRANCH_NAME NEW_LOCATION"
 
-. ${COGITO_LIB}cg-Xlib
+. ${COGITO_LIB}cg-Xlib || exit 1
 
 name=$1
 location=$2

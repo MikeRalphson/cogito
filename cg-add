@@ -23,7 +23,7 @@
 
 USAGE="cg-add [-N] FILE..."
 
-. ${COGITO_LIB}cg-Xlib
+. ${COGITO_LIB}cg-Xlib || exit 1
 
 infoonly=
 while optparse; do

@@ -49,7 +49,7 @@
 
 USAGE="cg-status [-g] [-w]"
 
-. ${COGITO_LIB}cg-Xlib
+. ${COGITO_LIB}cg-Xlib || exit 1
 
 gitstatus=
 workstatus=

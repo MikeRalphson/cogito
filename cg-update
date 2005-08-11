@@ -16,7 +16,7 @@
 USAGE="cg-update [-f] [BRANCH_NAME]"
 _git_requires_root=1
 
-. ${COGITO_LIB}cg-Xlib
+. ${COGITO_LIB}cg-Xlib || exit 1
 
 force=
 while optparse; do

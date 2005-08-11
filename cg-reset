@@ -17,7 +17,7 @@
 USAGE="cg-reset"
 _git_requires_root=1
 
-. ${COGITO_LIB}cg-Xlib
+. ${COGITO_LIB}cg-Xlib || exit 1
 
 if ! [ -s $_git/HEAD ]; then
 	rm -f $_git/HEAD

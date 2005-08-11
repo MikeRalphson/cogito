@@ -22,7 +22,7 @@
 # do any merges that might change the tree layout.
 #
 
-. ${COGITO_LIB}cg-Xlib
+. ${COGITO_LIB}cg-Xlib || exit 1
 
 
 error()

@@ -24,7 +24,7 @@
 
 USAGE="cg-restore [-f] [FILE]..."
 
-. ${COGITO_LIB}cg-Xlib
+. ${COGITO_LIB}cg-Xlib || exit 1
 
 force=
 while optparse; do

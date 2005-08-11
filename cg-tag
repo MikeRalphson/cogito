@@ -22,7 +22,7 @@
 
 USAGE="cg-tag [-s [-d DESCRIPTION] [-k KEYNAME]] TAG_NAME [COMMIT_ID]"
 
-. ${COGITO_LIB}cg-Xlib
+. ${COGITO_LIB}cg-Xlib || exit 1
 
 sign=
 keyname=

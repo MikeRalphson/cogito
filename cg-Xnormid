@@ -12,7 +12,7 @@
 #
 # Takes the ID to normalize and returns the normalized ID.
 
-. ${COGITO_LIB}cg-Xlib
+. ${COGITO_LIB}cg-Xlib || exit 1
 
 id="$1"
 

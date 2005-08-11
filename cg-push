@@ -14,7 +14,7 @@
 
 USAGE="cg-push [BRANCH_NAME]"
 
-. ${COGITO_LIB}cg-Xlib
+. ${COGITO_LIB}cg-Xlib || exit 1
 
 while optparse; do
 	optfail

@@ -38,7 +38,7 @@
 USAGE="cg-mkpatch [-m] [-s] [-r FROM_ID[:TO_ID]]"
 _git_requires_root=1
 
-. ${COGITO_LIB}cg-Xlib
+. ${COGITO_LIB}cg-Xlib || exit 1
 
 showpatch()
 {

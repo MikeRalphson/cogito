@@ -17,7 +17,7 @@
 
 USAGE="cg-pull [-f] [-v] [BRANCH_NAME]"
 
-. ${COGITO_LIB}cg-Xlib
+. ${COGITO_LIB}cg-Xlib || exit 1
 
 
 pull_progress()

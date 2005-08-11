@@ -31,7 +31,7 @@
 USAGE="cg-admin-uncommit [-t] [COMMIT_ID]"
 _git_requires_root=1
 
-. ${COGITO_LIB}cg-Xlib
+. ${COGITO_LIB}cg-Xlib || exit 1
 
 [ -s $_git/blocked ] && die "uncommitting blocked: $(cat $_git/blocked)"
 

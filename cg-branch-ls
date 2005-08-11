@@ -15,7 +15,7 @@
 
 USAGE="cg-branch-ls"
 
-. ${COGITO_LIB}cg-Xlib
+. ${COGITO_LIB}cg-Xlib || exit 1
 
 mkdir -p $_git/branches
 [ "$(find $_git/branches -follow -type f)" ] \

@@ -20,7 +20,7 @@
 USAGE="cg-clone [-s] LOCATION [DESTDIR]"
 _git_repo_unneeded=1
 
-. ${COGITO_LIB}cg-Xlib
+. ${COGITO_LIB}cg-Xlib || exit 1
 
 same_dir=
 while optparse; do

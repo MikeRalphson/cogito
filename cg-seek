@@ -22,7 +22,7 @@
 USAGE="cg-seek [COMMIT_ID]"
 _git_requires_root=1
 
-. ${COGITO_LIB}cg-Xlib
+. ${COGITO_LIB}cg-Xlib || exit 1
 
 dstcommit=$1
 

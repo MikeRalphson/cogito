@@ -15,7 +15,7 @@
 
 USAGE="cg-rm [-n] FILE..."
 
-. ${COGITO_LIB}cg-Xlib
+. ${COGITO_LIB}cg-Xlib || exit 1
 
 no_delete=
 if [ "$1" = "-n" ]; then
