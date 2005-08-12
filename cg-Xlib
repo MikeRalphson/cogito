@@ -69,6 +69,43 @@ stat()
 	fi
 }
 
+readlink()
+{
+	if [ "$has_readlink" ]; then
+		$has_readlink "$@"
+		return
+	fi
+
+	if [ "$1" = "-f" ]; then
+		shift
+		target="$(maynormpath "$1")"
+
+		# -e will test the existence of the final target; therefore,
+		# it will also protect against recursive symlinks and such
+		[ -e "$target" ] || return 1
+
+		while true; do
+			if ! [ -L "$target" ]; then
+				echo "$target"
+				return 0
+			fi
+			target2="$(readlink "$target" 2>/dev/null)" || return 1
+			[ "$target2" ] || return 1
+			target="$(maynormpath "$target2" "$target"/..)"
+		done
+		return 42
+	fi
+
+	line=$(ls -ld "$1" 2>/dev/null) || return 1
+	case "$line" in
+	*-\>*)
+		echo "${line#* -> }";;
+	*)
+		return 1;;
+	esac
+	return 0
+}
+
 normpath()
 {
 local inp
@@ -96,6 +133,20 @@ while read inp; do
 	done
 	echo
 done
+}
+
+# maynormpath PATH [BASE]
+# If $PATH is relative, make it absolute wrt. $(pwd) or $BASE if specified.
+# Basically, call this instead of normpath() if $PATH can ever be absolute.
+maynormpath()
+{
+	case "$1" in
+	/*)
+		echo "$1";;
+	*)
+		base="$2"; [ "$base" ] || base="$(pwd)"
+		echo "$base/$1" | normpath
+	esac
 }
 
 showdate()
@@ -269,6 +320,14 @@ if ! [ "$__cogito_subsequent" ]; then
 	for stat in "$(which stat)" "$(which gnustat)" "$(which gstat)"; do
 		if [ "$stat" ] && $stat -c %s / >/dev/null; then
 			export has_stat=$stat
+			break
+		fi
+	done 2>/dev/null
+
+	export has_readlink=
+	for readlink in "$(which readlink)"; do
+		if [ "$readlink" ] && $readlink -f / >/dev/null; then
+			export has_readlink=$readlink
 			break
 		fi
 	done 2>/dev/null
