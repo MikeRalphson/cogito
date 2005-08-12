@@ -38,7 +38,6 @@ done
 trap "rm -rf $_git; die \"interrupted\"" SIGINT SIGTERM
 
 git-init-db
-mkdir $_git/branches
 touch $_git/refs/heads/master
 
 git-read-tree # Seed the dircache
