@@ -44,13 +44,15 @@ if [ "$curcommit" != "$dstcommit" ]; then
 fi
 
 if [ "$seek_mode" = "away" ]; then
+	echo "$_git_head" >$_git/head-name
+	[ -s $_git/blocked ] || echo "seeked from $_git_head" >$_git/blocked
 	rm $_git/HEAD
 	echo "$dstcommit" >$_git/HEAD
-	[ -s $_git/blocked ] || echo "seeked from $_git_head" >$_git/blocked
 else
 	rm $_git/HEAD
 	ln -s "refs/heads/$_git_head" $_git/HEAD
 	rm -f $_git/blocked
+	rm $_git/head-name
 fi
 
 echo "On commit $dstcommit"
