@@ -310,40 +310,31 @@ optparse()
 
 # Optional tools detection/stubbing
 
+# check_tool_presence NAME COMMAND EXENAME...
+# (use $cmd in COMMAND)
+check_tool()
+{
+	cmdname="$1"; shift
+	cmdtest="$1"; shift
+	hasname="has_$cmdname"
+
+	export $hasname=
+	for exename in "$@"; do
+		cmd="$(which $exename)"
+		if [ "$cmd" ] && eval $cmdtest; then
+			export $hasname="$cmd"
+			break
+		fi
+	done 2>/dev/null
+}
+
 if ! [ "$__cogito_subsequent" ]; then
 	export __cogito_subsequent=1
 
-	export has_mktemp=
-	for mktemp in "$(which mktemp)"; do
-		if [ "$mktemp" ] && todel=$($mktemp -t) && rm $todel; then
-			export has_mktemp=$mktemp
-			break
-		fi
-	done 2>/dev/null
-
-	export has_stat=
-	for stat in "$(which stat)" "$(which gnustat)" "$(which gstat)"; do
-		if [ "$stat" ] && $stat -c %s / >/dev/null; then
-			export has_stat=$stat
-			break
-		fi
-	done 2>/dev/null
-
-	export has_readlink=
-	for readlink in "$(which readlink)"; do
-		if [ "$readlink" ] && $readlink -f / >/dev/null; then
-			export has_readlink=$readlink
-			break
-		fi
-	done 2>/dev/null
-
-	export has_gnudate=
-	for date in "$(which date)" "$(which gnudate)" "$(which gdate)"; do
-		if [ "$date" ] && $date -Rud "1970-01-01 UTC" >/dev/null; then
-			export has_gnudate=$date
-			break
-		fi
-	done 2>/dev/null
+	check_tool mktemp 'todel=$($cmd -t) && rm $todel' mktemp
+	check_tool stat '$cmd -c %s / >/dev/null' stat gnustat gstat
+	check_tool readlink '$cmd -f / >/dev/null' readlink
+	check_tool gnudate '$cmd -Rud "1970-01-01 UTC" >/dev/null' date gnudate gdate
 fi
 
 
