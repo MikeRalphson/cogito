@@ -14,6 +14,9 @@ bin=$(prefix)/bin
 mandir=$(prefix)/man
 man1=$(mandir)/man1
 man7=$(mandir)/man7
+docdir=$(prefix)/share/doc/cogito
+txtdir=$(docdir)/txt
+htmldir=$(docdir)/html
 
 INSTALL=install
 
@@ -35,10 +38,16 @@ man: man1 man7
 man1: $(DOC_MAN1)
 man7: $(DOC_MAN7)
 
-install:
+install: man
+	$(INSTALL) -m755 -d $(DESTDIR)/$(txtdir)
+	$(INSTALL) $(MAN1_TXT) $(MAN7_TXT) $(DESTDIR)/$(txtdir)
 	$(INSTALL) -m755 -d $(DESTDIR)/$(man1) $(DESTDIR)/$(man7)
 	$(INSTALL) $(DOC_MAN1) $(DESTDIR)/$(man1)
 	$(INSTALL) $(DOC_MAN7) $(DESTDIR)/$(man7)
+
+install-html: html
+	$(INSTALL) -m755 -d $(DESTDIR)/$(htmldir)
+	$(INSTALL) $(DOC_HTML) $(DESTDIR)/$(htmldir)
 
 clean:
 	rm -f *.xml *.html *.1 *.7 cg-*.txt cogito.txt
