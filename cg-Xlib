@@ -31,8 +31,8 @@ pager()
 
 mktemp()
 {
-	if [ ! "$BROKEN_MKTEMP" ]; then
-		$(which mktemp) "$@"
+	if [ "$has_mktemp" ]; then
+		$has_mktemp "$@"
 		return
 	fi
 
@@ -313,8 +313,13 @@ optparse()
 if ! [ "$__cogito_subsequent" ]; then
 	export __cogito_subsequent=1
 
-	export BROKEN_MKTEMP=1
-	del=$($(which mktemp) -t 2>/dev/null) && { rm $del; export BROKEN_MKTEMP=; }
+	export has_mktemp=
+	for mktemp in "$(which mktemp)"; do
+		if [ "$mktemp" ] && todel=$($mktemp -t) && rm $todel; then
+			export has_mktemp=$mktemp
+			break
+		fi
+	done 2>/dev/null
 
 	export has_stat=
 	for stat in "$(which stat)" "$(which gnustat)" "$(which gstat)"; do
