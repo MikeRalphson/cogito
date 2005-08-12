@@ -46,13 +46,14 @@ fi
 if [ "$seek_mode" = "away" ]; then
 	echo "$_git_head" >$_git/head-name
 	[ -s $_git/blocked ] || echo "seeked from $_git_head" >$_git/blocked
-	rm $_git/HEAD
-	echo "$dstcommit" >$_git/HEAD
+	# We hold this in a temporary branch so that some of the core
+	# GIT tools (git checkout and git-fsck-cache) don't get confused.
+	echo "$dstcommit" >$_git/refs/heads/cg-seek-point
+	rm $_git/HEAD; ln -s "refs/heads/cg-seek-point" $_git/HEAD
 else
-	rm $_git/HEAD
-	ln -s "refs/heads/$_git_head" $_git/HEAD
+	rm $_git/HEAD; ln -s "refs/heads/$_git_head" $_git/HEAD
+	rm $_git/refs/heads/cg-seek-point $_git/head-name
 	rm -f $_git/blocked
-	rm $_git/head-name
 fi
 
 echo "On commit $dstcommit"

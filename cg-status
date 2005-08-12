@@ -81,19 +81,20 @@ if [ "$gitstatus" ]; then
 	       || die "List of heads is empty."
 
 
-	[ -s "$_git/head-name" ] && echo "Head: $(cat "$_git/head-name")"
 	[ -s "$_git/branch-name" ] && echo "Branch (informal): $(cat "$_git/branch-name")"
 
-	headlink=$(readlink $_git/HEAD)
-	if [ ! "$headlink" ]; then
+	if [ -s "$_git/head-name" ]; then
 		headsha1=$(cat $_git/HEAD)
-		echo "Seeked at: $headsha1"
+		echo "Seeked from head: $(cat "$_git/head-name")"
+		echo "Seeked at commit: $headsha1"
+		echo
 	fi
 
 	echo "Heads:"
 	for head in $_git/refs/heads/*; do
 		headsha1=$(cat $head)
 		headname=$(basename $head)
+		[ "$headname" = "cg-seek-point" ] && continue
 		if [ "$headname" = "$_git_head" ]; then
 			echo -e "   >$headname\t$headsha1"
 		else
@@ -103,11 +104,13 @@ if [ "$gitstatus" ]; then
 
 	if [ -s "$_git/merging" ]; then
 		tmp=$(cat "$_git/merging")
+		echo
 		echo "Merging: $(cat "$_git/merging") ($(cat "$_git/merging-sym"))"
 		echo "Merge base: $(cat "$_git/merge-base")"
 	fi
 
 	if [ -s "$_git/blocked" ]; then
+		echo
 		echo "Changes recording BLOCKED:"
 		sed 's/^/    /' "$_git/blocked"
 	fi
