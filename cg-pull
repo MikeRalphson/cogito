@@ -231,11 +231,13 @@ pull_local()
 }
 
 
-force=
+recovery=
 verbose=
 while optparse; do
 	if optparse -f; then
-		force=1
+		# When forcing, let the pull tools make more extensive
+		# walk over the dependency tree with --recover.
+		recovery=--recover
 	elif optparse -v; then
 		verbose=1
 	else
@@ -255,7 +257,6 @@ if echo "$uri" | grep -q '#'; then
 	uri=$(echo $uri | cut -d '#' -f 1)
 fi
 
-recovery=
 # Some other process with the same pid might appear, that's why
 # we won't die but rather let the user check quickly.
 if [ -s "$_git/info/cg-pull-$name-dirty" ]; then
@@ -308,7 +309,7 @@ fi
 [ "$rsyncerr" ] && die "unable to get the head pointer of branch $rembranch"
 
 new_head=$(cat "$_git/refs/heads/$name")
-if [ "$force" ] || [ "$recovery" ] || [ "$orig_head" != "$new_head" ]; then
+if [ "$recovery" ] || [ "$orig_head" != "$new_head" ]; then
 	[ -d $_git_objects ] || mkdir -p $_git_objects
 	$pull "$name" "$uri" || die "objects pull failed"
 fi
