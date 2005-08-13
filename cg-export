@@ -10,15 +10,22 @@
 # for generating a tarball. Other destination specifiers are assumed
 # to be directory names, and the tree is exported to the given directory.
 
-USAGE="cg-export DESTFILE [TREE_ID]"
+USAGE="cg-export [-r TREE_ID] DESTFILE"
 _git_requires_root=1
 
 . ${COGITO_LIB}cg-Xlib || exit 1
 
+if [ "$1" = "-r" ]; then
+	shift
+	# We do not resolve to tree-id since git-tar-tree can utilize some commit
+	# information.
+	id="$(commit-id "$1" 2>/dev/null)" || id="$1"
+	shift
+else
+	id="$(commit-id)"
+fi
+
 dest=$1
-# We do not resolve to tree-id since git-tar-tree can utilize some commit
-# information.
-id=$(commit-id "$2" 2>/dev/null) || id="$2"
 
 ([ "$dest" ] && [ "$id" ]) || usage
 
