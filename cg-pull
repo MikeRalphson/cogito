@@ -100,7 +100,9 @@ fetch_rsync()
 pull_rsync()
 {
 	fetch_rsync -s -u -d "$2/objects" "$_git_objects" | pull_progress
-	return ${PIPESTATUS[0]}
+	ret=${PIPESTATUS[0]}
+	cat "$_git/refs/heads/.$3-pulling" > "$_git/refs/heads/$3"
+	return $ret
 }
 
 
@@ -149,7 +151,7 @@ fetch_http()
 
 pull_http()
 {
-	(git-http-pull -a -v $recovery "$(cat "$_git/refs/heads/$1")" "$2/" 2>&1 /dev/null) | pull_progress
+	(git-http-pull -a -v -w "$3" $recovery "$1" "$2/" 2>&1 /dev/null) | pull_progress
 	return ${PIPESTATUS[0]}
 }
 
@@ -190,7 +192,7 @@ pull_ssh()
 	# git-ssh-pull would theoretically take git+ssh://-style URL, but
 	# it is buggy and won't process it correctly, so let's just
 	# preprocess it to some easier-to-take form.
-	(git-ssh-pull -a -v $recovery "$(cat "$_git/refs/heads/$1")" \
+	(git-ssh-pull -a -v -w "$3" $recovery "$1" \
 		"$(echo "$2" | sed 's#^git+ssh://\([^/]*\)\(/.*\)$#\1:\2#')" \
 		2>&1 /dev/null) | pull_progress
 	return ${PIPESTATUS[0]}
@@ -225,9 +227,11 @@ fetch_local()
 pull_local()
 {
 	# git-local-pull is currently broken w.r.t. packfiles
-	#(git-local-pull -a -l -v $recovery "$(cat "$_git/refs/heads/$1")" "$2" 2>&1 /dev/null) | pull_progress
+	#(git-local-pull -a -l -v -w "$3" $recovery "$1" "$2" 2>&1 /dev/null) | pull_progress
 	fetch_local -s -u -d "$2/objects" "$_git_objects" | sed 's/`.*\/\(..\/[^\/]*\)'\'' -> .*/\1/' | pull_progress
-	return ${PIPESTATUS[0]}
+	ret=${PIPESTATUS[0]}
+	cat "$_git/refs/heads/.$3-pulling" > "$_git/refs/heads/$3"
+	return $ret
 }
 
 
@@ -305,18 +309,23 @@ orig_head=
 
 mkdir -p $_git/refs/heads
 rsyncerr=
-$fetch -i "$uri/refs/heads/$rembranch" "$_git/refs/heads/$name" || rsyncerr=1
+$fetch -i "$uri/refs/heads/$rembranch" "$_git/refs/heads/.$name-pulling" || rsyncerr=1
 if [ "$rsyncerr" ] && [ "$rembranch" = "master" ]; then
 	rsyncerr=
-	$fetch -s "$uri/HEAD" "$_git/refs/heads/$name" || rsyncerr=1
+	$fetch -s "$uri/HEAD" "$_git/refs/heads/.$name-pulling" || rsyncerr=1
 fi
 [ "$rsyncerr" ] && die "unable to get the head pointer of branch $rembranch"
 
-new_head=$(cat "$_git/refs/heads/$name")
-if [[ ! "$symlinked" && ( "$recovery" || "$orig_head" != "$new_head" ) ]]; then
-	[ -d $_git_objects ] || mkdir -p $_git_objects
-	$pull "$name" "$uri" || die "objects pull failed"
+new_head=$(cat "$_git/refs/heads/.$name-pulling")
+if ! [ "$symlinked" ]; then
+	if [ "$recovery" -o "$orig_head" != "$new_head" ]; then
+		[ -d $_git_objects ] || mkdir -p $_git_objects
+		$pull "$(cat "$_git/refs/heads/.$name-pulling")" "$uri" "$name" || die "objects pull failed"
+	fi
+else
+	cat "$_git/refs/heads/.$name-pulling" > "$_git/refs/heads/$name"
 fi
+rm "$_git/refs/heads/.$name-pulling"
 
 # FIXME: Warn about conflicting tag names?
 # XXX: We now throw stderr to /dev/null since not all repositories
