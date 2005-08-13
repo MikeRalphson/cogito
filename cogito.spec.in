@@ -12,13 +12,10 @@ Prereq: 	sh-utils, diffutils, rsync, rcs, mktemp >= 1.5, git-core >= 0.99.3
 BuildArchitectures:	noarch
 
 %description
-Cogito is a version control system layered on top of the git tree
-history storage system. Note that you can MOSTLY use it in parallel of
-other GIT frontends (e.g. StGIT), as well as the Linus' GIT plumbing and
-core GIT tools - they only need to keep HEAD in place and follow the
-standardized refs/ hierarchy. The exception is that you should stick
-with a single toolkit during a merge and mostly stick with Cogito while
-your tree is in cg-seek'd state.
+Cogito is a version control system layered on top of the git tree history
+storage system. It aims at seamless user interface and ease of use, providing
+generally smoother user experience than the "raw" Core GIT itself and indeed
+many other version control systems.
 
 %prep
 %setup -q
