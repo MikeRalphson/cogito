@@ -4,7 +4,7 @@ CG_SRC=$(filter-out $(CG_IGNORE), $(wildcard ../cg-*))
 MAN1_TXT=$(patsubst ../cg-%,cg-%.txt,$(CG_SRC))
 MAN7_TXT=cogito.txt
 
-DOC_HTML=$(patsubst %.txt,%.html,$(MAN1_TXT) $(MAN7_TXT))
+DOC_HTML=$(patsubst %.txt,%.html,$(MAN1_TXT) $(MAN7_TXT)) introduction.html
 
 DOC_MAN1=$(patsubst %.txt,%.1,$(MAN1_TXT))
 DOC_MAN7=$(patsubst %.txt,%.7,$(MAN7_TXT))
@@ -53,6 +53,9 @@ clean:
 	rm -f *.xml *.html *.1 *.7 cg-*.txt cogito.txt
 
 .PRECIOUS: %.txt
+
+introduction.html: ../README
+	asciidoc -b xhtml11 -d article -f asciidoc.conf -o $@ $<
 
 %.html : %.txt
 	asciidoc -b xhtml11 -d manpage -f asciidoc.conf $<
