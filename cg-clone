@@ -13,6 +13,14 @@
 #
 # OPTIONS
 # -------
+# -l::
+#	Symlink the object database when cloning locally, instead of
+#	hardlinking all the objects. This is suitable for very fast
+#	cloning of arbitrarily big repositories, but might be a trouble
+#	in multi-user environments, and less solid arrangement in case
+#	you do dangerous things with the database. Also, disappeared
+#	or moved origin repository will obviously render this one unusable
+#	as well. The choice is yours.
 # -s::
 #	Clone in the current directory instead of creating a new one.
 #	Specifying both -s and a destination directory makes no sense.
@@ -23,8 +31,11 @@ _git_repo_unneeded=1
 . ${COGITO_LIB}cg-Xlib || exit 1
 
 same_dir=
+symlink=
 while optparse; do
-	if optparse -s; then
+	if optparse -l; then
+		symlink=1
+	elif optparse -s; then
 		same_dir=1
 	else
 		optfail
@@ -47,6 +58,7 @@ fi
 if ! echo "$location" | grep -q ":" ; then
 	location=$(echo "$location" | sed -e "s#^[^/]#$(pwd)\/&#")
 else
+	[ ! "$symlink" ] || die "specifying -l for non-local clone makes no sense"
 	location="$location"
 fi
 
@@ -61,7 +73,14 @@ fi
 
 trap "cd .. && rm -rf $dir; echo; die \"interrupted\"" SIGINT SIGTERM
 
-cg-init -I
+cg-init -I || die "init failed"
+if [ "$symlink" ]; then
+	rmdir $_git/objects/*
+	rmdir $_git/objects
+	src="$location"
+	[ -d "$src/.git" ] && src="$src/.git"
+	ln -s $src/objects $_git/objects
+fi
 cg-branch-add origin "$location"
 cg-pull origin || die "pull failed"
 

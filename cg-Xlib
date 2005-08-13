@@ -218,6 +218,32 @@ update_index()
 	git-update-cache --refresh | sed 's/needs update$/locally modified/'
 }
 
+# Takes two object directories and checks if they are the same (symlinked
+# or so).
+is_same_repo()
+{
+	local dir1="$1" dir2="$2" diff=1
+
+	# Originally, I wanted to compare readlink output, but that fails
+	# in binding setup; it isn't likely the object database directories
+	# themselves would be binded, but some trunk directories might.
+	# So we just create a file inside and see if it appears on the
+	# second side...
+	if [ ! -w "$dir1" -o ! -w "$dir2" ]; then
+		# ...except in readonly setups.
+		[ "$(readlink -f "$dir1")" = "$(readlink -f "$dir2")" ] && diff=0
+	else
+		n=$$
+		while [ -e "$dir1/.,,lnstest-$n" -o -e "$dir2/.,,lnstest-$n" ]; do
+			n=$((n+1))
+		done
+		touch "$dir1/.,,lnstest-$n"
+		[ -e "$dir2/.,,lnstest-$n" ] && diff=0
+		rm "$dir1/.,,lnstest-$n"
+	fi
+	return $diff
+}
+
 
 print_help()
 {

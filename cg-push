@@ -40,5 +40,16 @@ elif echo "$uri" | grep -q "^git+ssh://"; then
 elif echo "$uri" | grep -q ":"; then
 	die "pushing over rsync not supported"
 else
-	git-send-pack "$uri" $rembranch
+	remgit="$uri"; [ -d "$remgit/.git" ] && remgit="$remgit/.git"
+	if is_same_repo "$_git_objects" "$remgit/objects"; then
+		remid="$(cat "$remgit"/refs/heads/$rembranch)" || die "$remgit: no branch $master"
+		if [ "$remid" != "$(git-merge-base "$remid" "$(commit-id)")" ]; then
+			echo "ERROR: Remote '$rembranch' has some changes you don't have in your '$_git_head'" >&2
+			echo "Try to cg-update from it first, then push." >&2
+			exit 1
+		fi
+		commit-id >"$remgit"/refs/heads/$rembranch
+	else
+		git-send-pack "$uri" $rembranch
+	fi
 fi

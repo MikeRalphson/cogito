@@ -285,6 +285,10 @@ else
 	fetch=fetch_local
 	pull=pull_local
 
+	# Perhaps the object database is shared
+	symlinked=
+	is_same_repo "$_git_objects" "$uri/objects" && symlinked=1
+
 	# See if we can hardlink and drop "l" if not.
 	can_hardlink=
 	sample_file=$(find $uri -type f -print | head -n 1)
@@ -309,7 +313,7 @@ fi
 [ "$rsyncerr" ] && die "unable to get the head pointer of branch $rembranch"
 
 new_head=$(cat "$_git/refs/heads/$name")
-if [ "$recovery" ] || [ "$orig_head" != "$new_head" ]; then
+if [[ ! "$symlinked" && ( "$recovery" || "$orig_head" != "$new_head" ) ]]; then
 	[ -d $_git_objects ] || mkdir -p $_git_objects
 	$pull "$name" "$uri" || die "objects pull failed"
 fi
