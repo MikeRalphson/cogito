@@ -67,6 +67,7 @@ install: build
 	$(MAKE) install DESTDIR=$(CURDIR)/debian/cogito prefix=/usr
 	# $(RM) $(DESTDIR)/usr/bin/cg
 	install -m 0644 Documentation/*.html $(DESTDIR)/usr/share/doc/cogito/html
+	install -m 0644 Documentation/cg-*.txt $(DESTDIR)/usr/share/doc/cogito/txt
 	install -m 0644 Documentation/cogito.txt $(DESTDIR)/usr/share/doc/cogito/txt
 	install -m 0644 Documentation/*.1 $(DESTDIR)/usr/share/man/man1
 	install -m 0644 Documentation/*.7 $(DESTDIR)/usr/share/man/man7
