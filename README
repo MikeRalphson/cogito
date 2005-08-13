@@ -24,30 +24,38 @@ Download and unpack the latest version, build with make, put the executables
 somewhere in your `$PATH` (or add your Cogito directory itself to your `$PATH`),
 and you're ready to go!
 
-The following tools are required by Cogito:
+The following tools are vitally required by Cogito to do anything useful:
 
 `-------------------------------`----------------------------------------------
 Tool				Description
 -------------------------------------------------------------------------------
-git-core			Cogito is a frontend for git.
+git-core			Cogito is a frontend for git, no help for that.
 bash				All Cogito executables are scripted in bash.
 sed, grep, textutils, etc.	The basic shell environment.
 diff, patch			The basic utilities for tracking file changes.
-merge				E.g. from the RCS package, for merging.
-wget				For pulling files with the HTTP backend.
 -------------------------------------------------------------------------------
 
-The following tools are optional but strongly recommended:
+The following tools are very recommended for regular Cogito operation:
 
 `-------------------------------`----------------------------------------------
 Tool				Description
 -------------------------------------------------------------------------------
+merge				E.g. from the RCS package, for merging.
+wget				For pulling files with the HTTP backend.
 rsync				For pulling files with the rsync backend.
+ssh				For pulling files with the git+ssh backend.
+-------------------------------------------------------------------------------
+
+The following tools are optional but recommended:
+
+`-------------------------------`----------------------------------------------
+Tool				Description
+-------------------------------------------------------------------------------
 gnu coreutils			The gnu versions of stat, date and cp \
 				are preferred over the BSD variants.
-ssh				For pulling files with the git+ssh backend.
 asciidoc (>= 7.0), xmlto	For building documentation.
 -------------------------------------------------------------------------------
+
 
 Starting a Fresh GIT Repository
 -------------------------------
