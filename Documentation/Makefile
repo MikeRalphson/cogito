@@ -1,4 +1,4 @@
-CG_IGNORE=$(wildcard ../cg-X*)
+CG_IGNORE=$(wildcard ../cg-X* ../cg-*.orig ../cg-*.rej)
 CG_SRC=$(filter-out $(CG_IGNORE), $(wildcard ../cg-*))
 
 MAN1_TXT=$(patsubst ../cg-%,cg-%.txt,$(CG_SRC))
