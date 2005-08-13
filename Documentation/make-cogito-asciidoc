@@ -157,4 +157,8 @@ FILES
 COPYRIGHT
 ---------
 Copyright (C) Petr Baudis, 2005.
+
+SEE ALSO
+--------
+Cogito is based on gitlink:git[7].
 __END__
