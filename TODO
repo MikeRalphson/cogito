@@ -1,0 +1,125 @@
+What comes on my mind but it isn't able to hold it all. Unsorted.
+
+
+Cogito-only stuff:
+
+* Tutorial
+
+* Cogito homepage
+	Reference documentation + Jonas' asciidoc'd README + tutorial
+		= http://git.or.cz/cogito/
+
+* Pushing to remote heads with different name
+	Should be trivial with modern git-send-pack.
+
+* cg-patch dealing with renames and stuff
+
+* Merge Dan Holmsand's cg-diff and cg-log work
+	It's big rewritish diffs, not all changes are good, but most
+	of it is cool stuff and it's a pity it stood unmerged so far.
+
+	Includes merge-order cg-log and cg-diff checking for renames.
+
+* "Volatile" branches
+	Properly follow branches which can rebase (do not do tree
+	merges but "fastforwards").
+
+* Better merging
+	* Handle all possible conflicts
+	* Make sure the user resolved the conflicts
+	  (if possible without requiring him to manually indicate that)
+	* Somehow show the list of commits getting merged
+	* Vim-merging
+
+* Comfortable cg-log
+	Probably make it a real terminal application, not just less
+	backend.
+
+	* Somehow switch between summary and full output
+	* Pickaxe
+	* Possibility to quickly show patches for commits
+
+* cg-switch
+	Full-fledged multibranch support - allow switching between
+	several branches in a single working tree, as well as creating
+	new ones (much alike git checkout -b), possibly based on
+	an arbitrary commit. (You should be also able to clone remote
+	branch at a particular commit.)
+
+* Patch-altering cg-commit
+	You can already alter the list of files to be committed, let's
+	optionally show the patch and let you alter it, too.
+
+* Graphical commit/merge tool
+
+* Email interface
+	At least an addon to cg-mkpatch to generate patch series.
+
+* Revisions numbering
+	An alternative way to identify revisions - by their sequential
+	number from the root, after merge-sorted.
+
+	Needs more thought.
+
+* cg-annotate
+
+
+* Rewrite in some other language
+	csh? Postscript? Befunge?
+
+* World domination
+	Make sure that everyone uses GIT, and in particular that
+	everyone uses Cogito.
+
+
+
+Stuff partially or fully involving Core GIT:
+
+
+Short term:
+
+* Unnamed remote branches
+	Pull from an URI without cg-branch-add'ing it first.
+	See Pasky's mail.
+
+* Tags
+	Clean up, fix and git-core-ize tags pulling; private tags need
+	to be supported first.
+
+* Remotes
+	.git/remotes describing remote repositories, not mere branches.
+	See Junio's mail.
+
+* Common templates
+	The discussion about templates sharing among the toolkits somewhat
+	died out.
+
+* Proper renaming recording
+	Seriously, guys. This needs to be done and I'm only not bringing
+	it up on the mailing list since we have enough other trouble for
+	now.
+
+	My current preferred solution of this is an "edge" object which
+	would describe the edge between two commits; containing only
+	"rename" lines for now. Parent line format would change to
+
+		parent COMMITID [edge:EDGEID]
+
+
+Long term:
+
+* Better than three-way merging
+	Perhaps pcdv merge, let's see how will that turn out.
+
+	Three-way merge silently gets some cases wrong, and an army of
+	experimental VCSes developers is devising better merge algorithms
+	for us. ;-)
+
+	(pcdv merge is actually probably very similar to how the BK merge
+	works.)
+
+* Cherrypicking support
+	At least "partial" cherrypicking support, with changing head IDs.
+	Merge up to the first dropped revision, rebase and merge on...
+
+	Needs more thought.
