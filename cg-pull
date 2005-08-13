@@ -151,7 +151,7 @@ fetch_http()
 
 pull_http()
 {
-	(git-http-pull -a -v -w "$3" $recovery "$1" "$2/" 2>&1 /dev/null) | pull_progress
+	(git-http-pull -a -v -w "heads/$3" $recovery "$1" "$2/" 2>&1 /dev/null) | pull_progress
 	return ${PIPESTATUS[0]}
 }
 
@@ -192,7 +192,7 @@ pull_ssh()
 	# git-ssh-pull would theoretically take git+ssh://-style URL, but
 	# it is buggy and won't process it correctly, so let's just
 	# preprocess it to some easier-to-take form.
-	(git-ssh-pull -a -v -w "$3" $recovery "$1" \
+	(git-ssh-pull -a -v -w "heads/$3" $recovery "$1" \
 		"$(echo "$2" | sed 's#^git+ssh://\([^/]*\)\(/.*\)$#\1:\2#')" \
 		2>&1 /dev/null) | pull_progress
 	return ${PIPESTATUS[0]}
