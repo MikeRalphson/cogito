@@ -12,8 +12,6 @@ Cogito-only stuff:
 * Pushing to remote heads with different name
 	Should be trivial with modern git-send-pack.
 
-* cg-patch dealing with renames and stuff
-
 * Merge Dan Holmsand's cg-diff and cg-log work
 	It's big rewritish diffs, not all changes are good, but most
 	of it is cool stuff and it's a pity it stood unmerged so far.
@@ -46,14 +44,45 @@ Cogito-only stuff:
 	an arbitrary commit. (You should be also able to clone remote
 	branch at a particular commit.)
 
-* Patch-altering cg-commit
-	You can already alter the list of files to be committed, let's
-	optionally show the patch and let you alter it, too.
+* cg-commit enhancements
+	* Patch-altering cg-commit
+		You can already alter the list of files to be committed,
+		let's optionally show the patch and let you alter it, too.
+	* Things coming to git-commit-script:
+		* Possibly verify the patch being committed against
+		  whitespace errors and stuff; hooks are good for this too,
+		  but I think it's good to have internal support for the
+		  basic stuff.
+		* -s,--signoff to automatically append a signoff line of
+		  yours to the patch.
 
 * Graphical commit/merge tool
 
-* Email interface
-	At least an addon to cg-mkpatch to generate patch series.
+* cg-log --short interfacing git-shortlog (but better and more flexible)
+
+* cg-mkpatch overhaul
+	cg-mkpatch was overlooked for too long, while it could do a huge
+	number of cool things (after some cleanups, and probably factoring
+	out the common parts of cg-mkpatch, cg-log and cg-diff):
+	Preparing patch series, frontending git-request-pull-script,
+	interfacing with email directly...
+
+* cg-patch improvements
+	* Again, an email interface - frontend to applymbox and stuff,
+	autocommitting, sucking commit messages from the patch...
+	* Dealing with renames and stuff
+
+* More comfortable history rewriting
+	* Make it possible to do rebase-merge easily, rebasing local
+	  changes against new remote head
+	* Easier recommitting - if I need to uncommit or change some
+	  commit not at the top, let me more easily uncommit, change it
+	  and recommit the rest on the top.
+
+	  This is encouraging history rewriting which is bad as soon
+	  as you publish your changes, but not before; I believe it's
+	  good to offer people ways to keep their history tidy if you
+	  also educate them not to do it after they publish it.
 
 * Subprojects
 	Support a GIT project inside a GIT project:
@@ -82,9 +111,15 @@ Cogito-only stuff:
 * Rewrite in some other language
 	csh? Postscript? Befunge?
 
+* Make Cogito agnostic to the underlying layer
+	Actually, I start to miss Cogito's convenient interface a lot when
+	working with other systems, and my fingers are already trained for
+	the cg-commands. But this is a very long-term goal and will take
+	a good deal of thought and work.
+
 * World domination
-	Make sure that everyone uses GIT, and in particular that
-	everyone uses Cogito.
+	Make sure that as many projects as possible use GIT, and in
+	particular that everyone uses Cogito! ;-)
 
 
 
