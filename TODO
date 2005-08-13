@@ -55,6 +55,21 @@ Cogito-only stuff:
 * Email interface
 	At least an addon to cg-mkpatch to generate patch series.
 
+* Subprojects
+	Support a GIT project inside a GIT project:
+
+		x/.git
+		x/foo/bar/.git
+		x/foo/bar/baz/.git
+		x/quux/zot/.git
+
+	That means cg-update working recursively and cg-add'n'stuff
+	checking if there isn't another .git along the path of its
+	argument.
+
+	Needs more thought, especially wrt. pulling and merging
+	recursive semantics.
+
 * Revisions numbering
 	An alternative way to identify revisions - by their sequential
 	number from the root, after merge-sorted.
@@ -90,9 +105,15 @@ Short term:
 	.git/remotes describing remote repositories, not mere branches.
 	See Junio's mail.
 
+* Empty directories handling
+	Directories should be first-class index objects, not implicit.
+
 * Common templates
 	The discussion about templates sharing among the toolkits somewhat
 	died out.
+
+
+Long term:
 
 * Proper renaming recording
 	Seriously, guys. This needs to be done and I'm only not bringing
@@ -104,9 +125,6 @@ Short term:
 	"rename" lines for now. Parent line format would change to
 
 		parent COMMITID [edge:EDGEID]
-
-
-Long term:
 
 * Better than three-way merging
 	Perhaps pcdv merge, let's see how will that turn out.
