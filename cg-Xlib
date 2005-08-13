@@ -79,6 +79,7 @@ readlink()
 	if [ "$1" = "-f" ]; then
 		shift
 		target="$(maynormpath "$1")"
+		target="${target%/}"
 
 		# -e will test the existence of the final target; therefore,
 		# it will also protect against recursive symlinks and such
