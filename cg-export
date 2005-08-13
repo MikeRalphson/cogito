@@ -16,7 +16,9 @@ _git_requires_root=1
 . ${COGITO_LIB}cg-Xlib || exit 1
 
 dest=$1
-id=$(tree-id "$2")
+# We do not resolve to tree-id since git-tar-tree can utilize some commit
+# information.
+id=$(commit-id "$2" 2>/dev/null) || id="$2"
 
 ([ "$dest" ] && [ "$id" ]) || usage
 
@@ -43,6 +45,7 @@ case $dest in
 	*)
 		mkdir -p $dest || die "cannot create $dest"
 		export GIT_INDEX_FILE="$dest/.git-index"
+		id="$(tree-id "$id")"
 		git-read-tree $id
 		git-checkout-cache "--prefix=$dest/" -a
 		rm $GIT_INDEX_FILE
