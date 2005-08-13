@@ -25,10 +25,11 @@ and you're ready to go!
 
 The following tools are required by Cogito:
 
+	git-core (Cogito is a frontend for git)
 	bash, basic shell environment (sed, grep, textutils, mktemp, ...)
 	diff, patch
 	merge (e.g. from the RCS package)
-	libcurl
+	wget
 
 The following tools are optional but strongly recommended:
 
@@ -231,3 +232,10 @@ cg-update, for example, give this command:
 or, for the same information, try this:
 
 	$ cg-help cg-pull
+
+You can ask thoughtful questions and make suggestions on the GIT mailing list:
+
+	git@vger.kernel.org
+
+or (less preferably) contact the maintainer Petr Baudis <pasky@suse.cz>
+directly.
