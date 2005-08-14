@@ -176,3 +176,38 @@ Long term:
 	Merge up to the first dropped revision, rebase and merge on...
 
 	Needs more thought.
+
+* Revision journal
+	I envision each head having a revision journal - list of all preceding
+	revisions in their merge order.
+
+	There are two motivations. The first is possibility of fast and
+	setupless dumb server transport. But more importantly, git-rev-list
+	does not scale if you want to sort it by anything but date, and you
+	definitively want - I think the date order is confusing and e.g.
+	for cg-mkpatch simply wrong and you really need merge order instead.
+	But that requires to load all the history, then order it, and that
+	means that it takes to crunch through the whole history even when
+	showing the tip of cg-log. And that is not going to scale to
+	thousands of revisions - it already takes 2s (20s for cold cache!)
+	for the current Cogito/git repositories, which is too long for
+	a quick cg-log peek.
+
+	So instead, every time you commit, the new revision is appended
+	to the revision journal of the given head, and when you pull the
+	head, you bring the remote revision journal along. When you merge,
+	all the new revisions are appended between the previous head and
+	the merge head - that gives you the merge order.
+
+	Well, if you want to append to it, you want new revisions at the end.
+	If you want to pull it, you want the new revisions at the start.
+	So I think the journal should look like
+
+		.git/revlist/master/0001
+		.git/revlist/master/0002
+		...
+
+	where each file contains some 1024 revisions or so, with the new
+	ones at the end.
+
+	Needs more thought.
