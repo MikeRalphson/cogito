@@ -19,6 +19,8 @@ _git_requires_root=1
 
 . ${COGITO_LIB}cg-Xlib || exit 1
 
+[ "$1" ] && die "this command takes no parameters; use cg-restore to restore individual files"
+
 if ! [ -s $_git/HEAD ]; then
 	rm -f $_git/HEAD
 	ln -s refs/heads/$_git_head $_git/HEAD
