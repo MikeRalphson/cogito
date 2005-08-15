@@ -58,6 +58,10 @@ Cogito-only stuff:
 
 * Graphical commit/merge tool
 
+* Always do three-way merge
+	Always perform three-way merge instead of applying patches - when
+	fast-forwarding trees, uncommitting, etc.
+
 * cg-log --short interfacing git-shortlog (but better and more flexible)
 
 * cg-mkpatch overhaul
