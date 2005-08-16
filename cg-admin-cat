@@ -27,7 +27,7 @@ USAGE="cg-admin-cat [-r TREE_ID] FILE..."
 
 rev=HEAD
 while optparse; do
-	if optparse -r; then
+	if optparse -r=; then
 		rev="$OPTARG"
 	else
 		optfail
