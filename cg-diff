@@ -167,7 +167,7 @@ fi
 id1=$(tree-id "$id1") || exit 1
 id2=$(tree-id "$id2") || exit 1
 
-[ "$id1" = "$id2" ] && die "trying to diff $id1 against itself"
+[ "$id1" = "$id2" ] && exit 0
 
 cat $filter | xargs git-diff-tree -r -p $id1 $id2 | colorize | pager
 
