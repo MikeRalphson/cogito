@@ -7,8 +7,9 @@
 
 id="$1"
 normid=$(. ${COGITO_LIB}cg-Xnormid "$id") || exit 1
-type=${normid#* }; [ "$type" ] || type=$(git-cat-file -t "$normid")
+type=${normid#* }
 normid=${normid% *}
+[ "$type" ] || type=$(git-cat-file -t "$normid")
 
 if [ "$type" = "commit" ]; then
 	normid=$(git-cat-file commit "$normid" | sed -e 's/tree //;q')
