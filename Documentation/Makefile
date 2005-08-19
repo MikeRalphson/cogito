@@ -52,7 +52,7 @@ install-html: html
 clean:
 	rm -f *.xml *.html *.1 *.7 cg-*.txt cogito.txt
 
-.PRECIOUS: %.txt
+.PRECIOUS: cg-%.txt
 
 introduction.html: ../README
 	asciidoc -b xhtml11 -d article -f asciidoc.conf -o $@ $<
