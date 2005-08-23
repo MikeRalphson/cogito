@@ -67,6 +67,8 @@ pull_progress()
 
 fetch_rsync()
 {
+	[ "$1" = "-b" ] && shift
+
 	redir=
 	if [ "$1" = "-i" ]; then # ignore-errors
 		redir="2>/dev/null"
@@ -108,6 +110,7 @@ pull_rsync()
 
 fetch_http()
 {
+	[ "$1" = "-b" ] && shift
 	[ "$1" = "-i" ] && shift
 	[ "$1" = "-s" ] && shift
 
@@ -158,6 +161,7 @@ pull_http()
 
 fetch_ssh()
 {
+	[ "$1" = "-b" ] && shift
 	[ "$1" = "-i" ] && shift
 	[ "$1" = "-s" ] && shift
 
@@ -205,6 +209,11 @@ fetch_local()
 	[ "$1" = "-s" ] && shift
 
 	cp_flags_l="-vdpR"
+	if [ "$1" = "-b" ]; then
+		cp_flags_l="-vb" # Dereference symlinks
+		shift
+	fi
+
 	if [ "$1" = "-u" ]; then
 		cp_flags_l="$cp_flags_l -fu$can_hardlink"
 		shift
@@ -254,7 +263,7 @@ name=${ARGS[0]}
 [ "$name" ] || die "where to pull from?"
 uri=$(cat "$_git/branches/$name" 2>/dev/null) || die "unknown branch: $name"
 
-rembranch=master
+rembranch=
 if echo "$uri" | grep -q '#'; then
 	rembranch=$(echo $uri | cut -d '#' -f 2)
 	uri=$(echo $uri | cut -d '#' -f 1)
@@ -311,13 +320,13 @@ orig_head=
 
 
 mkdir -p $_git/refs/heads
-rsyncerr=
-$fetch -i "$uri/refs/heads/$rembranch" "$_git/refs/heads/.$name-pulling" || rsyncerr=1
-if [ "$rsyncerr" ] && [ "$rembranch" = "master" ]; then
-	rsyncerr=
-	$fetch -s "$uri/HEAD" "$_git/refs/heads/.$name-pulling" || rsyncerr=1
+if [ "$rembranch" ]; then
+	$fetch -i "$uri/refs/heads/$rembranch" "$_git/refs/heads/.$name-pulling" ||
+		die "unable to get the head pointer of branch $rembranch"
+else
+	$fetch -b -s "$uri/HEAD" "$_git/refs/heads/.$name-pulling" ||
+		die "unable to get the HEAD branch"
 fi
-[ "$rsyncerr" ] && die "unable to get the head pointer of branch $rembranch"
 
 new_head=$(cat "$_git/refs/heads/.$name-pulling")
 if ! [ "$symlinked" ]; then
