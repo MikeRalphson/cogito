@@ -207,7 +207,6 @@ fetch_local()
 	cp_flags_l="-vdpR"
 	if [ "$1" = "-u" ]; then
 		cp_flags_l="$cp_flags_l -fu$can_hardlink"
-		suggest_hardlink=
 		shift
 	fi
 
@@ -293,12 +292,16 @@ else
 	symlinked=
 	is_same_repo "$_git_objects" "$uri/objects" && symlinked=1
 
-	# See if we can hardlink and drop "l" if not.
+	# See if we can hardlink and add "-l" to cp flags.
 	can_hardlink=
 	sample_file=$(find $uri -type f -print | head -n 1)
 	rm -f $_git/.,,lntest
-	ln "$sample_file" "$_git/.,,lntest" 2>/dev/null && can_hardlink=l
-	echo $can_hardlink
+	if cp -fl "$sample_file" "$_git/.,,lntest" 2>/dev/null; then
+		can_hardlink=l
+		echo "Using hard links"
+	else
+		echo "Hard links don't work - using copy"
+	fi
 	rm -f $_git/.,,lntest
 fi
 
