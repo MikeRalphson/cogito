@@ -19,8 +19,11 @@
 #	Use the given key to sign the tag, instead of the default one.
 # -s::
 #	Sign the tag by your private key using GPG.
+# OBJECT_ID::
+#	This is most usually the ID of the commit to tag. Tagging
+#	other objects than commits is possible, but rather "unusual".
 
-USAGE="cg-tag [-s [-d DESCRIPTION] [-k KEYNAME]] TAG_NAME [COMMIT_ID]"
+USAGE="cg-tag [-s [-d DESCRIPTION] [-k KEYNAME]] TAG_NAME [OBJECT_ID]"
 
 . ${COGITO_LIB}cg-Xlib || exit 1
 
@@ -43,7 +46,10 @@ name="${ARGS[0]}"
 id="${ARGS[1]}"
 
 [ "$name" ] || usage
-[ "$id" ] || id=$(commit-id) || exit 1
+
+id=$(. ${COGITO_LIB}cg-Xnormid "$id") || exit 1
+type=${id#* }; [ "$type" ] || type=$(git-cat-file -t "$id")
+id=${id% *}
 
 (echo $name | egrep -qv '[^a-zA-Z0-9_.@!:-]') || \
 	die "name contains invalid characters"
@@ -59,7 +65,7 @@ if [ "$sign" ]; then
 
 	cat <<SIGEND >"$tagdir/tag"
 object $id
-type commit
+type $type
 tag $name
 tagger $(git-var GIT_COMMITTER_IDENT)
 
