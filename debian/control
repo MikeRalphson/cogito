@@ -6,8 +6,8 @@ Build-Depends: debhelper (>= 4.0.0), dpatch, asciidoc, xmlto
 Standards-Version: 3.6.1
 
 Package: cogito
-Architecture: any
-Depends: git-core, ${shlibs:Depends}, patch, diff, rcs
+Architecture: all
+Depends: git-core, patch, diff, rcs
 Recommends: rsync, curl, wget, rsh-client
 Conflicts: cgvg
 Description: version control system
