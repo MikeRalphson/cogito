@@ -48,7 +48,7 @@ build: build-stamp
 build-stamp: configure-stamp 
 	dh_testdir
 	$(MAKE)
-	$(MAKE) -C Documentation html man
+	$(MAKE) -C Documentation all
 	touch build-stamp
 
 clean:

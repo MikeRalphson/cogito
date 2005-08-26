@@ -29,7 +29,7 @@ INSTALL=install
 # yourself - yes, all 6 characters of it!
 #
 
-all: html man
+all: html man txt
 
 html: $(DOC_HTML)
 
@@ -37,6 +37,8 @@ html: $(DOC_HTML)
 man: man1 man7
 man1: $(DOC_MAN1)
 man7: $(DOC_MAN7)
+
+txt: $(MAN1_TXT) $(MAN7_TXT)
 
 install: man
 	$(INSTALL) -m755 -d $(DESTDIR)/$(txtdir)
