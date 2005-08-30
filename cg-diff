@@ -159,7 +159,12 @@ if [ "$id2" = " " ]; then
 	# FIXME: Update ret based on what did we match. And take "$@"
 	# to account after all.
 	ret=
-	cat $filter | path_xargs git-diff-index -r -p $tree | colorize | pager
+	# xargs on FreeBSD is hardcoded to --no-run-if-empty :/
+	if [ -s "$filter" ]; then
+		cat $filter | path_xargs git-diff-index -r -p $tree | colorize | pager
+	else
+		git-diff-index -r -p $tree | colorize | pager
+	fi
 
 	rm $filter
 
@@ -173,7 +178,12 @@ id2=$(cg-object-id -t "$id2") || exit 1
 
 [ "$id1" = "$id2" ] && exit 0
 
-cat $filter | path_xargs git-diff-tree -r -p $id1 $id2 | colorize | pager
+# xargs on FreeBSD is hardcoded to --no-run-if-empty :/
+if [ -s "$filter" ]; then
+	cat $filter | path_xargs git-diff-tree -r -p $id1 $id2 | colorize | pager
+else
+	git-diff-tree -r -p $id1 $id2 | colorize | pager
+fi
 
 rm $filter
 exit 0
