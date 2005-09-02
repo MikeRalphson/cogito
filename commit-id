@@ -5,8 +5,6 @@
 #
 # Takes the appropriate ID, defaults to HEAD.
 
-. ${COGITO_LIB}cg-Xlib
-
 id="$1"
 normid=$(. ${COGITO_LIB}cg-Xnormid "$id") || exit 1
 type=${normid#* }
