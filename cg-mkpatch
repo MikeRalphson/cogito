@@ -17,8 +17,8 @@
 # -f FORMAT::
 #	Format string used for generating the patch filename when
 #	outputting the splitted-out patches (that is, passed the -d
-#	option). This is by default "%s/%03d.patch". The first %s
-#	represents the directory name and %03d represents the patch
+#	option). This is by default "%s/%02d.patch". The first %s
+#	represents the directory name and %d represents the patch
 #	sequence number.
 #
 # -m::
@@ -96,7 +96,7 @@ log_start=
 log_end=
 mergebase=
 outdir=
-fileformat="%s/%03d.patch"
+fileformat="%s/%02d.patch"
 while optparse; do
 	if optparse -s; then
 		omit_header=1
