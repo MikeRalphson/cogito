@@ -14,6 +14,13 @@
 #	when generating patch series, that is when you use the -r
 #	argument.
 #
+# -f FORMAT::
+#	Format string used for generating the patch filename when
+#	outputting the splitted-out patches (that is, passed the -d
+#	option). This is by default "%s/%03d.patch". The first %s
+#	represents the directory name and %03d represents the patch
+#	sequence number.
+#
 # -m::
 #	Base the patches at the merge base of the -r arguments
 #	(defaulting to HEAD and origin).
@@ -89,6 +96,7 @@ log_start=
 log_end=
 mergebase=
 outdir=
+fileformat="%s/%03d.patch"
 while optparse; do
 	if optparse -s; then
 		omit_header=1
@@ -110,6 +118,8 @@ while optparse; do
 		mergebase=1
 	elif optparse -d=; then
 		outdir="$OPTARG"
+	elif optparse -f; then
+		fileformat="$OPTARG"
 	else
 		optfail
 	fi
@@ -134,7 +144,7 @@ if [ "$log_end" ]; then
 
 	git-rev-list --merge-order $id2 ^$id1 | tac | while read id; do
 		if [ "$outdir" ]; then
-			filename="$(printf "%s/%03d.patch" "$outdir" "$pnum")"
+			filename="$(printf "$fileformat" "$outdir" "$pnum")"
 			echo "$filename"
 			showpatch $id >"$filename"
 			pnum=$((pnum+1))
