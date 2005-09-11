@@ -17,9 +17,10 @@
 # -f FORMAT::
 #	Format string used for generating the patch filename when
 #	outputting the splitted-out patches (that is, passed the -d
-#	option). This is by default "%s/%02d.patch". The first %s
+#	option). This is by default "%s/%02d-%s.patch". The first %s
 #	represents the directory name and %d represents the patch
-#	sequence number.
+#	sequence number. The last %s is mangled first line of the
+#	commit message - kind of patch title.
 #
 # -m::
 #	Base the patches at the merge base of the -r arguments
@@ -96,7 +97,7 @@ log_start=
 log_end=
 mergebase=
 outdir=
-fileformat="%s/%02d.patch"
+fileformat="%s/%02d-%s.patch"
 while optparse; do
 	if optparse -s; then
 		omit_header=1
@@ -144,7 +145,16 @@ if [ "$log_end" ]; then
 
 	git-rev-list --merge-order $id2 ^$id1 | tac | while read id; do
 		if [ "$outdir" ]; then
-			filename="$(printf "$fileformat" "$outdir" "$pnum")"
+			title="$(git-cat-file commit "$id" |
+			         sed -n '/^$/{n;
+				              s/^[ \t]*\[[^]]*\][ \t]*//;
+				              s/[:., \t][:., \t]*/-/g;
+					      s/_/-/g;
+					      # *cough*
+					      y/ABCDEFGHIJKLMNOPQRSTUVWXYZ/abcdefghijklmnopqrstuvwxyz/;
+					      s/[^a-zA-Z0-9-]//g;
+				              p;q;}')"
+			filename="$(printf "$fileformat" "$outdir" "$pnum" "$title")"
 			echo "$filename"
 			showpatch $id >"$filename"
 			pnum=$((pnum+1))
