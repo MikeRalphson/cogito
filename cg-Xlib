@@ -177,6 +177,8 @@ tree_timewarp()
 	local base=$1; shift
 	local branch=$1; shift
 
+	[ -s "$_git/merging" ] && die "merge in progress - cancel it by cg-reset first"
+
 	local patchfile=$(mktemp -t gituncommit.XXXXXX)
 	if [ "$rollback" ]; then
 		cg-diff >$patchfile
