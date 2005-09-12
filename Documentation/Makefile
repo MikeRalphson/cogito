@@ -38,9 +38,11 @@ man: man1 man7
 man1: $(DOC_MAN1)
 man7: $(DOC_MAN7)
 
-txt: $(MAN1_TXT) $(MAN7_TXT)
+txt: txt1 txt7
+txt1: $(MAN1_TXT)
+txt7: $(MAN7_TXT)
 
-install: man
+install: man txt
 	$(INSTALL) -m755 -d $(DESTDIR)/$(txtdir)
 	$(INSTALL) $(MAN1_TXT) $(MAN7_TXT) $(DESTDIR)/$(txtdir)
 	$(INSTALL) -m755 -d $(DESTDIR)/$(man1) $(DESTDIR)/$(man7)
