@@ -205,14 +205,14 @@ pull_ssh()
 
 fetch_local()
 {
-	[ "$1" = "-i" ] && shift
-	[ "$1" = "-s" ] && shift
-
 	cp_flags_l="-vdpR"
 	if [ "$1" = "-b" ]; then
 		cp_flags_l="-vb" # Dereference symlinks
 		shift
 	fi
+
+	[ "$1" = "-i" ] && shift
+	[ "$1" = "-s" ] && shift
 
 	if [ "$1" = "-u" ]; then
 		cp_flags_l="$cp_flags_l -fu$can_hardlink"
