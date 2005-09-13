@@ -53,6 +53,18 @@ clean_dirs()
 	git-ls-files --cached |
 		sed -n 's|^'"$_git_relpath"'||p' |
 		sed -n 's|/[^/]*$||p' |
+		while IFS='/' read -a dir; do
+			i=0
+			while test $i != ${#dir[@]}; do
+				j=0
+				while test $i != $j; do
+					echo -n ${dir[$j]}/
+					j=$[$j+1]
+				done
+				echo ${dir[$i]}
+				i=$[$i+1]
+			done
+		done |
 		sort -u >"$dirlist"
 
 	save_IFS="$IFS"
