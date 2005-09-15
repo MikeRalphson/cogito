@@ -50,8 +50,8 @@ else
 		fi
 
 		[ -x "$remgit/hooks/update" ] && "$remgit/hooks/update" "$rembranch" "$remid" "$(commit-id)"
-
 		commit-id >"$remgit"/refs/heads/$rembranch
+		[ -x "$remgit/hooks/post-update" ] && "$remgit/hooks/post-update" "$rembranch"
 	else
 		git-send-pack "$uri" $rembranch
 	fi
