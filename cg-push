@@ -48,6 +48,9 @@ else
 			echo "Try to cg-update from it first, then push." >&2
 			exit 1
 		fi
+
+		[ -x "$remgit/hooks/update" ] && "$remgit/hooks/update" "$rembranch" "$remid" "$(commit-id)"
+
 		commit-id >"$remgit"/refs/heads/$rembranch
 	else
 		git-send-pack "$uri" $rembranch
