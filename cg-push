@@ -27,8 +27,10 @@ name=${ARGS[0]}
 uri=$(cat "$_git/branches/$name" 2>/dev/null) || die "unknown branch: $name"
 
 rembranch=master
+sprembranch=
 if echo "$uri" | grep -q '#'; then
 	rembranch=$(echo $uri | cut -d '#' -f 2)
+	sprembranch=":$rembranch"
 	uri=$(echo $uri | cut -d '#' -f 1)
 	die "pushing to a different head not supported yet"
 fi
@@ -36,7 +38,7 @@ fi
 if echo "$uri" | grep -q "^http://"; then
 	die "pushing over HTTP not supported yet"
 elif echo "$uri" | grep -q "^git+ssh://"; then
-	git-send-pack "$(echo "$uri" | sed 's#^git+ssh://\([^/]*\)\(/.*\)$#\1:\2#')" $rembranch
+	git-send-pack "$(echo "$uri" | sed 's#^git+ssh://\([^/]*\)\(/.*\)$#\1:\2#')" $_git_head$sprembranch
 elif echo "$uri" | grep -q ":"; then
 	die "pushing over rsync not supported"
 else
@@ -53,6 +55,6 @@ else
 		commit-id >"$remgit"/refs/heads/$rembranch
 		[ -x "$remgit/hooks/post-update" ] && "$remgit/hooks/post-update" "$rembranch"
 	else
-		git-send-pack "$uri" $rembranch
+		git-send-pack "$uri" $_git_head$sprembranch
 	fi
 fi
