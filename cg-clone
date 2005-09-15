@@ -52,7 +52,7 @@ if [ "$destdir" ]; then
 	[ ! "$same_dir" ] || die "specifying both -s and DESTDIR makes no sense"
 	dir=$destdir
 else
-	dir=${location%/.git}; dir=${dir##*/} dir=${dir%.git}
+	dir=${location%#*}; dir=${location%/.git}; dir=${dir##*/} dir=${dir%.git}
 fi
 
 if ! echo "$location" | grep -q ":" ; then
