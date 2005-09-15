@@ -32,7 +32,6 @@ if echo "$uri" | grep -q '#'; then
 	rembranch=$(echo $uri | cut -d '#' -f 2)
 	sprembranch=":$rembranch"
 	uri=$(echo $uri | cut -d '#' -f 1)
-	die "pushing to a different head not supported yet"
 fi
 
 if echo "$uri" | grep -q "^http://"; then
