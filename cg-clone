@@ -21,6 +21,8 @@
 #	you do dangerous things with the database. Also, disappeared
 #	or moved origin repository will obviously render this one unusable
 #	as well. The choice is yours.
+#	Note that you MUST NOT prune repository containing a symlink
+#	or being symlinked to.
 # -s::
 #	Clone in the current directory instead of creating a new one.
 #	Specifying both -s and a destination directory makes no sense.
