@@ -23,6 +23,18 @@
 #
 # If it does not work, try to disable $xml_rpc in the configuration section
 # below.
+#
+#
+# Note that you can (and it might be actually more desirable) also use this
+# script as the GIT update hook:
+#
+#	refname=${1#refs/heads/}
+#	[ "$refname" = "master" ] && refname=
+#	oldhead=$2
+#	newhead=$3
+#	for merged in $(git-rev-list $newhead ^$oldhead | tac); do
+#		/path/to/ciabot.pl $merged $refname
+#	done
 
 use strict;
 use vars qw ($project $from_email $dest_email $noisy $rpc_uri $sendmail
