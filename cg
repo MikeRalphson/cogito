@@ -3,6 +3,7 @@
 [ x"$1" = "x" ] && exec cg-help
 cmd="$1"; shift
 ( [ x"$cmd" = x"--help" ] ) && exec cg-help
+( [ x"$cmd" = x"--version" ] ) && exec cg-version
 
 exe="cg-$cmd"
 exec $exe "$@"
