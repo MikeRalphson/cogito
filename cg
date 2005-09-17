@@ -1,7 +1,8 @@
 #!/bin/sh
 
+[ x"$1" = "x" ] && exec cg-help
 cmd="$1"; shift
-( [ x"$cmd" = x"--help" ] || [ x"$cmd" = x ] ) && exec cg-help
+( [ x"$cmd" = x"--help" ] ) && exec cg-help
 
 exe="cg-$cmd"
 exec $exe "$@"
