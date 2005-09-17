@@ -150,6 +150,12 @@ maynormpath()
 	esac
 }
 
+# xargs with one path argument per line
+path_xargs()
+{
+	normpath | tr '\n' '\0' | xargs -0 "$@"
+}
+
 showdate()
 {
 	local secs=$1 tzhours=${2:0:3} tzmins=${2:0:1}${2:3} format="$3"

@@ -43,6 +43,6 @@ TMPFILE=$(mktemp -t gitadd.XXXXXX) || exit 1
 }
 
 cat $TMPFILE | sed 's/^/Adding file /'
-cat $TMPFILE | sed "s|^|$_git_relpath|" | normpath | tr '\n' '\0' | xargs -0 git-update-cache --add ${infoonly} --
+cat $TMPFILE | sed "s|^|$_git_relpath|" | path_xargs git-update-cache --add ${infoonly} --
 
 rm $TMPFILE

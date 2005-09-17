@@ -32,6 +32,6 @@ done
 
 cat $TMPFILE | sed 's/^/Removing file /'
 [ "$no_delete" ] || ( cd ${_git_relpath:-.} && rm -f "$@" )
-cat $TMPFILE | normpath | tr '\n' '\0' | xargs -0 git-update-cache --force-remove --
+cat $TMPFILE | path_xargs git-update-cache --force-remove --
 
 rm $TMPFILE
