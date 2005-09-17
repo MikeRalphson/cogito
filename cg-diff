@@ -155,7 +155,7 @@ if [ "$id2" = " " ]; then
 	# FIXME: Update ret based on what did we match. And take "$@"
 	# to account after all.
 	ret=
-	cat $filter | xargs git-diff-cache -r -p $tree | colorize | pager
+	cat $filter | path_xargs git-diff-cache -r -p $tree | colorize | pager
 
 	rm $filter
 
@@ -169,7 +169,7 @@ id2=$(tree-id "$id2") || exit 1
 
 [ "$id1" = "$id2" ] && exit 0
 
-cat $filter | xargs git-diff-tree -r -p $id1 $id2 | colorize | pager
+cat $filter | path_xargs git-diff-tree -r -p $id1 $id2 | colorize | pager
 
 rm $filter
 exit 0

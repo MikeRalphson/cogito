@@ -152,7 +152,7 @@ if [ "$ARGS" -o "$_git_relpath" ]; then
 		echo "${_git_relpath}$file" >>$filter
 	done
 
-	eval commitfiles=($(cat $filter | xargs git-diff-cache -r -m HEAD -- | \
+	eval commitfiles=($(cat $filter | path_xargs git-diff-cache -r -m HEAD -- | \
 		sed 's/^\([^	]*\)\(.	.*\)\(	.*\)*$/"\2"/'))
 	customfiles=1
 
