@@ -137,7 +137,7 @@ if ! git-merge-cache -o -q ${COGITO_LIB}cg-Xmergefile -a || [ "$careful" ]; then
 		stage1hash=
 		stage1name=
 		stage2seen=
-		while read mode sha1 stage filename; do
+		while read -r mode sha1 stage filename; do
 			case $stage in
 			1)
 				stage1mode="$mode"

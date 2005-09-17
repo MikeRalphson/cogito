@@ -27,7 +27,7 @@ pull_progress()
 	last_objects=0
 	size=0
 
-	while read line; do
+	while read -r line; do
 		object=
 
 		case "$line" in

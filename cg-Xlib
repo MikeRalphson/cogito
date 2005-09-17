@@ -110,7 +110,7 @@ readlink()
 normpath()
 {
 local inp
-while IFS= read inp; do
+while IFS= read -r inp; do
 	local path path2
 	path=()
 	path2=()

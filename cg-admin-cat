@@ -39,7 +39,7 @@ done
 id=$(tree-id "$rev") || exit 1
 
 git-ls-tree "$id" "${ARGS[@]}" |
-	while read mode type sha name
+	while read -r mode type sha name
 	do
 		case "$type" in
 		blob)

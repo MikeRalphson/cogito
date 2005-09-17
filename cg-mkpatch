@@ -61,7 +61,7 @@ showpatch()
 	patch=$(mktemp -t gitpatch.XXXXXX)
 	id=$1
 	cg-diff -p -r $id >$patch
-	git-cat-file commit $id | while read key rest; do
+	git-cat-file commit $id | while read -r key rest; do
 		case "$key" in
 		"author"|"committer")
 			date=(${rest#*> })
