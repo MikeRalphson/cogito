@@ -8,11 +8,12 @@
 #
 # The command will fail if one of the given files does not exist.
 #
-# Note that directories never have to be added to the repository and any
-# attempt in doing so will cause the command to fail. The reason for this
-# is that 'Cogito' manages content and empty directories have no content.
-# Instead, directories are added automatically when adding files inside
-# them.
+# Note that directories never have to be added to the repository, and are
+# not tracked on their own. That means, you cannot currently add an empty
+# directory to 'Cogito'. The reason for this is that 'Cogito' manages
+# content and empty directories have no content. Directories are added
+# automatically when adding files inside them, or you can add all files in
+# a directory using cg-add -r.
 #
 # OPTIONS
 # -------
@@ -20,15 +21,24 @@
 #	Only update the cache: do not copy the data into the object database.
 #	This is for special purposes when you might not actually _have_ any
 #	object database. This option is normally not interesting.
+# -r::
+#	If you pass cg-add this flag and any directory names, it will try
+#	to add files in those directories recursively (with regard to your
+#	ignore rules - see cg-status documentation for more detailed
+#	description of those). See also above for more notes about cg-add
+#	vs. directories.
 
-USAGE="cg-add [-N] FILE..."
+USAGE="cg-add [-N] [-r] FILE..."
 
 . ${COGITO_LIB}cg-Xlib || exit 1
 
 infoonly=
+recursive=
 while optparse; do
 	if optparse -N; then
 		infoonly=--info-only
+	elif optparse -r; then
+		recursive=1
 	else
 		optfail
 	fi
@@ -39,10 +49,16 @@ done
 TMPFILE=$(mktemp -t gitadd.XXXXXX) || exit 1
 error=
 for file in "${ARGS[@]}"; do
-	if [ -d "$file" ]; then
-		echo "$file is a directory" >&2
-		error=1
-	elif [ ! -f "$file" ]; then
+	absfile="$_git_relpath$file"
+	if [ -d "$absfile" ]; then
+		if [ "$recursive" ]; then
+			list_untracked_files exclude | tr '\0' '\n' |
+				sed -n "s|^$absfile|$file|p" >>$TMPFILE
+		else
+			echo "$file is a directory (use cg-add -r?)" >&2
+			error=1
+		fi
+	elif [ ! -f "$absfile" ]; then
 		echo "$file does not exist or is not a regular file" >&2
 		error=1
 	else
