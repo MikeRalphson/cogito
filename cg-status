@@ -127,7 +127,7 @@ fi
 if [ "$workstatus" ]; then
 	git-update-cache --refresh > /dev/null
 
-	list_untracked_files $exclude |
+	list_untracked_files $exclude | tr '\0' '\n' |
 		{ if [ "$_git_relpath" ]; then sed -n "s|^$_git_relpath||p"; else cat; fi } |
 		sed 's,^,? ,'
 
