@@ -37,10 +37,22 @@ done
 [ "$ARGS" ] || usage
 
 TMPFILE=$(mktemp -t gitadd.XXXXXX) || exit 1
-( cd ${_git_relpath:-.} && find "${ARGS[@]}" -type f -print ) > $TMPFILE || {
-	die "not all files exist, nothing added"
+error=
+for file in "${ARGS[@]}"; do
+	if [ -d "$file" ]; then
+		echo "$file is a directory" >&2
+		error=1
+	elif [ ! -f "$file" ]; then
+		echo "$file does not exist or is not a regular file" >&2
+		error=1
+	else
+		echo "$file" >>$TMPFILE
+	fi
+done
+if [ "$error" ]; then
 	rm $TMPFILE
-}
+	die "not all files could be added, thus nothing will be added"
+fi
 
 cat $TMPFILE | sed 's/^/Adding file /'
 cat $TMPFILE | sed "s|^|$_git_relpath|" | path_xargs git-update-cache --add ${infoonly} --
