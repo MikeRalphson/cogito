@@ -56,14 +56,14 @@ USAGE="cg-status [-g] [-w] [-x]"
 
 gitstatus=
 workstatus=
-noexclude=
+exclude=yes
 while optparse; do
 	if optparse -g; then
 		gitstatus=1
 	elif optparse -w; then
 		workstatus=1
 	elif optparse -x; then
-		noexclude=1
+		exclude=no
 	else
 		optfail
 	fi
@@ -125,28 +125,9 @@ fi
 
 
 if [ "$workstatus" ]; then
-	EXCLUDE=
-	if ! [ "$noexclude" ]; then
-		for excl in '*.[ao]' '.*' tags '*~' '#*' ',,merge*'; do
-			EXCLUDE="$EXCLUDE --exclude=$excl"
-		done
-		EXCLUDEFILE=$_git/info/exclude
-		if [ -f $EXCLUDEFILE ]; then
-			EXCLUDE="$EXCLUDE --exclude-from=$EXCLUDEFILE"
-		fi
-		# This is just for compatibility (2005-09-16).
-		# To be removed later.
-		EXCLUDEFILE=$_git/exclude
-		if [ -f $EXCLUDEFILE ]; then
-			echo Warning: .git/exclude is obsolete, use .git/info/exclude instead. >&2
-			EXCLUDE="$EXCLUDE --exclude-from=$EXCLUDEFILE"
-		fi
-		EXCLUDE="$EXCLUDE --exclude-per-directory=.gitignore"
-	fi
-
 	git-update-cache --refresh > /dev/null
 
-	git-ls-files --others $EXCLUDE |
+	list_untracked_files $exclude |
 		{ if [ "$_git_relpath" ]; then sed -n "s|^$_git_relpath||p"; else cat; fi } |
 		sed 's,^,? ,'
 
