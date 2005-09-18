@@ -28,7 +28,7 @@
 # `git+ssh://host/path/repo.git` and you are interested in its 'testing'
 # branch, you can e.g.:
 #
-#	$ cg-branch-add repo-testing git+ssh://host/path/repo.git#testing
+#	$ cg-branch-add repo-testing 'git+ssh://host/path/repo.git#testing'
 #
 # and refer to it as 'repo-testing' anytime later.
 
