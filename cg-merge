@@ -58,7 +58,7 @@ posthook()
 }
 
 
-head=$(commit-id) || exit 1
+head=$(cg-commit-id) || exit 1
 
 
 careful=
@@ -67,7 +67,7 @@ while optparse; do
 	if optparse -c; then
 		careful=1
 	elif optparse -b=; then
-		base=$(commit-id "$OPTARG") || exit 1
+		base=$(cg-commit-id "$OPTARG") || exit 1
 	else
 		optfail
 	fi
@@ -76,7 +76,7 @@ done
 branchname="${ARGS[0]}"
 [ "$branchname" ] || { [ -s $_git/refs/heads/origin ] && branchname=origin; }
 [ "$branchname" ] || die "what to merge?"
-branch=$(commit-id "$branchname") || exit 1
+branch=$(cg-commit-id "$branchname") || exit 1
 
 [ "$base" ] || base=$(git-merge-base "$head" "$branch")
 [ "$base" ] || die "unable to automatically determine merge base"
@@ -117,7 +117,7 @@ echo -e "\tto $head..." >&2
 
 prehook tree
 
-if ! git-read-tree -u -m $(tree-id $base) $(tree-id $head) $(tree-id $branch); then
+if ! git-read-tree -u -m $(cg-tree-id $base) $(cg-tree-id $head) $(cg-tree-id $branch); then
 	echo "cg-merge: git-read-tree failed (merge likely blocked by local changes)" >&2
 	posthook tree localchanges
 	exit 1

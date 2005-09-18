@@ -12,7 +12,7 @@ INSTALL?=install
 
 
 
-SCRIPT=	commit-id tree-id parent-id cg-add cg-admin-lsobj cg-admin-uncommit \
+SCRIPT=	cg-commit-id cg-tree-id cg-parent-id cg-add cg-admin-lsobj cg-admin-uncommit \
 	cg-branch-add cg-branch-ls cg-reset cg-clone cg-commit cg-diff \
 	cg-export cg-help cg-init cg-log cg-merge cg-mkpatch cg-patch \
 	cg-pull cg-restore cg-rm cg-seek cg-status cg-tag cg-tag-ls cg-update \
@@ -78,8 +78,13 @@ install: install-cogito
 install-cogito: $(SCRIPT) $(LIB_SCRIPT) $(GEN_SCRIPT)
 	$(INSTALL) -m755 -d $(DESTDIR)$(bindir)
 	$(INSTALL) $(SCRIPT) $(GEN_SCRIPT) $(DESTDIR)$(bindir)
-	rm -f $(DESTDIR)$(bindir)/cg-cancel
-	ln -s cg-reset $(DESTDIR)$(bindir)/cg-cancel
+	for i in 'cg-cancel:cg-reset' 'commit-id:cg-commit-id' \
+		'tree-id:cg-tree-id' 'parent-id:cg-parent-id'; do \
+		old=`echo $$i | cut -d : -f 1`; \
+		new=`echo $$i | cut -d : -f 2`; \
+		rm -f $(DESTDIR)$(bindir)/$$old; \
+		ln -s $$new $(DESTDIR)$(bindir)/$$old; \
+	done
 	$(INSTALL) -m755 -d $(DESTDIR)$(libdir)
 	$(INSTALL) $(LIB_SCRIPT) $(DESTDIR)$(libdir)
 	cd $(DESTDIR)$(bindir); \

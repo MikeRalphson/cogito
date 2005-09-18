@@ -376,9 +376,9 @@ if [ ! "$orig_head" ]; then
 elif [ "$orig_head" != "$new_head" ]; then
 	echo "Tree change: $orig_head:$new_head"
 	if [ "$verbose" ] ; then
-		git-diff-tree -r $(tree-id $orig_head) $(tree-id $new_head)
+		git-diff-tree -r $(cg-tree-id $orig_head) $(cg-tree-id $new_head)
 	else
-		git-diff-tree -r $(tree-id $orig_head) $(tree-id $new_head) | awk '{ print $5" "$6 }'
+		git-diff-tree -r $(cg-tree-id $orig_head) $(cg-tree-id $new_head) | awk '{ print $5" "$6 }'
 	fi
 else
 	echo "Up to date."

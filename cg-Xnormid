@@ -17,8 +17,8 @@
 id="$1"
 
 if [ "${id:(-1):1}" = "^" ]; then
-	# parent-id
-	id=$(commit-id "${id%^}") || exit 1
+	# cg-parent-id
+	id=$(cg-commit-id "${id%^}") || exit 1
 	git-cat-file commit "$id" | awk '/^parent/{print $2," "};/^$/{exit}' || exit 1
 	exit
 fi

@@ -7,7 +7,7 @@
 # After you add a branch, you can `cg-pull` it whenever you want and
 # it will keep your objects database in sync with it. Its latest
 # commit is accessible as `.git/refs/heads/branchname` (or - more
-# conveniently - as `$(commit-id branchname)`). For example, to make a
+# conveniently - as `$(cg-commit-id branchname)`). For example, to make a
 # diff between Linus (after you added him) and your current tree, do:
 #
 #	$ cg-pull linus

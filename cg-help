@@ -103,7 +103,7 @@ These expressions can be used interchangably as "ID"s:
 	tag name (as registered with cg-tag)
 	date string (as recognized by the date tool)
 	shortcut hash (shorted unambiguous hash lead)
-	commit object hash (as returned by commit-id)
+	commit object hash (as returned by cg-commit-id)
 	tree object hash (accepted only by some commands)
 
 For details on individual commands, do e.g.:

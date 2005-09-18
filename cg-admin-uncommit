@@ -45,13 +45,13 @@ while optparse; do
 done
 
 
-base=$(commit-id) || exit 1
+base=$(cg-commit-id) || exit 1
 
-commit=$(commit-id "$1") || exit 1
+commit=$(cg-commit-id "$1") || exit 1
 git-rev-list $base | grep -q $commit || \
 	die "$commit: not an ancestor of HEAD"
 
-parent=$(parent-id "$commit") || exit 1
+parent=$(cg-parent-id "$commit") || exit 1
 [ "$parent" ] || die "cannot rewind behind the initial commit"
 
 
