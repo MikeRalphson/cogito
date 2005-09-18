@@ -8,6 +8,13 @@
 #
 # OPTIONS
 # -------
+# -e EXCLUDEPATTERN::
+#	Ignore files matching this pattern when importing files for the
+#	initial commit. Note that if you are importing any .gitignore
+#	files, they will be considered as well. If you want to make
+#	en even more custom choice of files to be imported, use the -I
+#	parameter and add and perform the initial commit manually.
+#
 # -I::
 #	Do not perform the initial commit.
 #
@@ -16,15 +23,18 @@
 #	This is for special purposes when you might not actually _have_ any
 #	object database. This option is normally not interesting.
 
-USAGE="cg-init [-I] [-N]"
+USAGE="cg-init [-I] [-N] [-e EXCLUDEPATTERN]..."
 _git_repo_unneeded=1
 
 . ${COGITO_LIB}cg-Xlib || exit 1
 
+excludes=()
 no_initial_commit=
 infoonly=
 while optparse; do
-	if optparse -I; then
+	if optparse -e=; then
+		excludes[${#excludes[@]}]="$OPTARG"
+	elif optparse -I; then
 		no_initial_commit=1
 	elif optparse -N; then
 		infoonly=-N
@@ -42,7 +52,7 @@ touch $_git/refs/heads/master
 
 git-read-tree # Seed the dircache
 if ! [ "$no_initial_commit" ]; then
-	[ "$(ls)" ] && find * \( -type f -o -type l \) -print0 | xargs -0 cg-add ${infoonly}
+	[ "$(ls)" ] && list_untracked_files exclude "${excludes[@]}" | xargs -0 cg-add ${infoonly}
 	cg-commit -C -m"Initial commit" -E ${infoonly}
 fi
 
