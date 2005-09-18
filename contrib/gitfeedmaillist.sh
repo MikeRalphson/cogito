@@ -113,12 +113,12 @@ EOF
 	done
 }
 
-base=$(commit-id $1)
+base=$(cg-commit-id $1)
 
 if [ -z $2 ]; then
     lastmail=`cat .git/tags/MailDone`
 else
-    lastmail=$(commit-id $2)
+    lastmail=$(cg-commit-id $2)
 fi
 
 #if [ -z $3 ]; then
@@ -128,7 +128,7 @@ fi
 #    release=$(gitXnormid.sh -c $3)
 #fi    
 
-base=$(commit-id $1) || exit 1
+base=$(cg-commit-id $1) || exit 1
 
 
 if [ "$base" != "$lastmail" ]; then

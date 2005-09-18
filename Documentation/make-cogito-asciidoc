@@ -125,8 +125,8 @@ COMMIT_ID, FROM_ID, TO_ID, BASE_COMMIT::
 	- tag name (as registered with $(man 1 cg-tag))
 	- date string (as recognized by the 'date' tool)
 	- shortcut object hash (shorted unambiguous hash lead)
-	- commit object hash (as returned by 'commit-id')
-	- tree object hash (as returned by 'tree-id')
+	- commit object hash (as returned by 'cg-commit-id')
+	- tree object hash (as returned by 'cg-tree-id')
 
 TAG_NAME::
 	Indicates a free form tag name.
