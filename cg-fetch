@@ -13,7 +13,9 @@
 #
 # Before the first fetch, you have to tell Cogito about the remote branch.
 # This should be done by the `cg-branch-add` command. See its documentation
-# for the list of supported fetching protocols and other details.
+# for the list of supported fetching protocols and other details. Note that
+# one exception to this is the 'origin' branch, which was set to the location
+# of the source repository if you created yours using the `cg-clone` command.
 #
 # Note that the operation now being performed by `cg-fetch` ('fetching')
 # was called 'pulling' in the past. However, GIT recently changed this
