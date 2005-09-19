@@ -3,7 +3,8 @@
 # Merge a branch to the current tree.
 # Copyright (c) Petr Baudis, 2005
 #
-# Takes a parameter identifying the branch to be merged.
+# Takes a parameter identifying the branch to be merged, defaulting
+# to 'origin'.
 #
 # You have to examine the tree after the merge and then do `cg-commit`.
 #
@@ -37,7 +38,7 @@
 #	STATUS is always "ok", while for "tree" the STATUS can be
 #	"localchanges", "conflicts", "nocommit", or "ok".
 
-USAGE="cg-merge [-c] [-b BASE_COMMIT] BRANCH_NAME"
+USAGE="cg-merge [-c] [-b BASE_COMMIT] [BRANCH_NAME]"
 _git_requires_root=1
 
 . ${COGITO_LIB}cg-Xlib || exit 1
