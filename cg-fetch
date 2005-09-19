@@ -187,7 +187,7 @@ get_ssh()
 
 	[ "$update" ] && ! [ "$directory" ] && [ -e "$dest" ] && return 1
 	[ "$update" ] && [ "$directory" ] &&
-		echo "Warning: Unable to protect against overwriting $dest" 2>/dev/null
+		echo "Warning: Cannot protect against overwriting $dest when fetching over ssh" 2>/dev/null
 
 	[ "$directory" ] && dest=$(dirname "$dest")
 	scp $scp_flags "$src" "$dest"
