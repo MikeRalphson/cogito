@@ -283,6 +283,18 @@ is_same_repo()
 }
 
 
+# Checks if we weren't called through a deprecated alias
+deprecated_aliases()
+{
+	cmd="${0##*/}"
+	propername="$1"; shift
+	for a in "$@"; do
+		[ "$cmd" = "$a" ] && \
+			echo "Warning: '$a' is a deprecated alias, please use '$propername' instead" >&2
+	done
+}
+
+
 print_help()
 {
 	which "cg-$1" >/dev/null 2>&1 || exit 1
