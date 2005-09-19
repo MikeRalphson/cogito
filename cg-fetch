@@ -3,9 +3,23 @@
 # Fetch changes from a remote branch to the local GIT repository.
 # Copyright (c) Petr Baudis, 2005.
 #
-# See `cg-branch-add` for some description.
+# Takes the branch name as an argument, defaulting to 'origin'.
 #
-# Takes the branch name as an argument, defaulting to "origin".
+# This will fetch the latest changes from a remote repository to the
+# corresponding branch in your local repository. Note that this operation
+# does not involve merging those changes to your own branch - that is being
+# done by the `cg-merge` command. `cg-update` exists to conveniently bundle
+# the act of fetching and merging to your working branch together.
+#
+# Before the first fetch, you have to tell Cogito about the remote branch.
+# This should be done by the `cg-branch-add` command. See its documentation
+# for the list of supported fetching protocols and other details.
+#
+# Note that the operation now being performed by `cg-fetch` ('fetching')
+# was called 'pulling' in the past. However, GIT recently changed this
+# terminology, and after sufficient transition period, the 'pulling'
+# expression will be instead used for the operation now performed by the
+# `cg-update` command. Please do not let this confuse you.
 #
 # OPTIONS
 # -------
