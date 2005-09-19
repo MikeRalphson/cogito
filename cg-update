@@ -5,8 +5,14 @@
 #
 # Takes the branch name as an argument, defaulting to 'origin'.
 #
-# If local changes conflict with those of the branch updated from the
-# merge will be blocked.
+# This is basically equivalent to running cg-fetch and cg-merge commands
+# successively. Please refer to the documentation of those commands for
+# more details about the operation.
+#
+# Note that in the GIT newspeak, the operation being performed by cg-update
+# is now called 'pull', even though in the past, 'pull' was the name for
+# the operation being now done by cg-fetch, which is even still aliased
+# to cg-pull. Please do not let this confuse you.
 #
 # OPTIONS
 # -------
