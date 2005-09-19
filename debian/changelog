@@ -1,3 +1,15 @@
+cogito (0.15-1) stable; urgency=low
+
+  * New Version
+  * Now depends on git-core-0.99.7
+  * cg-pull is now called cg-fetch
+  * cg-update will become cg-pull in a future release
+  * the *-id scriptlets renamed to cg-*-id
+  * cg-init respects the ignore rules
+  * cg-add now support directories (-r)
+
+ -- Martin Atukunda <matlads@dsmagic.com>  Mon, 19 Sep 2005 10:01:40 +0300
+
 cogito (0.13-1) stable; urgency=low
 
   * New version.
