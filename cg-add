@@ -71,6 +71,6 @@ if [ "$error" ]; then
 fi
 
 cat $TMPFILE | sed 's/^/Adding file /'
-cat $TMPFILE | sed "s|^|$_git_relpath|" | path_xargs git-update-cache --add ${infoonly} --
+cat $TMPFILE | sed "s|^|$_git_relpath|" | path_xargs git-update-index --add ${infoonly} --
 
 rm $TMPFILE

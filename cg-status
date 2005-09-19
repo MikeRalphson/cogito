@@ -125,13 +125,13 @@ fi
 
 
 if [ "$workstatus" ]; then
-	git-update-cache --refresh > /dev/null
+	git-update-index --refresh > /dev/null
 
 	list_untracked_files $exclude | tr '\0' '\n' |
 		{ if [ "$_git_relpath" ]; then sed -n "s|^$_git_relpath||p"; else cat; fi } |
 		sed 's,^,? ,'
 
-	git-diff-cache HEAD $_git_relpath | cut -f5- -d' ' | 
+	git-diff-index HEAD $_git_relpath | cut -f5- -d' ' | 
 	while IFS=$'\t' read -r mode file; do
 		if [ "$mode" = D ]; then
 			[ "$(git-diff-files "$file")" ] && mode=!

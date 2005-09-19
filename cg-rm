@@ -39,6 +39,6 @@ done
 
 cat $TMPFILE | sed 's/^/Removing file /'
 [ "$delete" ] && ( cd ${_git_relpath:-.} && rm -f "${ARGS[@]}" )
-cat $TMPFILE | sed "s|^|$_git_relpath|" | path_xargs git-update-cache --force-remove --
+cat $TMPFILE | sed "s|^|$_git_relpath|" | path_xargs git-update-index --force-remove --
 
 rm $TMPFILE

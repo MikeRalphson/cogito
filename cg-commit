@@ -152,7 +152,7 @@ if [ "$ARGS" -o "$_git_relpath" ]; then
 		echo "${_git_relpath}$file" >>$filter
 	done
 
-	eval commitfiles=($(cat $filter | path_xargs git-diff-cache -r -m HEAD -- | \
+	eval commitfiles=($(cat $filter | path_xargs git-diff-index -r -m HEAD -- | \
 		sed 's/^\([^	]*\)\(.	.*\)\(	.*\)*$/"\2"/'))
 	customfiles=1
 
@@ -169,7 +169,7 @@ else
 	if [ ! "$ignorecache" ]; then
 		# \t instead of the tab character itself works only with new
 		# sed versions.
-		eval commitfiles=($(git-diff-cache -r -m HEAD | \
+		eval commitfiles=($(git-diff-index -r -m HEAD | \
 			sed 's/^\([^	]*\)\(.	.*\)\(	.*\)*$/"\2"/'))
 	fi
 
@@ -342,9 +342,9 @@ precommit_update()
 	oldIFS="$IFS"
 	IFS=$'\n'
 	# XXX: Do we even need to do the --add and --remove update-caches?
-	[ "$queueA" ] && { ( echo "${queueA[*]}" | path_xargs git-update-cache --add ${infoonly} -- ) || return 1; }
-	[ "$queueD" ] && { ( echo "${queueD[*]}" | path_xargs git-update-cache --force-remove -- ) || return 1;  }
-	[ "$queueM" ] && { ( echo "${queueM[*]}" | path_xargs git-update-cache ${infoonly} -- ) || return 1; }
+	[ "$queueA" ] && { ( echo "${queueA[*]}" | path_xargs git-update-index --add ${infoonly} -- ) || return 1; }
+	[ "$queueD" ] && { ( echo "${queueD[*]}" | path_xargs git-update-index --force-remove -- ) || return 1;  }
+	[ "$queueM" ] && { ( echo "${queueM[*]}" | path_xargs git-update-index ${infoonly} -- ) || return 1; }
 	IFS="$oldIFS"
 	return 0
 }

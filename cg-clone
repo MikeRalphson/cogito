@@ -88,7 +88,7 @@ cg-pull origin || die "pull failed"
 
 cp $_git/refs/heads/origin $_git/refs/heads/master
 git-read-tree HEAD
-git-checkout-cache -a
-git-update-cache --refresh
+git-checkout-index -a
+git-update-index --refresh
 
 echo "Cloned to $dir/ (origin $location available as branch \"origin\")"

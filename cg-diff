@@ -150,12 +150,12 @@ if [ "$id2" = " " ]; then
 	fi
 
 	# Ensure to only diff modified files
-	git-update-cache --refresh >/dev/null
+	git-update-index --refresh >/dev/null
 
 	# FIXME: Update ret based on what did we match. And take "$@"
 	# to account after all.
 	ret=
-	cat $filter | path_xargs git-diff-cache -r -p $tree | colorize | pager
+	cat $filter | path_xargs git-diff-index -r -p $tree | colorize | pager
 
 	rm $filter
 

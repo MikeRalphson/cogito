@@ -41,5 +41,5 @@ fi
 rm -f $_git/blocked $_git/merging $_git/merging-sym $_git/merge-base
 git-read-tree -m HEAD || git-read-tree HEAD
 
-git-checkout-cache -f -a
-git-update-cache --refresh
+git-checkout-index -f -a
+git-update-index --refresh

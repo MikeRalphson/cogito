@@ -154,7 +154,7 @@ fetch_http()
 
 pull_http()
 {
-	(git-http-pull -a -v -w "heads/$3" $recovery "$1" "$2/" 2>&1 /dev/null) | pull_progress
+	(git-http-fetch -a -v -w "heads/$3" $recovery "$1" "$2/" 2>&1 /dev/null) | pull_progress
 	return ${PIPESTATUS[0]}
 }
 
@@ -193,10 +193,10 @@ fetch_ssh()
 
 pull_ssh()
 {
-	# git-ssh-pull would theoretically take git+ssh://-style URL, but
+	# git-ssh-fetch would theoretically take git+ssh://-style URL, but
 	# it is buggy and won't process it correctly, so let's just
 	# preprocess it to some easier-to-take form.
-	(git-ssh-pull -a -v -w "heads/$3" $recovery "$1" \
+	(git-ssh-fetch -a -v -w "heads/$3" $recovery "$1" \
 		"$(echo "$2" | sed 's#^git+ssh://\([^/]*\)\(/.*\)$#\1:\2#')" \
 		2>&1 /dev/null) | pull_progress
 	return ${PIPESTATUS[0]}
@@ -234,8 +234,8 @@ fetch_local()
 
 pull_local()
 {
-	# git-local-pull is currently broken w.r.t. packfiles
-	#(git-local-pull -a -l -v -w "$3" $recovery "$1" "$2" 2>&1 /dev/null) | pull_progress
+	# git-local-fetch is currently broken w.r.t. packfiles
+	#(git-local-fetch -a -l -v -w "$3" $recovery "$1" "$2" 2>&1 /dev/null) | pull_progress
 	fetch_local -s -u -d "$2/objects" "$_git_objects" | sed 's/`.*\/\(..\/[^\/]*\)'\'' -> .*/\1/' | pull_progress
 	ret=${PIPESTATUS[0]}
 	cat "$_git/refs/heads/.$3-pulling" > "$_git/refs/heads/$3"

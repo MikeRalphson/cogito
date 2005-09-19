@@ -48,7 +48,7 @@ Cogito-only stuff:
 	* Patch-altering cg-commit
 		You can already alter the list of files to be committed,
 		let's optionally show the patch and let you alter it, too.
-	* Things coming to git-commit-script:
+	* Things coming to git-commit:
 		* Possibly verify the patch being committed against
 		  whitespace errors and stuff; hooks are good for this too,
 		  but I think it's good to have internal support for the
@@ -68,7 +68,7 @@ Cogito-only stuff:
 	cg-mkpatch was overlooked for too long, while it could do a huge
 	number of cool things (after some cleanups, and probably factoring
 	out the common parts of cg-mkpatch, cg-log and cg-diff):
-	Preparing patch series, frontending git-request-pull-script,
+	Preparing patch series, frontending git-request-pull,
 	interfacing with email directly...
 
 * cg-patch improvements

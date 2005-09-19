@@ -242,18 +242,18 @@ tree_timewarp()
 			fi
 		done
 	' padding
-	git-checkout-cache -f -a
+	git-checkout-index -f -a
 
 	# FIXME: Can produce bogus "contains only garbage" messages.
 	cat $patchfile | cg-patch
 	rm $patchfile
 
-	git-update-cache --refresh >/dev/null
+	git-update-index --refresh >/dev/null
 }
 
 update_index()
 {
-	git-update-cache --refresh | sed 's/needs update$/locally modified/'
+	git-update-index --refresh | sed 's/needs update$/locally modified/'
 }
 
 # Takes two object directories and checks if they are the same (symlinked

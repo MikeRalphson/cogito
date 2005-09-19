@@ -39,7 +39,7 @@ ret=0
 
 if [ "$ARGS" ]; then
 	for file in "${ARGS[@]}"; do
-		git-checkout-cache $force "${_git_relpath}$file" || ret=1
+		git-checkout-index $force "${_git_relpath}$file" || ret=1
 	done
 else
 	[ "$_git_relpath" ] && die "cannot restore files en masse in subdirectories yet"
@@ -47,7 +47,7 @@ else
 		echo "Recovering files:"
 		git-ls-files --deleted | sed "s/^/$(echo -e "\t")/"
 	fi
-	git-checkout-cache -q -a $force
+	git-checkout-index -q -a $force
 fi
 
 update_index || ret=1

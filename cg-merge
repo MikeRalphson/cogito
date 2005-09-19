@@ -127,7 +127,7 @@ echo $base >>$_git/merge-base
 echo $branch >>$_git/merging
 echo $branchname >>$_git/merging-sym
 
-if ! git-merge-cache -o -q ${COGITO_LIB}cg-Xmergefile -a || [ "$careful" ]; then
+if ! git-merge-index -o -q ${COGITO_LIB}cg-Xmergefile -a || [ "$careful" ]; then
 	# "Resolve" merges still in the cache (conflicts).
 	# We will resolve only those caught by merge-cache;
 	# that is "three-way conflicts". Others should still
@@ -155,7 +155,7 @@ if ! git-merge-cache -o -q ${COGITO_LIB}cg-Xmergefile -a || [ "$careful" ]; then
 				[ "$stage2seen" ] || continue
 				stage2seen=
 			esac
-			git-update-cache --cacheinfo $stage1mode $stage1hash $stage1name
+			git-update-index --cacheinfo $stage1mode $stage1hash $stage1name
 		done
 	}
 
@@ -166,7 +166,7 @@ __END__
 	posthook tree conflicts
 	exit 2
 fi
-git-checkout-cache -f -u -a
+git-checkout-index -f -u -a
 
 echo
 readtree=

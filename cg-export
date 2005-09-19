@@ -54,7 +54,7 @@ case $dest in
 		export GIT_INDEX_FILE="$dest/.git-index"
 		id="$(cg-tree-id "$id")"
 		git-read-tree $id
-		git-checkout-cache "--prefix=$dest/" -a
+		git-checkout-index "--prefix=$dest/" -a
 		rm $GIT_INDEX_FILE
 	;;
 esac

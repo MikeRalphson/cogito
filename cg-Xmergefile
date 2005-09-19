@@ -46,7 +46,7 @@ case "${1:-.}${2:-.}${3:-.}" in
 	if test -f "$4"; then
 		rm -f -- "$4"
 	fi &&
-		exec git-update-cache --remove -- "$4"
+		exec git-update-index --remove -- "$4"
 	;;
 
 #
@@ -54,8 +54,8 @@ case "${1:-.}${2:-.}${3:-.}" in
 #
 ".$2." | "..$3" )
 	#echo "Adding $4"
-	git-update-cache --add --cacheinfo "$6$7" "$2$3" "$4" &&
-		exec git-checkout-cache -u -f -- "$4"
+	git-update-index --add --cacheinfo "$6$7" "$2$3" "$4" &&
+		exec git-checkout-index -u -f -- "$4"
 	;;
 
 #
@@ -63,8 +63,8 @@ case "${1:-.}${2:-.}${3:-.}" in
 #
 ".$3$2")
 	#echo "Adding $4"
-	git-update-cache --add --cacheinfo "$6" "$2" "$4" &&
-		git-checkout-cache -u -f -- "$4"
+	git-update-index --add --cacheinfo "$6" "$2" "$4" &&
+		git-checkout-index -u -f -- "$4"
 	ret=$?
 	if [ "$6" != "$7" ]; then
 		error "$4: added in both branches, permissions conflict $6->$7"
@@ -83,8 +83,8 @@ case "${1:-.}${2:-.}${3:-.}" in
 
 	# We reset the index to the first branch, making
 	# git-diff-file useful
-	git-update-cache --add --cacheinfo "$6" "$2" "$4"
-		git-checkout-cache -u -f -- "$4" &&
+	git-update-index --add --cacheinfo "$6" "$2" "$4"
+		git-checkout-index -u -f -- "$4" &&
 		merge "$4" "$orig" "$src2"
 	ret=$?
 	rm -f -- "$orig" "$src2"
@@ -100,7 +100,7 @@ case "${1:-.}${2:-.}${3:-.}" in
 		#error "Auto-merge failed"
 		exit 1
 	fi
-	exec git-update-cache -- "$4"
+	exec git-update-index -- "$4"
 	;;
 
 *)
