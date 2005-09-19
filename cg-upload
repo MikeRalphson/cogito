@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 #
-# Push changes to a remote GIT repository.
+# Upload changes to a remote GIT repository.
 # Copyright (c) Petr Baudis, 2005.
 #
 # It will upload your commits to the remote repository, provided that

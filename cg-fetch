@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 #
-# Pull changes from a remote branch to the local GIT repository.
+# Fetch changes from a remote branch to the local GIT repository.
 # Copyright (c) Petr Baudis, 2005.
 #
 # See `cg-branch-add` for some description.
