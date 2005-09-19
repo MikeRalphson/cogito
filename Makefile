@@ -16,7 +16,7 @@ SCRIPT=	cg-commit-id cg-tree-id cg-parent-id cg-add cg-admin-lsobj cg-admin-unco
 	cg-branch-add cg-branch-ls cg-reset cg-clone cg-commit cg-diff \
 	cg-export cg-help cg-init cg-log cg-merge cg-mkpatch cg-patch \
 	cg-fetch cg-restore cg-rm cg-seek cg-status cg-tag cg-tag-ls cg-update \
-	cg cg-admin-ls cg-push cg-branch-chg cg-admin-cat cg-clean
+	cg cg-admin-ls cg-upload cg-branch-chg cg-admin-cat cg-clean
 
 LIB_SCRIPT=cg-Xlib cg-Xmergefile cg-Xnormid
 
@@ -80,7 +80,7 @@ install-cogito: $(SCRIPT) $(LIB_SCRIPT) $(GEN_SCRIPT)
 	$(INSTALL) $(SCRIPT) $(GEN_SCRIPT) $(DESTDIR)$(bindir)
 	for i in 'cg-cancel:cg-reset' 'commit-id:cg-commit-id' \
 		'tree-id:cg-tree-id' 'parent-id:cg-parent-id' \
-		'cg-pull:cg-fetch'; do \
+		'cg-pull:cg-fetch' 'cg-push:cg-upload'; do \
 		old=`echo $$i | cut -d : -f 1`; \
 		new=`echo $$i | cut -d : -f 2`; \
 		rm -f $(DESTDIR)$(bindir)/$$old; \
