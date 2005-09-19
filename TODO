@@ -9,9 +9,6 @@ Cogito-only stuff:
 	Reference documentation + Jonas' asciidoc'd README + tutorial
 		= http://git.or.cz/cogito/
 
-* Pushing to remote heads with different name
-	Should be trivial with modern git-send-pack.
-
 * Merge Dan Holmsand's cg-diff and cg-log work
 	It's big rewritish diffs, not all changes are good, but most
 	of it is cool stuff and it's a pity it stood unmerged so far.
@@ -21,6 +18,9 @@ Cogito-only stuff:
 * "Volatile" branches
 	Properly follow branches which can rebase (do not do tree
 	merges but "fastforwards").
+
+* Support for remotes/
+	More powerful 'n stuff than branches/, ya know.
 
 * Better merging
 	* Handle all possible conflicts
@@ -139,10 +139,6 @@ Short term:
 * Tags
 	Clean up, fix and git-core-ize tags pulling; private tags need
 	to be supported first.
-
-* Remotes
-	.git/remotes describing remote repositories, not mere branches.
-	See Junio's mail.
 
 * Empty directories handling
 	Directories should be first-class index objects, not implicit.
