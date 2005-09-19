@@ -8,10 +8,9 @@
 # `stdin`. If the commit message is not modified the commit will be
 # aborted.
 #
-# The `GIT_AUTHOR_NAME`, `GIT_AUTHOR_EMAIL`, `GIT_AUTHOR_DATE`,
-# `GIT_COMMITTER_NAME` and `GIT_COMMITTER_EMAIL` environment variables
-# are used in case values other than that returned by `getpwuid(getuid())`
-# are desired when performing a commit.
+# By default, the commit is recorded as made by you, but you can change
+# that - useful if you are e.g. applying a patch submitted by someone
+# else. See the ENVIRONMENT section below.
 #
 # OPTIONS
 # -------
@@ -78,20 +77,36 @@
 #
 # ENVIRONMENT VARIABLES
 # ---------------------
+# GIT_AUTHOR_* general notes::
+#	Those variables describe who is the author of the change being
+#	committed. It defaults to you, but it is considered good practice
+#	to change this to the actual author of the change if the patch
+#	was submitted by someone else etc.
+#
 # GIT_AUTHOR_NAME::
-#	Author's name
+#	Author's name. This defaults to the GECOS field of your /etc/passwd
+#	entry, which is taken almost verbatim. (Note that this is carried
+#	over by GIT, not Cogito, and may change in the future GIT versions.)
 #
 # GIT_AUTHOR_EMAIL::
-#	Author's e-mail address
+#	Author's e-mail address. This defaults to your
+#	username@hostname.domainname, but you should change it to your
+#	real email you use if it is different.
 #
 # GIT_AUTHOR_DATE::
-#	Date, useful when applying patches an e-mail
+#	Date, useful when applying patches submitted over e-mail.
 #
 # GIT_COMMITTER_NAME::
-#	Committer's name
+#	Committer's name. It defaults to the same as GIT_AUTHOR_NAME.
 #
 # GIT_COMMITTER_EMAIL::
-#	Committer's e-mail address
+#	Committer's e-mail address. It defaults to the same as
+#	GIT_AUTHOR_EMAIL. The recommended policy is not to change this,
+#	though - it may not be necessarily a valid e-mail address, but
+#	its purpose is more to identify the actual user and machine
+#	where the commit was done. However, it is obviously ultimately
+#	a policy decision of a particular project to determine whether
+#	this should be a real e-mail or not.
 #
 # EDITOR::
 #	The editor used for entering revision log information.
