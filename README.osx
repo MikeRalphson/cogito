@@ -11,8 +11,8 @@ your new Portfile or place the new tarball in
 
 Caveats:
 
-cg-pull on a local repository requires cp -u, a non-portable gnu
-extension.  This means that cg-pull, cg-clone and cg-update from a
+cg-fetch on a local repository requires cp -u, a non-portable gnu
+extension.  This means that cg-fetch, cg-clone and cg-update from a
 local repository are broken.
 
 Workaround #1: Use rsync for local clones.  I.e.  "cg-clone

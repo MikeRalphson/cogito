@@ -22,7 +22,7 @@
 # -------
 # This command can be dangerous! It is safe to do as long as you do not
 # push the commit out in the meantime, but you should 'NEVER' uncommit an
-# already pushed out commit. Things will break for the pullers since you
+# already pushed out commit. Things will break for the fetchers since you
 # just broke the fast-forward merging mechanism (the new commit is not
 # descendant of the previous one). The future push scripts will refuse
 # to push after you uncommitted a pushed out commit, too. At the moment

@@ -24,7 +24,7 @@
 #	git-pasky-0.6.2 b21cee2236b494787204754960d6a5d2916dfeb4
 #	git-pasky-0.6.3 acc71aab89b4ae8d5f4a03c758cc4c2bc04a3229
 #	git-pasky-0.7   bc61d9a04dc39598014f38b0ad7422f0ceaf2cc9
-#	pull_from_pasky 11ed64c1b141c9ba397a1ca76aef2cd250976007
+#	fetch_from_pasky 11ed64c1b141c9ba397a1ca76aef2cd250976007
 #	$
 
 USAGE="cg-tag-ls"

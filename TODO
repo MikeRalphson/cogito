@@ -68,7 +68,7 @@ Cogito-only stuff:
 	cg-mkpatch was overlooked for too long, while it could do a huge
 	number of cool things (after some cleanups, and probably factoring
 	out the common parts of cg-mkpatch, cg-log and cg-diff):
-	Preparing patch series, frontending git-request-pull,
+	Preparing patch series, frontending git-request-fetch,
 	interfacing with email directly...
 
 * cg-patch improvements
@@ -100,7 +100,7 @@ Cogito-only stuff:
 	checking if there isn't another .git along the path of its
 	argument.
 
-	Needs more thought, especially wrt. pulling and merging
+	Needs more thought, especially wrt. fetching and merging
 	recursive semantics.
 
 * Revisions numbering
@@ -137,7 +137,7 @@ Short term:
 	See Pasky's mail.
 
 * Tags
-	Clean up, fix and git-core-ize tags pulling; private tags need
+	Clean up, fix and git-core-ize tags fetching; private tags need
 	to be supported first.
 
 * Empty directories handling
@@ -194,13 +194,13 @@ Long term:
 	a quick cg-log peek.
 
 	So instead, every time you commit, the new revision is appended
-	to the revision journal of the given head, and when you pull the
+	to the revision journal of the given head, and when you fetch the
 	head, you bring the remote revision journal along. When you merge,
 	all the new revisions are appended between the previous head and
 	the merge head - that gives you the merge order.
 
 	Well, if you want to append to it, you want new revisions at the end.
-	If you want to pull it, you want the new revisions at the start.
+	If you want to fetch it, you want the new revisions at the start.
 	So I think the journal should look like
 
 		.git/revlist/master/0001

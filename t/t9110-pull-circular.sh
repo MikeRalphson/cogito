@@ -2,7 +2,7 @@
 #
 # Copyright (c) 2005 Petr Baudis
 #
-test_description="Tests circular cg-pull
+test_description="Tests circular cg-fetch
 
 The base for the test is the following description of Russel King workflow:
 
@@ -15,7 +15,7 @@ The base for the test is the following description of Russel King workflow:
                 \`---------------------------------'
 
 Changes are made in working tree 1, and made available to Linus.  Linus
-merges them into his tree.  I pull them into the pristine tree.  Assume
+merges them into his tree.  I fetch them into the pristine tree.  Assume
 other changes occurred. in Linus' tree.
 
 The pristine tree is obviously a superset of the working tree.

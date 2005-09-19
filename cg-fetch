@@ -10,17 +10,18 @@
 # OPTIONS
 # -------
 # -f::
-#	Force the complete pull even if the heads are the same.
+#	Force the complete fetch even if the heads are the same.
 #
 # -v::
 #	Display more verbose output
 
-USAGE="cg-pull [-f] [-v] [BRANCH_NAME]"
+USAGE="cg-fetch [-f] [-v] [BRANCH_NAME]"
 
 . ${COGITO_LIB}cg-Xlib || exit 1
+deprecated_aliases cg-fetch cg-pull
 
 
-pull_progress()
+fetch_progress()
 {
 	percentage=""
 	objects=0
@@ -99,11 +100,11 @@ fetch_rsync()
 	return ${PIPESTATUS[0]}
 }
 
-pull_rsync()
+fetch_rsync()
 {
-	fetch_rsync -s -u -d "$2/objects" "$_git_objects" | pull_progress
+	fetch_rsync -s -u -d "$2/objects" "$_git_objects" | fetch_progress
 	ret=${PIPESTATUS[0]}
-	cat "$_git/refs/heads/.$3-pulling" > "$_git/refs/heads/$3"
+	cat "$_git/refs/heads/.$3-fetching" > "$_git/refs/heads/$3"
 	return $ret
 }
 
@@ -152,9 +153,9 @@ fetch_http()
 	return $ret
 }
 
-pull_http()
+fetch_http()
 {
-	(git-http-fetch -a -v -w "heads/$3" $recovery "$1" "$2/" 2>&1 /dev/null) | pull_progress
+	(git-http-fetch -a -v -w "heads/$3" $recovery "$1" "$2/" 2>&1 /dev/null) | fetch_progress
 	return ${PIPESTATUS[0]}
 }
 
@@ -191,14 +192,14 @@ fetch_ssh()
 	scp $scp_flags "$src" "$dest"
 }
 
-pull_ssh()
+fetch_ssh()
 {
 	# git-ssh-fetch would theoretically take git+ssh://-style URL, but
 	# it is buggy and won't process it correctly, so let's just
 	# preprocess it to some easier-to-take form.
 	(git-ssh-fetch -a -v -w "heads/$3" $recovery "$1" \
 		"$(echo "$2" | sed 's#^git+ssh://\([^/]*\)\(/.*\)$#\1:\2#')" \
-		2>&1 /dev/null) | pull_progress
+		2>&1 /dev/null) | fetch_progress
 	return ${PIPESTATUS[0]}
 }
 
@@ -232,13 +233,13 @@ fetch_local()
 	cp $cp_flags_l "$src" "$dest"
 }
 
-pull_local()
+fetch_local()
 {
 	# git-local-fetch is currently broken w.r.t. packfiles
-	#(git-local-fetch -a -l -v -w "$3" $recovery "$1" "$2" 2>&1 /dev/null) | pull_progress
-	fetch_local -s -u -d "$2/objects" "$_git_objects" | sed 's/`.*\/\(..\/[^\/]*\)'\'' -> .*/\1/' | pull_progress
+	#(git-local-fetch -a -l -v -w "$3" $recovery "$1" "$2" 2>&1 /dev/null) | fetch_progress
+	fetch_local -s -u -d "$2/objects" "$_git_objects" | sed 's/`.*\/\(..\/[^\/]*\)'\'' -> .*/\1/' | fetch_progress
 	ret=${PIPESTATUS[0]}
-	cat "$_git/refs/heads/.$3-pulling" > "$_git/refs/heads/$3"
+	cat "$_git/refs/heads/.$3-fetching" > "$_git/refs/heads/$3"
 	return $ret
 }
 
@@ -247,7 +248,7 @@ recovery=
 verbose=
 while optparse; do
 	if optparse -f; then
-		# When forcing, let the pull tools make more extensive
+		# When forcing, let the fetch tools make more extensive
 		# walk over the dependency tree with --recover.
 		recovery=--recover
 	elif optparse -v; then
@@ -260,7 +261,7 @@ done
 name=${ARGS[0]}
 
 [ "$name" ] || { [ -s $_git/refs/heads/origin ] && name=origin; }
-[ "$name" ] || die "where to pull from?"
+[ "$name" ] || die "where to fetch from?"
 uri=$(cat "$_git/branches/$name" 2>/dev/null) || die "unknown branch: $name"
 
 rembranch=
@@ -271,31 +272,31 @@ fi
 
 # Some other process with the same pid might appear, that's why
 # we won't die but rather let the user check quickly.
-if [ -s "$_git/info/cg-pull-$name-dirty" ]; then
-	kill -0 $(cat "$_git/info/cg-pull-$name-dirty") 2>/dev/null && \
-		echo "Warning: Aren't you pulling $name twice at once? (waiting 10s)" >&2 && \
+if [ -s "$_git/info/cg-fetch-$name-dirty" ]; then
+	kill -0 $(cat "$_git/info/cg-fetch-$name-dirty") 2>/dev/null && \
+		echo "Warning: Aren't you fetching $name twice at once? (waiting 10s)" >&2 && \
 		sleep 10
-	echo "Recovering from a previously interrupted pull..."
+	echo "Recovering from a previously interrupted fetch..."
 	recovery=--recover
 fi
 mkdir -p "$_git/info"
-echo $$ > "$_git/info/cg-pull-$name-dirty"
+echo $$ > "$_git/info/cg-fetch-$name-dirty"
 
 
 if echo "$uri" | grep -q "^http://"; then
 	fetch=fetch_http
-	pull=pull_http
+	fetch=fetch_http
 elif echo "$uri" | grep -q "^git+ssh://"; then
 	fetch=fetch_ssh
-	pull=pull_ssh
+	fetch=fetch_ssh
 elif echo "$uri" | grep -q ":"; then
 	echo "WARNING: The rsync access method is DEPRECATED and will be REMOVED in the future!" >&2
 	fetch=fetch_rsync
-	pull=pull_rsync
+	fetch=fetch_rsync
 else
 	[ -d $uri/.git ] && uri=$uri/.git
 	fetch=fetch_local
-	pull=pull_local
+	fetch=fetch_local
 
 	# Perhaps the object database is shared
 	symlinked=
@@ -321,23 +322,23 @@ orig_head=
 
 mkdir -p $_git/refs/heads
 if [ "$rembranch" ]; then
-	$fetch -i "$uri/refs/heads/$rembranch" "$_git/refs/heads/.$name-pulling" ||
+	$fetch -i "$uri/refs/heads/$rembranch" "$_git/refs/heads/.$name-fetching" ||
 		die "unable to get the head pointer of branch $rembranch"
 else
-	$fetch -b -s "$uri/HEAD" "$_git/refs/heads/.$name-pulling" ||
+	$fetch -b -s "$uri/HEAD" "$_git/refs/heads/.$name-fetching" ||
 		die "unable to get the HEAD branch"
 fi
 
-new_head=$(cat "$_git/refs/heads/.$name-pulling")
+new_head=$(cat "$_git/refs/heads/.$name-fetching")
 if ! [ "$symlinked" ]; then
 	if [ "$recovery" -o "$orig_head" != "$new_head" ]; then
 		[ -d $_git_objects ] || mkdir -p $_git_objects
-		$pull "$(cat "$_git/refs/heads/.$name-pulling")" "$uri" "$name" || die "objects pull failed"
+		$fetch "$(cat "$_git/refs/heads/.$name-fetching")" "$uri" "$name" || die "objects fetch failed"
 	fi
 else
-	cat "$_git/refs/heads/.$name-pulling" > "$_git/refs/heads/$name"
+	cat "$_git/refs/heads/.$name-fetching" > "$_git/refs/heads/$name"
 fi
-rm "$_git/refs/heads/.$name-pulling"
+rm "$_git/refs/heads/.$name-fetching"
 
 # FIXME: Warn about conflicting tag names?
 # XXX: We now throw stderr to /dev/null since not all repositories
@@ -348,7 +349,7 @@ $fetch -i -s -u -d "$uri/refs/tags" "$_git/refs/tags" || rsyncerr=1
 [ "$rsyncerr" ] && echo "unable to get tags list (non-fatal)" >&2
 
 # Now check if we have the objects pointed at by the tags; if they are
-# tag objects, $pull didn't get them.
+# tag objects, $fetch didn't get them.
 # XXX: This is the quick'n'dirty way.
 (
 	cd $_git/refs/tags
@@ -368,7 +369,7 @@ $fetch -i -s -u -d "$uri/refs/tags" "$_git/refs/tags" || rsyncerr=1
 )
 
 
-rm "$_git/info/cg-pull-$name-dirty"
+rm "$_git/info/cg-fetch-$name-dirty"
 
 if [ ! "$orig_head" ]; then
 	echo "New branch: $new_head"

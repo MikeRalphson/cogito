@@ -84,7 +84,7 @@ if [ "$symlink" ]; then
 	ln -s $src/objects $_git/objects
 fi
 cg-branch-add origin "$location"
-cg-pull origin || die "pull failed"
+cg-fetch origin || die "fetch failed"
 
 cp $_git/refs/heads/origin $_git/refs/heads/master
 git-read-tree HEAD

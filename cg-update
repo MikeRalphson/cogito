@@ -11,7 +11,7 @@
 # OPTIONS
 # -------
 # -f::
-#	Force the complete pull even if the heads are the same.
+#	Force the complete fetch even if the heads are the same.
 
 USAGE="cg-update [-f] [BRANCH_NAME]"
 _git_requires_root=1
@@ -32,7 +32,7 @@ name=${ARGS[0]}
 [ "$name" ] || die "where to update from?"
 
 if [ -s "$_git/branches/$name" ]; then
-	cg-pull $force $name || exit 1
+	cg-fetch $force $name || exit 1
 else
 	echo "Updating from a local branch."
 fi

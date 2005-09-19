@@ -46,9 +46,9 @@ The following tools are very recommended for regular Cogito operation:
 Tool				Description
 -------------------------------------------------------------------------------
 merge				E.g. from the RCS package, for merging.
-wget				For pulling files with the HTTP backend.
-rsync				For pulling files with the rsync backend.
-ssh				For pulling files with the git+ssh backend.
+wget				For fetching files with the HTTP backend.
+rsync				For fetching files with the rsync backend.
+ssh				For fetching files with the git+ssh backend.
 -------------------------------------------------------------------------------
 
 The following tools are optional but recommended:
@@ -168,7 +168,7 @@ But cg-update can be also used to track specific branches. See below for more
 discussion of branches and how to track them.
 
 When you give the above `cg-update` command, this performed two actions.
-First, it pulled all new changes from the upstream repository into your
+First, it fetched all new changes from the upstream repository into your
 local repository. At that point, the changes exist in your local repository
 as part of the project history. The changes themselves are not actually
 visible in the files you see, but reside in the `.git` directory's awareness,
@@ -182,28 +182,28 @@ It may be that you want to be aware of the history of the upstream work, but
 you don't yet want those changes merged with your own local files. To do
 this, give the following command:
 
-	$ cg-pull
+	$ cg-fetch
 
 This does the first part of cg-update's job, but skips the second part.
 Now your local files have not been changed, but your `.git` directory has been
 updated with the history of all the changes that have occurred in the
 upstream sources.
 
-Using `cg-pull` is useful for a variety of purposes, for instance if you want
+Using `cg-fetch` is useful for a variety of purposes, for instance if you want
 to construct a diff against the latest version of the upstream sources, but
-don't want those changes to disturb your ongoing work. `cg-pull` will update
+don't want those changes to disturb your ongoing work. `cg-fetch` will update
 your `.git` directory with the history you need to construct your diff,
 without merging that history into your tree, potentially breaking your
 changes.
 
 Typically, if you are not making changes to the project yourself, but just
 want the latest version of a given project for your own use, you would use
-`cg-update`. `cg-pull` is strictly for development work.
+`cg-update`. `cg-fetch` is strictly for development work.
 
-Once you've done a `cg-pull`, you may decide you want to merge after all. In
+Once you've done a `cg-fetch`, you may decide you want to merge after all. In
 this case a `cg-update` command will do the trick, however you will also
 update your local files with any further upstream changes that have occurred
-since your `cg-pull`. The alternative and more powerful way is using
+since your `cg-fetch`. The alternative and more powerful way is using
 the `cg-merge` command, which we shall describe later.
 
 
@@ -211,10 +211,10 @@ the `cg-merge` command, which we shall describe later.
 Using Cogito
 ------------
 
-If there are any changes, two IDs will be printed during `cg-pull` or
+If there are any changes, two IDs will be printed during `cg-fetch` or
 `cg-update` run (I mean the line saying "Tree change"). Pass those as
 parameters to cg-diff and you will get a diff describing changes from
-the last time you pulled. You can also
+the last time you fetched. You can also
 
 	$ cg-diff -r origin:HEAD
 
@@ -227,7 +227,7 @@ by adding it with the command
 	$ cg-branch-add name repourl
 
 (the repourl can have a fragment part identifying a branch inside of the
-repository). Then you can pass the 'name' to `cg-update` and `cg-pull`
+repository). Then you can pass the 'name' to `cg-update` and `cg-fetch`
 or use it anywhere where you could use the 'origin' name.
 
 When you do some local changes, you can do
@@ -283,13 +283,13 @@ Getting Help
 ------------
 
 Cogito commands come with their own helpful documentation. To get help on
-cg-pull, for example, give this command:
+cg-fetch, for example, give this command:
 
-	$ cg-pull --help
+	$ cg-fetch --help
 
 or, for the same information, try this:
 
-	$ cg-help cg-pull
+	$ cg-help cg-fetch
 
 Alternatively, the man pages for the individual commands can be used as a
 reference (their content is equivalent to the cg-help output).
