@@ -1,36 +1,56 @@
 #!/usr/bin/env bash
 #
-# Add new branch to the GIT repository.
+# Add new remote branch to the GIT repository.
 # Copyright (c) Petr Baudis, 2005
 #
-# Takes the branch name and source location as parameters.
-# After you add a branch, you can `cg-fetch` it whenever you want and
-# it will keep your objects database in sync with it. Its latest
-# commit is accessible as `.git/refs/heads/branchname` (or - more
-# conveniently - as `$(cg-commit-id branchname)`). For example, to make a
-# diff between Linus (after you added him) and your current tree, do:
+# Takes the desired branch name and source location as parameters.
 #
-#	$ cg-fetch linus
-#	$ cg-diff -r linus
+# This command lets you add to the list of 'remote branches'. Those are
+# branches in your local repository which correspond to some branches
+# in other repositories.
 #
-# The possible location specifiers are:
+# After you add a remote branch, you can `cg-fetch` from it to get the
+# latest changes on the branch, as they appeared in the remote repository.
 #
-# 1. Local path - note that fetching will hardlink the objects, not copy them.
+# The possible source location specifiers are:
+#
+# 1. Local path - note that fetching will hardlink the objects if possible.
 # 2. rsync - either `rsync://host/path` or `host:/path` (the latter can change)
 #    THE rsync REPOSITORY ACCESS METHOD IS DEPRECATED AND WILL BE REMOVED
-#    IN THE FUTURE!
+#    IN THE FUTURE! The problem is that it will download _all_ data from
+#    the remote repository, including objects which do not belong to the
+#    one particular branch you want to fetch.
 # 3. HTTP - `http://host/path`
-# 4. SSH - `git+ssh://host/path` or `git+ssh://user@host/path` - note that
-#    the path must be absolute.
+# 4. SSH - `git+ssh://host/path` - note that the path must be absolute.
 #
 # The URL can have a fragment part, which identifies a branch inside of
-# the repository. Therefore, if you have a repository
-# `git+ssh://host/path/repo.git` and you are interested in its 'testing'
-# branch, you can e.g.:
+# the remote repository.
+#
+# FILES
+# -----
+# $GIT_DIR/branches/BRANCH_NAME::
+#	Contains the source location of the remote branch.
+#
+# $GIT_DIR/refs/heads/BRANCH_NAME::
+# 	Contains pointer to the latest commit in a branch. It can be more
+#	conveniently retrieved using `cg-commit-id BRANCH_NAME`.
+#
+# EXAMPLE USAGE
+# -------------
+# Let's say you have a repository at `git+ssh://host/path/repo.git` and you
+# want to fetch its 'testing' branch to your local repository. In that case
+# you can do
 #
 #	$ cg-branch-add repo-testing 'git+ssh://host/path/repo.git#testing'
 #
-# and refer to it as 'repo-testing' anytime later.
+# and refer to it as 'repo-testing' anytime later:
+#
+#	$ cg-fetch repo-testing
+#
+# For example you can check the changes in the `repo-testing` branch compared
+# to your current branch:
+#
+#	$ cg-diff -r repo-testing
 
 USAGE="cg-branch-add BRANCH_NAME LOCATION"
 
