@@ -22,10 +22,18 @@ usage()
 
 pager()
 {
+	local cgless
+	# A little trick to tell the difference between unset and set-to-empty
+	# variable:
+	if [ "${CG_LESS+set}" = "set" ]; then
+		cgless="$CG_LESS"
+	else
+		cgless="R$_local_CG_LESS$LESS"
+	fi
 	local line
 	# Invoke pager only if there's any actual output
 	if read -r line; then
-		( echo "$line"; cat; ) | LESS="R$LESS" ${PAGER:-less} $PAGER_FLAGS
+		( echo "$line"; cat; ) | LESS="$cgless" ${PAGER:-less} $PAGER_FLAGS
 	fi
 }
 
