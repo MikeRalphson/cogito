@@ -5,6 +5,8 @@
 #
 # Takes ID of the appropriate commit, defaults to HEAD.
 
+USAGE="cg-tree-id [COMMIT_ID]"
+
 id="$1"
 normid=$(. ${COGITO_LIB}cg-Xnormid "$id") || exit 1
 type=${normid#* }

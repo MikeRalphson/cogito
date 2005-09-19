@@ -7,5 +7,7 @@
 #
 # NOTE: Will return multiple SHA1s if ID is a commit with multiple parents.
 
+USAGE="cg-parent-id [COMMIT_ID]"
+
 normid=$(. ${COGITO_LIB}cg-Xnormid "$1"^)
 echo ${normid%% *}
