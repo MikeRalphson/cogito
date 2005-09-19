@@ -85,7 +85,7 @@ fi
 
 bin_path="$(dirname $0)"
 
-REGULAR_COMMANDS="$(ls $bin_path/cg-* | grep -v cg-admin- | grep -v cg-X)"
+REGULAR_COMMANDS="$(ls $bin_path/cg-* | grep -v cg-admin- | grep -v cg-X | grep -v -- -id)"
 ADVANCED_COMMANDS="$(ls $bin_path/cg-admin-*)"
 
 colorize <<__END__
