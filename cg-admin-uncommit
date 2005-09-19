@@ -24,9 +24,9 @@
 # push the commit out in the meantime, but you should 'NEVER' uncommit an
 # already pushed out commit. Things will break for the fetchers since you
 # just broke the fast-forward merging mechanism (the new commit is not
-# descendant of the previous one). The future push scripts will refuse
-# to push after you uncommitted a pushed out commit, too. At the moment
-# you pushed the commit out it's etched to history, live with that.
+# descendant of the previous one), and the push command will refuse to
+# push again after you uncommitted a pushed out commit, too. At the moment
+# you pushed the commit out it's etched to the history, live with that.
 
 USAGE="cg-admin-uncommit [-t] [COMMIT_ID]"
 _git_requires_root=1
