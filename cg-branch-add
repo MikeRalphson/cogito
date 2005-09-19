@@ -11,7 +11,7 @@
 # diff between Linus (after you added him) and your current tree, do:
 #
 #	$ cg-fetch linus
-#	$ cg-diff linus
+#	$ cg-diff -r linus
 #
 # The possible location specifiers are:
 #
