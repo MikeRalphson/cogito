@@ -66,7 +66,7 @@ fetch_progress()
 	[ "$last_objects" != "$objects" ] && echo
 }
 
-fetch_rsync()
+get_rsync()
 {
 	[ "$1" = "-b" ] && shift
 
@@ -102,14 +102,14 @@ fetch_rsync()
 
 fetch_rsync()
 {
-	fetch_rsync -s -u -d "$2/objects" "$_git_objects" | fetch_progress
+	get_rsync -s -u -d "$2/objects" "$_git_objects" | fetch_progress
 	ret=${PIPESTATUS[0]}
 	cat "$_git/refs/heads/.$3-fetching" > "$_git/refs/heads/$3"
 	return $ret
 }
 
 
-fetch_http()
+get_http()
 {
 	[ "$1" = "-b" ] && shift
 	[ "$1" = "-i" ] && shift
@@ -160,7 +160,7 @@ fetch_http()
 }
 
 
-fetch_ssh()
+get_ssh()
 {
 	[ "$1" = "-b" ] && shift
 	[ "$1" = "-i" ] && shift
@@ -204,7 +204,7 @@ fetch_ssh()
 }
 
 
-fetch_local()
+get_local()
 {
 	cp_flags_l="-vdpR"
 	if [ "$1" = "-b" ]; then
@@ -237,7 +237,7 @@ fetch_local()
 {
 	# git-local-fetch is currently broken w.r.t. packfiles
 	#(git-local-fetch -a -l -v -w "$3" $recovery "$1" "$2" 2>&1 /dev/null) | fetch_progress
-	fetch_local -s -u -d "$2/objects" "$_git_objects" | sed 's/`.*\/\(..\/[^\/]*\)'\'' -> .*/\1/' | fetch_progress
+	get_local -s -u -d "$2/objects" "$_git_objects" | sed 's/`.*\/\(..\/[^\/]*\)'\'' -> .*/\1/' | fetch_progress
 	ret=${PIPESTATUS[0]}
 	cat "$_git/refs/heads/.$3-fetching" > "$_git/refs/heads/$3"
 	return $ret
@@ -284,18 +284,18 @@ echo $$ > "$_git/info/cg-fetch-$name-dirty"
 
 
 if echo "$uri" | grep -q "^http://"; then
-	fetch=fetch_http
+	get=get_http
 	fetch=fetch_http
 elif echo "$uri" | grep -q "^git+ssh://"; then
-	fetch=fetch_ssh
+	get=get_ssh
 	fetch=fetch_ssh
 elif echo "$uri" | grep -q ":"; then
 	echo "WARNING: The rsync access method is DEPRECATED and will be REMOVED in the future!" >&2
-	fetch=fetch_rsync
+	get=get_rsync
 	fetch=fetch_rsync
 else
 	[ -d $uri/.git ] && uri=$uri/.git
-	fetch=fetch_local
+	get=get_local
 	fetch=fetch_local
 
 	# Perhaps the object database is shared
@@ -322,10 +322,10 @@ orig_head=
 
 mkdir -p $_git/refs/heads
 if [ "$rembranch" ]; then
-	$fetch -i "$uri/refs/heads/$rembranch" "$_git/refs/heads/.$name-fetching" ||
+	$get -i "$uri/refs/heads/$rembranch" "$_git/refs/heads/.$name-fetching" ||
 		die "unable to get the head pointer of branch $rembranch"
 else
-	$fetch -b -s "$uri/HEAD" "$_git/refs/heads/.$name-fetching" ||
+	$get -b -s "$uri/HEAD" "$_git/refs/heads/.$name-fetching" ||
 		die "unable to get the HEAD branch"
 fi
 
@@ -345,7 +345,7 @@ rm "$_git/refs/heads/.$name-fetching"
 # may have tags/ and users were confused by the harmless errors.
 [ -d $_git/refs/tags ] || mkdir -p $_git/refs/tags
 rsyncerr=
-$fetch -i -s -u -d "$uri/refs/tags" "$_git/refs/tags" || rsyncerr=1
+$get -i -s -u -d "$uri/refs/tags" "$_git/refs/tags" || rsyncerr=1
 [ "$rsyncerr" ] && echo "unable to get tags list (non-fatal)" >&2
 
 # Now check if we have the objects pointed at by the tags; if they are
@@ -360,7 +360,7 @@ $fetch -i -s -u -d "$uri/refs/tags" "$_git/refs/tags" || rsyncerr=1
 		echo -n "Missing object of tag $tag... "
 		# In case it's not in a packfile...
 		tagfile=objects/${tagid:0:2}/${tagid:2}
-		if $fetch -i -s "$uri/$tagfile" "../../$tagfile" 2>/dev/null >&2; then
+		if $get -i -s "$uri/$tagfile" "../../$tagfile" 2>/dev/null >&2; then
 			echo "retrieved"
 		else
 			echo "unable to retrieve"
