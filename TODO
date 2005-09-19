@@ -29,6 +29,10 @@ Cogito-only stuff:
 	* Somehow show the list of commits getting merged
 	* Vim-merging
 
+* Always do three-way merge
+	Always perform three-way merge instead of applying patches - when
+	fast-forwarding trees, uncommitting, etc.
+
 * Comfortable cg-log
 	Probably make it a real terminal application, not just less
 	backend.
@@ -44,26 +48,6 @@ Cogito-only stuff:
 	an arbitrary commit. (You should be also able to clone remote
 	branch at a particular commit.)
 
-* cg-commit enhancements
-	* Patch-altering cg-commit
-		You can already alter the list of files to be committed,
-		let's optionally show the patch and let you alter it, too.
-	* Things coming to git-commit:
-		* Possibly verify the patch being committed against
-		  whitespace errors and stuff; hooks are good for this too,
-		  but I think it's good to have internal support for the
-		  basic stuff.
-		* -s,--signoff to automatically append a signoff line of
-		  yours to the patch.
-
-* Graphical commit/merge tool
-
-* Always do three-way merge
-	Always perform three-way merge instead of applying patches - when
-	fast-forwarding trees, uncommitting, etc.
-
-* cg-log --short interfacing git-shortlog (but better and more flexible)
-
 * cg-mkpatch overhaul
 	cg-mkpatch was overlooked for too long, while it could do a huge
 	number of cool things (after some cleanups, and probably factoring
@@ -76,17 +60,17 @@ Cogito-only stuff:
 	autocommitting, sucking commit messages from the patch...
 	* Dealing with renames and stuff
 
-* More comfortable history rewriting
-	* Make it possible to do rebase-merge easily, rebasing local
-	  changes against new remote head
-	* Easier recommitting - if I need to uncommit or change some
-	  commit not at the top, let me more easily uncommit, change it
-	  and recommit the rest on the top.
-
-	  This is encouraging history rewriting which is bad as soon
-	  as you publish your changes, but not before; I believe it's
-	  good to offer people ways to keep their history tidy if you
-	  also educate them not to do it after they publish it.
+* cg-commit enhancements
+	* Patch-altering cg-commit
+		You can already alter the list of files to be committed,
+		let's optionally show the patch and let you alter it, too.
+	* Things coming to git-commit:
+		* Possibly verify the patch being committed against
+		  whitespace errors and stuff; hooks are good for this too,
+		  but I think it's good to have internal support for the
+		  basic stuff.
+		* -s,--signoff to automatically append a signoff line of
+		  yours to the patch.
 
 * Subprojects
 	Support a GIT project inside a GIT project:
@@ -102,6 +86,22 @@ Cogito-only stuff:
 
 	Needs more thought, especially wrt. fetching and merging
 	recursive semantics.
+
+* cg-log --short interfacing git-shortlog (but better and more flexible)
+
+* Graphical commit/merge tool
+
+* More comfortable history rewriting
+	* Make it possible to do rebase-merge easily, rebasing local
+	  changes against new remote head
+	* Easier recommitting - if I need to uncommit or change some
+	  commit not at the top, let me more easily uncommit, change it
+	  and recommit the rest on the top.
+
+	  This is encouraging history rewriting which is bad as soon
+	  as you publish your changes, but not before; I believe it's
+	  good to offer people ways to keep their history tidy if you
+	  also educate them not to do it after they publish it.
 
 * Revisions numbering
 	An alternative way to identify revisions - by their sequential
