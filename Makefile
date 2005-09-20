@@ -18,7 +18,7 @@ SCRIPT=	cg-object-id cg-add cg-admin-lsobj cg-admin-uncommit \
 	cg-fetch cg-restore cg-rm cg-seek cg-status cg-tag cg-tag-ls cg-update \
 	cg cg-admin-ls cg-upload cg-branch-chg cg-admin-cat cg-clean
 
-LIB_SCRIPT=cg-Xlib cg-Xmergefile cg-Xnormid
+LIB_SCRIPT=cg-Xlib cg-Xmergefile
 
 GEN_SCRIPT= cg-version
 

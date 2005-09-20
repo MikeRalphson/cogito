@@ -2,7 +2,8 @@
 #
 # Get SHA1 ID of commit or tree associated with given ID or HEAD.
 # Copyright (c) Petr Baudis, 2005
-# Copyright (c) Pavel Roskin 2005
+# Copyright (c) Pavel Roskin, 2005
+# Copyright (c) Philip Pokorny, 2005
 #
 # If the ID is not provided, HEAD is used.  The default behavior is to
 # show the commit ID.
@@ -24,6 +25,76 @@ USAGE="cg-object-id [-p] [-t] [OBJECT_ID]"
 
 . ${COGITO_LIB}cg-Xlib
 deprecated_alias cg-object-id commit-id cg-commit-id parent-id cg-parent-id tree-id cg-tree-id
+
+
+# Normalize argument.  The normalized SHA1 ID is put to $normid,
+# type is put to $type.
+normalize_id()
+{
+	local id="$1"
+
+	if [ "${id:(-1):1}" = "^" ]; then
+		# find first parent
+		id=$(cg-object-id "${id%^}") || exit 1
+		normid=$(git-cat-file commit "$id" | \
+			 awk '/^parent/{print $2; exit};/^$/{exit}') || exit 1
+		type="commit"
+		return
+	fi
+
+	if [ ! "$id" ] || [ "$id" = "this" ] || [ "$id" = "HEAD" ]; then
+		read id < "$_git/HEAD"
+
+	elif [ -r "$_git/refs/tags/$id" ]; then
+		read id < "$_git/refs/tags/$id"
+
+	elif [ -r "$_git/refs/heads/$id" ]; then
+		read id < "$_git/refs/heads/$id"
+
+	# Short id's must be lower case and at least 4 digits.
+	elif [[ "$id" == [0-9a-f][0-9a-f][0-9a-f][0-9a-f]* ]]; then
+		idpref=${id:0:2}
+		idpost=${id:2}
+
+		# Assign array elements to matching names
+		idmatch=($_git_objects/$idpref/$idpost*)
+
+		if [ ${#idmatch[*]} -eq 1 ] && [ -r "$idmatch" ]; then
+			id=$idpref${idmatch#$_git_objects/$idpref/}
+		elif [ ${#idmatch[*]} -gt 1 ]; then
+			echo "Ambiguous id: $id" >&2
+			echo "${idmatch[@]}" >&2
+			exit 1
+		fi
+	fi
+
+	valid=; [ ${#id} -eq 40 ] && [ "$(git-rev-parse --revs-only "$id")" ] && valid=1
+	if ([ "$id" ] && [ "$id" != " " ]) && [ ! "$valid" ]; then
+		reqsecs=$(date --date="$id" +'%s' 2>/dev/null)
+
+		if [ "$reqsecs" ]; then
+			id=$(git-rev-list --min-age=$reqsecs --max-count=1 HEAD)
+			valid=; [ ${#id} -eq 40 ] && [ "$(git-rev-parse --revs-only "$id")" ] && valid=1
+		fi
+	fi
+
+	# If we don't have a 40-char ID by now, it's an error
+	if [ ! "$valid" ]; then
+		echo "Invalid id: $id" >&2
+		exit 1
+	fi
+
+	type="$(git-cat-file -t "$id")"
+	if [ "$type" = "tag" ]; then
+		id=$(git-cat-file tag "$id" | head -n 1)
+		id="${id#object }"
+		type=
+	fi
+
+	normid="$id"
+}
+
+
 
 show_parent=
 show_tree=
@@ -49,19 +120,13 @@ if [ "$show_parent" -a "$show_tree" ]; then
 fi
 
 id="${ARGS[0]}"
-if [ "$show_parent" ]; then
-	id="$id"^
-fi
-
-normid=$(. ${COGITO_LIB}cg-Xnormid "$id") || exit 1
+normalize_id "$id"
 
 if [ "$show_parent" ]; then
-	echo "$normid"
+	git-cat-file commit "$normid" | awk '/^parent/{print $2};/^$/{exit}'
 	exit 0
 fi
 
-type=${normid#* }
-normid=${normid% *}
 [ "$type" ] || type=$(git-cat-file -t "$normid")
 if [ "$show_tree" ]; then
 	if [ "$type" = "commit" ]; then
