@@ -5,7 +5,8 @@
 #
 # Takes ID of the current commit, defaults to HEAD.
 #
-# NOTE: Will return multiple SHA1s if ID is a commit with multiple parents.
+# NOTE: Will return only the first parent if ID is a commit with multiple
+# parents.
 
 USAGE="cg-parent-id [COMMIT_ID]"
 
