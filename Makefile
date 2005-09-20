@@ -125,6 +125,12 @@ dist: cogito.spec
 rpm: dist
 	rpmbuild -ta $(GIT_TARNAME).tar.gz
 
+deb: dist
+	tar zxf $(GIT_TARNAME).tar.gz
+	dpkg-source -b $(GIT_TARNAME)
+	cd $(GIT_TARNAME) && fakeroot debian/rules binary \
+		&& cd .. && rm -rf $(GIT_TARNAME)
+
 Portfile: Portfile.in $(VERSION) dist
 	sed -e 's/@@VERSION@@/$(shell cat $(VERSION) | cut -d"-" -f2)/g' < Portfile.in > Portfile
 	echo "checksums md5 " `md5sum $(GIT_TARNAME).tar.gz | cut -d ' ' -f 1` >> Portfile
