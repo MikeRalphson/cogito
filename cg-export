@@ -17,12 +17,12 @@ _git_requires_root=1
 
 if [ "$1" = "-r" ]; then
 	shift
-	# We do not resolve to cg-tree-id since git-tar-tree can utilize some commit
+	# We do not resolve to tree id since git-tar-tree can utilize some commit
 	# information.
-	id="$(cg-commit-id "$1" 2>/dev/null)" || id="$1"
+	id="$(cg-object-id "$1" 2>/dev/null)" || id="$1"
 	shift
 else
-	id="$(cg-commit-id)"
+	id="$(cg-object-id)"
 fi
 
 dest=$1
@@ -52,7 +52,7 @@ case $dest in
 	*)
 		mkdir -p $dest || die "cannot create $dest"
 		export GIT_INDEX_FILE="$dest/.git-index"
-		id="$(cg-tree-id "$id")"
+		id="$(cg-object-id -t "$id")"
 		git-read-tree $id
 		git-checkout-index "--prefix=$dest/" -a
 		rm $GIT_INDEX_FILE

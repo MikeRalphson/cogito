@@ -129,14 +129,14 @@ done
 if [ "$mergebase" ]; then
 	[ "$log_start" ] || log_start="HEAD"
 	[ "$log_end" ] || log_end="origin"
-	id1=$(cg-commit-id "$log_start") || exit 1
-	id2=$(cg-commit-id "$log_end") || exit 1
+	id1=$(cg-object-id "$log_start") || exit 1
+	id2=$(cg-object-id "$log_end") || exit 1
 	log_start=$(git-merge-base $id1 $id2) || exit 1
 fi
 
 if [ "$log_end" ]; then
-	id1=$(cg-commit-id "$log_start") || exit 1
-	id2=$(cg-commit-id "$log_end") || exit 1
+	id1=$(cg-object-id "$log_start") || exit 1
+	id2=$(cg-object-id "$log_end") || exit 1
 
 	if [ "$outdir" ]; then
 		mkdir -p "$outdir" || die "cannot create patch directory"
@@ -171,6 +171,6 @@ if [ "$log_end" ]; then
 
 else
 	[ "$outdir" ] && die "-d makes sense only for patch series"
-	id=$(cg-commit-id "$log_start") || exit 1
+	id=$(cg-object-id "$log_start") || exit 1
 	showpatch $id
 fi

@@ -127,15 +127,15 @@ done
 if [ "$parent" ]; then
 	id2="$id1"
 	id="$id2"; [ "$id" = " " ] && id=""
-	id1=$(cg-parent-id "$id" | head -n 1) || exit 1
+	id1=$(cg-object-id -p "$id" | head -n 1) || exit 1
 	[ "$id1" ] || exit 1
 fi
 
 if [ "$mergebase" ]; then
 	[ "$id1" != " " ] || id1="HEAD"
 	[ "$id2" != " " ] || id2="origin"
-	id1=$(cg-commit-id "$id1") || exit 1
-	id2=$(cg-commit-id "$id2") || exit 1
+	id1=$(cg-object-id "$id1") || exit 1
+	id2=$(cg-object-id "$id2") || exit 1
 	id1=$(git-merge-base $id1 $id2) || exit 1
 fi
 
@@ -148,9 +148,9 @@ done
 
 if [ "$id2" = " " ]; then
 	if [ "$id1" != " " ]; then
-		tree=$(cg-tree-id "$id1") || exit 1
+		tree=$(cg-object-id -t "$id1") || exit 1
 	else
-		tree=$(cg-tree-id) || exit 1
+		tree=$(cg-object-id -t) || exit 1
 	fi
 
 	# Ensure to only diff modified files
@@ -168,8 +168,8 @@ if [ "$id2" = " " ]; then
 fi
 
 
-id1=$(cg-tree-id "$id1") || exit 1
-id2=$(cg-tree-id "$id2") || exit 1
+id1=$(cg-object-id -t "$id1") || exit 1
+id2=$(cg-object-id -t "$id2") || exit 1
 
 [ "$id1" = "$id2" ] && exit 0
 

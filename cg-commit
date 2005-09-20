@@ -158,7 +158,7 @@ while optparse; do
 	elif optparse -m=; then
 		msgs[${#msgs[@]}]="$OPTARG"
 	elif optparse -c=; then
-		copy_commit="$(cg-commit-id "$OPTARG")"
+		copy_commit="$(cg-object-id "$OPTARG")"
 	else
 		optfail
 	fi
@@ -390,7 +390,7 @@ fi
 treeid=$(git-write-tree ${missingok})
 [ "$treeid" ] || die "git-write-tree failed"
 if [ ! "$force" ] && [ ! "$merging" ] && [ "$oldhead" ] &&
-   [ "$treeid" = "$(cg-tree-id)" ]; then
+   [ "$treeid" = "$(cg-object-id -t)" ]; then
 	echo "Refusing to make an empty commit - the tree was not modified" >&2
 	echo "since the previous commit. If you really want to make the" >&2
 	echo "commit, pass cg-commit the -f argument." >&2

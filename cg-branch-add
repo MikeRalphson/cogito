@@ -33,7 +33,7 @@
 #
 # $GIT_DIR/refs/heads/BRANCH_NAME::
 # 	Contains pointer to the latest commit in a branch. It can be more
-#	conveniently retrieved using `cg-commit-id BRANCH_NAME`.
+#	conveniently retrieved using `cg-object-id BRANCH_NAME`.
 #
 # EXAMPLE USAGE
 # -------------

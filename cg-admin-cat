@@ -36,7 +36,7 @@ done
 
 [ "$ARGS" ] || usage
 
-id=$(cg-tree-id "$rev") || exit 1
+id=$(cg-object-id -t "$rev") || exit 1
 
 git-ls-tree "$id" "${ARGS[@]}" |
 	while read -r mode type sha name
