@@ -35,8 +35,8 @@ normalize_id()
 
 	if [ "${id:(-1):1}" = "^" ]; then
 		# find first parent
-		id=$(cg-object-id "${id%^}") || exit 1
-		normid=$(git-cat-file commit "$id" | \
+		normalize_id "${id%^}"
+		normid=$(git-cat-file commit "$normid" | \
 			 awk '/^parent/{print $2; exit};/^$/{exit}') || exit 1
 		type="commit"
 		return
