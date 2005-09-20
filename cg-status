@@ -5,7 +5,7 @@
 # Copyright (c) Pavel Roskin 2005
 #
 # The output includes the list of branches and merge status.
-# Current branch is marked by ">".
+# Current branch is marked by ">", remote branches are marked by "R".
 #
 # Then, the files in the working tree are printed out. The output has
 # the following format:
@@ -95,11 +95,10 @@ if [ "$gitstatus" ]; then
 		headsha1=$(cat $head)
 		headname=$(basename $head)
 		[ "$headname" = "cg-seek-point" ] && continue
-		if [ "$headname" = "$_git_head" ]; then
-			echo -e "   >$headname\t$headsha1"
-		else
-			echo -e "    $headname\t$headsha1"
-		fi
+		cf=" "; rf=" "
+		[ "$headname" = "$_git_head" ] && cf=">"
+		[ -s "$_git/branches/$headname" ] && rf="R"
+		echo -e "  $rf$cf$headname\t$headsha1"
 	done
 
 	if [ -s "$_git/merging" ]; then
