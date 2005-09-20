@@ -11,6 +11,8 @@
 # -------
 # -p::
 #	Get ID of the first parent commit of a given revision or HEAD.
+#	NOTE: Multiple SHA1s separated by newlines will be returned for
+#	commits with multiple parents.
 #
 # -t::
 #	Get ID of tree associated with given commit or HEAD.
@@ -54,7 +56,7 @@ fi
 normid=$(. ${COGITO_LIB}cg-Xnormid "$id") || exit 1
 
 if [ "$show_parent" ]; then
-	echo ${normid% *}
+	echo "$normid"
 	exit 0
 fi
 

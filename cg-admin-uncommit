@@ -51,7 +51,7 @@ commit=$(cg-object-id "$1") || exit 1
 git-rev-list $base | grep -q $commit || \
 	die "$commit: not an ancestor of HEAD"
 
-parent=$(cg-object-id -p "$commit") || exit 1
+parent=$(cg-object-id -p "$commit" | head -n 1) || exit 1
 [ "$parent" ] || die "cannot rewind behind the initial commit"
 
 
