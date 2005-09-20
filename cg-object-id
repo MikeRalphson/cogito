@@ -10,6 +10,9 @@
 #
 # OPTIONS
 # -------
+# -n::
+#	Normalize only - don't check the object type.
+#
 # -p::
 #	Get ID of the first parent commit of a given revision or HEAD.
 #	NOTE: Multiple SHA1s separated by newlines will be returned for
@@ -21,7 +24,7 @@
 # OBJECT_ID::
 #	An ID resolving to a commit.
 
-USAGE="cg-object-id [-p] [-t] [OBJECT_ID]"
+USAGE="cg-object-id [-n | -p | -t] [OBJECT_ID]"
 
 . ${COGITO_LIB}cg-Xlib
 deprecated_alias cg-object-id commit-id cg-commit-id parent-id cg-parent-id tree-id cg-tree-id
@@ -98,8 +101,11 @@ normalize_id()
 
 show_parent=
 show_tree=
+normalize_only=
 while optparse; do
-	if optparse -p; then
+	if optparse -n; then
+		normalize_only=1
+	elif optparse -p; then
 		show_parent=1
 	elif optparse -t; then
 		show_tree=1
@@ -114,13 +120,18 @@ case $_cg_cmd in
 	*tree*) show_tree=1;;
 esac
 
-if [ "$show_parent" -a "$show_tree" ]; then
-	echo "Cannot show parent and tree ID at the same time." >&2
-	exit 1
-fi
+case "$show_parent$show_tree$normalize_only" in
+	11*)	usage;;
+esac
 
 id="${ARGS[0]}"
 normalize_id "$id"
+
+if [ "$normalize_only" ]; then
+	echo $normid
+	exit 0
+fi
+
 
 if [ "$show_parent" ]; then
 	git-cat-file commit "$normid" | awk '/^parent/{print $2};/^$/{exit}'

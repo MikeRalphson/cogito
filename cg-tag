@@ -47,8 +47,8 @@ id="${ARGS[1]}"
 
 [ "$name" ] || usage
 
-id=$(. ${COGITO_LIB}cg-Xnormid "$id") || exit 1
-type=${id#* }; [ "$type" ] || type=$(git-cat-file -t "$id")
+id=$(cg-object-id -n "$id") || exit 1
+type=$(git-cat-file -t "$id")
 id=${id% *}
 
 (echo $name | egrep -qv '[^a-zA-Z0-9_.@!:-]') || \
