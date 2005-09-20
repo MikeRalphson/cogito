@@ -1,0 +1,82 @@
+#!/usr/bin/env bash
+#
+# Get SHA1 ID of commit or tree associated with given ID or HEAD.
+# Copyright (c) Petr Baudis, 2005
+# Copyright (c) Pavel Roskin 2005
+#
+# If the ID is not provided, HEAD is used.  The default behavior is to
+# show the commit ID.
+#
+# OPTIONS
+# -------
+# -p::
+#	Get ID of the first parent commit of a given revision or HEAD.
+#
+# -t::
+#	Get ID of tree associated with given commit or HEAD.
+#
+# OBJECT_ID::
+#	An ID resolving to a commit.
+
+USAGE="cg-object-id [-p] [-t] [OBJECT_ID]"
+
+. ${COGITO_LIB}cg-Xlib
+deprecated_alias cg-object-id commit-id cg-commit-id parent-id cg-parent-id tree-id cg-tree-id
+
+show_parent=
+show_tree=
+while optparse; do
+	if optparse -p; then
+		show_parent=1
+	elif optparse -t; then
+		show_tree=1
+	else
+		optfail
+	fi
+done
+
+# Compatibility code
+case $_cg_cmd in
+	*parent*) show_parent=1;;
+	*tree*) show_tree=1;;
+esac
+
+if [ "$show_parent" -a "$show_tree" ]; then
+	echo "Cannot show parent and tree ID at the same time." >&2
+	exit 1
+fi
+
+id="${ARGS[0]}"
+if [ "$show_parent" ]; then
+	id="$id"^
+fi
+
+normid=$(. ${COGITO_LIB}cg-Xnormid "$id") || exit 1
+
+if [ "$show_parent" ]; then
+	echo ${normid% *}
+	exit 0
+fi
+
+type=${normid#* }
+normid=${normid% *}
+[ "$type" ] || type=$(git-cat-file -t "$normid")
+if [ "$show_tree" ]; then
+	if [ "$type" = "commit" ]; then
+		normid=$(git-cat-file commit "$normid" | sed -e 's/tree //;q')
+		type=$(git-cat-file -t "$normid")
+	fi
+
+	if [ "$type" != "tree" ]; then
+		echo "Invalid tree id: $normid" >&2
+		exit 1
+	fi
+else
+	if [ "$type" != "commit" ]; then
+		echo "Invalid commit id: $normid" >&2
+		exit 1
+	fi
+fi
+
+echo $normid
+
