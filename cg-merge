@@ -76,7 +76,7 @@ posthook()
 }
 
 
-head=$(cg-object-id) || exit 1
+head=$(cg-object-id -c) || exit 1
 
 
 careful=
@@ -85,7 +85,7 @@ while optparse; do
 	if optparse -c; then
 		careful=1
 	elif optparse -b=; then
-		base=$(cg-object-id "$OPTARG") || exit 1
+		base=$(cg-object-id -c "$OPTARG") || exit 1
 	else
 		optfail
 	fi
@@ -94,7 +94,7 @@ done
 branchname="${ARGS[0]}"
 [ "$branchname" ] || { [ -s $_git/refs/heads/origin ] && branchname=origin; }
 [ "$branchname" ] || die "what to merge?"
-branch=$(cg-object-id "$branchname") || exit 1
+branch=$(cg-object-id -c "$branchname") || exit 1
 
 [ "$base" ] || base=$(git-merge-base "$head" "$branch")
 [ "$base" ] || die "unable to automatically determine merge base"

@@ -299,17 +299,17 @@ done
 if [ "$mergebase" ]; then
 	[ "$log_start" ] || log_start="HEAD"
 	[ "$log_end" ] || log_end="origin"
-	id1=$(cg-object-id "$log_start") || exit 1
-	id2=$(cg-object-id "$log_end") || exit 1
+	id1=$(cg-object-id -c "$log_start") || exit 1
+	id2=$(cg-object-id -c "$log_end") || exit 1
 	log_start=$(git-merge-base $id1 $id2) || exit 1
 fi
 
 revls="git-rev-list --pretty=raw $date_from $date_to"
 echo "$revls" 
 
-id1="$(cg-object-id "$log_start")" || exit 1
+id1="$(cg-object-id -c "$log_start")" || exit 1
 if [ "$log_end" ]; then
-	id2="$(cg-object-id "$log_end")" || exit 1
+	id2="$(cg-object-id -c "$log_end")" || exit 1
 	revls="$revls $id2 ^$id1"
 else
 	revls="$revls $id1"

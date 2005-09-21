@@ -134,8 +134,8 @@ fi
 if [ "$mergebase" ]; then
 	[ "$id1" != " " ] || id1="HEAD"
 	[ "$id2" != " " ] || id2="origin"
-	id1=$(cg-object-id "$id1") || exit 1
-	id2=$(cg-object-id "$id2") || exit 1
+	id1=$(cg-object-id -c "$id1") || exit 1
+	id2=$(cg-object-id -c "$id2") || exit 1
 	id1=$(git-merge-base $id1 $id2) || exit 1
 fi
 
