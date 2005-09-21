@@ -83,6 +83,27 @@ fetch_progress()
 	[ "$last_objects" != "$objects" ] && echo
 }
 
+show_changes_summary()
+{
+	local orig_head="$1"
+	local new_head="$2"
+	if [ ! "$orig_head" ]; then
+		echo "New branch: $new_head"
+
+	elif [ "$orig_head" != "$new_head" ]; then
+		echo "Tree change: $orig_head:$new_head"
+		if [ "$verbose" ] ; then
+			git-diff-tree -r $(cg-object-id -t $orig_head) $(cg-object-id -t $new_head)
+		else
+			git-diff-tree -r $(cg-object-id -t $orig_head) $(cg-object-id -t $new_head) | awk '{ print $5" "$6 }'
+		fi
+	else
+		echo "Up to date."
+		exit
+	fi
+}
+
+
 get_rsync()
 {
 	[ "$1" = "-b" ] && shift
@@ -300,6 +321,25 @@ mkdir -p "$_git/info"
 echo $$ > "$_git/info/cg-fetch-$name-dirty"
 
 
+orig_head=
+[ -s "$_git/refs/heads/$name" ] && orig_head=$(cat "$_git/refs/heads/$name")
+
+
+if echo "$uri" | grep -q "^git://"; then
+	# This is a really special case.
+	[ "$rembranch" ] || rembranch="HEAD"
+	(
+		git-fetch-pack "$uri" "$rembranch" || echo "failed" "$rembranch"
+	) | while read sha1 remote_name; do
+		[ "$sha1" = "failed" ] && die "fetching pack over the git protocol failed"
+		echo "$sha1" >"$_git/refs/heads/$name"
+	done || exit
+	rm "$_git/info/cg-fetch-$name-dirty"
+	show_changes_summary "$orig_head" "$(cg-object-id "$name")"
+	exit 0
+fi
+
+
 if echo "$uri" | grep -q "^http://"; then
 	get=get_http
 	fetch=fetch_http
@@ -331,10 +371,6 @@ else
 	fi
 	rm -f $_git/.,,lntest
 fi
-
-
-orig_head=
-[ -s "$_git/refs/heads/$name" ] && orig_head=$(cat "$_git/refs/heads/$name")
 
 
 mkdir -p $_git/refs/heads
@@ -388,17 +424,4 @@ $get -i -s -u -d "$uri/refs/tags" "$_git/refs/tags" || rsyncerr=1
 
 rm "$_git/info/cg-fetch-$name-dirty"
 
-if [ ! "$orig_head" ]; then
-	echo "New branch: $new_head"
-
-elif [ "$orig_head" != "$new_head" ]; then
-	echo "Tree change: $orig_head:$new_head"
-	if [ "$verbose" ] ; then
-		git-diff-tree -r $(cg-object-id -t $orig_head) $(cg-object-id -t $new_head)
-	else
-		git-diff-tree -r $(cg-object-id -t $orig_head) $(cg-object-id -t $new_head) | awk '{ print $5" "$6 }'
-	fi
-else
-	echo "Up to date."
-	exit
-fi
+show_changes_summary "$orig_head" "$new_head"

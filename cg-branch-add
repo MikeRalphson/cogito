@@ -22,6 +22,7 @@
 #    one particular branch you want to fetch.
 # 3. HTTP - `http://host/path`
 # 4. SSH - `git+ssh://host/path` - note that the path must be absolute.
+# 5. GIT-Daemon - `git://host/path`
 #
 # The URL can have a fragment part, which identifies a branch inside of
 # the remote repository.
