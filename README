@@ -266,7 +266,7 @@ changes, do
 
 Note that we gave only a glimpse to the basic usage, but there is a lot more
 - merging (`cg-merge`), moving your tree to an older commit (`cg-seek`),
-uploading (`cg-upload`), etc.
+pushing (`cg-push`), etc.
 
 
 Understanding GIT branching and merging
