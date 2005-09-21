@@ -305,7 +305,6 @@ if [ "$mergebase" ]; then
 fi
 
 revls="git-rev-list --pretty=raw $date_from $date_to"
-echo "$revls" 
 
 id1="$(cg-object-id -c "$log_start")" || exit 1
 if [ "$log_end" ]; then
