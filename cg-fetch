@@ -273,12 +273,8 @@ get_local()
 
 fetch_local()
 {
-	# git-local-fetch is currently broken w.r.t. packfiles
-	#(git-local-fetch -a -l -v -w "$3" $recovery "$1" "$2" 2>&1 /dev/null) | fetch_progress
-	get_local -s -u -d "$2/objects" "$_git_objects" | sed 's/`.*\/\(..\/[^\/]*\)'\'' -> .*/\1/' | fetch_progress
-	ret=${PIPESTATUS[0]}
-	cat "$_git/refs/heads/.$3-fetching" > "$_git/refs/heads/$3"
-	return $ret
+	(git-local-fetch -a -l -v -w "heads/$3" $recovery "$1" "$2" 2>&1 /dev/null) | fetch_progress
+	return ${PIPESTATUS[0]}
 }
 
 
