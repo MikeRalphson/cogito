@@ -10,6 +10,13 @@
 #
 # OPTIONS
 # -------
+# -c::
+#	Get ID of commit matching the object ID (error out if it is not
+#	a commit). This is the default if you do not pass any parameter
+#	as well, but that is only for the human usage. For clarity, all
+#	scripted usage of cg-object-id should use -c explicitly if it
+#	wants a commit.
+#
 # -n::
 #	Normalize only - don't check the object type.
 #
@@ -24,7 +31,7 @@
 # OBJECT_ID::
 #	An ID resolving to a commit.
 
-USAGE="cg-object-id [-n | -p | -t] [OBJECT_ID]"
+USAGE="cg-object-id [-c | -n | -p | -t] [OBJECT_ID]"
 
 . ${COGITO_LIB}cg-Xlib
 deprecated_alias cg-object-id commit-id cg-commit-id parent-id cg-parent-id tree-id cg-tree-id
@@ -99,11 +106,14 @@ normalize_id()
 
 
 
+show_commit= # this is really only for the options-exclusivity-checking
 show_parent=
 show_tree=
 normalize_only=
 while optparse; do
-	if optparse -n; then
+	if optparse -c; then
+		show_commit=1
+	elif optparse -n; then
 		normalize_only=1
 	elif optparse -p; then
 		show_parent=1
@@ -120,7 +130,7 @@ case $_cg_cmd in
 	*tree*) show_tree=1;;
 esac
 
-case "$show_parent$show_tree$normalize_only" in
+case "$show_commit$show_parent$show_tree$normalize_only" in
 	11*)	usage;;
 esac
 
