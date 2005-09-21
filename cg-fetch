@@ -75,7 +75,7 @@ fetch_progress()
 		esac 
 
 		object="$_git_objects/$object"
-		size=$(($size + $(stat -c '%s' "$object" 2>/dev/null)))
+		[ -e "$object" ] && size=$(($size + $(stat -c '%s' "$object" 2>/dev/null)))
 		objects=$(($objects + 1));
 
 		echo -ne "progress: $objects objects, $size bytes$percentage\r"
