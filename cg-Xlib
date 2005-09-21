@@ -7,17 +7,26 @@
 # Cogito programs.
 
 _cg_cmd=${0##*/}
+_cleanup_code=
 
 
 die()
 {
 	echo $_cg_cmd: $@ >&2
+	eval "$_cleanup_code"
 	exit 1
 }
 
 usage()
 {
 	die "usage: $USAGE"
+}
+
+# Do this in case we get interrupted or prematurely die
+cleanup_trap()
+{
+	_cleanup_code="$*"
+	trap "$_cleanup_code; echo; die \"interrupted\"" SIGINT SIGTERM
 }
 
 pager()

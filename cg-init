@@ -45,7 +45,7 @@ done
 
 [ -e $_git ] && die "$_git already exists"
 
-trap "rm -rf $_git; die \"interrupted\"" SIGINT SIGTERM
+cleanup_trap "rm -rf $_git"
 
 git-init-db
 touch $_git/refs/heads/master

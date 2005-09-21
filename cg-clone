@@ -73,7 +73,7 @@ else
 fi
 
 
-trap "cd .. && rm -rf $dir; echo; die \"interrupted\"" SIGINT SIGTERM
+cleanup_trap "cd .. && rm -rf $dir"
 
 cg-init -I || die "init failed"
 if [ "$symlink" ]; then
