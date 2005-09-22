@@ -26,7 +26,8 @@ usage()
 cleanup_trap()
 {
 	_cleanup_code="$*"
-	trap "$_cleanup_code; echo; die \"interrupted\"" SIGINT SIGTERM
+	# die will execute the $_cleanup_code
+	trap "echo; die \"interrupted\"" SIGINT SIGTERM
 }
 
 pager()
