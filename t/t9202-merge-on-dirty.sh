@@ -23,6 +23,8 @@ test_add_block()
 			'(cd branch1 && cg-status -w | grep -q "^A y" && cmp y y-)'
 	test_expect_success 'undoing the local change' \
 			'(cd branch1 && cg-rm -f y)'
+	test_expect_success 'confirming that we have no uncommitted modifications' \
+			'(cd branch1 && [ -z "$(git-diff-index -r $(cg-object-id -t))" ])'
 }
 
 commit_and_propagate()
@@ -94,6 +96,8 @@ test_expect_success 'checking that we didn'\''t commit the local change' \
 		'(cd branch1 && cg-admin-cat foo >foo-tree && ! cmp foo- foo-tree)'
 test_expect_success 'undoing the local change' \
 		'(cd branch1 && cg-restore -f foo)'
+test_expect_success 'confirming that we have no uncommitted modifications' \
+		'(cd branch1 && [ -z "$(git-diff-index -r $(cg-object-id -t))" ])'
 
 test_expect_success 'local change on branch1 (modify in different, should not block)' \
 		"(cd branch1 && echo moo >bar)"
