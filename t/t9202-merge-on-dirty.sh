@@ -76,7 +76,7 @@ test_expect_success 'local commit in branch1' \
 		"(cd branch1 && cg-commit -m\"Branch1 commit\")"
 
 
-echo appended >>branch2/brm
+echo appended >>branch2/foo
 commit_and_propagate
 
 test_add_block "clean"
@@ -127,8 +127,8 @@ cp branch1/bar branch1/bar-
 cp branch1/brm branch1/brm-
 test_expect_success 'merging branch2 to branch1 (automatic)' \
 		"(cd branch1 && cg-merge </dev/null)"
-test_expect_success 'checking if the merge was cancelled' \
-		'(cd branch1 && cmp brm brm-)'
+test_expect_success 'checking if the working copy was touched by the merge' \
+		'(cd branch1 && ! cmp brm brm-)'
 test_expect_success 'checking if we still have our local change' \
 		'(cd branch1 && cg-status -w | grep -q "^M bar" && cmp bar bar-)'
 # This test is useful if the previous one failed - did it get lost or
@@ -154,9 +154,9 @@ test_expect_success 'local change on branch1 (modify in different, should not bl
 		"(cd branch1 && echo zoo >bar)"
 cp branch1/bar branch1/bar-
 cp branch1/brm branch1/brm-
-test_expect_success 'merging branch2 to branch1 (conflicting)' \
+test_expect_failure 'merging branch2 to branch1 (conflicting)' \
 		"(cd branch1 && cg-merge </dev/null)"
-test_expect_success 'checking if the merge was cancelled' \
+test_expect_success 'checking if the merge was cancelled and the working copy was not polluted by conflicts' \
 		'(cd branch1 && cmp brm brm-)'
 test_expect_success 'checking if we still have our local change' \
 		'(cd branch1 && cg-status -w | grep -q "^M bar" && cmp bar bar-)'
