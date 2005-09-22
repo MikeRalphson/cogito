@@ -34,7 +34,7 @@ while optparse; do
 done
 
 name=${ARGS[0]}
-[ "$name" ] || { [ -s $_git/refs/heads/origin ] && name=origin; }
+[ "$name" ] || { [ -s $_git/branches/origin ] && name=origin; }
 [ "$name" ] || die "where to update from?"
 
 if [ -s "$_git/branches/$name" ]; then
