@@ -135,7 +135,7 @@ echo -e "\tto $head..." >&2
 
 prehook tree
 
-if ! git-read-tree -u -m $(cg-object-id -t $base) $(cg-object-id -t $head) $(cg-object-id -t $branch); then
+if ! git-read-tree -u -m "$(cg-object-id -t $base)" "$(cg-object-id -t $head)" "$(cg-object-id -t $branch)"; then
 	echo "cg-merge: git-read-tree failed (merge likely blocked by local changes)" >&2
 	posthook tree localchanges
 	exit 1
