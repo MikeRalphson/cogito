@@ -184,7 +184,6 @@ __END__
 	posthook tree conflicts
 	exit 2
 fi
-git-checkout-index -f -u -a
 
 echo
 readtree=
