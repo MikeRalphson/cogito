@@ -111,7 +111,7 @@ clean_files()
 	cg-status "$xopt" -w | sed -n 's/^? //p' |
 	for file in $(cat); do
 		path="${_git_relpath}$file"
-		if [ -d "$path" ]; then
+		if [ -d "$path" -a ! -L "$path" ]; then
 			# Sanity check, shouldn't happen
 			echo "FATAL: cg-status reports directories (internal error)" >&2
 			exit 1
