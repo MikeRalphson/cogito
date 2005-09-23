@@ -25,6 +25,13 @@
 # want to fetch the changes and then merge them to your branch, use the command
 # `cg-update`.
 #
+# Also note that if you have local changes in your tree that you did not
+# commit, cg-merge will always preserve them when fast-forwarding. When doing
+# a tree merge, it will preserve them if they don't conflict with the merged
+# changes, and report an error otherwise. In short, it should do the Right
+# Thing (tm), never lose your local changes and never let them mix up with
+# the merge.
+#
 # OPTIONS
 # -------
 # -b BASE_COMMIT::
