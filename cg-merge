@@ -135,6 +135,10 @@ echo -e "\tto $head..." >&2
 
 prehook tree
 
+git-diff-index --name-only "$(cg-object-id -t $head)" >>"$_git/commit-ignore"
+# Don't keep around useless empty files
+[ -s "$_git/commit-ignore" ] || rm "$_git/commit-ignore"
+
 if ! git-read-tree -u -m "$(cg-object-id -t $base)" "$(cg-object-id -t $head)" "$(cg-object-id -t $branch)"; then
 	echo "cg-merge: git-read-tree failed (merge likely blocked by local changes)" >&2
 	posthook tree localchanges
@@ -181,6 +185,10 @@ if ! git-merge-index -o -q ${COGITO_LIB}cg-Xmergefile -a || [ "$careful" ]; then
 
 	Conflicts during merge. Do cg-commit after resolving them.
 __END__
+	if [ -s "$_git/commit-ignore" ]; then
+		echo "	These files contained local modifications and won't be automatically chosen for committing:" >&2
+		cat "$_git/commit-ignore" >&2
+	fi
 	posthook tree conflicts
 	exit 2
 fi

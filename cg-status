@@ -107,6 +107,10 @@ if [ "$gitstatus" ]; then
 		echo "Merging: $(cat "$_git/merging") ($(cat "$_git/merging-sym"))"
 		echo "Merge base: $(cat "$_git/merge-base")"
 	fi
+	if [ -s "$_git/commit-ignore" ]; then
+		echo "Files not to be committed now (contained local changes before the merge):"
+		sed 's/^/    /' "$_git/commit-ignore"
+	fi
 
 	if [ -s "$_git/blocked" ]; then
 		echo

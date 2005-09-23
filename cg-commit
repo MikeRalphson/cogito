@@ -193,6 +193,15 @@ else
 		# sed versions.
 		eval commitfiles=($(git-diff-index -r -m HEAD | \
 			sed 's/^\([^	]*\)\(.	.*\)\(	.*\)*$/"\2"/'))
+
+		if [ -s "$_git/commit-ignore" ]; then
+			newcommitfiles=()
+			for file in "${commitfiles[@]}"; do
+				fgrep -qx "${file:2}" "$_git/commit-ignore" && continue
+				newcommitfiles[${#newcommitfiles[@]}]="$file"
+			done
+			commitfiles=("${newcommitfiles[@]}")
+		fi
 	fi
 
 	merging=
@@ -409,6 +418,7 @@ if [ "$newhead" ]; then
 	echo "Committed as $newhead."
 	echo $newhead >$_git/HEAD
 	[ "$merging" ] && rm $_git/merging $_git/merging-sym $_git/merge-base
+	rm -f "$_git/commit-ignore"
 
 	# Trigger the postcommit hook
 	branchname=

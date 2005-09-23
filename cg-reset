@@ -38,7 +38,7 @@ if [ -s "$_git/head-name" ]; then
 	fi
 fi
 
-rm -f $_git/blocked $_git/merging $_git/merging-sym $_git/merge-base
+rm -f $_git/blocked $_git/merging $_git/merging-sym $_git/merge-base $_git/commit-ignore
 git-read-tree -m HEAD || git-read-tree HEAD
 
 git-checkout-index -f -a
