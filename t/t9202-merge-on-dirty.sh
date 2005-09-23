@@ -160,8 +160,11 @@ cp branch1/bar branch1/bar-
 cp branch1/brm branch1/brm-
 test_expect_failure 'merging branch2 to branch1 (conflicting)' \
 		"(cd branch1 && cg-merge </dev/null)"
-test_expect_success 'checking if the merge was cancelled and the working copy was not polluted by conflicts' \
-		'(cd branch1 && cmp brm brm-)'
+test_expect_success 'checking if the merge caused a conflict' \
+		'(cd branch1 && grep "<<<" brm)'
+# <now imagine me resolving the conflict>
+test_expect_success 'committing "resolved" conflicting merge' \
+		'(cd branch1 && cg-commit -m"Resolved conflicting merge")'
 test_expect_success 'checking if we still have our local change' \
 		'(cd branch1 && cg-status -w | grep -q "^M bar" && cmp bar bar-)'
 # This test is useful if the previous one failed - did it get lost or
