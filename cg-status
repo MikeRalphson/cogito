@@ -22,6 +22,10 @@
 #	'<file>' has been deleted.
 # M::
 #	'<file>' has been touched or modified.
+# m::
+#	'<file>' has been touched or modified, but will not be automatically
+#	committed the next time you call cg-commit. This is used during a
+#	merge to mark files which contained local changes before the merge.
 #
 # OPTIONS
 # -------
@@ -134,10 +138,15 @@ if [ "$workstatus" ]; then
 		{ if [ "$_git_relpath" ]; then sed -n "s|^$_git_relpath||p"; else cat; fi } |
 		sed 's,^,? ,'
 
+	commitignore=
+	[ -s "$_git/commit-ignore" ] && commitignore=1
+
 	git-diff-index HEAD $_git_relpath | cut -f5- -d' ' | 
 	while IFS=$'\t' read -r mode file; do
 		if [ "$mode" = D ]; then
 			[ "$(git-diff-files "$file")" ] && mode=!
+		elif [ "$mode" = M ] && [ "$commitignore" ]; then
+			fgrep -qx "$file" "$_git/commit-ignore" && mode=m
 		fi
 		[ "$_git_relpath" ] && file="${file#$_git_relpath}"
 		echo "$mode $file"
