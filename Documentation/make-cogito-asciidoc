@@ -24,11 +24,11 @@ print_command_info()
 
 	echo
 	case "$cmdname" in
-	cg-X*|*-id)
+	cg-X*)
 		echo "$cmdname::"
 		;;
 	cg-*)
-		usage=$(sed -n '/^USAGE=/,0s/.*cg-[^ ]*\(.*\)"/\1/p' < $command)
+		usage=$(sed -n '/^USAGE=/,0s/.*"cg-[^ ]*\(.*\)"/\1/p' < $command)
 		echo "gitlink:$cmdname[] $usage::"
 		;;
 	esac
