@@ -3,12 +3,12 @@
 # Restore removed/changed files in the working tree.
 # Copyright (c) Petr Baudis, 2005
 #
-# Restore given files to their original state. Without any parameters,
-# it recovers any files removed locally whose removal was not recorded
-# by `cg-rm`.
+# Restore given files to their original state.  It recovers any files
+# (or files passed as arguments to the command, respectively) removed
+# locally whose removal was not recorded by `cg-rm`.
 #
-# If passed a set of file names, it restores those files to their
-# state as of the last commit (including bringing files removed with
+# If passed the -f parameter, it restores the files to their state
+# as of the last commit (including bringing files removed with
 # `cg-rm` back to life; FIXME: does not do that part yet).
 #
 # This command is complementary to the `cg-reset` command, which
