@@ -329,7 +329,7 @@ orig_head=
 
 if echo "$uri" | grep -q "^(git|git+packed+ssh)://"; then
 	# This is a really special case.
-	uri="$(echo "$uri" | sed 's#^git+packed+ssh://\([^/]*\)\(/.*\)$#\1:\2#')";;
+	uri="$(echo "$uri" | sed 's#^git+packed+ssh://\([^/]*\)\(/.*\)$#\1:\2#')"
 	[ "$rembranch" ] || rembranch="HEAD"
 	(
 		git-fetch-pack "$uri" "$rembranch" || echo "failed" "$rembranch"
