@@ -142,7 +142,7 @@ fetch_rsync()
 {
 	get_rsync -s -u -d "$2/objects" "$_git_objects" | fetch_progress
 	ret=${PIPESTATUS[0]}
-	cat "$_git/refs/heads/.$3-fetching" > "$_git/refs/heads/$3"
+	[ "$3" ] && cat "$_git/refs/${3%/*}/.${3##*/}-fetching" > "$_git/refs/$3"
 	return $ret
 }
 
@@ -193,7 +193,9 @@ get_http()
 
 fetch_http()
 {
-	(git-http-fetch -a -v -w "heads/$3" $recovery "$1" "$2/" 2>&1 /dev/null) | fetch_progress
+	whead=
+	[ "$3" ] && whead="-w $3"
+	(git-http-fetch -a -v $whead $recovery "$1" "$2/" 2>&1 /dev/null) | fetch_progress
 	return ${PIPESTATUS[0]}
 }
 
@@ -232,10 +234,12 @@ get_ssh()
 
 fetch_ssh()
 {
+	whead=
+	[ "$3" ] && whead="-w $3"
 	# git-ssh-fetch would theoretically take git+ssh://-style URL, but
 	# it is buggy and won't process it correctly, so let's just
 	# preprocess it to some easier-to-take form.
-	(git-ssh-fetch -a -v -w "heads/$3" $recovery "$1" \
+	(git-ssh-fetch -a -v $whead $recovery "$1" \
 		"$(echo "$2" | sed 's#^git+ssh://\([^/]*\)\(/.*\)$#\1:\2#')" \
 		2>&1 /dev/null) | fetch_progress
 	return ${PIPESTATUS[0]}
@@ -273,7 +277,9 @@ get_local()
 
 fetch_local()
 {
-	(git-local-fetch -a -l -v -w "heads/$3" $recovery "$1" "$2" 2>&1 /dev/null) | fetch_progress
+	whead=
+	[ "$3" ] && whead="-w $3"
+	(git-local-fetch -a -l -v $whead $recovery "$1" "$2" 2>&1 /dev/null) | fetch_progress
 	return ${PIPESTATUS[0]}
 }
 
@@ -383,7 +389,7 @@ new_head=$(cat "$_git/refs/heads/.$name-fetching")
 if ! [ "$symlinked" ]; then
 	if [ "$recovery" -o "$orig_head" != "$new_head" ]; then
 		[ -d $_git_objects ] || mkdir -p $_git_objects
-		$fetch "$(cat "$_git/refs/heads/.$name-fetching")" "$uri" "$name" || die "objects fetch failed"
+		$fetch "$(cat "$_git/refs/heads/.$name-fetching")" "$uri" "heads/$name" || die "objects fetch failed"
 	fi
 else
 	cat "$_git/refs/heads/.$name-fetching" > "$_git/refs/heads/$name"
