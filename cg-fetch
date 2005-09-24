@@ -414,9 +414,7 @@ $get -i -s -u -d "$uri/refs/tags" "$_git/refs/tags" || rsyncerr=1
 		tagid=$(cat $tag)
 		GIT_DIR=../.. git-cat-file -t "$tagid" >/dev/null 2>&1 && continue
 		echo -n "Missing object of tag $tag... "
-		# In case it's not in a packfile...
-		tagfile=objects/${tagid:0:2}/${tagid:2}
-		if $get -i -s "$uri/$tagfile" "../../$tagfile" 2>/dev/null >&2; then
+		if [ "$fetch" != "fetch_rsync" ] && GIT_DIR=../.. $fetch "$tagid" "$uri" 2>/dev/null >&2; then
 			echo "retrieved"
 		else
 			echo "unable to retrieve"
