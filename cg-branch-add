@@ -22,7 +22,7 @@
 #    one particular branch you want to fetch.
 # 3. HTTP - `http://host/path`
 # 4. SSH - `git+ssh://host/path` - note that the path must be absolute.
-# 5. Packed SSH - `git+packed+ssh://host/path` - fetch over SSH, but using
+# 5. Packed SSH - `git+pack+ssh://host/path` - fetch over SSH, but using
 #    the git-fetch-pack tool. This won't clone tags, but might be much more
 #    network-effective (while also more CPU-intensive especially on the
 #    server side).

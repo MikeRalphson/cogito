@@ -327,9 +327,9 @@ orig_head=
 [ -s "$_git/refs/heads/$name" ] && orig_head=$(cat "$_git/refs/heads/$name")
 
 
-if echo "$uri" | grep -q "^(git|git+packed+ssh)://"; then
+if echo "$uri" | grep -q "^(git|git+pack+ssh)://"; then
 	# This is a really special case.
-	uri="$(echo "$uri" | sed 's#^git+packed+ssh://\([^/]*\)\(/.*\)$#\1:\2#')"
+	uri="$(echo "$uri" | sed 's#^git+pack+ssh://\([^/]*\)\(/.*\)$#\1:\2#')"
 	[ "$rembranch" ] || rembranch="HEAD"
 	(
 		git-fetch-pack "$uri" "$rembranch" || echo "failed" "$rembranch"
