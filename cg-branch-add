@@ -26,6 +26,8 @@
 #    the git-fetch-pack tool. This won't clone tags, but might be much more
 #    network-effective (while also more CPU-intensive especially on the
 #    server side).
+#    THIS SCHEME IS DEPRECATED AND IT WILL BE REMOVED VERY SOON, NEVER USE IT.
+#    The standard git+ssh scheme will be made to behave as git+pack+ssh.
 # 6. GIT-Daemon - `git://host/path` - this won't clone tags.
 #
 # The URL can have a fragment part, which identifies a branch inside of
