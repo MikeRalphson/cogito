@@ -14,7 +14,7 @@
 # OPTIONS
 # -------
 # -d DESCRIPTION::
-#	Append this text to the tag object before signing it.
+#	Description of the tag.
 # -k KEYNAME::
 #	Use the given key to sign the tag, instead of the default one.
 # -s::
@@ -23,7 +23,7 @@
 #	This is most usually the ID of the commit to tag. Tagging
 #	other objects than commits is possible, but rather "unusual".
 
-USAGE="cg-tag [-s [-d DESCRIPTION] [-k KEYNAME]] TAG_NAME [OBJECT_ID]"
+USAGE="cg-tag [-d DESCRIPTION] [-s [-k KEYNAME]] TAG_NAME [OBJECT_ID]"
 
 . ${COGITO_LIB}cg-Xlib || exit 1
 
@@ -60,31 +60,29 @@ mkdir -p $_git/refs/tags
 [ "$id" ] || id=$(cat $_git/HEAD)
 
 
-if [ "$sign" ]; then
-	tagdir="$(mktemp -d -t gittag.XXXXXX)"
+tagdir="$(mktemp -d -t gittag.XXXXXX)"
 
-	cat <<SIGEND >"$tagdir/tag"
+cat <<SIGEND >"$tagdir/tag"
 object $id
 type $type
 tag $name
 tagger $(git-var GIT_COMMITTER_IDENT)
-
 SIGEND
-	if [ "$description" ]; then
-		echo "$description" >>"$tagdir/tag"
-		echo >>"$tagdir/tag"
-	fi
+if [ "$description" ]; then
+	echo >>"$tagdir/tag"
+	echo "$description" >>"$tagdir/tag"
+fi
+if [ "$sign" ]; then
+	echo >>"$tagdir/tag"
 	if ! gpg ${keyname:+--default-key "$keyname"} -bsa "$tagdir/tag"; then
 		rm -rf "$tagdir"
 		die "error signing the tag"
 	fi
 	cat "$tagdir/tag.asc" >>"$tagdir/tag"
-	if ! git-mktag <"$tagdir/tag" >$_git/refs/tags/$name; then
-		rm -rf "$tagdir"
-		die "error creating tag"
-	fi
-
-	rm -rf "$tagdir"
-else
-	echo "$id" >$_git/refs/tags/$name
 fi
+if ! git-mktag <"$tagdir/tag" >$_git/refs/tags/$name; then
+	rm -rf "$tagdir"
+	die "error creating tag"
+fi
+
+rm -rf "$tagdir"
