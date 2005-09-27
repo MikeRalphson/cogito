@@ -153,7 +153,7 @@ get_http()
 	[ "$1" = "-i" ] && shift
 	[ "$1" = "-s" ] && shift
 
-	wget_flags="-nv"
+	wget_flags="--execute continue=off -nv"
 
 	update=
 	if [ "$1" = "-u" ]; then
