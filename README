@@ -431,6 +431,43 @@ You can also get the list of source locations for remote heads by
 	$ cg-branch-ls
 
 
+Using Cogito for team work
+~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+A small team with SSH access to a shared server can use Cogito in a way
+similar to traditional CVS over SSH.
+
+If you are bootstrapping the project, and you have a local Cogito working
+copy, you must set up the shared repository and push a local head to it.
+
+To set up the shared repository, for example in
+
+	remoteserver:/srv/git/projectname.git
+
+login to the remote server and do:
+
+	$ mkdir /srv/git
+	$ cg-admin-setuprepo -g gitcommit /srv/git/projectname.git
+
+Note: All the developers with "push" access must belong to the 'gitcommit'
+group and have a 002 umask set on the remote server.
+
+Going back to your Cogito working copy, run:
+
+	$ cg-branch-add origin git+ssh://remoteserver/srv/git/project.git
+	$ cg-push
+
+Now your other team members can start working with you, doing
+
+         $ cg-clone git+ssh://remoteserver/var/git/project.git
+
+and when they are ready to push their work onto the shared repository,
+they just do:
+
+         $ cg-update
+         $ cg-push
+
+
 Cogito vs. other GIT tools
 ~~~~~~~~~~~~~~~~~~~~~~~~~~
 
