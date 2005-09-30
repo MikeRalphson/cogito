@@ -47,7 +47,7 @@ done
 
 base=$(cg-object-id -c) || exit 1
 
-commit=$(cg-object-id -c "$1") || exit 1
+commit=$(cg-object-id -c "${ARGS[0]}") || exit 1
 git-rev-list $base | grep -q $commit || \
 	die "$commit: not an ancestor of HEAD"
 
