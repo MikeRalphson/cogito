@@ -305,11 +305,13 @@ will `cg-clone` do?
 
 	+--------+
 	+--------+
+
 First it creates an empty repository
 
 	+--------+
 	$  origin<
 	+--------+
+
 Then it creates an 'origin' head, and will copy all the history from the
 remote repository's 'master' head there. So this head exists to reflect
 the state of the remote repository. The important point is that it is
@@ -325,6 +327,7 @@ head and possibly push to it.
 	|  master<
 	$  origin<
 	+--------+
+
 Finally it copied over the 'origin' head to the 'master' head, which will
 from now as your current head represent your local development in the
 repository.
@@ -337,6 +340,7 @@ will it do?
 	|  master<
 	$  origin< < < < <
 	+--------+
+
 First, it will populate your 'origin' head with the new commits from the
 remote's 'master' head.
 
@@ -344,6 +348,7 @@ remote's 'master' head.
 	|  master<-M-.
 	$  origin>---'
 	+--------+
+
 Then, it will merge those new commits to your 'master' head.
 
 Now let's imagine that there is also another head 'unoji' on the other side
