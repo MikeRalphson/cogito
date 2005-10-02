@@ -1,9 +1,16 @@
-#!/bin/sh
+#!/usr/bin/env bash
 
-[ x"$1" = "x" ] && exec cg-help
 cmd="$1"; shift
-( [ x"$cmd" = x"--help" ] ) && exec cg-help
-( [ x"$cmd" = x"--version" ] ) && exec cg-version
+case "$cmd" in
+-h|--help|"") cmd="help" ;;
+--version) cmd="version" ;;
+-*)
+	echo "cg: unknown option '$cmd' (try 'cg --help' or 'cg --version')" >&2
+	exit 1
+esac
 
 exe="cg-$cmd"
-exec $exe "$@"
+type -P "$exe" >/dev/null && exec "$exe" "$@"
+
+echo "cg: unknown command '$cmd' (try 'cg help')" >&2
+exit 1
