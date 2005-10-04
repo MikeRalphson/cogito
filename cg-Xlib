@@ -115,6 +115,11 @@ readlink()
 	return 0
 }
 
+# normpath PATH
+# Normalize the path, handling and removing any superfluous .. and .
+# elements. Typically
+#	normpath ABSPATH/RELPATH
+# to get new absolute path.
 normpath()
 {
 local inp
@@ -194,6 +199,8 @@ list_untracked_files()
 	git-ls-files -z --others $EXCLUDE
 }
 
+# Usage: showdate SECONDS TIMEZONE [FORMAT]
+# Display date nicely based on how GIT stores it.
 showdate()
 {
 	local secs=$1 tzhours=${2:0:3} tzmins=${2:0:1}${2:3} format="$3"
@@ -209,6 +216,8 @@ showdate()
 }
 
 # Usage: tree_timewarp [--no-head-update] DIRECTION_STR ROLLBACK_BOOL BASE BRANCH
+# Reset the current tree from version BASE to version BRANCH, properly updating
+# the working copy (if ROLLBACK_BOOL) and trying to keep local changes.
 tree_timewarp()
 {
 	local no_head_update=
