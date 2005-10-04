@@ -115,10 +115,10 @@ readlink()
 	return 0
 }
 
-# normpath PATH
+# echo PATH | normpath
 # Normalize the path, handling and removing any superfluous .. and .
 # elements. Typically
-#	normpath ABSPATH/RELPATH
+#	echo ABSPATH/RELPATH | normpath
 # to get new absolute path.
 normpath()
 {
