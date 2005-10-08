@@ -116,7 +116,7 @@ if [ "$gitstatus" ]; then
 	[ -s "$_git/branch-name" ] && echo "Branch (informal): $(cat "$_git/branch-name")"
 
 	if [ -s "$_git/head-name" ]; then
-		headsha1=$(cat $_git/HEAD)
+		headsha1=$(cat "$_git/$(git-symbolic-ref HEAD)")
 		echo "Seeked from head: $(cat "$_git/head-name")"
 		echo "Seeked at commit: $headsha1"
 		echo
@@ -151,7 +151,7 @@ if [ "$gitstatus" ]; then
 		sed 's/^/    /' "$_git/blocked"
 	fi
 
-	if [ ! -s .git/HEAD ]; then
+	if [ ! -s "$_git/$(git-symbolic-ref HEAD)" ]; then
 		echo
 		echo "Before initial commit."
 	fi
@@ -176,7 +176,7 @@ if [ "$workstatus" ]; then
 		{ if [ "$basepath" ]; then sed -n "s|^$basepath||p"; else cat; fi } |
 		sed 's,^,? ,'
 
-	if [ ! -s .git/HEAD ]; then
+	if [ ! -s "$_git/$(git-symbolic-ref HEAD)" ]; then
 		# Initial commit
 		should_show_flag 'A' && git-ls-files | sed 's,^,A ,'
 	else

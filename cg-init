@@ -53,7 +53,6 @@ done
 cleanup_trap "rm -rf $_git"
 
 git-init-db
-touch $_git/refs/heads/master
 
 git-read-tree # Seed the dircache
 if ! [ "$no_initial_commit" ]; then

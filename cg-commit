@@ -417,8 +417,9 @@ fi
 
 
 oldhead=
-if [ -s "$_git/HEAD" ]; then
-	oldhead=$(cat $_git/HEAD)
+oldheadname="$(git-symbolic-ref HEAD)"
+if [ -s "$_git/$oldheadname" ]; then
+	oldhead="$(cat "$_git/$oldheadname")"
 	oldheadstr="-p $oldhead"
 fi
 
@@ -442,8 +443,8 @@ if [ "$customfiles" ]; then
 fi
 
 if [ "$newhead" ]; then
+	git-update-ref HEAD $newhead $oldhead || die "unable to move to the new commit $newhead"
 	echo "Committed as $newhead."
-	echo $newhead >$_git/HEAD
 	[ "$merging" ] && rm -f $_git/merging $_git/merging-sym $_git/merge-base $_git/squashing
 	rm -f "$_git/commit-ignore"
 

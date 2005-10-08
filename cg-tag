@@ -57,7 +57,7 @@ id=${id% *}
 mkdir -p $_git/refs/tags
 
 [ -s "$_git/refs/tags/$name" ] && die "tag already exists ($name)"
-[ "$id" ] || id=$(cat $_git/HEAD)
+[ "$id" ] || id="$(cat "$_git/$(git-symbolic-ref HEAD)")"
 
 
 tagdir="$(mktemp -d -t gittag.XXXXXX)"

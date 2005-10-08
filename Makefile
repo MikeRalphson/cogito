@@ -36,7 +36,7 @@ all: cogito
 cogito: $(GEN_SCRIPT)
 
 ifneq (,$(wildcard .git))
-GIT_HEAD=.git/HEAD
+GIT_HEAD=.git/$(shell git-symbolic-ref HEAD)
 GIT_HEAD_ID=" \($(shell cat $(GIT_HEAD))\)"
 endif
 cg-version: $(VERSION) $(GIT_HEAD) Makefile

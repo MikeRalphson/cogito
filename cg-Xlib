@@ -256,7 +256,7 @@ tree_timewarp()
 	fi
 
 	git-read-tree -m "$branch" || die "$branch: bad commit"
-	[ "$no_head_update" ] || echo "$branch" > $_git/HEAD
+	[ "$no_head_update" ] || git-update-ref HEAD "$branch" || :
 
 	# Kill gone files
 	git-diff-tree -z -r $base $branch | xargs -0 bash -c '
@@ -488,7 +488,7 @@ if [ ! "$_git_repo_unneeded" ]; then
 	       exit 1
 	fi
 	_git_head=master
-	[ -L "$_git/HEAD" ] && _git_head="$(basename "$(readlink "$_git/HEAD")")"
+	[ -s "$_git/HEAD" ] && _git_head="$(basename "$(git-symbolic-ref HEAD)")"
 	[ -s "$_git/head-name" ] && _git_head="$(cat "$_git/head-name")"
 fi
 
