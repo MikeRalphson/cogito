@@ -121,6 +121,11 @@ if [ "$gitstatus" ]; then
 		echo "Changes recording BLOCKED:"
 		sed 's/^/    /' "$_git/blocked"
 	fi
+
+	if [ ! -s .git/HEAD ]; then
+		echo
+		echo "Before initial commit."
+	fi
 fi
 
 
@@ -138,17 +143,22 @@ if [ "$workstatus" ]; then
 		{ if [ "$_git_relpath" ]; then sed -n "s|^$_git_relpath||p"; else cat; fi } |
 		sed 's,^,? ,'
 
-	commitignore=
-	[ -s "$_git/commit-ignore" ] && commitignore=1
+	if [ ! -s .git/HEAD ]; then
+		# Initial commit
+		git-ls-files | sed 's,^,A ,'
+	else
+		commitignore=
+		[ -s "$_git/commit-ignore" ] && commitignore=1
 
-	git-diff-index HEAD $_git_relpath | cut -f5- -d' ' | 
-	while IFS=$'\t' read -r mode file; do
-		if [ "$mode" = D ]; then
-			[ "$(git-diff-files "$file")" ] && mode=!
-		elif [ "$mode" = M ] && [ "$commitignore" ]; then
-			fgrep -qx "$file" "$_git/commit-ignore" && mode=m
-		fi
-		[ "$_git_relpath" ] && file="${file#$_git_relpath}"
-		echo "$mode $file"
-	done
+		git-diff-index HEAD $_git_relpath | cut -f5- -d' ' | 
+		while IFS=$'\t' read -r mode file; do
+			if [ "$mode" = D ]; then
+				[ "$(git-diff-files "$file")" ] && mode=!
+			elif [ "$mode" = M ] && [ "$commitignore" ]; then
+				fgrep -qx "$file" "$_git/commit-ignore" && mode=m
+			fi
+			[ "$_git_relpath" ] && file="${file#$_git_relpath}"
+			echo "$mode $file"
+		done
+	fi
 fi
