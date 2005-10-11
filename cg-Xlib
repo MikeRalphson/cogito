@@ -333,6 +333,7 @@ done
 
 ARGS=("$@")
 ARGPOS=0
+set '' # clear positional parameters - use $ARGS[] instead
 
 if [ -t 1 -a -e "$HOME/.cgrc" ]; then
 	_cg_name=${_cg_cmd#cg-}
