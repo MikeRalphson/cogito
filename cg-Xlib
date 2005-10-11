@@ -42,7 +42,7 @@ pager()
 	fi
 	local line
 	# Invoke pager only if there's any actual output
-	if read -r line; then
+	if IFS=$'\n' read -r line; then
 		( echo "$line"; cat; ) | LESS="$cgless" ${PAGER:-less} $PAGER_FLAGS
 	fi
 }
