@@ -15,17 +15,22 @@ _git_requires_root=1
 
 . ${COGITO_LIB}cg-Xlib || exit 1
 
-if [ "$1" = "-r" ]; then
-	shift
-	# We do not resolve to tree id since git-tar-tree can utilize some commit
-	# information.
-	id="$(cg-object-id -c "$1" 2>/dev/null)" || id="$1"
-	shift
-else
+id=
+while optparse; do
+	if optparse -r=; then
+		# We do not resolve to tree id since git-tar-tree can
+		# utilize some commit information.
+		id="$(cg-object-id -c "$OPTARG" 2>/dev/null)" || id="$OPTARG"
+	else
+		optfail
+	fi
+done
+
+if [ -z "$id" ]; then
 	id="$(cg-object-id -c)"
 fi
 
-dest=$1
+dest=${ARGS[0]}
 
 ([ "$dest" ] && [ "$id" ]) || usage
 

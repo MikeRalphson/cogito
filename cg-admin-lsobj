@@ -39,7 +39,7 @@ USAGE="cg-admin-lsobj [OBJECT_TYPE]"
 
 . ${COGITO_LIB}cg-Xlib || exit 1
 
-target=$1
+target=${ARGS[0]}
 
 
 subdir=$_git_objects
