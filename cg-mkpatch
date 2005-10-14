@@ -119,7 +119,7 @@ while optparse; do
 		mergebase=1
 	elif optparse -d=; then
 		outdir="$OPTARG"
-	elif optparse -f; then
+	elif optparse -f=; then
 		fileformat="$OPTARG"
 	else
 		optfail
