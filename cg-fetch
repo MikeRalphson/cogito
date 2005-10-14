@@ -349,10 +349,15 @@ if echo "$uri" | grep -q "^http://"; then
 elif echo "$uri" | grep -q "^git+ssh://"; then
 	get=get_ssh
 	fetch=fetch_ssh
-elif echo "$uri" | grep -q ":"; then
+elif echo "$uri" | grep -q "^rsync://"; then
 	echo "WARNING: The rsync access method is DEPRECATED and will be REMOVED in the future!" >&2
 	get=get_rsync
 	fetch=fetch_rsync
+elif echo "$uri" | grep -q ":"; then
+	echo "WARNING: I guessed the host:path syntax was used and fell back to the git+ssh protocol." >&2
+	echo "WARNING: The host:path syntax is evil because it is implicit. Please just use a URI." >&2
+	get=get_ssh
+	fetch=fetch_ssh
 else
 	[ -d $uri/.git ] && uri=$uri/.git
 	get=get_local

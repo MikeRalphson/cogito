@@ -15,13 +15,14 @@
 # The possible source location specifiers are:
 #
 # 1. Local path - note that fetching will hardlink the objects if possible.
-# 2. rsync - either `rsync://host/path` or `host:/path` (the latter can change)
+# 2. rsync - `rsync://host/path`
 #    THE rsync REPOSITORY ACCESS METHOD IS DEPRECATED AND WILL BE REMOVED
 #    IN THE FUTURE! The problem is that it will download _all_ data from
 #    the remote repository, including objects which do not belong to the
 #    one particular branch you want to fetch.
 # 3. HTTP - `http://host/path`
-# 4. SSH - `git+ssh://host/path` - note that the path must be absolute.
+# 4. SSH - `git+ssh://host/path` or `host:path` (the latter can change);
+#    note that the path must be absolute in the first case.
 # 5. Packed SSH - `git+pack+ssh://host/path` - fetch over SSH, but using
 #    the git-fetch-pack tool. This won't clone tags, but might be much more
 #    network-effective (while also more CPU-intensive especially on the
