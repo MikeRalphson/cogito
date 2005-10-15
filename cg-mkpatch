@@ -10,13 +10,13 @@
 # -d DIRNAME::
 #	Split the patches to separate files with their names in the
 #	format "%02d.patch", created in directory DIRNAME (will be
-#	created if non-existant). Note that this makes sense only
+#	created if non-existent). Note that this makes sense only
 #	when generating patch series, that is when you use the -r
 #	argument.
 #
 # -f FORMAT::
 #	Format string used for generating the patch filename when
-#	outputting the splitted-out patches (that is, passed the -d
+#	outputting the split-out patches (that is, passed the -d
 #	option). This is by default "%s/%02d-%s.patch". The first %s
 #	represents the directory name and %d represents the patch
 #	sequence number. The last %s is mangled first line of the

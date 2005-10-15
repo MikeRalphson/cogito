@@ -119,7 +119,7 @@ LOCATION::
 
 COMMIT_ID, FROM_ID, TO_ID, BASE_COMMIT::
 	Indicates an ID resolving to a commit. The following expressions can
-	be used interchangably as IDs:
+	be used interchangeably as IDs:
 	- empty string, 'this' or 'HEAD' (current HEAD)
 	- branch name (as registered with $(man 1 cg-branch-add))
 	- tag name (as registered with $(man 1 cg-tag))

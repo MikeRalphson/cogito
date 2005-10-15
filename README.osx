@@ -26,6 +26,6 @@ Recommendations:
 The gnu versions of "stat" and "date" are preferred over their BSD
 variants.
 
-"patch", "diff", "merge", "curl" and "rysnc" are required.  OS X.4
+"patch", "diff", "merge", "curl" and "rsync" are required.  OS X.4
 includes recent versions of these tools.  If you are not running X.4,
 you may wish to check this.

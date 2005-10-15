@@ -97,7 +97,7 @@ $(print_command_listing $REGULAR_COMMANDS)
 Advanced (low-level or dangerous) commands:
 $(print_command_listing $ADVANCED_COMMANDS)
 
-These expressions can be used interchangably as "ID"s:
+These expressions can be used interchangeably as "ID"s:
 	empty string, "this" or "HEAD" (current HEAD)
 	branch name (as registered with cg-branch-add)
 	tag name (as registered with cg-tag)

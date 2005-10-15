@@ -40,7 +40,7 @@
 #
 # -c::
 #	Parameter specifies that you want to have tree merge never
-#	autocomitted, but want to review and commit it manually. This will
+#	autocommitted, but want to review and commit it manually. This will
 #	basically make cg-merge always behave like there were conflicts
 #	during the merge.
 #

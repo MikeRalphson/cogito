@@ -42,7 +42,7 @@
 # -f::
 #	Force the commit even when there's "nothing to commit", that is
 #	the tree is the same as the last time you committed, no changes
-#	happenned.
+#	happened.
 #
 # -N::
 #	Don't add the files to the object database, just update the caches
