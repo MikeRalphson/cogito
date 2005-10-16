@@ -305,6 +305,11 @@ if [ ! "$ignorecache" ]; then
 		echo "CG:F   $file" >>$LOGMSG
 		[ "$msgs" ] && ! [ "$forceeditor" ] && echo $file
 	done
+	if [ -s "$_git/commit-ignore" ]; then
+		echo "CG:" >>$LOGMSG
+		echo "CG: I have kept back the $(wc -l "$_git/commit-ignore" | cut -d ' ' -f 1) file(s) containing your local changes." >>$LOGMSG
+		echo "CG: You need not worry, the local changes will not interfere with the merge." >>$LOGMSG
+	fi
 fi
 echo "CG: -----------------------------------------------------------------------" >>$LOGMSG
 echo "CG: vim: textwidth=75" >>$LOGMSG
