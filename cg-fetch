@@ -72,7 +72,7 @@ fetch_progress()
 			echo "$line"
 			continue
 			;;
-		esac 
+		esac
 
 		object="$_git_objects/$object"
 		[ -e "$object" ] && size=$(($size + $(stat -c '%s' "$object" 2>/dev/null)))
@@ -93,9 +93,10 @@ show_changes_summary()
 	elif [ "$orig_head" != "$new_head" ]; then
 		echo "Tree change: $orig_head:$new_head"
 		if [ "$verbose" ] ; then
-			git-diff-tree -r $(cg-object-id -t $orig_head) $(cg-object-id -t $new_head)
+			git-diff-tree -r "$(cg-object-id -t "$orig_head")" "$(cg-object-id -t "$new_head")"
 		else
-			git-diff-tree -r $(cg-object-id -t $orig_head) $(cg-object-id -t $new_head) | awk '{ print $5" "$6 }'
+			git-diff-tree -r "$(cg-object-id -t "$orig_head")" "$(cg-object-id -t "$new_head")" | \
+				awk '{ print $5" "$6 }'
 		fi
 	else
 		echo "Up to date."
@@ -179,7 +180,7 @@ get_http()
 	if echo "$dest" | grep -q '^\.git/'; then
 		# wget is idiotic and convers . to _
 		dest=$(echo "$dest" | sed 's#^.git/##')
-		pushd $_git >/dev/null
+		pushd "$_git" >/dev/null
 	else
 		pushd . >/dev/null
 	fi
@@ -221,14 +222,14 @@ get_ssh()
 		shift
 	fi
 
-	src=$(echo "$1" | sed 's#^git+ssh://\([^/]*\)\(/.*\)$#\1:\2#')
+	src="$(echo "$1" | sed 's#^git+ssh://\([^/]*\)\(/.*\)$#\1:\2#')"
 	dest="$2"
 
 	[ "$update" ] && ! [ "$directory" ] && [ -e "$dest" ] && return 1
 	[ "$update" ] && [ "$directory" ] &&
 		echo "Warning: Cannot protect against overwriting $dest when fetching over ssh" 2>/dev/null
 
-	[ "$directory" ] && dest=$(dirname "$dest")
+	[ "$directory" ] && dest="$(dirname "$dest")"
 	scp $scp_flags "$src" "$dest"
 }
 
@@ -270,7 +271,7 @@ get_local()
 
 	src="$1"
 	dest="$2"
-	[ "$cut_last" ] && dest=${dest%/*}
+	[ "$cut_last" ] && dest="${dest%/*}"
 
 	cp $cp_flags_l "$src" "$dest"
 }
@@ -300,14 +301,14 @@ done
 
 name=${ARGS[0]}
 
-[ "$name" ] || { [ -s $_git/branches/origin ] && name=origin; }
+[ "$name" ] || { [ -s "$_git/branches/origin" ] && name=origin; }
 [ "$name" ] || die "where to fetch from?"
 uri=$(cat "$_git/branches/$name" 2>/dev/null) || die "unknown branch: $name"
 
 rembranch=
 if echo "$uri" | grep -q '#'; then
-	rembranch=$(echo $uri | cut -d '#' -f 2)
-	uri=$(echo $uri | cut -d '#' -f 1)
+	rembranch=$(echo "$uri" | cut -d '#' -f 2)
+	uri=$(echo "$uri" | cut -d '#' -f 1)
 fi
 
 # Some other process with the same pid might appear, that's why
@@ -324,7 +325,7 @@ echo $$ > "$_git/info/cg-fetch-$name-dirty"
 
 
 orig_head=
-[ -s "$_git/refs/heads/$name" ] && orig_head=$(cat "$_git/refs/heads/$name")
+[ -s "$_git/refs/heads/$name" ] && orig_head="$(cat "$_git/refs/heads/$name")"
 
 
 if echo "$uri" | grep -q '^\(git\|git+pack+ssh\)://'; then
@@ -359,7 +360,7 @@ elif echo "$uri" | grep -q ":"; then
 	get=get_ssh
 	fetch=fetch_ssh
 else
-	[ -d $uri/.git ] && uri=$uri/.git
+	[ -d "$uri/.git" ] && uri="$uri/.git"
 	get=get_local
 	fetch=fetch_local
 
@@ -369,19 +370,19 @@ else
 
 	# See if we can hardlink and add "-l" to cp flags.
 	can_hardlink=
-	sample_file=$(find $uri -type f -print | head -n 1)
-	rm -f $_git/.,,lntest
+	sample_file="$(find $uri -type f -print | head -n 1)"
+	rm -f "$_git/.,,lntest"
 	if cp -fl "$sample_file" "$_git/.,,lntest" 2>/dev/null; then
 		can_hardlink=l
 		echo "Using hard links"
 	else
 		echo "Hard links don't work - using copy"
 	fi
-	rm -f $_git/.,,lntest
+	rm -f "$_git/.,,lntest"
 fi
 
 
-mkdir -p $_git/refs/heads
+mkdir -p "$_git/refs/heads"
 if [ "$rembranch" ]; then
 	$get -i "$uri/refs/heads/$rembranch" "$_git/refs/heads/.$name-fetching" ||
 		die "unable to get the head pointer of branch $rembranch"
@@ -390,10 +391,10 @@ else
 		die "unable to get the HEAD branch"
 fi
 
-new_head=$(cat "$_git/refs/heads/.$name-fetching")
+new_head="$(cat "$_git/refs/heads/.$name-fetching")"
 if ! [ "$symlinked" ]; then
 	if [ "$recovery" -o "$orig_head" != "$new_head" ]; then
-		[ -d $_git_objects ] || mkdir -p $_git_objects
+		[ -d "$_git_objects" ] || mkdir -p "$_git_objects"
 		$fetch "$(cat "$_git/refs/heads/.$name-fetching")" "$uri" "heads/$name" || die "objects fetch failed"
 	fi
 else
@@ -404,7 +405,7 @@ rm "$_git/refs/heads/.$name-fetching"
 # FIXME: Warn about conflicting tag names?
 # XXX: We now throw stderr to /dev/null since not all repositories
 # may have tags/ and users were confused by the harmless errors.
-[ -d $_git/refs/tags ] || mkdir -p $_git/refs/tags
+[ -d "$_git/refs/tags" ] || mkdir -p "$_git/refs/tags"
 rsyncerr=
 $get -i -s -u -d "$uri/refs/tags" "$_git/refs/tags" || rsyncerr=1
 [ "$rsyncerr" ] && echo "unable to get tags list (non-fatal)" >&2
@@ -413,10 +414,10 @@ $get -i -s -u -d "$uri/refs/tags" "$_git/refs/tags" || rsyncerr=1
 # tag objects, $fetch didn't get them.
 # XXX: This is the quick'n'dirty way.
 (
-	cd $_git/refs/tags
+	cd "$_git/refs/tags"
 	for tag in *; do
 		[ "$tag" = "*" ] && break
-		tagid=$(cat $tag)
+		tagid="$(cat "$tag")"
 		GIT_DIR=../.. git-cat-file -t "$tagid" >/dev/null 2>&1 && continue
 		echo -n "Missing object of tag $tag... "
 		if [ "$fetch" != "fetch_rsync" ] && GIT_DIR=../.. $fetch "$tagid" "$uri" 2>/dev/null >&2; then
