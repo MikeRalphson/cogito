@@ -52,7 +52,8 @@ fetch_progress()
 		"got "[a-f0-9][a-f0-9][a-f0-9][a-f0-9][a-f0-9][a-f0-9]*|\
 		"walk "[a-f0-9][a-f0-9][a-f0-9][a-f0-9][a-f0-9][a-f0-9]*)
 			# Convert the sha to an object path
-			object=$(echo "$line" | sed 's,.* \([a-f0-9][a-f0-9]\),\1/,')
+			object="${line#* }"
+			object="${object:0:2}/${object:2}"
 			;;
 
 		[a-f0-9][a-f0-9]/[a-f0-9][a-f0-9][a-f0-9][a-f0-9][a-f0-9]*)
@@ -60,7 +61,7 @@ fetch_progress()
 			# Estimate percentage done using the position of
 			# the object subdir. It might not get all the way
 			# up to 100% ...
-			position=$(echo "$line" | cut -d/ -f 1)
+			position=${line%%/*}
 			percentage=", $((0x$position * 100 / 0xff))% done"
 			;;
 
@@ -75,6 +76,7 @@ fetch_progress()
 		esac
 
 		object="$_git_objects/$object"
+		# FIXME: This slows cg-fetch roughly by a factor of 4... (!)
 		[ -e "$object" ] && size=$(($size + $(stat -c '%s' "$object" 2>/dev/null)))
 		objects=$(($objects + 1));
 
