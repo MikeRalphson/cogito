@@ -39,50 +39,7 @@ deprecated_alias cg-fetch cg-pull
 
 fetch_progress()
 {
-	percentage=""
-	objects=0
-	last_objects=0
-	size=0
-
-	while read -r line; do
-		object=
-
-		case "$line" in
-		link*|symlink*|copy*|\
-		"got "[a-f0-9][a-f0-9][a-f0-9][a-f0-9][a-f0-9][a-f0-9]*|\
-		"walk "[a-f0-9][a-f0-9][a-f0-9][a-f0-9][a-f0-9][a-f0-9]*)
-			# Convert the sha to an object path
-			object="${line#* }"
-			object="${object:0:2}/${object:2}"
-			;;
-
-		[a-f0-9][a-f0-9]/[a-f0-9][a-f0-9][a-f0-9][a-f0-9][a-f0-9]*)
-			object="$line"
-			# Estimate percentage done using the position of
-			# the object subdir. It might not get all the way
-			# up to 100% ...
-			position=${line%%/*}
-			percentage=", $((0x$position * 100 / 0xff))% done"
-			;;
-
-		*)
-			if [ "$last_objects" != "$objects" ]; then
-				last_objects="$objects"
-				echo;
-			fi
-			echo "$line"
-			continue
-			;;
-		esac
-
-		object="$_git_objects/$object"
-		# FIXME: This slows cg-fetch roughly by a factor of 4... (!)
-		[ -e "$object" ] && size=$(($size + $(stat -c '%s' "$object" 2>/dev/null)))
-		objects=$(($objects + 1));
-
-		echo -ne "progress: $objects objects, $size bytes$percentage\r"
-	done;
-	[ "$last_objects" != "$objects" ] && echo
+	exec cg-Xfetchprogress "$_git_objects"
 }
 
 show_changes_summary()
