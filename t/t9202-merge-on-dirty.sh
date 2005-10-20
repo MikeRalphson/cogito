@@ -89,7 +89,7 @@ cp branch1/foo branch1/foo-
 test_expect_failure 'merging branch2 to branch1 (clean)' \
 		"(cd branch1 && cg-merge </dev/null)"
 test_expect_success 'checking if we still have our local change' \
-		'(cd branch1 && cg-status -w | grep -q "^M foo" && cmp foo foo-)'
+		'(cd branch1 && cg-status -w | grep -q "^m foo" && cmp foo foo-)'
 # This test is useful if the previous one failed - did it get lost or
 # accidentally committed?
 test_expect_success 'checking that we didn'\''t commit the local change' \
