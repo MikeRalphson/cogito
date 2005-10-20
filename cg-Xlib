@@ -269,6 +269,12 @@ tree_timewarp()
 	git-update-index --refresh >/dev/null
 }
 
+# update_index will refresh the index and list the local modifications
+# Note that this isn't usually safe, since some of the modifications may
+# be recorded in the index file - modulo adds and removes also cg-restore
+# to historical revisions. Besides, it gives confusing output for relpath.
+# Never use it. If you do, accompany it with a comment explaining why is
+# it safe to use it.
 update_index()
 {
 	git-update-index --refresh | sed 's/needs update$/locally modified/'

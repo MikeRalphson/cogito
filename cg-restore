@@ -100,7 +100,7 @@ if [ "$ARGS" ]; then
 		#	exit $?
 		#}
 		fi
-		git-checkout-index $force -- "${files[@]}" || ret=1
+		git-checkout-index -u $force -- "${files[@]}" || ret=1
 
 	elif [ "$objtype" = "blob" ]; then
 		[ "${#files[@]}" -gt 1 ] && echo "Warning: Restoring multiple files to a single blob" >&2
@@ -118,9 +118,7 @@ else # no arguments - much weaker
 	if [ "$(git-ls-files --deleted)" ]; then
 		git-ls-files --deleted | sed "s/^/Restoring file /"
 	fi
-	git-checkout-index -q -a $force
+	git-checkout-index -u -q -a $force
 fi
-
-update_index || ret=1
 
 exit $ret

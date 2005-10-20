@@ -134,7 +134,7 @@ if [ "$head" = "$base" ]; then
 fi
 
 
-[ "$(git-diff-files -s)" ] && update_index
+[ "$(git-diff-files -s)" ] && git-update-index --refresh >/dev/null
 
 echo "Merging $base -> $branch" >&2
 echo -e "\tto $head..." >&2
@@ -209,6 +209,8 @@ if ! cg-commit -C; then
 fi
 
 [ "$readtree" ] && git-read-tree -m HEAD
+# update_index here is safe because no tree<->index desyncs could've
+# survived the read-tree above
 update_index
 
 posthook tree ok
