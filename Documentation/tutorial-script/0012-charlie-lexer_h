@@ -1,0 +1,13 @@
+/*
+ * lexer.h -- Lexical analysis for RPN
+ *
+ * (c) 2005 Horst H. von Brand
+ * Licensed under the Open Software License version 2.1
+ */
+
+#ifndef LEXER_H
+#define LEXER_H
+extern double val;
+
+extern int getsym(void);
+#endif /* LEXER_H */

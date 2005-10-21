@@ -1,0 +1,33 @@
+diff --git a/rpn.c b/rpn.c
+--- a/rpn.c
++++ b/rpn.c
+@@ -11,6 +11,7 @@ double val;
+ 
+ extern double pop(void);
+ extern void push(double);
++extern void clear(void);
+ 
+ extern int getsym(void);
+ 
+@@ -53,6 +54,9 @@ int main(void)
+ 		case 'd':
+ 			pop();
+ 			break;
++		case 'C':
++			clear();
++			break;
+ 		default:
+ 			fprintf(stderr, "Unknown '%c'\n", sym);
+ 			return 1;
+diff --git a/stack.c b/stack.c
+--- a/stack.c
++++ b/stack.c
+@@ -19,3 +19,8 @@ double pop(void)
+ {
+ 	return stack[top--];
+ }
++
++void clear(void)
++{
++	top = -1;
++}

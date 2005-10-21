@@ -1,0 +1,50 @@
+diff --git a/Makefile b/Makefile
+--- a/Makefile
++++ b/Makefile
+@@ -1,4 +1,6 @@
+-# Makefile
++# Makefile for RPN
++# (c) 2005 Horst H. von Brand
++# Licensed under the Open Software License version 2.1
+ 
+ rpn: rpn.o stack.o lexer.o
+ 	$(CC) $(CFLAGS) $^ -o $@
+diff --git a/lexer.c b/lexer.c
+--- a/lexer.c
++++ b/lexer.c
+@@ -1,5 +1,8 @@
+ /*
+- * lexer.c
++ * lexer.c -- Lexical analysis for RPN
++ *
++ * (c) 2005 Horst H. von Brand
++ * Licensed under the Open Software License version 2.1
+  */
+ 
+ #include <stdio.h>
+diff --git a/rpn.c b/rpn.c
+--- a/rpn.c
++++ b/rpn.c
+@@ -1,5 +1,8 @@
+ /*
+- * rpn.c
++ * rpn.c -- Main program for RPN
++ *
++ * (c) 2005 Horst H. von Brand
++ * Licensed under the Open Software License version 2.1
+  */
+ 
+ #include <stdio.h>
+diff --git a/stack.c b/stack.c
+--- a/stack.c
++++ b/stack.c
+@@ -1,5 +1,8 @@
+ /*
+- * stack.c
++ * stack.c -- Stack implementation for RPN
++ *
++ * (c) 2005 Horst H. von Brand
++ * Licensed under the Open Software License version 2.1
+  */
+ 
+ #define N	8

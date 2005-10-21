@@ -1,0 +1,13 @@
+diff --git a/rpn.c b/rpn.c
+--- a/rpn.c
++++ b/rpn.c
+@@ -50,6 +50,9 @@ int main(void)
+ 			push(x);
+ 			push(y);
+ 			break;
++		case 'd':
++			pop();
++			break;
+ 		default:
+ 			fprintf(stderr, "Unknown '%c'\n", sym);
+ 			return 1;
