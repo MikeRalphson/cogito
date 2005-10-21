@@ -16,7 +16,9 @@
 # -------
 # -t TAG::
 #	Tells cg-push to also push the given tag. Note that in the
-#	future, cg-push should push tags automatically.
+#	future, cg-push should push tags automatically. Also note
+#	that even if you pass `cg-push` the '-t' arguments, your
+#	HEAD is still pushed as well in addition to the tags.
 
 USAGE="cg-push [BRANCH_NAME] [-t TAG]..."
 
