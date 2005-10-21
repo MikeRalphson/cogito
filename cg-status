@@ -37,6 +37,10 @@
 # -g::
 #	Show the GIT repository information.
 #
+# -n::
+#	Do not show status flags. This is probably useful only when you filter
+#	the flags for a single specific flag using the '-s' option.
+#
 # -s STATUS::
 #	Show only files with the given status flag, e.g. '-s D'. You can list
 #	multiple flags ('-s MmA') to filter for all of them.
@@ -60,7 +64,7 @@
 #	The excludes are applied from the project root approaching the
 #	current subdirectory.
 
-USAGE="cg-status [-g] [-s STATUS] [-w] [-x]"
+USAGE="cg-status [-g] [[-n] -s STATUS] [-w] [-x]"
 
 . ${COGITO_LIB}cg-Xlib || exit 1
 
@@ -74,9 +78,12 @@ gitstatus=
 workstatus=
 exclude=yes
 flagfilter=
+noflags=
 while optparse; do
 	if optparse -g; then
 		gitstatus=1
+	elif optparse -n; then
+		noflags=1
 	elif optparse -s=; then
 		flagfilter="$OPTARG"
 		echo "$flagfilter" | grep -qx '[a-zA-Z?!]*' \
@@ -179,4 +186,8 @@ if [ "$workstatus" ]; then
 			should_show_flag "$mode" && echo "$mode $file"
 		done
 	fi
+fi | if [ "$noflags" ]; then
+	sed 's/^. //'
+else
+	cat
 fi
