@@ -108,7 +108,7 @@ clean_files()
 	save_IFS="$IFS"
 	IFS=$'\n'
 
-	cg-status "$xopt" -w | sed -n 's/^? //p' |
+	cg-status -n -s '?' "$xopt" -w |
 	for file in $(cat); do
 		path="${_git_relpath}$file"
 		if [ -d "$path" -a ! -L "$path" ]; then

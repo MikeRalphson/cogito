@@ -174,8 +174,8 @@ path_xargs()
 	normpath | tr '\n' '\0' | xargs -0 "$@"
 }
 
-# Equivalent to cg-status | grep '^?' | cut -d ' ' -f 2-, but the filenames
-# are delimited by '\0' instead of '\n'.
+# Equivalent to cg-status -w -n -s '?', but the filenames are delimited
+# by '\0' instead of '\n'.
 # Usage: list_untracked_files DO_EXCLUDE [EXTRAEXCLUDE]...
 # DO_EXCLUDE: "no", "noexclude" means not to exclude anything,
 #             otherwise the exclude rules apply
