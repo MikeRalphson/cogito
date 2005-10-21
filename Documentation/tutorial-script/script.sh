@@ -39,8 +39,9 @@ cg-tag -d "Place under OSL-2.1" rpn-0.2
 
 # Alice creates a public repository for the new toy
 cg-admin-setuprepo $ALICE/rpn.git
-git push $ALICE/rpn.git rpn-0.1 rpn-0.2
-git push $ALICE/rpn.git master
+cg-branch-add public "$ALICE/rpn.git" # Shortcut for the public repository
+# Alice pushes her master _and_ the two tags to the public repository
+cg-push public -t rpn-0.1 -t rpn-0.2
 
 ### Bob hears about this exciting new program, gets a copy from Alice
 cd $BOB
@@ -81,14 +82,10 @@ cg-add README
 cg-commit -m "Add clear stack command" \
           -m "Change rpn.c to add handling for 'C'lear" \
           -m "Add README file with fist stab at documentation"
-          
-# Create a shortcut for the public repository
-echo "URL: $ALICE/rpn.git"     >  .git/remotes/public
 
 # The result works fine, so she prepares to release it
 cg-tag -d "First public release" -s -k Examples rpn-0.3 
-git push public rpn-0.3
-git push public master
+cg-push public -t rpn-0.3
 cg-export ../rpn-0.3.tar.bz2
 
 
@@ -167,7 +164,7 @@ cg-commit -m "Add duplication operator" \
           -m "Add handling for 'D'up in rpn.c"
           
 # Alice publishes her work-in-progress
-git push public master
+cg-push public
 
 
 ### Alice gets Charlie's fix, creates a new branch for his changes
@@ -264,7 +261,7 @@ git prune-packed
 
 # Second public release
 cg-tag -d "New public release" -s -k Examples rpn-0.4
-git push public rpn-0.4 master
+cg-push public -t rpn-0.4
 cg-export ../rpn-0.4.tar.bz2
 
 # Also pack public repository
