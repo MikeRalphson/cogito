@@ -56,7 +56,7 @@ print_command_listing()
 		# random binary named cg-*
 		[ "$usage" ] || continue
 		usage=$(echo "$usage" | sed 's/^cg-[^ ]*//')
-		printf "	%-17s %s\n" "$cmdname" "$usage"
+		printf "	%-18s %s\n" "$cmdname" "$usage"
 	done
 }
 
