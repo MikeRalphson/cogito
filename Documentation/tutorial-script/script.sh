@@ -1,4 +1,9 @@
 #!/bin/sh
+#
+# FIXME: This script has many GITisms. Some of them are unnecessary, while
+# some stem from missing Cogito features (especially no support for pushing
+# tags, and consequently no support for remotes/).
+
 
 ### Set up playground
 sh 0000-playground.sh
@@ -33,7 +38,7 @@ cg-commit -m "Place under OSL-2.1"
 cg-tag -d "Place under OSL-2.1" rpn-0.2
 
 # Alice creates a public repository for the new toy
-GIT_DIR=$ALICE/rpn.git git init-db
+cg-admin-setuprepo $ALICE/rpn.git
 git push $ALICE/rpn.git rpn-0.1 rpn-0.2
 git push $ALICE/rpn.git master
 
@@ -125,9 +130,7 @@ cg-commit -m "Fix Makefile and stack.h"
 cd $CHARLIE
 
 cg-clone $ALICE/rpn.git rpn
-
 cd rpn
-git checkout
 
 # He hacks around, and messes up rpn.c. To restore the saved version:
 rm rpn.c
