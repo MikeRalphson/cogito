@@ -13,14 +13,39 @@
 # This command is complementary to `cg-restore`, which only brings
 # individual files in sync with their state at the time of the
 # last commit.
+#
+# OPTIONS
+# -------
+# --adds-removes::
+#	Reset ONLY the so-called "index" file. This effectively means that
+#	any adds and removes you did will be unrecorded (but if you removed
+#	the file physically as well, that will not be undone - run
+#	'cg-restore' to restore it physically afterwards).
 
-USAGE="cg-reset"
+USAGE="cg-reset [--adds-removes]"
 _git_requires_root=1
 
 . ${COGITO_LIB}cg-Xlib || exit 1
 deprecated_alias cg-reset cg-cancel
 
+
+indexonly=
+while optparse; do
+	if optparse --adds-removes; then
+		indexonly=1
+	else
+		optfail
+	fi
+done
+
 [ "${ARGS[0]}" ] && die "this command takes no parameters; use cg-restore to restore individual files"
+
+
+if [ "$indexonly" ]; then
+	( git-read-tree -m HEAD || git-read-tree HEAD ) && git-update-index --refresh
+	exit
+fi
+
 
 if ! [ -s $_git/HEAD ]; then
 	rm -f $_git/HEAD
