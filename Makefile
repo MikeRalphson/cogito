@@ -92,12 +92,12 @@ install-cogito: $(SCRIPT) $(LIB_SCRIPT) $(GEN_SCRIPT)
 	$(INSTALL) $(LIB_SCRIPT) $(DESTDIR)$(libdir)
 	cd $(DESTDIR)$(bindir); \
 	for file in $(SCRIPT); do \
-		sed -e 's/\$${COGITO_LIB}/\$${COGITO_LIB:-$(sedlibdir)\/}/g' $$file > $$file.new; \
+		sed -e 's/\$${COGITO_LIB}/"\$${COGITO_LIB:-$(sedlibdir)\/}"/g' $$file > $$file.new; \
 		cat $$file.new > $$file; rm $$file.new; \
 	done
 	cd $(DESTDIR)$(libdir); \
 	for file in $(LIB_SCRIPT); do \
-		sed -e 's/\$${COGITO_LIB}/\$${COGITO_LIB:-$(sedlibdir)\/}/g' $$file > $$file.new; \
+		sed -e 's/\$${COGITO_LIB}/"\$${COGITO_LIB:-$(sedlibdir)\/}"/g' $$file > $$file.new; \
 		cat $$file.new > $$file; rm $$file.new; \
 	done
 
