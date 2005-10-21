@@ -84,7 +84,7 @@ cg-commit -m "Add clear stack command" \
           -m "Add README file with fist stab at documentation"
 
 # The result works fine, so she prepares to release it
-cg-tag -d "First public release" -s -k Examples rpn-0.3 
+cg-tag -d "First public release" rpn-0.3
 cg-push public -t rpn-0.3
 cg-export ../rpn-0.3.tar.bz2
 
@@ -265,7 +265,7 @@ git repack
 git prune-packed
 
 # Second public release
-cg-tag -d "New public release" -s -k Examples rpn-0.4
+cg-tag -d "New public release" rpn-0.4
 cg-push public -t rpn-0.4
 cg-export ../rpn-0.4.tar.bz2
 
@@ -279,6 +279,9 @@ cd $BOB/rpn
 cg-fetch
 
 # Bob has doubts about the latest version...
+# (Note that originally, rpn-0.4 was signed, but that would require you
+# to set up a GPG key before running the script... verify-tag on unsigned
+# scripts does not make much sense.)
 git verify-tag rpn-0.4
 
 # Everything's OK, integrate the changes
