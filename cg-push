@@ -11,13 +11,24 @@
 # in that tree).
 #
 # Takes the branch name as an argument, defaulting to "origin".
+#
+# OPTIONS
+# -------
+# -t TAG::
+#	Tells cg-push to also push the given tag. Note that in the
+#	future, cg-push should push tags automatically.
 
-USAGE="cg-push [BRANCH_NAME]"
+USAGE="cg-push [BRANCH_NAME] [-t TAG]..."
 
 . ${COGITO_LIB}cg-Xlib || exit 1
 
+tags=()
 while optparse; do
-	optfail
+	if optparse -t=; then
+		tags[${#tags[@]}]="refs/tags/$OPTARG"
+	else
+		optfail
+	fi
 done
 
 name=${ARGS[0]}
@@ -37,7 +48,7 @@ fi
 if echo "$uri" | grep -q "^http://"; then
 	die "pushing over HTTP not supported yet"
 elif echo "$uri" | grep -q "^git+ssh://"; then
-	git-send-pack "$(echo "$uri" | sed 's#^git+ssh://\([^/]*\)\(/.*\)$#\1:\2#')" $_git_head$sprembranch
+	git-send-pack "$(echo "$uri" | sed 's#^git+ssh://\([^/]*\)\(/.*\)$#\1:\2#')" $_git_head$sprembranch "${tags[@]}"
 elif echo "$uri" | grep -q ":"; then
 	die "pushing over rsync not supported"
 else
@@ -52,8 +63,11 @@ else
 
 		[ -x "$remgit/hooks/update" ] && "$remgit/hooks/update" "$rembranch" "$remid" "$(cg-object-id -c)"
 		cg-object-id -c >"$remgit"/refs/heads/$rembranch
+		for tag in "${tags[@]}"; do
+			cat "$_git"/refs/tags/"$tag" >"$remgit"/refs/tags/"$tag"
+		done
 		[ -x "$remgit/hooks/post-update" ] && "$remgit/hooks/post-update" "$rembranch"
 	else
-		git-send-pack "$uri" $_git_head$sprembranch
+		git-send-pack "$uri" $_git_head$sprembranch "${tags[@]}"
 	fi
 fi
