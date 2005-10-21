@@ -20,6 +20,8 @@
 #	'<file>' has been added.
 # D::
 #	'<file>' has been deleted.
+# !::
+#	'<file>' is gone from your working copy but not deleted by cg-rm.
 # M::
 #	'<file>' has been touched or modified.
 # m::
