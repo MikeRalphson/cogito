@@ -6,6 +6,11 @@
 # If `cg-init` is run in a non-empty directory files in the top and
 # sub directory will automatically be added.
 #
+# This command is intended for creating repositories for work on new projects.
+# If you want to clone an existing project, see `cg-clone`. If you want to
+# set up a public repository not for direct work but only for pushing/pulling,
+# see `cg-admin-setuprepo`.
+#
 # OPTIONS
 # -------
 # -e EXCLUDEPATTERN::
