@@ -2,15 +2,18 @@
 #
 # Commit into a GIT repository.
 # Copyright (c) Petr Baudis, 2005
-# Based on an example script fragment sent to LKML by Linus Torvalds.
 #
-# Commits changes to a GIT repository. Accepts the commit message from
-# `stdin`. If the commit message is not modified the commit will be
+# Commits your changes to the GIT repository. Accepts the commit message
+# from `stdin`. If the commit message is not modified the commit will be
 # aborted.
 #
 # By default, the commit is recorded as made by you, but you can change
 # that - useful if you are e.g. applying a patch submitted by someone
 # else. See the ENVIRONMENT section below.
+#
+# Note that you can undone a commit by the `cg-admin-uncommit` command,
+# but that is possible only under special circumstances. See the CAVEATS
+# section of its documentation.
 #
 # OPTIONS
 # -------
