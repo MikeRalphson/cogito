@@ -42,7 +42,7 @@ done
 
 
 if [ "$indexonly" ]; then
-	( git-read-tree -m HEAD || git-read-tree HEAD ) && git-update-index --refresh
+	( git-read-tree --reset HEAD ) && git-update-index --refresh
 	exit
 fi
 
@@ -64,7 +64,7 @@ if [ -s "$_git/head-name" ]; then
 fi
 
 rm -f $_git/blocked $_git/merging $_git/merging-sym $_git/merge-base $_git/commit-ignore
-git-read-tree -m HEAD || git-read-tree HEAD
+git-read-tree --reset HEAD
 
 git-checkout-index -f -a
 git-update-index --refresh
