@@ -65,12 +65,10 @@ for file in "${ARGS[@]}"; do
 		echo "$file" >>$TMPFILE
 	fi
 done
-if [ "$error" ]; then
-	rm $TMPFILE
-	die "not all files could be added, thus nothing will be added"
-fi
 
 cat $TMPFILE | sed 's/^/Adding file /'
-cat $TMPFILE | sed "s|^|$_git_relpath|" | path_xargs git-update-index --add ${infoonly} --
+cat $TMPFILE | sed "s|^|$_git_relpath|" | path_xargs git-update-index --add ${infoonly} -- || error=1
 
 rm $TMPFILE
+
+[ "$error" ] && die "warning: not all files could be added"
