@@ -35,6 +35,10 @@
 # -g::
 #	Show the GIT repository information.
 #
+# -s STATUS::
+#	Show only files with the given status flag, e.g. '-s D'. You can list
+#	multiple flags ('-s MmA') to filter for all of them.
+#
 # -w::
 #	Show the working tree file list.
 #
@@ -54,16 +58,27 @@
 #	The excludes are applied from the project root approaching the
 #	current subdirectory.
 
-USAGE="cg-status [-g] [-w] [-x]"
+USAGE="cg-status [-g] [-s STATUS] [-w] [-x]"
 
 . ${COGITO_LIB}cg-Xlib || exit 1
+
+
+should_show_flag() {
+	[[ -z "$flagfilter" || "$flagfilter" == *"$1"* ]]
+}
+
 
 gitstatus=
 workstatus=
 exclude=yes
+flagfilter=
 while optparse; do
 	if optparse -g; then
 		gitstatus=1
+	elif optparse -s=; then
+		flagfilter="$OPTARG"
+		echo "$flagfilter" | grep -qx '[a-zA-Z?!]*' \
+			|| die "invalid -s status flag"
 	elif optparse -w; then
 		workstatus=1
 	elif optparse -x; then
@@ -139,13 +154,14 @@ fi
 if [ "$workstatus" ]; then
 	git-update-index --refresh > /dev/null
 
-	list_untracked_files $exclude | tr '\0' '\n' |
+	should_show_flag '?' &&
+		list_untracked_files $exclude | tr '\0' '\n' |
 		{ if [ "$_git_relpath" ]; then sed -n "s|^$_git_relpath||p"; else cat; fi } |
 		sed 's,^,? ,'
 
 	if [ ! -s .git/HEAD ]; then
 		# Initial commit
-		git-ls-files | sed 's,^,A ,'
+		should_show_flag 'A' && git-ls-files | sed 's,^,A ,'
 	else
 		commitignore=
 		[ -s "$_git/commit-ignore" ] && commitignore=1
@@ -158,7 +174,7 @@ if [ "$workstatus" ]; then
 				fgrep -qx "$file" "$_git/commit-ignore" && mode=m
 			fi
 			[ "$_git_relpath" ] && file="${file#$_git_relpath}"
-			echo "$mode $file"
+			should_show_flag "$mode" && echo "$mode $file"
 		done
 	fi
 fi
