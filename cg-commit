@@ -228,7 +228,7 @@ if [ "$merging" ]; then
 	[ "$msgs" ] && echo -n 'Merge with '
 	[ -s $_git/merging-sym ] || cp $_git/merging $_git/merging-sym
 	for sym in $(cat $_git/merging-sym); do
-		uri=$(cat $_git/branches/$sym)
+		uri=$(cat $_git/branches/$sym 2>/dev/null)
 		[ "$uri" ] || uri="$sym"
 		echo "$uri" >>$LOGMSG
 		[ "$msgs" ] && echo "$uri"
