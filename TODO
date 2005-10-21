@@ -3,6 +3,11 @@ What comes on my mind but it isn't able to hold it all. Unsorted.
 
 Cogito-only stuff:
 
+
+Pre-1.0 stuff:
+(Note that I'm not sure whether the mail-related improvements to
+cg-*patch should be pre-1.0.)
+
 * Tutorial
 
 * Cogito homepage
@@ -26,20 +31,13 @@ Cogito-only stuff:
 	* Handle all possible conflicts
 	* Make sure the user resolved the conflicts
 	  (if possible without requiring him to manually indicate that)
+	-- post 1.0 --
 	* Somehow show the list of commits getting merged
 	* Vim-merging
 
 * Always do three-way merge
 	Always perform three-way merge instead of applying patches - when
 	fast-forwarding trees, uncommitting, etc.
-
-* Comfortable cg-log
-	Probably make it a real terminal application, not just less
-	backend.
-
-	* Somehow switch between summary and full output
-	* Pickaxe
-	* Possibility to quickly show patches for commits
 
 * cg-switch
 	Full-fledged multibranch support - allow switching between
@@ -60,10 +58,9 @@ Cogito-only stuff:
 	autocommitting, sucking commit messages from the patch...
 	* Dealing with renames and stuff
 
+* cg-log --short interfacing git-shortlog (but better and more flexible)
+
 * cg-commit enhancements
-	* Patch-altering cg-commit
-		You can already alter the list of files to be committed,
-		let's optionally show the patch and let you alter it, too.
 	* Things coming to git-commit:
 		* Possibly verify the patch being committed against
 		  whitespace errors and stuff; hooks are good for this too,
@@ -71,6 +68,13 @@ Cogito-only stuff:
 		  basic stuff.
 		* -s,--signoff to automatically append a signoff line of
 		  yours to the patch.
+	-- post 1.0 --
+	* Patch-altering cg-commit
+		You can already alter the list of files to be committed,
+		let's optionally show the patch and let you alter it, too.
+
+
+Post 1.0:
 
 * Subprojects
 	Support a GIT project inside a GIT project:
@@ -87,13 +91,22 @@ Cogito-only stuff:
 	Needs more thought, especially wrt. fetching and merging
 	recursive semantics.
 
-* cg-log --short interfacing git-shortlog (but better and more flexible)
+* Comfortable cg-log
+	Probably make it a real terminal application, not just less
+	backend.
+
+	* Somehow switch between summary and full output
+	* Pickaxe
+	* Possibility to quickly show patches for commits
 
 * Graphical commit/merge tool
 
+* cg-annotate
+
 * More comfortable history rewriting
 	* Make it possible to do rebase-merge easily, rebasing local
-	  changes against new remote head
+	  changes against new remote head; OTOH, perhaps we just need
+	  to advertise StGIT more...
 	* Easier recommitting - if I need to uncommit or change some
 	  commit not at the top, let me more easily uncommit, change it
 	  and recommit the rest on the top.
@@ -108,8 +121,6 @@ Cogito-only stuff:
 	number from the root, after merge-sorted.
 
 	Needs more thought.
-
-* cg-annotate
 
 
 * Rewrite in some other language
