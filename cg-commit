@@ -53,6 +53,10 @@
 #	might not actually _have_ any object database. This option is
 #	normally not interesting.
 #
+# -q::
+#	Be quiet in case there's "nothing to commit", and silently exit
+#	returning success. In a sense, this is the opposite to '-f'.
+#
 # FILES
 # -----
 # $GIT_DIR/author::
@@ -145,6 +149,7 @@ commitalways=
 missingok=
 copy_commit=
 msgs=()
+quiet=
 while optparse; do
 	if optparse -C; then
 		ignorecache=1
@@ -158,6 +163,8 @@ while optparse; do
 		commitalways=1
 	elif optparse -f; then
 		force=1
+	elif optparse -q; then
+		quiet=1
 	elif optparse -m=; then
 		msgs[${#msgs[@]}]="$OPTARG"
 	elif optparse -c=; then
@@ -295,7 +302,7 @@ if [ ! "$ignorecache" ]; then
 	if [ ! "$merging" ]; then
 		if [ ! "$force" ] && [ ! "${commitfiles[*]}" ]; then
 			rm $LOGMSG $LOGMSG2
-			die 'Nothing to commit'
+			[ "$quiet" ] && exit 0 || die 'Nothing to commit'
 		fi
 		echo "CG: By deleting lines beginning with CG:F, the associated file" >>$LOGMSG
 		echo "CG: will be removed from the commit list." >>$LOGMSG
@@ -347,7 +354,7 @@ __END__
 		eval newcommitfiles=($(grep ^CG:F $LOGMSG2 | sed 's/^CG:F *\(.*\)$/"\1"/'))
 		if [ ! "${newcommitfiles[*]}" ]; then
 			rm $LOGMSG $LOGMSG2
-			die 'Nothing to commit'
+			[ "$quiet" ] && exit 0 || die 'Nothing to commit'
 		fi
 		if [ "${commitfiles[*]}" != "${newcommitfiles[*]}" ]; then
 			commitfiles=("${newcommitfiles[@]}")
