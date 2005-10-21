@@ -330,8 +330,8 @@ print_help()
 }
 
 for option in "$@"; do
-	[ "$option" = -- ] && break
-	if [ "$option" = "-h" -o "$option" = "--help" ]; then
+	[ x"$option" = x-- ] && break
+	if [ x"$option" = x"-h" -o x"$option" = x"--help" ]; then
 		print_help ${_cg_cmd##cg-}
 	fi
 done
