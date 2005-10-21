@@ -95,8 +95,10 @@ cd $ALICE/rpn
 git checkout -b bob
 git branch
 
-git fetch $BOB/rpn
-git merge "Changes from Bob" HEAD FETCH_HEAD
+# Alice needs to register his remote branch
+cg-branch-add bobswork $BOB/rpn
+# Now try to merge Bob's work to the bob branch
+cg-update bobswork
 
 # There are conflicts in rpn.c. Looking at the file, Alice sees the
 # difference between her version and Bob's:
@@ -115,11 +117,12 @@ git merge "Changes from Bob" HEAD FETCH_HEAD
 # Alice keeps Bob's version
 ed rpn.c < $TOP/0010-alice-bob-fixup.ed
 
-cg-commit -m "Merge in Bob's updates"
+# cg-commit after resolving conflicts from failed merge will autogenerate
+# the commit message.
+cg-commit </dev/null
 
 # She fixes up Makefile and stack.h a bit
 patch -p1 -i $TOP/0011-alice-cleanup.patch
-
 cg-commit -m "Fix Makefile and stack.h"
 
 
@@ -185,11 +188,13 @@ git applymbox $TOP/0014-charlie-email
 cd $ALICE/rpn
 
 git checkout master
+# Alice tries "git merge" instead of "cg-merge" since she wanted to
+# merge both branches at once, which "cg-merge" cannot do.
 git merge "Integrate changes from Bob and Charlie" master bob charlie
 
 # Automatic 3-way merge fails! Have to do it step by step
 
-git merge "Integrate Bob's changes" master bob
+cg-merge bob
 
 # Merge fails:
 
@@ -206,9 +211,9 @@ git merge "Integrate Bob's changes" master bob
 
 ed Makefile < $TOP/0017-alice-bob-fixup.ed
 
-git commit -a -m "Integrate Bob's changes"
+cg-commit -m "Integrate Bob's changes"
 
-git merge "Integrate Charlie's changes" master charlie
+cg-merge charlie
 
 # Merge conflicts!
 
@@ -242,7 +247,7 @@ ed Makefile < $TOP/0018-alice-charlie-fixup1.ed
 
 ed rpn.c    < $TOP/0019-alice-charlie-fixup2.ed
 
-git commit -a -m "Integrate Charlie's changes"
+cg-commit -m "Integrate Charlie's changes"
 
 # Give proper credits
 cp $TOP/0020-alice-CONTRIBUTORS.txt CONTRIBUTORS
@@ -277,17 +282,14 @@ cg-fetch
 git verify-tag rpn-0.4
 
 # Everything's OK, integrate the changes
-git merge "Merge with 0.4" master origin
+echo "Merge with 0.4" | cg-merge
 
 # Merge conflicts in Makefile, rpn.c
 # Mishandled stack.h
 ed Makefile < $TOP/0021-bob-alice-fixup1.ed
 ed rpn.c    < $TOP/0022-bob-alice-fixup2.ed
 ed stack.h  < $TOP/0023-bob-alice-fixup3.ed
-
-git add stack.h
-
-git update-index
+cg-add stack.h
 
 # Now commit the whole
-git commit -m "Merge with 0.4"
+cg-commit -m "Merge with 0.4"
