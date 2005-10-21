@@ -292,7 +292,7 @@ Now let's take an hypothetical repository:
 
 	repository
 	+--------+
-	|  master<  heads
+	|  master<  heads (denoted by the '<')
 	|   unoji<
 	+--------+
 
@@ -338,11 +338,11 @@ will it do?
 
 	+--------+
 	|  master<
-	$  origin< < < < <
+	$  origin<-F--- - - ... remote repository ...
 	+--------+
 
-First, it will populate your 'origin' head with the new commits from the
-remote's 'master' head.
+First, it will fetch: populate your 'origin' head with the new commits from
+the remote's 'master' head.
 
 	+--------+
 	|  master<-M-.
