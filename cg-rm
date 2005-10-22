@@ -45,3 +45,4 @@ cat $TMPFILE | sed "s|^|$_git_relpath|" | path_xargs git-update-index --force-re
 rm $TMPFILE
 
 [ "$error" ] && die "warning: not all files could be removed"
+exit 0
