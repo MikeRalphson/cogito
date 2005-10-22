@@ -11,7 +11,7 @@
 # that - useful if you are e.g. applying a patch submitted by someone
 # else. See the ENVIRONMENT section below.
 #
-# Note that you can undone a commit by the `cg-admin-uncommit` command,
+# Note that you can undo a commit by the `cg-admin-uncommit` command,
 # but that is possible only under special circumstances. See the CAVEATS
 # section of its documentation.
 #
