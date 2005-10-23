@@ -245,7 +245,10 @@ tree_timewarp()
 		cg-diff -r $branch >$patchfile
 	fi
 
-	git-read-tree -m "$branch" || die "$branch: bad commit"
+	#XXX: Two-way merge can be done only when we drop the patches
+	#stuff and do true merge resolving.
+	#if ! git-read-tree -u -m "$base" "$branch"; then
+	git-read-tree -u -m "$branch" || die "$branch: bad commit"
 	[ "$no_head_update" ] || echo "$branch" > $_git/HEAD
 
 	# Kill gone files
@@ -260,7 +263,6 @@ tree_timewarp()
 			fi
 		done
 	' padding
-	git-checkout-index -f -a
 
 	# FIXME: Can produce bogus "contains only garbage" messages.
 	cat $patchfile | cg-patch
