@@ -86,9 +86,10 @@ fi
 cg-branch-add origin "$location"
 cg-fetch origin || die "fetch failed"
 
-cp $_git/refs/heads/origin $_git/refs/heads/master
-git-read-tree HEAD
-git-checkout-index -a
-git-update-index --refresh
+cp $_git/refs/heads/origin $_git/refs/heads/master &&
+	git-read-tree HEAD &&
+	git-checkout-index -a &&
+	git-update-index --refresh ||
+	exit 1
 
 echo "Cloned to $dir/ (origin $location available as branch \"origin\")"
