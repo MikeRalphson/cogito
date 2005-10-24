@@ -17,8 +17,8 @@ test_expect_success 'initialize repo' \
 	"(cg-add identical different && cg-commit -C -m\"Initial commit\")"
 commit1=$(cg-object-id -c)
 
-sleep 1 # FIXME: race
 echo "v2" >different
+cg-add different # FIXME: race
 mkdir newdir
 echo "v2" >newdir/newfile
 test_expect_success 'record second commit' \
