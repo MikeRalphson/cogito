@@ -39,7 +39,7 @@ deprecated_alias cg-fetch cg-pull
 
 fetch_progress()
 {
-	exec ${COGITO_LIB}cg-Xfetchprogress "$_git_objects"
+	exec "${COGITO_LIB}cg-Xfetchprogress" "$_git_objects"
 }
 
 show_changes_summary()
