@@ -148,8 +148,7 @@ process_commit_line()
 		fi
 
 		if [ "$user" ]; then
-			if ! echo -e "author $author\ncommitter $committer" \
-			     | grep -qi "$user"; then
+			if ! [[ "$author" == *"$user"* || "$committer" == *"$user"* ]]; then
 				skip_commit=1
 				return
 			fi
