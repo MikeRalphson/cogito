@@ -156,9 +156,7 @@ process_commit_line()
 		fi
 		if [ -s "$filter" ]; then
 			parent="${parents[0]}"
-			diff_ops=
-			[ "$parent" ] || diff_ops=--root
-			if ! [ "$(cat $filter | path_xargs git-diff-tree -r $diff_ops $commit $parent)" ]; then
+			if ! [ "$(cat $filter | path_xargs git-diff-tree --root -r $commit $parent)" ]; then
 				skip_commit=1
 				return
 			fi
