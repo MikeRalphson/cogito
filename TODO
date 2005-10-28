@@ -58,8 +58,6 @@ cg-*patch should be pre-1.0.)
 	autocommitting, sucking commit messages from the patch...
 	* Dealing with renames and stuff
 
-* cg-log --short interfacing git-shortlog (but better and more flexible)
-
 * cg-commit enhancements
 	* Things coming to git-commit:
 		* Possibly verify the patch being committed against
@@ -98,6 +96,8 @@ Post 1.0:
 	* Somehow switch between summary and full output
 	* Pickaxe
 	* Possibility to quickly show patches for commits
+	* ?? cg-log --short interfacing git-shortlog
+	  (but better - more flexible)
 
 * Graphical commit/merge tool
 
