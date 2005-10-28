@@ -1,9 +1,40 @@
-#!/bin/sh
+#!/usr/bin/env bash
+#
+# Wrapper for running Cogito commands.
+# Copyright (c) Petr Baudis, 2005
+#
+# Takes a variable number of arguments where the first argument should
+# either be a Cogito command or one of the supported options. If no
+# arguments are specified an overview of all the Cogito commands will be
+# shown.
+#
+# Enables all Cogito commands to be accessed as subcommands, for example
+# is:
+#
+#	cg help
+#	cg-help
+#
+# equivalent.
+#
+# OPTIONS
+# -------
+# --version::
+#	Show the version of the Cogito toolkit. Equivalent to the output
+#	of `cg-version`.
 
-[ x"$1" = "x" ] && exec cg-help
+USAGE="cg [--version | COMMAND [ARGS]...]"
+
 cmd="$1"; shift
-( [ x"$cmd" = x"--help" ] ) && exec cg-help
-( [ x"$cmd" = x"--version" ] ) && exec cg-version
+case "$cmd" in
+-h|--help|"") cmd="help" ;;
+--version) cmd="version" ;;
+-*)
+	echo "cg: unknown option '$cmd' (try 'cg --help' or 'cg --version')" >&2
+	exit 1
+esac
 
 exe="cg-$cmd"
-exec $exe "$@"
+type -P "$exe" >/dev/null && exec "$exe" "$@"
+
+echo "cg: unknown command '$cmd' (try 'cg help')" >&2
+exit 1

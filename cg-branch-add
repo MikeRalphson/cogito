@@ -15,13 +15,21 @@
 # The possible source location specifiers are:
 #
 # 1. Local path - note that fetching will hardlink the objects if possible.
-# 2. rsync - either `rsync://host/path` or `host:/path` (the latter can change)
+# 2. rsync - `rsync://host/path`
 #    THE rsync REPOSITORY ACCESS METHOD IS DEPRECATED AND WILL BE REMOVED
 #    IN THE FUTURE! The problem is that it will download _all_ data from
 #    the remote repository, including objects which do not belong to the
 #    one particular branch you want to fetch.
 # 3. HTTP - `http://host/path`
-# 4. SSH - `git+ssh://host/path` - note that the path must be absolute.
+# 4. SSH - `git+ssh://host/path` or `host:path` (the latter can change);
+#    note that the path must be absolute in the first case.
+# 5. Packed SSH - `git+pack+ssh://host/path` - fetch over SSH, but using
+#    the git-fetch-pack tool. This won't clone tags, but might be much more
+#    network-effective (while also more CPU-intensive especially on the
+#    server side).
+#    THIS SCHEME IS DEPRECATED AND IT WILL BE REMOVED VERY SOON, NEVER USE IT.
+#    The standard git+ssh scheme will be made to behave as git+pack+ssh.
+# 6. GIT-Daemon - `git://host/path` - this won't clone tags.
 #
 # The URL can have a fragment part, which identifies a branch inside of
 # the remote repository.
@@ -33,7 +41,7 @@
 #
 # $GIT_DIR/refs/heads/BRANCH_NAME::
 # 	Contains pointer to the latest commit in a branch. It can be more
-#	conveniently retrieved using `cg-commit-id BRANCH_NAME`.
+#	conveniently retrieved using `cg-object-id BRANCH_NAME`.
 #
 # EXAMPLE USAGE
 # -------------
@@ -56,10 +64,10 @@ USAGE="cg-branch-add BRANCH_NAME LOCATION"
 
 . ${COGITO_LIB}cg-Xlib || exit 1
 
-name=$1
-location=$2
+name=${ARGS[0]}
+location=${ARGS[1]}
 
-([ "$name" ] && [ "$location" ]) || usage
+([ "$name" ] && [ "$location" ] && ! [ "${ARGS[2]}" ]) || usage
 (echo $name | egrep -qv '[^a-zA-Z0-9_.@!:-]') || \
 	die "name contains invalid characters"
 if [ "$name" = "this" ] || [ "$name" = "HEAD" ]; then

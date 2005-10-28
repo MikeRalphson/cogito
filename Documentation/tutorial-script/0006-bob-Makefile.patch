@@ -1,0 +1,10 @@
+diff --git a/Makefile b/Makefile
+--- a/Makefile
++++ b/Makefile
+@@ -4,3 +4,6 @@
+ 
+ rpn: rpn.o stack.o lexer.o
+ 	$(CC) $(CFLAGS) $^ -o $@
++	
++rpn.o stack.o: stack.h
++	

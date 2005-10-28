@@ -1,0 +1,63 @@
+#!/usr/bin/env bash
+#
+# Setup a public GIT repository.
+# Copyright (c) Petr Baudis, 2005
+#
+# Setup a public GIT repository, that is, one that has no attached working
+# copy and you typically only push into it and pull from it. You need to run
+# this command before you will be able to push into the repository for the
+# first time.
+#
+# Use `cg-init` if you want to create a new GIT project instead.
+#
+# The command will create the repository to reside in DIRECTORY. By default,
+# it will be world-readable, but writable only by you. If you want to make
+# it possible for multiple users to push, create a group for them and use the
+# '-g' parameter, which will make `cg-admin-setuprepo` set up the permissions
+# properly.
+#
+# Note that you might need to do other additional steps, like touching the
+# 'git-daemon-export-ok' file if you want to make the repository accessible
+# over git-daemon.
+#
+# OPTIONS
+# -------
+# -g GROUP::
+#	Name of the UNIX group covering the users authorized to push into
+#	the repository. If unspecified, only you (who ran this command) will
+#	have write (push) access.
+
+USAGE="cg-admin-setuprepo [-g GROUP] DIRECTORY"
+_git_repo_unneeded=1
+
+. ${COGITO_LIB}cg-Xlib || exit 1
+
+unixgroup=
+while optparse; do
+	if optparse -g=; then
+		unixgroup="$OPTARG"
+	else
+		optfail
+	fi
+done
+
+
+export GIT_DIR="${ARGS[0]}"
+_git="$GIT_DIR"
+
+[ "$_git" ] || die "missing name of the repository directory"
+[ -e "$_git" ] && die "$_git already exists"
+
+
+if [ "$unixgroup" ]; then
+	umask 002
+else
+	umask 022
+fi
+
+mkdir "$_git" || exit 1
+if [ "$unixgroup" ]; then
+	chgrp "$unixgroup" "$_git" && chmod 2775 "$_git" || exit 1
+fi
+
+git-init-db

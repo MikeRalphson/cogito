@@ -37,6 +37,12 @@
 #	to the initial commit is shown. If no revisions is specified,
 #	the log information starting from 'HEAD' will be shown.
 #
+# -d DATE::
+#	Limit the log information to revisions newer than given DATE,
+#	and on second time further restrain it to revisions older than
+#	given date. Therefore, '-d "2 days ago" -d "yesterday"' will
+#	show all the commits from the day before yesterday.
+#
 # -m::
 #	End the log listing at the merge base of the -r arguments
 #	(defaulting to HEAD and origin).
@@ -72,7 +78,7 @@
 #
 #	$ cg-log -r releasetag-0.9:releasetag-0.10
 
-USAGE="cg-log [-c] [-f] [-m] [-s] [-uUSERNAME] [-r FROM_ID[:TO_ID]] FILE..."
+USAGE="cg-log [-c] [-f] [-m] [-s] [-uUSERNAME] [-d DATE] [-r FROM_ID[:TO_ID]] FILE..."
 
 . ${COGITO_LIB}cg-Xlib || exit 1
 # Try to fix the annoying "Broken pipe" output. May not help, but apparently
@@ -142,17 +148,14 @@ process_commit_line()
 		fi
 
 		if [ "$user" ]; then
-			if ! echo -e "author $author\ncommitter $committer" \
-			     | grep -qi "$user"; then
+			if ! [[ "$author" == *"$user"* || "$committer" == *"$user"* ]]; then
 				skip_commit=1
 				return
 			fi
 		fi
 		if [ -s "$filter" ]; then
 			parent="${parents[0]}"
-			diff_ops=
-			[ "$parent" ] || diff_ops=--root
-			if ! [ "$(cat $filter | path_xargs git-diff-tree -r $diff_ops $commit $parent)" ]; then
+			if ! [ "$(cat $filter | path_xargs git-diff-tree --root -r $commit $parent)" ]; then
 				skip_commit=1
 				return
 			fi
@@ -162,7 +165,7 @@ process_commit_line()
 			commit="${commit%:*}"
 			author="${author% <*}"
 			date=(${committer#*> })
-			date="$(showdate ${date[*]} '+%F %H:%M')"
+			showdate ${date[*]} '+%F %H:%M'; date="$_showdate"
 			read -r title
 			if [ "${#author}" -gt 15 ]; then
 				author="${author:0:14}$coltrim~"
@@ -185,12 +188,12 @@ process_commit_line()
 		done
 
 		date=(${author#*> })
-		pdate="$(showdate ${date[*]})"
+		showdate ${date[*]}; pdate="$_showdate"
 		[ "$pdate" ] && author="${author%> *}> $pdate"
 		echo ${colauthor}author $author $coldefault
 
 		date=(${committer#*> })
-		pdate="$(showdate ${date[*]})"
+		showdate ${date[*]}; pdate="$_showdate"
 		[ "$pdate" ] && committer="${committer%> *}> $pdate"
 		echo ${colcommitter}committer $committer $coldefault
 
@@ -239,6 +242,8 @@ log_end=
 summary=
 user=
 mergebase=
+date_from=
+date_to=
 
 while optparse; do
 	if optparse -c; then
@@ -272,6 +277,12 @@ while optparse; do
 		else
 			log_end="$OPTARG"
 		fi
+	elif optparse -d=; then
+		if [ -z "$date_from" ]; then
+			date_from="--max-age=$(date -d "$OPTARG" +%s)" || exit 1
+		else
+			date_to="--min-age=$(date -d "$OPTARG" +%s)" || exit 1
+		fi
 	elif optparse -m; then
 		mergebase=1
 	elif optparse -s; then
@@ -285,17 +296,19 @@ done
 if [ "$mergebase" ]; then
 	[ "$log_start" ] || log_start="HEAD"
 	[ "$log_end" ] || log_end="origin"
-	id1=$(cg-commit-id "$log_start") || exit 1
-	id2=$(cg-commit-id "$log_end") || exit 1
+	id1=$(cg-object-id -c "$log_start") || exit 1
+	id2=$(cg-object-id -c "$log_end") || exit 1
 	log_start=$(git-merge-base $id1 $id2) || exit 1
 fi
 
-id1="$(cg-commit-id "$log_start")" || exit 1
+revls="git-rev-list --pretty=raw $date_from $date_to"
+
+id1="$(cg-object-id -c "$log_start")" || exit 1
 if [ "$log_end" ]; then
-	id2="$(cg-commit-id "$log_end")" || exit 1
-	revls="git-rev-list --pretty=raw $id2 ^$id1"
+	id2="$(cg-object-id -c "$log_end")" || exit 1
+	revls="$revls $id2 ^$id1"
 else
-	revls="git-rev-list --pretty=raw $id1"
+	revls="$revls $id1"
 fi
 
 

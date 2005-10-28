@@ -1,35 +1,48 @@
 #!/usr/bin/env bash
 #
-# Restore removed/changed files in the working tree.
+# Restore files in the working tree to state at the given/last commit.
 # Copyright (c) Petr Baudis, 2005
 #
-# Restore given files to their original state. Without any parameters,
-# it recovers any files removed locally whose removal was not recorded
-# by `cg-rm`.
+# Restore given files to their original state.  It recovers any files
+# (or files passed as arguments to the command, respectively) removed
+# locally whose removal was not recorded by `cg-rm`.
 #
-# If passed a set of file names, it restores those files to their
-# state as of the last commit (including bringing files removed with
-# `cg-rm` back to life; FIXME: does not do that part yet).
+# If passed the -f parameter, it restores the files to their state
+# as of the last commit (including bringing files removed with
+# `cg-rm` back to life).
 #
-# This command is complementary to the `cg-reset` command, which
-# forcefully abandons all the changes in the working tree and
-# restores everything to a proper state (including unseeking,
-# cancelling merge in progress and rebuilding indexes).
+# If passed the -r parameter, it will not restore the file as of the
+# last commit, but to the state in the given commit, tree, or blob.
+# The list of files is mandatory in this case.
+#
+# For the "restore-to-last-commit" usage, this command is
+# complementary to the `cg-reset` command, which forcefully abandons
+# all the changes in the working tree and restores everything to
+# a proper state (including unseeking, cancelling merge in progress
+# and rebuilding indexes).
 #
 # OPTIONS
 # -------
 # -f::
 #	Restore even locally modified files to the version as of
 #	the last commit. Take care!
+# -r COMMIT_ID::
+# -r TREE_ID::
+# -r BLOB_ID::
+#	Restore the file to the state appropriate to the given ID.
+#	The list of files to recover is mandatory in this case.
 
-USAGE="cg-restore [-f] [FILE]..."
+USAGE="cg-restore [-f] [-r ID] [FILE]..."
 
 . ${COGITO_LIB}cg-Xlib || exit 1
 
 force=
+objid=
 while optparse; do
 	if optparse -f; then
 		force=-f
+	elif optparse -r=; then
+		objid="$(cg-object-id -n "${OPTARG}")" || exit 1
 	else
 		optfail
 	fi
@@ -38,18 +51,74 @@ done
 ret=0
 
 if [ "$ARGS" ]; then
-	for file in "${ARGS[@]}"; do
-		git-checkout-index $force "${_git_relpath}$file" || ret=1
-	done
-else
+	if [ "$objid" ]; then
+		objtype="$(git-cat-file -t "$objid")"
+		if [ "$objtype" = "commit" ]; then
+			objid="$(cg-object-id -t "$objid")"
+			objtype="tree"
+		fi
+	else
+		objid="$(cg-object-id -t)"
+		objtype="tree"
+	fi
+
+	files=()
+	if [ "$force" ]; then
+		for file in "${ARGS[@]}"; do
+			files[${#files[@]}]="${_git_relpath}$file"
+		done
+	else
+		# Not forcing, filter out existing files
+		for file in "${ARGS[@]}"; do
+			if [ -e "${_git_relpath}$file" ]; then
+				echo "Error: File $file already exists; use -f to override" >&2
+				ret=2
+				continue
+			fi
+			files[${#files[@]}]="${_git_relpath}$file"
+		done
+		[ ${#files[@]} -ge 1 ] || die "no files suitable for restoring left"
+	fi
+
+	if [ "$objtype" = "tree" ]; then
+		if ! git-ls-tree -r "$objid" "${files[@]}" |
+			sed -ne 's/^\([0-7]*\) blob \(.*\)$/\1 \2/p' |
+			( ret=0; while read mode id name; do
+				echo "Restoring file ${name#$_git_relpath}"
+				# TODO: Use git-update-index --index-info when we
+				# will depend on git new enough. --pasky
+				if ! git-update-index --add --cacheinfo "$mode" "$id" "$name"; then
+					echo "Error: Cannot mark ${file#$_git_relpath} for update" >&2
+					ret=1
+					continue
+				fi
+			done; exit $ret ); then
+				ret=$?
+		# When we'll do --index-info which should be atomic:
+		#|| {
+		#	echo "Fatal: git-update-index failed, cancelling the whole operation (restored nothing)" >&2
+		#	exit $?
+		#}
+		fi
+		git-checkout-index -u $force -- "${files[@]}" || ret=1
+
+	elif [ "$objtype" = "blob" ]; then
+		[ "${#files[@]}" -gt 1 ] && echo "Warning: Restoring multiple files to a single blob" >&2
+		for file in "${files[@]}"; do
+			echo "Restoring file ${file#$_git_relpath}"
+			echo "Warning: File ${file#$_git_relpath} likely will not have correct permissions" >&2
+			git-cat-file blob "$objid" >"$file"
+			git-update-index -- "$file" || ret=1
+		done
+	fi
+
+else # no arguments - much weaker
+	[ "$objid" ] && die "you need to pass an explicit list of files to -r"
 	[ "$_git_relpath" ] && die "cannot restore files en masse in subdirectories yet"
 	if [ "$(git-ls-files --deleted)" ]; then
-		echo "Recovering files:"
-		git-ls-files --deleted | sed "s/^/$(echo -e "\t")/"
+		git-ls-files --deleted | sed "s/^/Restoring file /"
 	fi
-	git-checkout-index -q -a $force
+	git-checkout-index -u -q -a $force
 fi
-
-update_index || ret=1
 
 exit $ret

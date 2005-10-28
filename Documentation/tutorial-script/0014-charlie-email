@@ -1,0 +1,72 @@
+From nobody Mon Sep 17 00:00:00 2001
+Subject: [PATCH] Add proper header file for lexer
+From: Horst von Brand <vonbrand@inf.utfsm.cl>
+Date: 1127959411 -0400
+
+Create lexer.h, move lexer declarations into it.
+
+Include lexer.h in rpn.c and lexer.c
+
+Update dependencies in Makefile
+
+Signed-off-by: Horst H. von Brand <vonbrand@inf.utfsm.cl>
+
+
+---
+
+ Makefile |    3 +++
+ lexer.h  |   13 +++++++++++++
+ rpn.c    |    4 ++--
+ 3 files changed, 18 insertions(+), 2 deletions(-)
+ create mode 100644 lexer.h
+
+82af9d2042fc0995156541b90bda1b949daafc9d
+diff --git a/Makefile b/Makefile
+--- a/Makefile
++++ b/Makefile
+@@ -4,3 +4,6 @@
+ 
+ rpn: rpn.o stack.o lexer.o
+ 	$(CC) $(CFLAGS) $^ -o $@
++	
++rpn.o lexer.o: lexer.h
++	
+diff --git a/lexer.h b/lexer.h
+new file mode 100644
+--- /dev/null
++++ b/lexer.h
+@@ -0,0 +1,13 @@
++/*
++ * lexer.h -- Lexical analysis for RPN
++ *
++ * (c) 2005 Horst H. von Brand
++ * Licensed under the Open Software License version 2.1
++ */
++
++#ifndef LEXER_H
++#define LEXER_H
++extern double val;
++
++extern int getsym(void);
++#endif /* LEXER_H */
+diff --git a/rpn.c b/rpn.c
+--- a/rpn.c
++++ b/rpn.c
+@@ -7,14 +7,14 @@
+ 
+ #include <stdio.h>
+ 
++#include "lexer.h"
++
+ double val;
+ 
+ extern double pop(void);
+ extern void push(double);
+ extern void clear(void);
+ 
+-extern int getsym(void);
+-
+ int main(void)
+ {
+ 	int sym;
+

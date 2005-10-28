@@ -12,7 +12,9 @@
 # Note that in the GIT newspeak, the operation being performed by cg-update
 # is now called 'pull', even though in the past, 'pull' was the name for
 # the operation being now done by cg-fetch, which is even still aliased
-# to cg-pull. Please do not let this confuse you.
+# to cg-pull. Please do not let this confuse you. (Cogito won't call this
+# 'update' operation 'pull', since about everyone but GIT and BK users uses
+# it in the 'fetch' meaning.)
 #
 # OPTIONS
 # -------
@@ -34,7 +36,7 @@ while optparse; do
 done
 
 name=${ARGS[0]}
-[ "$name" ] || { [ -s $_git/refs/heads/origin ] && name=origin; }
+[ "$name" ] || { [ -s $_git/branches/origin ] && name=origin; }
 [ "$name" ] || die "where to update from?"
 
 if [ -s "$_git/branches/$name" ]; then

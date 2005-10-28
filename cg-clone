@@ -27,7 +27,7 @@
 #	Clone in the current directory instead of creating a new one.
 #	Specifying both -s and a destination directory makes no sense.
 
-USAGE="cg-clone [-s] LOCATION [DESTDIR]"
+USAGE="cg-clone [-l] [-s] LOCATION [DESTDIR]"
 _git_repo_unneeded=1
 
 . ${COGITO_LIB}cg-Xlib || exit 1
@@ -54,7 +54,7 @@ if [ "$destdir" ]; then
 	[ ! "$same_dir" ] || die "specifying both -s and DESTDIR makes no sense"
 	dir=$destdir
 else
-	dir=${location%#*}; dir=${location%/.git}; dir=${dir##*/} dir=${dir%.git}
+	dir=${location%#*}; dir=${dir%/.git}; dir=${dir##*/} dir=${dir%.git}
 fi
 
 if ! echo "$location" | grep -q ":" ; then
@@ -73,7 +73,7 @@ else
 fi
 
 
-trap "cd .. && rm -rf $dir; echo; die \"interrupted\"" SIGINT SIGTERM
+cleanup_trap "cd .. && rm -rf $dir"
 
 cg-init -I || die "init failed"
 if [ "$symlink" ]; then
@@ -86,9 +86,10 @@ fi
 cg-branch-add origin "$location"
 cg-fetch origin || die "fetch failed"
 
-cp $_git/refs/heads/origin $_git/refs/heads/master
-git-read-tree HEAD
-git-checkout-index -a
-git-update-index --refresh
+cp $_git/refs/heads/origin $_git/refs/heads/master &&
+	git-read-tree HEAD &&
+	git-checkout-index -a &&
+	git-update-index --refresh ||
+	exit 1
 
 echo "Cloned to $dir/ (origin $location available as branch \"origin\")"

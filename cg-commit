@@ -2,15 +2,18 @@
 #
 # Commit into a GIT repository.
 # Copyright (c) Petr Baudis, 2005
-# Based on an example script fragment sent to LKML by Linus Torvalds.
 #
-# Commits changes to a GIT repository. Accepts the commit message from
-# `stdin`. If the commit message is not modified the commit will be
+# Commits your changes to the GIT repository. Accepts the commit message
+# from `stdin`. If the commit message is not modified the commit will be
 # aborted.
 #
 # By default, the commit is recorded as made by you, but you can change
 # that - useful if you are e.g. applying a patch submitted by someone
 # else. See the ENVIRONMENT section below.
+#
+# Note that you can undo a commit by the `cg-admin-uncommit` command,
+# but that is possible only under special circumstances. See the CAVEATS
+# section of its documentation.
 #
 # OPTIONS
 # -------
@@ -25,7 +28,7 @@
 #	Note, this is used internally by 'Cogito' when merging. This option
 #	does not make sense when files are given on the command line.
 #
-# -mMESSAGE::
+# -m MESSAGE::
 #	Specify the commit message, which is used instead of starting
 #	up an editor (if the input is not `stdin`, the input is appended
 #	after all the '-m' messages). Multiple '-m' parameters are appended
@@ -42,13 +45,17 @@
 # -f::
 #	Force the commit even when there's "nothing to commit", that is
 #	the tree is the same as the last time you committed, no changes
-#	happenned.
+#	happened.
 #
 # -N::
 #	Don't add the files to the object database, just update the caches
 #	and the commit information. This is for special purposes when you
 #	might not actually _have_ any object database. This option is
 #	normally not interesting.
+#
+# -q::
+#	Be quiet in case there's "nothing to commit", and silently exit
+#	returning success. In a sense, this is the opposite to '-f'.
 #
 # FILES
 # -----
@@ -111,7 +118,7 @@
 # EDITOR::
 #	The editor used for entering revision log information.
 
-USAGE="cg-commit [-mMESSAGE]... [-C] [-e | -E] [-c COMMITID] [FILE]... [< MESSAGE]"
+USAGE="cg-commit [-m MESSAGE]... [-C] [-e | -E] [-c COMMIT_ID] [FILE]... [< MESSAGE]"
 
 . ${COGITO_LIB}cg-Xlib || exit 1
 
@@ -142,6 +149,7 @@ commitalways=
 missingok=
 copy_commit=
 msgs=()
+quiet=
 while optparse; do
 	if optparse -C; then
 		ignorecache=1
@@ -155,10 +163,12 @@ while optparse; do
 		commitalways=1
 	elif optparse -f; then
 		force=1
+	elif optparse -q; then
+		quiet=1
 	elif optparse -m=; then
 		msgs[${#msgs[@]}]="$OPTARG"
 	elif optparse -c=; then
-		copy_commit="$(cg-commit-id "$OPTARG")"
+		copy_commit="$(cg-object-id -c "$OPTARG")"
 	else
 		optfail
 	fi
@@ -193,6 +203,15 @@ else
 		# sed versions.
 		eval commitfiles=($(git-diff-index -r -m HEAD | \
 			sed 's/^\([^	]*\)\(.	.*\)\(	.*\)*$/"\2"/'))
+
+		if [ -s "$_git/commit-ignore" ]; then
+			newcommitfiles=()
+			for file in "${commitfiles[@]}"; do
+				fgrep -qx "${file:2}" "$_git/commit-ignore" && continue
+				newcommitfiles[${#newcommitfiles[@]}]="$file"
+			done
+			commitfiles=("${newcommitfiles[@]}")
+		fi
 	fi
 
 	merging=
@@ -209,7 +228,7 @@ if [ "$merging" ]; then
 	[ "$msgs" ] && echo -n 'Merge with '
 	[ -s $_git/merging-sym ] || cp $_git/merging $_git/merging-sym
 	for sym in $(cat $_git/merging-sym); do
-		uri=$(cat $_git/branches/$sym)
+		uri=$(cat $_git/branches/$sym 2>/dev/null)
 		[ "$uri" ] || uri="$sym"
 		echo "$uri" >>$LOGMSG
 		[ "$msgs" ] && echo "$uri"
@@ -283,7 +302,7 @@ if [ ! "$ignorecache" ]; then
 	if [ ! "$merging" ]; then
 		if [ ! "$force" ] && [ ! "${commitfiles[*]}" ]; then
 			rm $LOGMSG $LOGMSG2
-			die 'Nothing to commit'
+			[ "$quiet" ] && exit 0 || die 'Nothing to commit'
 		fi
 		echo "CG: By deleting lines beginning with CG:F, the associated file" >>$LOGMSG
 		echo "CG: will be removed from the commit list." >>$LOGMSG
@@ -296,6 +315,11 @@ if [ ! "$ignorecache" ]; then
 		echo "CG:F   $file" >>$LOGMSG
 		[ "$msgs" ] && ! [ "$forceeditor" ] && echo $file
 	done
+	if [ -s "$_git/commit-ignore" ]; then
+		echo "CG:" >>$LOGMSG
+		echo "CG: I have kept back the $(wc -l "$_git/commit-ignore" | cut -d ' ' -f 1) file(s) containing your local changes." >>$LOGMSG
+		echo "CG: You need not worry, the local changes will not interfere with the merge." >>$LOGMSG
+	fi
 fi
 echo "CG: -----------------------------------------------------------------------" >>$LOGMSG
 echo "CG: vim: textwidth=75" >>$LOGMSG
@@ -312,8 +336,12 @@ if tty -s; then
 					rm $LOGMSG $LOGMSG2
 					echo "Commit message not modified, commit aborted" >&2
 					if [ "$merging" ]; then
-						echo "Note that the merge is NOT aborted - you can cg-commit again" >&2
-						echo "cg-reset will abort the ongoing merge" >&2
+						cat >&2 <<__END__
+Note that the merge is NOT aborted - you can cg-commit again, cg-reset will abort it.
+__END__
+						[ -s "$_git/commit-ignore" ] && cat >&2 <<__END__
+(But note that cg-reset will remove your pending local changes as well!)
+__END__
 					fi
 					exit 1
 				elif [ "$choice" = "c" ]; then
@@ -326,7 +354,7 @@ if tty -s; then
 		eval newcommitfiles=($(grep ^CG:F $LOGMSG2 | sed 's/^CG:F *\(.*\)$/"\1"/'))
 		if [ ! "${newcommitfiles[*]}" ]; then
 			rm $LOGMSG $LOGMSG2
-			die 'Nothing to commit'
+			[ "$quiet" ] && exit 0 || die 'Nothing to commit'
 		fi
 		if [ "${commitfiles[*]}" != "${newcommitfiles[*]}" ]; then
 			commitfiles=("${newcommitfiles[@]}")
@@ -390,7 +418,7 @@ fi
 treeid=$(git-write-tree ${missingok})
 [ "$treeid" ] || die "git-write-tree failed"
 if [ ! "$force" ] && [ ! "$merging" ] && [ "$oldhead" ] &&
-   [ "$treeid" = "$(cg-tree-id)" ]; then
+   [ "$treeid" = "$(cg-object-id -t)" ]; then
 	echo "Refusing to make an empty commit - the tree was not modified" >&2
 	echo "since the previous commit. If you really want to make the" >&2
 	echo "commit, pass cg-commit the -f argument." >&2
@@ -409,6 +437,7 @@ if [ "$newhead" ]; then
 	echo "Committed as $newhead."
 	echo $newhead >$_git/HEAD
 	[ "$merging" ] && rm $_git/merging $_git/merging-sym $_git/merge-base
+	rm -f "$_git/commit-ignore"
 
 	# Trigger the postcommit hook
 	branchname=

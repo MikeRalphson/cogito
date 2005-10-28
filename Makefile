@@ -12,13 +12,13 @@ INSTALL?=install
 
 
 
-SCRIPT=	cg-commit-id cg-tree-id cg-parent-id cg-add cg-admin-lsobj cg-admin-uncommit \
+SCRIPT=	cg-object-id cg-add cg-admin-lsobj cg-admin-uncommit \
 	cg-branch-add cg-branch-ls cg-reset cg-clone cg-commit cg-diff \
 	cg-export cg-help cg-init cg-log cg-merge cg-mkpatch cg-patch \
 	cg-fetch cg-restore cg-rm cg-seek cg-status cg-tag cg-tag-ls cg-update \
-	cg cg-admin-ls cg-upload cg-branch-chg cg-admin-cat cg-clean
+	cg cg-admin-ls cg-push cg-branch-chg cg-admin-cat cg-clean
 
-LIB_SCRIPT=cg-Xlib cg-Xmergefile cg-Xnormid
+LIB_SCRIPT=cg-Xlib cg-Xmergefile cg-Xfetchprogress
 
 GEN_SCRIPT= cg-version
 
@@ -78,9 +78,11 @@ install: install-cogito
 install-cogito: $(SCRIPT) $(LIB_SCRIPT) $(GEN_SCRIPT)
 	$(INSTALL) -m755 -d $(DESTDIR)$(bindir)
 	$(INSTALL) $(SCRIPT) $(GEN_SCRIPT) $(DESTDIR)$(bindir)
-	for i in 'cg-cancel:cg-reset' 'commit-id:cg-commit-id' \
-		'tree-id:cg-tree-id' 'parent-id:cg-parent-id' \
-		'cg-pull:cg-fetch' 'cg-push:cg-upload'; do \
+	for i in 'cg-cancel:cg-reset' 'commit-id:cg-object-id' \
+		'tree-id:cg-object-id' 'parent-id:cg-object-id' \
+		'cg-commit-id:cg-object-id' \
+		'cg-tree-id:cg-object-id' 'cg-parent-id:cg-object-id' \
+		'cg-pull:cg-fetch'; do \
 		old=`echo $$i | cut -d : -f 1`; \
 		new=`echo $$i | cut -d : -f 2`; \
 		rm -f $(DESTDIR)$(bindir)/$$old; \
@@ -90,12 +92,12 @@ install-cogito: $(SCRIPT) $(LIB_SCRIPT) $(GEN_SCRIPT)
 	$(INSTALL) $(LIB_SCRIPT) $(DESTDIR)$(libdir)
 	cd $(DESTDIR)$(bindir); \
 	for file in $(SCRIPT); do \
-		sed -e 's/\$${COGITO_LIB}/\$${COGITO_LIB:-$(sedlibdir)\/}/g' $$file > $$file.new; \
+		sed -e 's/\$${COGITO_LIB}/"\$${COGITO_LIB:-$(sedlibdir)\/}"/g' $$file > $$file.new; \
 		cat $$file.new > $$file; rm $$file.new; \
 	done
 	cd $(DESTDIR)$(libdir); \
 	for file in $(LIB_SCRIPT); do \
-		sed -e 's/\$${COGITO_LIB}/\$${COGITO_LIB:-$(sedlibdir)\/}/g' $$file > $$file.new; \
+		sed -e 's/\$${COGITO_LIB}/"\$${COGITO_LIB:-$(sedlibdir)\/}"/g' $$file > $$file.new; \
 		cat $$file.new > $$file; rm $$file.new; \
 	done
 

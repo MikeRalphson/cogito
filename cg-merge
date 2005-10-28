@@ -25,6 +25,13 @@
 # want to fetch the changes and then merge them to your branch, use the command
 # `cg-update`.
 #
+# Also note that if you have local changes in your tree that you did not
+# commit, cg-merge will always preserve them when fast-forwarding. When doing
+# a tree merge, it will preserve them if they don't conflict with the merged
+# changes, and report an error otherwise. In short, it should do the Right
+# Thing (tm), never lose your local changes and never let them mix up with
+# the merge.
+#
 # OPTIONS
 # -------
 # -b BASE_COMMIT::
@@ -33,7 +40,7 @@
 #
 # -c::
 #	Parameter specifies that you want to have tree merge never
-#	autocomitted, but want to review and commit it manually. This will
+#	autocommitted, but want to review and commit it manually. This will
 #	basically make cg-merge always behave like there were conflicts
 #	during the merge.
 #
@@ -76,7 +83,7 @@ posthook()
 }
 
 
-head=$(cg-commit-id) || exit 1
+head=$(cg-object-id -c) || exit 1
 
 
 careful=
@@ -85,16 +92,16 @@ while optparse; do
 	if optparse -c; then
 		careful=1
 	elif optparse -b=; then
-		base=$(cg-commit-id "$OPTARG") || exit 1
+		base=$(cg-object-id -c "$OPTARG") || exit 1
 	else
 		optfail
 	fi
 done
 
 branchname="${ARGS[0]}"
-[ "$branchname" ] || { [ -s $_git/refs/heads/origin ] && branchname=origin; }
+[ "$branchname" ] || { [ -s $_git/branches/origin ] && branchname=origin; }
 [ "$branchname" ] || die "what to merge?"
-branch=$(cg-commit-id "$branchname") || exit 1
+branch=$(cg-object-id -c "$branchname") || exit 1
 
 [ "$base" ] || base=$(git-merge-base "$head" "$branch")
 [ "$base" ] || die "unable to automatically determine merge base"
@@ -127,7 +134,7 @@ if [ "$head" = "$base" ]; then
 fi
 
 
-[ "$(git-diff-files -s)" ] && update_index
+[ "$(git-diff-files -s)" ] && git-update-index --refresh >/dev/null
 
 echo "Merging $base -> $branch" >&2
 echo -e "\tto $head..." >&2
@@ -135,7 +142,11 @@ echo -e "\tto $head..." >&2
 
 prehook tree
 
-if ! git-read-tree -u -m $(cg-tree-id $base) $(cg-tree-id $head) $(cg-tree-id $branch); then
+git-diff-index --name-only "$(cg-object-id -t $head)" >>"$_git/commit-ignore"
+# Don't keep around useless empty files
+[ -s "$_git/commit-ignore" ] || rm "$_git/commit-ignore"
+
+if ! git-read-tree -u -m "$(cg-object-id -t $base)" "$(cg-object-id -t $head)" "$(cg-object-id -t $branch)"; then
 	echo "cg-merge: git-read-tree failed (merge likely blocked by local changes)" >&2
 	posthook tree localchanges
 	exit 1
@@ -181,10 +192,13 @@ if ! git-merge-index -o -q ${COGITO_LIB}cg-Xmergefile -a || [ "$careful" ]; then
 
 	Conflicts during merge. Do cg-commit after resolving them.
 __END__
+	if [ -s "$_git/commit-ignore" ]; then
+		echo "	These files contained local modifications and won't be automatically chosen for committing:" >&2
+		cat "$_git/commit-ignore" >&2
+	fi
 	posthook tree conflicts
 	exit 2
 fi
-git-checkout-index -f -u -a
 
 echo
 readtree=
@@ -195,6 +209,8 @@ if ! cg-commit -C; then
 fi
 
 [ "$readtree" ] && git-read-tree -m HEAD
+# update_index here is safe because no tree<->index desyncs could've
+# survived the read-tree above
 update_index
 
 posthook tree ok

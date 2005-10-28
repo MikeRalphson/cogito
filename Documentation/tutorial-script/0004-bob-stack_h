@@ -1,0 +1,15 @@
+/*
+ * stack.h -- Stack for RPN
+ *
+ * (c) 2005 Horst H. von Brand
+ * Licensed under the Open Software License version 2.1
+ */
+
+#ifndef STACK_H
+#define STACK_H
+
+extern double val;
+
+extern double pop(void);
+extern void push(double);
+#endif STACK_H

@@ -24,6 +24,13 @@
 
 . ${COGITO_LIB}cg-Xlib || exit 1
 
+id0="${ARGS[0]}"
+id1="${ARGS[1]}"
+id2="${ARGS[2]}"
+file="${ARGS[3]}"
+mode0="${ARGS[4]}"
+mode1="${ARGS[5]}"
+mode2="${ARGS[6]}"
 
 error()
 {
@@ -37,37 +44,37 @@ warning()
 }
 
 
-case "${1:-.}${2:-.}${3:-.}" in
+case "${id0:-.}${id1:-.}${id2:-.}" in
 #
 # Deleted in both or deleted in one and unchanged in the other
 #
-"$1.." | "$1.$1" | "$1$1.")
-	#echo "Removing $4"
-	if test -f "$4"; then
-		rm -f -- "$4"
+"$id0.." | "$id0.$id0" | "$id0$id0.")
+	#echo "Removing $file"
+	if test -f "$file"; then
+		rm -f -- "$file"
 	fi &&
-		exec git-update-index --remove -- "$4"
+		exec git-update-index --remove -- "$file"
 	;;
 
 #
 # Added in one.
 #
-".$2." | "..$3" )
-	#echo "Adding $4"
-	git-update-index --add --cacheinfo "$6$7" "$2$3" "$4" &&
-		exec git-checkout-index -u -f -- "$4"
+".$id1." | "..$id2" )
+	#echo "Adding $file"
+	git-update-index --add --cacheinfo "$mode1$mode2" "$id1$id2" "$file" &&
+		exec git-checkout-index -u -f -- "$file"
 	;;
 
 #
 # Added in both (check for same permissions).
 #
-".$3$2")
-	#echo "Adding $4"
-	git-update-index --add --cacheinfo "$6" "$2" "$4" &&
-		git-checkout-index -u -f -- "$4"
+".$id2$id1")
+	#echo "Adding $file"
+	git-update-index --add --cacheinfo "$mode1" "$id1" "$file" &&
+		git-checkout-index -u -f -- "$file"
 	ret=$?
-	if [ "$6" != "$7" ]; then
-		error "$4: added in both branches, permissions conflict $6->$7"
+	if [ "$mode1" != "$mode2" ]; then
+		error "$file: added in both branches, permissions conflict $mode1->$mode2"
 		exit 1
 	fi
 	exit $ret
@@ -76,21 +83,21 @@ case "${1:-.}${2:-.}${3:-.}" in
 #
 # Modified in both, but differently.
 #
-"$1$2$3")
-	echo "... Auto-merging $4"
-	orig=$(git-unpack-file $1)
-	src2=$(git-unpack-file $3)
+"$id0$id1$id2")
+	echo "... Auto-merging $file"
+	orig=$(git-unpack-file $id0)
+	src2=$(git-unpack-file $id2)
 
 	# We reset the index to the first branch, making
 	# git-diff-file useful
-	git-update-index --add --cacheinfo "$6" "$2" "$4"
-		git-checkout-index -u -f -- "$4" &&
-		merge "$4" "$orig" "$src2"
+	git-update-index --add --cacheinfo "$mode1" "$id1" "$file"
+		git-checkout-index -u -f -- "$file" &&
+		merge "$file" "$orig" "$src2"
 	ret=$?
 	rm -f -- "$orig" "$src2"
 
-	if [ "$6" != "$7" ]; then
-		error "Permissions conflict: $5->$6,$7."
+	if [ "$mode1" != "$mode2" ]; then
+		error "Permissions conflict: $mode0->$mode1,$mode2."
 		ret=1
 	fi
 
@@ -100,11 +107,11 @@ case "${1:-.}${2:-.}${3:-.}" in
 		#error "Auto-merge failed"
 		exit 1
 	fi
-	exec git-update-index -- "$4"
+	exec git-update-index -- "$file"
 	;;
 
 *)
-	error "$4: Not handling case $1 -> $2 -> $3"
+	error "$file: Not handling case: ${id0:-empty} -> ${id1:-empty} -> ${id2:-empty}"
 	;;
 esac
 exit 1

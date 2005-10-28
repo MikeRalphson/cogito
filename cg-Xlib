@@ -7,17 +7,27 @@
 # Cogito programs.
 
 _cg_cmd=${0##*/}
+_cleanup_code=
 
 
 die()
 {
 	echo $_cg_cmd: $@ >&2
+	eval "$_cleanup_code"
 	exit 1
 }
 
 usage()
 {
 	die "usage: $USAGE"
+}
+
+# Do this in case we get interrupted or prematurely die
+cleanup_trap()
+{
+	_cleanup_code="$*"
+	# die will execute the $_cleanup_code
+	trap "echo; die \"interrupted\"" SIGINT SIGTERM
 }
 
 pager()
@@ -32,7 +42,7 @@ pager()
 	fi
 	local line
 	# Invoke pager only if there's any actual output
-	if read -r line; then
+	if IFS=$'\n' read -r line; then
 		( echo "$line"; cat; ) | LESS="$cgless" ${PAGER:-less} $PAGER_FLAGS
 	fi
 }
@@ -169,8 +179,8 @@ path_xargs()
 	normpath | tr '\n' '\0' | xargs -0 "$@"
 }
 
-# Equivalent to cg-status | grep '^?' | cut -d ' ' -f 2-, but the filenames
-# are delimited by '\0' instead of '\n'.
+# Equivalent to cg-status -w -n -s '?', but the filenames are delimited
+# by '\0' instead of '\n'.
 # Usage: list_untracked_files DO_EXCLUDE [EXTRAEXCLUDE]...
 # DO_EXCLUDE: "no", "noexclude" means not to exclude anything,
 #             otherwise the exclude rules apply
@@ -201,6 +211,7 @@ list_untracked_files()
 
 # Usage: showdate SECONDS TIMEZONE [FORMAT]
 # Display date nicely based on how GIT stores it.
+# Save the date to $_showdate
 showdate()
 {
 	local secs=$1 tzhours=${2:0:3} tzmins=${2:0:1}${2:3} format="$3"
@@ -209,9 +220,9 @@ showdate()
 	secs=$(($secs + $tzhours * 3600 + $tzmins * 60))
 	[ "$format" ] || format="+%a, %d %b %Y %H:%M:%S $2"
 	if [ "$has_gnudate" ]; then
-		LANG=C $has_gnudate -ud "1970-01-01 UTC + $secs sec" "$format"
+		_showdate="$(LANG=C $has_gnudate -ud "1970-01-01 UTC + $secs sec" "$format")"
 	else
-		LANG=C date -u -r $secs "$format"
+		_showdate="$(LANG=C date -u -r $secs "$format")"
 	fi
 }
 
@@ -244,7 +255,10 @@ tree_timewarp()
 		cg-diff -r $branch >$patchfile
 	fi
 
-	git-read-tree -m "$branch" || die "$branch: bad commit"
+	#XXX: Two-way merge can be done only when we drop the patches
+	#stuff and do true merge resolving.
+	#if ! git-read-tree -u -m "$base" "$branch"; then
+	git-read-tree -u -m "$branch" || die "$branch: bad commit"
 	[ "$no_head_update" ] || echo "$branch" > $_git/HEAD
 
 	# Kill gone files
@@ -259,7 +273,6 @@ tree_timewarp()
 			fi
 		done
 	' padding
-	git-checkout-index -f -a
 
 	# FIXME: Can produce bogus "contains only garbage" messages.
 	cat $patchfile | cg-patch
@@ -268,6 +281,12 @@ tree_timewarp()
 	git-update-index --refresh >/dev/null
 }
 
+# update_index will refresh the index and list the local modifications
+# Note that this isn't usually safe, since some of the modifications may
+# be recorded in the index file - modulo adds and removes also cg-restore
+# to historical revisions. Besides, it gives confusing output for relpath.
+# Never use it. If you do, accompany it with a comment explaining why is
+# it safe to use it.
 update_index()
 {
 	git-update-index --refresh | sed 's/needs update$/locally modified/'
@@ -316,15 +335,15 @@ print_help()
 {
 	which "cg-$1" >/dev/null 2>&1 || exit 1
 	sed -n '/^USAGE=/,0s/.*"\(.*\)"/Usage: \1/p;
-	        /^deprecated_alias/,0s/.* \([^ ]*\) \([^ ]*\)/\1 is the new name for \2/p' < $(which cg-$1) 
+	        /^deprecated_alias/,0s/^deprecated_alias \([^ ]*\)/\1 is the new name for/p' < $(which cg-$1) 
 	echo
 	sed -n '3,/^$/s/^# *//p' < $(which cg-$1)
 	exit
 }
 
 for option in "$@"; do
-	[ "$option" = -- ] && break
-	if [ "$option" = "-h" -o "$option" = "--help" ]; then
+	[ x"$option" = x-- ] && break
+	if [ x"$option" = x"-h" -o x"$option" = x"--help" ]; then
 		print_help ${_cg_cmd##cg-}
 	fi
 done
@@ -332,11 +351,12 @@ done
 
 ARGS=("$@")
 ARGPOS=0
+set '' # clear positional parameters - use $ARGS[] instead
 
 if [ -t 1 -a -e "$HOME/.cgrc" ]; then
 	_cg_name=${_cg_cmd#cg-}
-	_cg_defaults1="$(sed -n "/^$_cg_cmd/s/^$_cg_cmd //p" < $HOME/.cgrc)"
-	_cg_defaults2="$(sed -n "/^$_cg_name/s/^$_cg_name //p" < $HOME/.cgrc)"
+	_cg_defaults1="$(sed -n "/^$_cg_cmd/s/^$_cg_cmd //p" < "$HOME/.cgrc")"
+	_cg_defaults2="$(sed -n "/^$_cg_name/s/^$_cg_name //p" < "$HOME/.cgrc")"
 	ARGS=($_cg_defaults1 $_cg_defaults2 "${ARGS[@]}")
 fi
 

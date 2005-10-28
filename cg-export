@@ -15,17 +15,22 @@ _git_requires_root=1
 
 . ${COGITO_LIB}cg-Xlib || exit 1
 
-if [ "$1" = "-r" ]; then
-	shift
-	# We do not resolve to cg-tree-id since git-tar-tree can utilize some commit
-	# information.
-	id="$(cg-commit-id "$1" 2>/dev/null)" || id="$1"
-	shift
-else
-	id="$(cg-commit-id)"
+id=
+while optparse; do
+	if optparse -r=; then
+		# We do not resolve to tree id since git-tar-tree can
+		# utilize some commit information.
+		id="$(cg-object-id -c "$OPTARG" 2>/dev/null)" || id="$OPTARG"
+	else
+		optfail
+	fi
+done
+
+if [ -z "$id" ]; then
+	id="$(cg-object-id -c)"
 fi
 
-dest=$1
+dest=${ARGS[0]}
 
 ([ "$dest" ] && [ "$id" ]) || usage
 
@@ -52,7 +57,7 @@ case $dest in
 	*)
 		mkdir -p $dest || die "cannot create $dest"
 		export GIT_INDEX_FILE="$dest/.git-index"
-		id="$(cg-tree-id "$id")"
+		id="$(cg-object-id -t "$id")"
 		git-read-tree $id
 		git-checkout-index "--prefix=$dest/" -a
 		rm $GIT_INDEX_FILE

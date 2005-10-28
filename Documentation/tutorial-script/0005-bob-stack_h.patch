@@ -1,0 +1,28 @@
+diff --git a/rpn.c b/rpn.c
+--- a/rpn.c
++++ b/rpn.c
+@@ -7,10 +7,9 @@
+ 
+ #include <stdio.h>
+ 
+-double val;
++#include "stack.h"
+ 
+-extern double pop(void);
+-extern void push(double);
++double val;
+ 
+ extern int getsym(void);
+ 
+diff --git a/stack.c b/stack.c
+--- a/stack.c
++++ b/stack.c
+@@ -5,6 +5,8 @@
+  * Licensed under the Open Software License version 2.1
+  */
+ 
++#include "stack.h"
++
+ #define N	8
+ 
+ static double stack[N];

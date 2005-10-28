@@ -1,0 +1,8 @@
+/^<<<<<<< Makefile/d
+/^rpn\.o:/s/\.h.*$/.h lexer.h/
+/^lexer\.o:/s/:.*$/: lexer.h/
+/^=======/,/^>>>>>>> \.merge_file_/d
+w
+q
+
+ 

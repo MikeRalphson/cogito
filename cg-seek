@@ -24,21 +24,21 @@ _git_requires_root=1
 
 . ${COGITO_LIB}cg-Xlib || exit 1
 
-dstcommit=$1
+dstcommit=${ARGS[0]}
 
 
 [ -s $_git/blocked ] && grep -vq '^seeked from ' $_git/blocked && die "action blocked: $(cat $_git/blocked)"
 
-curcommit=$(cg-commit-id) || exit 1
+curcommit=$(cg-object-id -c) || exit 1
 
 if [ "$dstcommit" ] && [ "$dstcommit" != "$_git_head" ]; then
 	seek_mode=away
 else
 	seek_mode=back
-	dstcommit=$(cg-commit-id "$_git_head") || exit 1
+	dstcommit=$(cg-object-id -c "$_git_head") || exit 1
 fi
 
-dstcommit=$(cg-commit-id "$dstcommit") || exit 1
+dstcommit=$(cg-object-id -c "$dstcommit") || exit 1
 if [ "$curcommit" != "$dstcommit" ]; then
 	tree_timewarp --no-head-update "along" "please rollback" $curcommit $dstcommit
 fi

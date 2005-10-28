@@ -1,7 +1,7 @@
 CG_IGNORE=$(wildcard ../cg-X* ../cg-*.orig ../cg-*.rej)
-CG_SRC=$(filter-out $(CG_IGNORE), $(wildcard ../cg-*))
+CG_SRC=$(filter-out $(CG_IGNORE), $(wildcard ../cg*))
 
-MAN1_TXT=$(patsubst ../cg-%,cg-%.txt,$(CG_SRC))
+MAN1_TXT=$(patsubst ../cg%,cg%.txt,$(CG_SRC))
 MAN7_TXT=cogito.txt
 
 DOC_HTML=$(patsubst %.txt,%.html,$(MAN1_TXT) $(MAN7_TXT)) introduction.html
@@ -54,9 +54,9 @@ install-html: html
 	$(INSTALL) $(DOC_HTML) $(DESTDIR)/$(htmldir)
 
 clean:
-	rm -f *.xml *.html *.1 *.7 cg-*.txt cogito.txt
+	rm -f *.xml *.html *.1 *.7 cg*.txt cogito.txt
 
-.PRECIOUS: cg-%.txt
+.PRECIOUS: cg%.txt
 
 introduction.html: ../README
 	asciidoc -b xhtml11 -d article -f asciidoc.conf -o $@ $<
@@ -72,6 +72,10 @@ introduction.html: ../README
 
 cogito.txt : make-cogito-asciidoc
 	./make-cogito-asciidoc > $@
+
+# It seems that cg%.txt won't match this so use an explicit rule
+cg.txt : ../cg make-cg-asciidoc
+	./make-cg-asciidoc $< > $@
 
 cg-%.txt : ../cg-% make-cg-asciidoc
 	./make-cg-asciidoc $< > $@

@@ -17,6 +17,11 @@
 #	Instead of one ID denotes a parent commit to the specified ID
 #	(which must not be a tree, obviously).
 #
+# -s::
+#	Summarize the diff by showing a histogram for removed and added
+#	lines (similar to the output of diffstat(1)) and information
+#	about added and renamed files and mode changes.
+#
 # -r FROM_ID[:TO_ID]::
 #	Specify the revisions to diff using either '-r rev1:rev2' or
 #	'-r rev1 -r rev2'. If no revision is specified, the current
@@ -41,7 +46,7 @@
 #	to before invoking $PAGER. It defaults to $LESS concatenated
 #	with the `R` flag to allow displaying of colorized output.
 
-USAGE="cg-diff [-c] [-m] [-p] [-r FROM_ID[:TO_ID]] [FILE]..."
+USAGE="cg-diff [-c] [-m] [-s] [-p] [-r FROM_ID[:TO_ID]] [FILE]..."
 
 . ${COGITO_LIB}cg-Xlib || exit 1
 
@@ -65,7 +70,9 @@ setup_colors()
 
 colorize()
 {
-	if [ "$opt_color" ]; then
+	if [ "$opt_summary" ]; then
+		git-apply --summary --stat
+	elif [ "$opt_color" ]; then
 		gawk '
 		{ if (/^(diff --git) /)
 		    print "'$coldiffhdr'" $0 "'$coldefault'"
@@ -96,6 +103,7 @@ id2=" "
 parent=
 opt_color=
 mergebase=
+opt_summary=
 
 while optparse; do
 	if optparse -c; then
@@ -103,6 +111,8 @@ while optparse; do
 		setup_colors
 	elif optparse -p; then
 		parent=1
+	elif optparse -s; then
+		opt_summary=1
 	elif optparse -r=; then
 		if echo "$OPTARG" | fgrep -q '..'; then
 			id2=${OPTARG#*..}
@@ -127,15 +137,20 @@ done
 if [ "$parent" ]; then
 	id2="$id1"
 	id="$id2"; [ "$id" = " " ] && id=""
-	id1=$(cg-parent-id "$id" | head -n 1) || exit 1
+
+	ids=$(cg-object-id -p "$id")
+	[ "$(echo "$ids" | wc -l)" -gt 1 ] && \
+		echo "Warning: Choosing the first parent of a merge commit. This may not be what you want." >&2
+	id1=$(echo "$ids" | head -n 1) || exit 1
+
 	[ "$id1" ] || exit 1
 fi
 
 if [ "$mergebase" ]; then
 	[ "$id1" != " " ] || id1="HEAD"
 	[ "$id2" != " " ] || id2="origin"
-	id1=$(cg-commit-id "$id1") || exit 1
-	id2=$(cg-commit-id "$id2") || exit 1
+	id1=$(cg-object-id -c "$id1") || exit 1
+	id2=$(cg-object-id -c "$id2") || exit 1
 	id1=$(git-merge-base $id1 $id2) || exit 1
 fi
 
@@ -148,9 +163,9 @@ done
 
 if [ "$id2" = " " ]; then
 	if [ "$id1" != " " ]; then
-		tree=$(cg-tree-id "$id1") || exit 1
+		tree=$(cg-object-id -t "$id1") || exit 1
 	else
-		tree=$(cg-tree-id) || exit 1
+		tree=$(cg-object-id -t) || exit 1
 	fi
 
 	# Ensure to only diff modified files
@@ -159,7 +174,12 @@ if [ "$id2" = " " ]; then
 	# FIXME: Update ret based on what did we match. And take "$@"
 	# to account after all.
 	ret=
-	cat $filter | path_xargs git-diff-index -r -p $tree | colorize | pager
+	# xargs on FreeBSD is hardcoded to --no-run-if-empty :/
+	if [ -s "$filter" ]; then
+		cat $filter | path_xargs git-diff-index -r -p $tree | colorize | pager
+	else
+		git-diff-index -r -p $tree | colorize | pager
+	fi
 
 	rm $filter
 
@@ -168,12 +188,17 @@ if [ "$id2" = " " ]; then
 fi
 
 
-id1=$(cg-tree-id "$id1") || exit 1
-id2=$(cg-tree-id "$id2") || exit 1
+id1=$(cg-object-id -t "$id1") || exit 1
+id2=$(cg-object-id -t "$id2") || exit 1
 
 [ "$id1" = "$id2" ] && exit 0
 
-cat $filter | path_xargs git-diff-tree -r -p $id1 $id2 | colorize | pager
+# xargs on FreeBSD is hardcoded to --no-run-if-empty :/
+if [ -s "$filter" ]; then
+	cat $filter | path_xargs git-diff-tree -r -p $id1 $id2 | colorize | pager
+else
+	git-diff-tree -r -p $id1 $id2 | colorize | pager
+fi
 
 rm $filter
 exit 0

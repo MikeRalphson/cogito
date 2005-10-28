@@ -70,7 +70,7 @@ redzone_border()
 
 
 reverse=
-if [ "$1" = "-R" ]; then
+if [ "${ARGS[0]}" = "-R" ]; then
 	reverse=1
 	shift
 fi

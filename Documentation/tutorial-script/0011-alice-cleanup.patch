@@ -1,0 +1,19 @@
+--- rpn/Makefile.orig	2005-09-28 19:35:35.000000000 -0400
++++ rpn/Makefile	2005-09-28 19:36:30.000000000 -0400
+@@ -5,5 +5,6 @@
+ rpn: rpn.o stack.o lexer.o
+ 	$(CC) $(CFLAGS) $^ -o $@
+ 	
+-rpn.o stack.o: stack.h
+-	
++rpn.o: stack.h
++stack.o: stack.h
++lexer.o:	
+--- rpn/stack.h.orig	2005-09-28 19:35:42.000000000 -0400
++++ rpn/stack.h	2005-09-28 19:35:58.000000000 -0400
+@@ -12,4 +12,4 @@
+ 
+ extern double pop(void);
+ extern void push(double);
+-#endif STACK_H
++#endif /* STACK_H */

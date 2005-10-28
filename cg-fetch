@@ -39,49 +39,30 @@ deprecated_alias cg-fetch cg-pull
 
 fetch_progress()
 {
-	percentage=""
-	objects=0
-	last_objects=0
-	size=0
-
-	while read -r line; do
-		object=
-
-		case "$line" in
-		link*|symlink*|copy*|\
-		"got "[a-f0-9][a-f0-9][a-f0-9][a-f0-9][a-f0-9][a-f0-9]*|\
-		"walk "[a-f0-9][a-f0-9][a-f0-9][a-f0-9][a-f0-9][a-f0-9]*)
-			# Convert the sha to an object path
-			object=$(echo "$line" | sed 's,.* \([a-f0-9][a-f0-9]\),\1/,')
-			;;
-
-		[a-f0-9][a-f0-9]/[a-f0-9][a-f0-9][a-f0-9][a-f0-9][a-f0-9]*)
-			object="$line"
-			# Estimate percentage done using the position of
-			# the object subdir. It might not get all the way
-			# up to 100% ...
-			position=$(echo "$line" | cut -d/ -f 1)
-			percentage=", $((0x$position * 100 / 0xff))% done"
-			;;
-
-		*)
-			if [ "$last_objects" != "$objects" ]; then
-				last_objects="$objects"
-				echo;
-			fi
-			echo "$line"
-			continue
-			;;
-		esac 
-
-		object="$_git_objects/$object"
-		size=$(($size + $(stat -c '%s' "$object" 2>/dev/null)))
-		objects=$(($objects + 1));
-
-		echo -ne "progress: $objects objects, $size bytes$percentage\r"
-	done;
-	[ "$last_objects" != "$objects" ] && echo
+	exec "${COGITO_LIB}cg-Xfetchprogress" "$_git_objects"
 }
+
+show_changes_summary()
+{
+	local orig_head="$1"
+	local new_head="$2"
+	if [ ! "$orig_head" ]; then
+		echo "New branch: $new_head"
+
+	elif [ "$orig_head" != "$new_head" ]; then
+		echo "Tree change: $orig_head:$new_head"
+		if [ "$verbose" ] ; then
+			git-diff-tree -r "$(cg-object-id -t "$orig_head")" "$(cg-object-id -t "$new_head")"
+		else
+			git-diff-tree -r "$(cg-object-id -t "$orig_head")" "$(cg-object-id -t "$new_head")" | \
+				awk '{ print $5" "$6 }'
+		fi
+	else
+		echo "Up to date."
+		exit
+	fi
+}
+
 
 get_rsync()
 {
@@ -121,7 +102,7 @@ fetch_rsync()
 {
 	get_rsync -s -u -d "$2/objects" "$_git_objects" | fetch_progress
 	ret=${PIPESTATUS[0]}
-	cat "$_git/refs/heads/.$3-fetching" > "$_git/refs/heads/$3"
+	[ "$3" ] && cat "$_git/refs/${3%/*}/.${3##*/}-fetching" > "$_git/refs/$3"
 	return $ret
 }
 
@@ -132,7 +113,7 @@ get_http()
 	[ "$1" = "-i" ] && shift
 	[ "$1" = "-s" ] && shift
 
-	wget_flags="-nv"
+	wget_flags="--execute continue=off -nv"
 
 	update=
 	if [ "$1" = "-u" ]; then
@@ -158,7 +139,7 @@ get_http()
 	if echo "$dest" | grep -q '^\.git/'; then
 		# wget is idiotic and convers . to _
 		dest=$(echo "$dest" | sed 's#^.git/##')
-		pushd $_git >/dev/null
+		pushd "$_git" >/dev/null
 	else
 		pushd . >/dev/null
 	fi
@@ -172,7 +153,9 @@ get_http()
 
 fetch_http()
 {
-	(git-http-fetch -a -v -w "heads/$3" $recovery "$1" "$2/" 2>&1 /dev/null) | fetch_progress
+	whead=
+	[ "$3" ] && whead="-w $3"
+	(git-http-fetch -a -v $whead $recovery "$1" "$2/" 2>&1 /dev/null) | fetch_progress
 	return ${PIPESTATUS[0]}
 }
 
@@ -198,23 +181,25 @@ get_ssh()
 		shift
 	fi
 
-	src=$(echo "$1" | sed 's#^git+ssh://\([^/]*\)\(/.*\)$#\1:\2#')
+	src="$(echo "$1" | sed 's#^git+ssh://\([^/]*\)\(/.*\)$#\1:\2#')"
 	dest="$2"
 
 	[ "$update" ] && ! [ "$directory" ] && [ -e "$dest" ] && return 1
 	[ "$update" ] && [ "$directory" ] &&
 		echo "Warning: Cannot protect against overwriting $dest when fetching over ssh" 2>/dev/null
 
-	[ "$directory" ] && dest=$(dirname "$dest")
+	[ "$directory" ] && dest="$(dirname "$dest")"
 	scp $scp_flags "$src" "$dest"
 }
 
 fetch_ssh()
 {
+	whead=
+	[ "$3" ] && whead="-w $3"
 	# git-ssh-fetch would theoretically take git+ssh://-style URL, but
 	# it is buggy and won't process it correctly, so let's just
 	# preprocess it to some easier-to-take form.
-	(git-ssh-fetch -a -v -w "heads/$3" $recovery "$1" \
+	(git-ssh-fetch -a -v $whead $recovery "$1" \
 		"$(echo "$2" | sed 's#^git+ssh://\([^/]*\)\(/.*\)$#\1:\2#')" \
 		2>&1 /dev/null) | fetch_progress
 	return ${PIPESTATUS[0]}
@@ -245,19 +230,17 @@ get_local()
 
 	src="$1"
 	dest="$2"
-	[ "$cut_last" ] && dest=${dest%/*}
+	[ "$cut_last" ] && dest="${dest%/*}"
 
 	cp $cp_flags_l "$src" "$dest"
 }
 
 fetch_local()
 {
-	# git-local-fetch is currently broken w.r.t. packfiles
-	#(git-local-fetch -a -l -v -w "$3" $recovery "$1" "$2" 2>&1 /dev/null) | fetch_progress
-	get_local -s -u -d "$2/objects" "$_git_objects" | sed 's/`.*\/\(..\/[^\/]*\)'\'' -> .*/\1/' | fetch_progress
-	ret=${PIPESTATUS[0]}
-	cat "$_git/refs/heads/.$3-fetching" > "$_git/refs/heads/$3"
-	return $ret
+	whead=
+	[ "$3" ] && whead="-w $3"
+	(git-local-fetch -a -l -v $whead $recovery "$1" "$2" 2>&1 /dev/null) | fetch_progress
+	return ${PIPESTATUS[0]}
 }
 
 
@@ -277,14 +260,14 @@ done
 
 name=${ARGS[0]}
 
-[ "$name" ] || { [ -s $_git/refs/heads/origin ] && name=origin; }
+[ "$name" ] || { [ -s "$_git/branches/origin" ] && name=origin; }
 [ "$name" ] || die "where to fetch from?"
 uri=$(cat "$_git/branches/$name" 2>/dev/null) || die "unknown branch: $name"
 
 rembranch=
 if echo "$uri" | grep -q '#'; then
-	rembranch=$(echo $uri | cut -d '#' -f 2)
-	uri=$(echo $uri | cut -d '#' -f 1)
+	rembranch=$(echo "$uri" | cut -d '#' -f 2)
+	uri=$(echo "$uri" | cut -d '#' -f 1)
 fi
 
 # Some other process with the same pid might appear, that's why
@@ -300,18 +283,43 @@ mkdir -p "$_git/info"
 echo $$ > "$_git/info/cg-fetch-$name-dirty"
 
 
+orig_head=
+[ -s "$_git/refs/heads/$name" ] && orig_head="$(cat "$_git/refs/heads/$name")"
+
+
+if echo "$uri" | grep -q '^\(git\|git+pack+ssh\)://'; then
+	# This is a really special case.
+	uri="$(echo "$uri" | sed 's#^git+pack+ssh://\([^/]*\)\(/.*\)$#\1:\2#')"
+	[ "$rembranch" ] || rembranch="HEAD"
+	(
+		git-fetch-pack "$uri" "$rembranch" || echo "failed" "$rembranch"
+	) | while read sha1 remote_name; do
+		[ "$sha1" = "failed" ] && die "fetching pack failed"
+		echo "$sha1" >"$_git/refs/heads/$name"
+	done || exit
+	rm "$_git/info/cg-fetch-$name-dirty"
+	show_changes_summary "$orig_head" "$(cg-object-id "$name")"
+	exit 0
+fi
+
+
 if echo "$uri" | grep -q "^http://"; then
 	get=get_http
 	fetch=fetch_http
 elif echo "$uri" | grep -q "^git+ssh://"; then
 	get=get_ssh
 	fetch=fetch_ssh
-elif echo "$uri" | grep -q ":"; then
+elif echo "$uri" | grep -q "^rsync://"; then
 	echo "WARNING: The rsync access method is DEPRECATED and will be REMOVED in the future!" >&2
 	get=get_rsync
 	fetch=fetch_rsync
+elif echo "$uri" | grep -q ":"; then
+	echo "WARNING: I guessed the host:path syntax was used and fell back to the git+ssh protocol." >&2
+	echo "WARNING: The host:path syntax is evil because it is implicit. Please just use a URI." >&2
+	get=get_ssh
+	fetch=fetch_ssh
 else
-	[ -d $uri/.git ] && uri=$uri/.git
+	[ -d "$uri/.git" ] && uri="$uri/.git"
 	get=get_local
 	fetch=fetch_local
 
@@ -321,23 +329,19 @@ else
 
 	# See if we can hardlink and add "-l" to cp flags.
 	can_hardlink=
-	sample_file=$(find $uri -type f -print | head -n 1)
-	rm -f $_git/.,,lntest
+	sample_file="$(find $uri -type f -print | head -n 1)"
+	rm -f "$_git/.,,lntest"
 	if cp -fl "$sample_file" "$_git/.,,lntest" 2>/dev/null; then
 		can_hardlink=l
 		echo "Using hard links"
 	else
 		echo "Hard links don't work - using copy"
 	fi
-	rm -f $_git/.,,lntest
+	rm -f "$_git/.,,lntest"
 fi
 
 
-orig_head=
-[ -s "$_git/refs/heads/$name" ] && orig_head=$(cat "$_git/refs/heads/$name")
-
-
-mkdir -p $_git/refs/heads
+mkdir -p "$_git/refs/heads"
 if [ "$rembranch" ]; then
 	$get -i "$uri/refs/heads/$rembranch" "$_git/refs/heads/.$name-fetching" ||
 		die "unable to get the head pointer of branch $rembranch"
@@ -346,11 +350,11 @@ else
 		die "unable to get the HEAD branch"
 fi
 
-new_head=$(cat "$_git/refs/heads/.$name-fetching")
+new_head="$(cat "$_git/refs/heads/.$name-fetching")"
 if ! [ "$symlinked" ]; then
 	if [ "$recovery" -o "$orig_head" != "$new_head" ]; then
-		[ -d $_git_objects ] || mkdir -p $_git_objects
-		$fetch "$(cat "$_git/refs/heads/.$name-fetching")" "$uri" "$name" || die "objects fetch failed"
+		[ -d "$_git_objects" ] || mkdir -p "$_git_objects"
+		$fetch "$(cat "$_git/refs/heads/.$name-fetching")" "$uri" "heads/$name" || die "objects fetch failed"
 	fi
 else
 	cat "$_git/refs/heads/.$name-fetching" > "$_git/refs/heads/$name"
@@ -360,7 +364,7 @@ rm "$_git/refs/heads/.$name-fetching"
 # FIXME: Warn about conflicting tag names?
 # XXX: We now throw stderr to /dev/null since not all repositories
 # may have tags/ and users were confused by the harmless errors.
-[ -d $_git/refs/tags ] || mkdir -p $_git/refs/tags
+[ -d "$_git/refs/tags" ] || mkdir -p "$_git/refs/tags"
 rsyncerr=
 $get -i -s -u -d "$uri/refs/tags" "$_git/refs/tags" || rsyncerr=1
 [ "$rsyncerr" ] && echo "unable to get tags list (non-fatal)" >&2
@@ -369,15 +373,13 @@ $get -i -s -u -d "$uri/refs/tags" "$_git/refs/tags" || rsyncerr=1
 # tag objects, $fetch didn't get them.
 # XXX: This is the quick'n'dirty way.
 (
-	cd $_git/refs/tags
+	cd "$_git/refs/tags"
 	for tag in *; do
 		[ "$tag" = "*" ] && break
-		tagid=$(cat $tag)
+		tagid="$(cat "$tag")"
 		GIT_DIR=../.. git-cat-file -t "$tagid" >/dev/null 2>&1 && continue
 		echo -n "Missing object of tag $tag... "
-		# In case it's not in a packfile...
-		tagfile=objects/${tagid:0:2}/${tagid:2}
-		if $get -i -s "$uri/$tagfile" "../../$tagfile" 2>/dev/null >&2; then
+		if [ "$fetch" != "fetch_rsync" ] && GIT_DIR=../.. $fetch "$tagid" "$uri" 2>/dev/null >&2; then
 			echo "retrieved"
 		else
 			echo "unable to retrieve"
@@ -388,17 +390,4 @@ $get -i -s -u -d "$uri/refs/tags" "$_git/refs/tags" || rsyncerr=1
 
 rm "$_git/info/cg-fetch-$name-dirty"
 
-if [ ! "$orig_head" ]; then
-	echo "New branch: $new_head"
-
-elif [ "$orig_head" != "$new_head" ]; then
-	echo "Tree change: $orig_head:$new_head"
-	if [ "$verbose" ] ; then
-		git-diff-tree -r $(cg-tree-id $orig_head) $(cg-tree-id $new_head)
-	else
-		git-diff-tree -r $(cg-tree-id $orig_head) $(cg-tree-id $new_head) | awk '{ print $5" "$6 }'
-	fi
-else
-	echo "Up to date."
-	exit
-fi
+show_changes_summary "$orig_head" "$new_head"

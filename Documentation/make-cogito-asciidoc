@@ -24,11 +24,11 @@ print_command_info()
 
 	echo
 	case "$cmdname" in
-	cg-X*|*-id)
+	cg-X*)
 		echo "$cmdname::"
 		;;
 	cg-*)
-		usage=$(sed -n '/^USAGE=/,0s/.*cg-[^ ]*\(.*\)"/\1/p' < $command)
+		usage=$(sed -n '/^USAGE=/,0s/.*"cg-[^ ]*\(.*\)"/\1/p' < $command)
 		echo "gitlink:$cmdname[] $usage::"
 		;;
 	esac
@@ -119,14 +119,14 @@ LOCATION::
 
 COMMIT_ID, FROM_ID, TO_ID, BASE_COMMIT::
 	Indicates an ID resolving to a commit. The following expressions can
-	be used interchangably as IDs:
+	be used interchangeably as IDs:
 	- empty string, 'this' or 'HEAD' (current HEAD)
 	- branch name (as registered with $(man 1 cg-branch-add))
 	- tag name (as registered with $(man 1 cg-tag))
 	- date string (as recognized by the 'date' tool)
 	- shortcut object hash (shorted unambiguous hash lead)
-	- commit object hash (as returned by 'cg-commit-id')
-	- tree object hash (as returned by 'cg-tree-id')
+	- commit object hash (as returned by 'cg-object-id -c')
+	- tree object hash (as returned by 'cg-object-id -t')
 
 TAG_NAME::
 	Indicates a free form tag name.

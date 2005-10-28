@@ -1,6 +1,6 @@
 Name: 		cogito
 Version: 	@@VERSION@@
-Release: 	1
+Release: 	1%{?dist}
 Summary:  	The Cogito Version Control System
 License: 	GPL
 Group: 		Development/Tools
@@ -38,6 +38,9 @@ rm -rf $RPM_BUILD_ROOT
 %doc README COPYING Documentation/*
 
 %changelog
+* Tue Oct 11 2005 Chris Wright <chrisw@osdl.org> 0.15.1-1
+- use %dist
+
 * Fri Sep 16 2005 Chris Wright <chrisw@osdl.org> 0.14.1-2
 - fix _libdir breakage on 64-bit, the irony...
 
