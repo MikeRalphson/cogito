@@ -66,7 +66,7 @@ case "${id0:-.}${id1:-.}${id2:-.}" in
 	;;
 
 #
-# Added in both (check for same permissions).
+# Added same in both (check for same permissions).
 #
 ".$id2$id1")
 	#echo "Adding $file"
@@ -78,6 +78,28 @@ case "${id0:-.}${id1:-.}${id2:-.}" in
 		exit 1
 	fi
 	exit $ret
+	;;
+
+#
+# Added in both (different in each).
+#
+".$id1$id2")
+	#echo "Adding $file"
+	filev="$file"
+	while [ -e "$filev~1" ] || [ -e "$filev~2" ]; do
+		filev="$filev~"
+	done
+	error "File $file added in both branches, but different in each!"
+	error "Conflicting versions saved as '$filev~1' and '$filev~2'."
+	git-update-index --add --cacheinfo "$mode1" "$id1" "$file" &&
+		git-checkout-index -u -f -- "$file" &&
+		mv "$file" "$filev~1" ||
+		error "Cannot create '$filev~1'"
+	git-update-index --add --cacheinfo "$mode2" "$id2" "$file" &&
+		git-checkout-index -u -f -- "$file" &&
+		mv "$file" "$filev~2" ||
+		error "Cannot create '$filev~2'"
+	exit 1
 	;;
 
 #
