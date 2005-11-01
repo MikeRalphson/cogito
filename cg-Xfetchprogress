@@ -11,6 +11,9 @@
 use warnings;
 use strict;
 
+# Even line-buffering is bad since we output no newlines normally.
+$| = 1;
+
 my $_git_objects = shift;
 
 my $objects = 0;
