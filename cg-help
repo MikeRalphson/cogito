@@ -51,12 +51,11 @@ print_command_listing()
 		[ -f "$command" -a ! -L "$command" ] || continue
 		cmdname=$(basename $command)
 
-		usage=$(sed -n '/^USAGE=/,0s/.*"\(cg-.*\)"/\1/p' < $command)
+		shortdesc=$(sed -n 'n;n;p;q' < $command)
 		# Some minimal sanity check that we didn't pick up some
 		# random binary named cg-*
-		[ "$usage" ] || continue
-		usage=$(echo "$usage" | sed 's/^cg-[^ ]*//')
-		printf "	%-18s %s\n" "$cmdname" "$usage"
+		[ "${shortdesc:0:1}" = "#" ] || continue
+		printf "	%-18s %s\n" "$cmdname" "${shortdesc:2}"
 	done
 }
 
