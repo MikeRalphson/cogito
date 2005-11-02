@@ -70,7 +70,8 @@ normalize_id()
 		idmatch=($_git_objects/$idpref/$idpost*)
 
 		if [ ${#idmatch[*]} -eq 1 ] && [ -r "$idmatch" ]; then
-			id=$idpref${idmatch#$_git_objects/$idpref/}
+			exid=$idpref${idmatch#$_git_objects/$idpref/}
+			[ ${#exid} -eq 40 ] && [ "$(git-rev-parse --revs-only "$exid")" ] && id="$exid"
 		elif [ ${#idmatch[*]} -gt 1 ]; then
 			echo "Ambiguous id: $id" >&2
 			echo "${idmatch[@]}" >&2
