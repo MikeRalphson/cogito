@@ -35,6 +35,10 @@
 #	for merged in $(git-rev-list $newhead ^$oldhead | tac); do
 #		/path/to/ciabot.pl $merged $refname
 #	done
+#
+# This is useful when you use a remote repository without working copy, where
+# you only push to - the update hook will be trigerred each time you push into
+# that repository, and the pushed commits will be reported through CIA.
 
 use strict;
 use vars qw ($project $from_email $dest_email $noisy $rpc_uri $sendmail
