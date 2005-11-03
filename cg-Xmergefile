@@ -16,11 +16,8 @@
 # We are designed to merge $3 _to_ $2, so we will give it
 # a preference.
 #
-#
-# Handle some trivial cases.. The _really_ trivial cases have
-# been handled already by git-read-tree, but that one doesn't
-# do any merges that might change the tree layout.
-#
+# FIXME: Make at least some effort to protect against checking in
+# the conflicts.
 
 . ${COGITO_LIB}cg-Xlib || exit 1
 
@@ -173,7 +170,7 @@ case "${id0:-.}${id1:-.}${id2:-.}" in
 	;;
 
 *)
-	error "$file: Not handling case: ${id0:-empty} -> ${id1:-empty} -> ${id2:-empty}"
+	error "$file: Not handling case: ${id0:-empty} -> ${id1:-empty} -> ${id2:-empty} (this would be a Cogito bug, please report it)"
 	;;
 esac
 exit 1
