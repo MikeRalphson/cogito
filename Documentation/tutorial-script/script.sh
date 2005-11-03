@@ -1,8 +1,18 @@
-#!/bin/sh
+#!/bin/sh -e
 #
 # FIXME: This script has many GITisms. Some of them are unnecessary, while
 # some stem from missing Cogito features (especially no support for pushing
 # tags, and consequently no support for remotes/).
+
+
+# This function is appended as "&& should_fail" to commands which should
+# fail. Readers please pretend that it is not here at all - it is useful
+# for executing this script to make sure we did not break it with any
+# Cogito changes.
+should_fail () {
+	echo "Expected failure, got success - aborting" >&2
+	exit 1
+}
 
 
 ### Set up playground
@@ -98,7 +108,7 @@ git branch
 # Alice needs to register his remote branch
 cg-branch-add bobswork $BOB/rpn
 # Now try to merge Bob's work to the bob branch
-cg-update bobswork
+cg-update bobswork && should_fail
 
 # There are conflicts in rpn.c. Looking at the file, Alice sees the
 # difference between her version and Bob's:
@@ -190,11 +200,12 @@ cd $ALICE/rpn
 git checkout master
 # Alice tries "git merge" instead of "cg-merge" since she wanted to
 # merge both branches at once, which "cg-merge" cannot do.
-git merge "Integrate changes from Bob and Charlie" master bob charlie
+git merge "Integrate changes from Bob and Charlie" master bob charlie \
+	&& should_fail
 
 # Automatic 3-way merge fails! Have to do it step by step
 
-cg-merge bob
+cg-merge bob && should_fail
 
 # Merge fails:
 
@@ -213,7 +224,7 @@ ed Makefile < $TOP/0017-alice-bob-fixup.ed
 
 cg-commit -m "Integrate Bob's changes"
 
-cg-merge charlie
+cg-merge charlie && should_fail
 
 # Merge conflicts!
 
@@ -282,10 +293,10 @@ cg-fetch
 # (Note that originally, rpn-0.4 was signed, but that would require you
 # to set up a GPG key before running the script... verify-tag on unsigned
 # scripts does not make much sense.)
-git verify-tag rpn-0.4
+git verify-tag rpn-0.4 && should_fail
 
 # Everything's OK, integrate the changes
-echo "Merge with 0.4" | cg-merge
+echo "Merge with 0.4" | cg-merge && should_fail
 
 # Merge conflicts in Makefile, rpn.c
 # Mishandled stack.h
@@ -296,3 +307,6 @@ cg-add stack.h
 
 # Now commit the whole
 cg-commit -m "Merge with 0.4"
+
+# Great, we are done.
+echo "Script completed successfully!"
