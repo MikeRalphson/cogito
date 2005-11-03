@@ -59,7 +59,6 @@ show_changes_summary()
 		fi
 	else
 		echo "Up to date."
-		exit
 	fi
 }
 
@@ -391,3 +390,4 @@ $get -i -s -u -d "$uri/refs/tags" "$_git/refs/tags" || rsyncerr=1
 rm "$_git/info/cg-fetch-$name-dirty"
 
 show_changes_summary "$orig_head" "$new_head"
+exit 0
