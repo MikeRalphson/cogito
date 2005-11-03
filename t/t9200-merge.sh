@@ -5,7 +5,7 @@
 test_description="Tests basic cg-merge functionality
 
 Generates two simple branches, and tests fast-forward cg-merge, clean cg-merge,
-cg-merge doing automatic merge, and cg-merge with conflicts."
+cg-merge doing automatic merge, cg-merge with conflicts and baseless cg-merge."
 
 . ./test-lib.sh
 
@@ -142,6 +142,26 @@ test_expect_success 'checking for correct conflict content' \
 test_expect_success 'checking for correct automerge result in the conflicting tree' \
 		"(cmp branch2/foo branch1/foo)"
 
+
+
+# And now for something totally different...
+mkdir branch3
+echo branch3file >branch3/b3
+cp branch3/b3 branch3/b3-
+test_expect_success 'initialize branch3' \
+	"(cd branch3 && cg-init -I && cg-add b3 && cg-commit -C -m\"Initial commit\")"
+mkdir branch4
+echo branch4file >branch4/b4
+test_expect_success 'initialize branch4' \
+	"(cd branch4 && cg-init -I && cg-add b4 && cg-commit -C -m\"Initial commit\")"
+test_expect_success 'fetching branch4 from branch3' \
+	"(cd branch3 && cg-branch-add origin ../branch4 && cg-fetch)"
+test_expect_failure 'baseless merge of branch3 and branch4' \
+	"(cd branch3 && cg-merge)"
+test_expect_success 'baseless joining merge of branch3 and branch4' \
+	"(cd branch3 && cg-merge -j </dev/null)"
+test_expect_success 'verifying merge' \
+	"(cd branch3 && cmp b3 b3- && cmp b4 ../branch4/b4)"
 
 
 test_done
