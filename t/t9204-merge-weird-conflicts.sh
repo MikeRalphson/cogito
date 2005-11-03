@@ -94,4 +94,34 @@ test_expect_success 'checking for the proper conflict being generated (no file4)
 		"([ ! -e branch1/file4 ])"
 
 
+test_expect_success 'resolving the last conflict' \
+		"(cd branch1 && mv file4~1 file4 && cg-commit -m\"Resolved\")"
+test_expect_success 'removing branch1/file4' \
+		"(cd branch1 && cg-rm -f file4 && cg-commit -m\"Killed file4\")"
+test_expect_success 'removing branch2/file4' \
+		"(cd branch2 && cg-rm -f file4 && cg-commit -m\"Killed file4\")"
+
+test_expect_success 'fetching from branch2 to branch1' \
+		"(cd branch1 && cg-fetch)"
+test_expect_success 'merging branch2 to branch1 (should not conflict)' \
+		"(cd branch1 && cg-merge </dev/null)"
+test_expect_success 'checking for the proper conflict resolution (file4 gone)' \
+		"([ ! -e branch1/file4 ])"
+
+
+test_expect_success 'removing branch1/file3' \
+		"(cd branch1 && cg-rm -f file3 && cg-commit -m\"Killed file3\")"
+test_expect_success 'modifying branch2/file3' \
+		"(cd branch2 && echo modificaton >>file3 && chmod a+x file3 && cg-commit -m\"Modified file3\")"
+
+test_expect_success 'fetching from branch2 to branch1' \
+		"(cd branch1 && cg-fetch)"
+test_expect_failure 'merging branch2 to branch1 (should conflict)' \
+		"(cd branch1 && cg-merge </dev/null)"
+test_expect_success 'checking for the proper conflict being generated for branch2' \
+		"(cmp branch1/file3~2 branch2/file3 && [ -x branch2/file3 ])"
+test_expect_success 'checking for the proper conflict being generated (no file3)' \
+		"([ ! -e branch1/file3 ])"
+
+
 test_done

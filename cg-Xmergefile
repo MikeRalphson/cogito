@@ -68,6 +68,28 @@ case "${id0:-.}${id1:-.}${id2:-.}" in
 	;;
 
 #
+# Deleted in one and changed in the other
+#
+"$id0$id1." | "$id0.$id2")
+	#echo "Removing $file"
+	filev="$file"
+	if [ "$id1" ]; then
+		num=1; mode="$mode1"; id="$id1"
+	else
+		num=2; mode="$mode2"; id="$id2"
+	fi
+	while [ -e "$filev~0" ] || [ -e "$filev~$num" ]; do
+		filev="$filev~"
+	done
+	error "File $file removed in one branch but modified in the other!"
+	error "The original version saved as '$filev~0', the modified one as '$filev~$num'."
+	mv "$file" "$filev~0"
+	git-update-index --add --cacheinfo "$mode" "$id" "$file" &&
+		git-checkout-index -u -f -- "$file" &&
+		mv "$file" "$filev~$num" ||
+		error "Cannot create '$filev~$num'"
+	;;
+#
 # Added in one.
 #
 ".$id1." | "..$id2" )
