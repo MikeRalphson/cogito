@@ -10,17 +10,38 @@ die() {
 
 if [ ! "$1" ] || [ "$1" = "-h" ] || [ "$1" = "--help" ]; then
 	die http://revctrl.org/NeutralInterface
-elif [ "$1" = "identify" ]; then
-	echo type:3:git
-elif [ "$1" = "changeset" ]; then
-	[ "$2" ] || die "missing changeset id"
-	commit="$(cg-object-id -c "$2")" || die "bad changeset id"
-	echo identifier:40:"$commit"
-	for parent in $(cg-object-id -p "$commit"); do
-		echo parent:40:$parent
-	done
-	user="$(git-cat-file commit "$commit" | sed -n 's/^author \([^<]* <[^>]*>\).*/\1/p;/^$/q')"
-	echo user:${#user}:"$user"
-	desc="$(git-cat-file commit "$commit" | sed -n '/^$/{:a n;p;b a}')"
-	echo description:${#desc}:"$desc"
 fi
+
+cmd="$1"; shift; args=("$@");
+shell=
+[ "$cmd" = "shell" ] && shell=1
+
+while [ "$cmd" ]; do
+	if [ "$cmd" = "shell" ]; then
+		: # nothing
+
+	elif [ "$cmd" = "identify" ]; then
+		echo type:3:git
+
+	elif [ "$cmd" = "changeset" ]; then
+		[ "${args[0]}" ] || die "missing changeset id"
+		commit="$(cg-object-id -c "${args[0]}")" || die "bad changeset id"
+		echo identifier:40:"$commit"
+		for parent in $(cg-object-id -p "$commit"); do
+			echo parent:40:$parent
+		done
+		user="$(git-cat-file commit "$commit" | sed -n 's/^author \([^<]* <[^>]*>\).*/\1/p;/^$/q')"
+		echo user:${#user}:"$user"
+		desc="$(git-cat-file commit "$commit" | sed -n '/^$/{:a n;p;b a}')"
+		echo description:${#desc}:"$desc"
+	else
+		die "unknown command"
+	fi
+
+	cmd=
+	if [ "$shell" ]; then
+		echo :
+		read cmd arg
+		args=($arg)
+	fi
+done
