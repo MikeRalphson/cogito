@@ -27,13 +27,22 @@ while [ "$cmd" ]; do
 		[ "${args[0]}" ] || die "missing changeset id"
 		commit="$(cg-object-id -c "${args[0]}")" || die "bad changeset id"
 		echo identifier:40:"$commit"
+
 		for parent in $(cg-object-id -p "$commit"); do
 			echo parent:40:$parent
 		done
-		user="$(git-cat-file commit "$commit" | sed -n 's/^author \([^<]* <[^>]*>\).*/\1/p;/^$/q')"
+
+		author="$(git-cat-file commit "$commit" | sed -n 's/^author //p;/^$/q')"
+
+		user="$(echo "$author" | sed 's/\([^<]* <[^>]*>\).*/\1/')"
 		echo user:${#user}:"$user"
+
+		date="$(echo "$author" | sed 's/[^<]* <[^>]*> \(.*\)/\1/')"
+		echo date:${#date}:"$date"
+
 		desc="$(git-cat-file commit "$commit" | sed -n '/^$/{:a n;p;b a}')"
 		echo description:${#desc}:"$desc"
+
 	else
 		die "unknown command"
 	fi
