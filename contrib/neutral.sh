@@ -13,11 +13,11 @@ if [ ! "$1" ] || [ "$1" = "-h" ] || [ "$1" = "--help" ]; then
 fi
 
 cmd="$1"; shift; args=("$@");
-shell=
-[ "$cmd" = "shell" ] && shell=1
+interactive=
+[ "$cmd" = "-i" ] && interactive=1
 
 while [ "$cmd" ]; do
-	if [ "$cmd" = "shell" ]; then
+	if [ "$cmd" = "-i" ]; then
 		: # nothing
 
 	elif [ "$cmd" = "identify" ]; then
@@ -39,7 +39,7 @@ while [ "$cmd" ]; do
 	fi
 
 	cmd=
-	if [ "$shell" ]; then
+	if [ "$interactive" ]; then
 		echo :
 		read cmd arg
 		args=($arg)
