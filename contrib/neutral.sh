@@ -59,14 +59,17 @@ while [ "$cmd" ]; do
 		read cmd
 		args=()
 		while true; do
-			# XXX: This is not right and will break on arguments
-			# with embedded newlines; but that's the best I can
 			# do with bash, I guess.
 			IFS=$'\n' read arg
 			[ "$arg" ] || break
 			arglen="${arg%%:*}"
 			argval="${arg#*:}"
-			[ "${#argval}" -eq "$arglen" ] ||
+			while [ "${#argval}" -lt "$arglen" ]; do
+				IFS=$'\n' read argvalmore
+				argval="$argval
+$argvalmore"
+			done
+			[ "${#argval}" -gt "$arglen" ] &&
 				die "announced value length ($arglen) doesn't match what I really snapped (${#argval})"
 			args[${#args[@]}]=${arg#*:}
 		done
