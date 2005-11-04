@@ -32,6 +32,12 @@ while [ "$cmd" ]; do
 			echo parent:40:$parent
 		done
 
+		grep -r -l "$commit" ${GIT_DIR:-.git}/refs/tags |
+		while read tag; do
+			tag="${tag##*/}"
+			echo tag:${#tag}:"$tag"
+		done
+
 		author="$(git-cat-file commit "$commit" | sed -n 's/^author //p;/^$/q')"
 
 		user="$(echo "$author" | sed 's/\([^<]* <[^>]*>\).*/\1/')"
