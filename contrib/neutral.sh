@@ -33,9 +33,15 @@ while [ "$cmd" ]; do
 		done
 
 		grep -r -l "$commit" ${GIT_DIR:-.git}/refs/tags |
-		while read tag; do
+		while IFS=$'\n' read tag; do
 			tag="${tag##*/}"
 			echo tag:${#tag}:"$tag"
+		done
+
+		# FIXME: doesn't handle filenames containing newlines
+		echo $commit $(cg-object-id -p "$commit") | git-diff-tree -r -m --stdin | grep ^: | cut -f 2- |
+		while IFS=$'\n' read file; do
+			echo file:${#file}:"$file"
 		done
 
 		author="$(git-cat-file commit "$commit" | sed -n 's/^author //p;/^$/q')"
