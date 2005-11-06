@@ -170,13 +170,6 @@ process_commit_line()
 				return
 			fi
 		fi
-		if [ -s "$filter" ]; then
-			parent="${parents[0]}"
-			if ! [ "$(cat $filter | path_xargs git-diff-tree --root -r $commit $parent)" ]; then
-				skip_commit=1
-				return
-			fi
-		fi
 		if [ "$summary" ]; then
 			# Print summary
 			commit="${commit%:*}"
@@ -326,6 +319,7 @@ if [ "$shortlog" ]; then
 else
 	revls="git-rev-list --pretty=raw $date_from $date_to"
 fi
+revls="$revls $date_from $date_to"
 
 id1="$(cg-object-id -c "$log_start")" || exit 1
 if [ "$log_end" ]; then
@@ -335,28 +329,22 @@ else
 	revls="$revls $id1"
 fi
 
+# Later, we will want to use git-diff-tree --stdin for the filtering
+# instead of git-rev-list, so that we can do custom renames detection.
+# See also <Pine.LNX.4.64.0510212025260.10477@g5.osdl.org>.
+sep=
+[ "${ARGS[*]}" ] && sep=--
+
 
 if [ "$shortlog" ]; then
 	# Special care here.
-	sep=
-	[ "${ARGS[*]}" ] && sep=--
 	$revls $sep "${ARGS[@]}" | git-shortlog | pager
 	exit
 fi
 
 
-filter=$(mktemp -t gitlog.XXXXXX)
-# XXX: Semantic problem: Should cg-log without parameters in a subdirectory
-# list only changes concerning the subdirectory, or all the changes?
-# We follow the principle of least surprise now and list all the changes.
-# [ "$_git_relpath" -a ! "$ARGS" ] && echo "$_git_relpath" >>$filter
-for file in "${ARGS[@]}"; do
-	echo "${_git_relpath}$file" >>$filter
-done
-
 # LESS="S" will prevent less to wrap too long titles to multiple lines;
 # you can scroll horizontally.
-$revls | print_commit_log | _local_CG_LESS="S" pager
+$revls $sep "${ARGS[@]}" | print_commit_log | _local_CG_LESS="S" pager
 
-rm $filter
 exit 0
