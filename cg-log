@@ -29,9 +29,9 @@
 # -f::
 #	List affected files. (No effect when passed along `-s`.)
 #
-# -r FROM_ID[:TO_ID]::
+# -r FROM_ID[..TO_ID]::
 #	Limit the log information to a set of revisions using either
-#	'-r FROM_ID[:TO_ID]' or '-r FROM_ID -r TO_ID'. In both cases the
+#	'-r FROM_ID[..TO_ID]' or '-r FROM_ID -r TO_ID'. In both cases the
 #	option expects IDs which resolve to commits and will include the
 #	specified IDs. If 'TO_ID' is omitted all commits from 'FROM_ID'
 #	to the initial commit is shown. If no revisions is specified,
@@ -76,9 +76,21 @@
 # To show a log of changes between two releases tagged as 'releasetag-0.9'
 # and 'releasetag-0.10' do:
 #
-#	$ cg-log -r releasetag-0.9:releasetag-0.10
+#	$ cg-log -r releasetag-0.9..releasetag-0.10
+#
+# Similarily, to see which commits are in branch A but not yet in branch B,
+#
+#	$ cg-log -r B..A
+#
+# (meaning "all the commits needed along the way from B to A").
+#
+# NOTES
+# -----
+# The ':' is equivalent to '..' in revisions range specification (to make
+# things more comfortable to SVN users). See cogito(7) for more details
+# about revision specification.
 
-USAGE="cg-log [-c] [-f] [-m] [-s] [-uUSERNAME] [-d DATE] [-r FROM_ID[:TO_ID]] FILE..."
+USAGE="cg-log [-c] [-f] [-m] [-s] [-uUSERNAME] [-d DATE] [-r FROM_ID[..TO_ID]] FILE..."
 
 . ${COGITO_LIB}cg-Xlib || exit 1
 # Try to fix the annoying "Broken pipe" output. May not help, but apparently

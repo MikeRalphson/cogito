@@ -216,7 +216,7 @@ If there are any changes, two IDs will be printed during `cg-fetch` or
 parameters to cg-diff and you will get a diff describing changes from
 the last time you fetched. You can also
 
-	$ cg-diff -r origin:HEAD
+	$ cg-diff -r origin..HEAD
 
 which will show changes between the cloned branch and your current branch
 (shall you do any modifications).

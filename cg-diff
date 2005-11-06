@@ -22,11 +22,11 @@
 #	lines (similar to the output of diffstat(1)) and information
 #	about added and renamed files and mode changes.
 #
-# -r FROM_ID[:TO_ID]::
-#	Specify the revisions to diff using either '-r rev1:rev2' or
+# -r FROM_ID[..TO_ID]::
+#	Specify the revisions to diff using either '-r rev1..rev2' or
 #	'-r rev1 -r rev2'. If no revision is specified, the current
 #	working tree is implied. Note that no revision is different from
-#	empty revision which means '-r rev:' compares between 'rev' and
+#	empty revision which means '-r rev..' compares between 'rev' and
 #	'HEAD', while '-r rev' compares between 'rev' and working tree.
 #
 # -m::
@@ -45,8 +45,14 @@
 #	This is what the $LESS environment variable value will be set
 #	to before invoking $PAGER. It defaults to $LESS concatenated
 #	with the `R` flag to allow displaying of colorized output.
+#
+# NOTES
+# -----
+# The ':' is equivalent to '..' in revisions range specification (to make
+# things more comfortable to SVN users). See cogito(7) for more details
+# about revision specification.
 
-USAGE="cg-diff [-c] [-m] [-s] [-p] [-r FROM_ID[:TO_ID]] [FILE]..."
+USAGE="cg-diff [-c] [-m] [-s] [-p] [-r FROM_ID[..TO_ID]] [FILE]..."
 
 . ${COGITO_LIB}cg-Xlib || exit 1
 

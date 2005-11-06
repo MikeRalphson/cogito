@@ -26,9 +26,9 @@
 #	Base the patches at the merge base of the -r arguments
 #	(defaulting to HEAD and origin).
 #
-# -r FROM_ID[:TO_ID]::
+# -r FROM_ID[..TO_ID]::
 #	Specify a set of commits to make patches from using either
-#	'-r FROM_ID[:TO_ID]' or '-r FROM_ID -r TO_ID'. In both cases the
+#	'-r FROM_ID[..TO_ID]' or '-r FROM_ID -r TO_ID'. In both cases the
 #	option expects IDs which resolve to commits and will include the
 #	specified IDs. If 'TO_ID' is omitted patches for all commits
 #	from 'FROM_ID' to the initial commit will be generated. If no
@@ -43,14 +43,20 @@
 # To make patches for all commits between two releases tagged as
 # 'releasetag-0.9' and 'releasetag-0.10' do:
 #
-#	$ cg-mkpatch -r releasetag-0.9:releasetag-0.10
+#	$ cg-mkpatch -r releasetag-0.9..releasetag-0.10
 #
 # The output will be a continuous dump of patches each separated by
 # the line:
 #
 #	!-------------------------------------------------------------flip-
+#
+# NOTES
+# -----
+# The ':' is equivalent to '..' in revisions range specification (to make
+# things more comfortable to SVN users). See cogito(7) for more details
+# about revision specification.
 
-USAGE="cg-mkpatch [-m] [-s] [-r FROM_ID[:TO_ID] [-d DIRNAME]]"
+USAGE="cg-mkpatch [-m] [-s] [-r FROM_ID[..TO_ID] [-d DIRNAME]]"
 _git_requires_root=1
 
 . ${COGITO_LIB}cg-Xlib || exit 1
