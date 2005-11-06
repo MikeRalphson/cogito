@@ -55,7 +55,8 @@
 #
 # --summary::
 #	Generate the changes summary, listing the commit titles grouped
-#	by their author. This is also known as a "shortlog".
+#	by their author. This is also known as a "shortlog", suitable
+#	e.g. for contribution summaries of announcements.
 #
 # -uUSERNAME::
 #	List only commits where author or committer contains 'USERNAME'.
