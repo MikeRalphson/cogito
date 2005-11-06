@@ -53,6 +53,10 @@
 #	of the commit log and the commit ID. Long author names and commit
 #	IDs are trimmed and marked with an ending tilde (~).
 #
+# --summary::
+#	Generate the changes summary, listing the commit titles grouped
+#	by their author. This is also known as a "shortlog".
+#
 # -uUSERNAME::
 #	List only commits where author or committer contains 'USERNAME'.
 #	The search for 'USERNAME' is case-insensitive.
@@ -252,6 +256,7 @@ list_files=
 log_start=
 log_end=
 summary=
+shortlog=
 user=
 mergebase=
 date_from=
@@ -299,6 +304,8 @@ while optparse; do
 		mergebase=1
 	elif optparse -s; then
 		summary=1
+	elif optparse --summary; then
+		shortlog=1
 	else
 		optfail
 	fi
@@ -313,7 +320,11 @@ if [ "$mergebase" ]; then
 	log_start=$(git-merge-base $id1 $id2) || exit 1
 fi
 
-revls="git-rev-list --pretty=raw $date_from $date_to"
+if [ "$shortlog" ]; then
+	revls="git-rev-list --pretty $date_from $date_to"
+else
+	revls="git-rev-list --pretty=raw $date_from $date_to"
+fi
 
 id1="$(cg-object-id -c "$log_start")" || exit 1
 if [ "$log_end" ]; then
@@ -321,6 +332,15 @@ if [ "$log_end" ]; then
 	revls="$revls $id2 ^$id1"
 else
 	revls="$revls $id1"
+fi
+
+
+if [ "$shortlog" ]; then
+	# Special care here.
+	sep=
+	[ "${ARGS[*]}" ] && sep=--
+	$revls $sep "${ARGS[@]}" | git-shortlog | pager
+	exit
 fi
 
 
