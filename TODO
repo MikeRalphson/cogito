@@ -4,6 +4,17 @@ What comes on my mind but it isn't able to hold it all. Unsorted.
 Cogito-only stuff:
 
 
+Before next version release:
+
+* Proper tags fetching
+
+* Switch from ssh-fetch to packs for the git+ssh protocol
+
+* Deal with [PATCH] cogito: use locale date_fmt in obtaining default date format
+
+* cg-mv
+
+
 Pre-1.0 stuff:
 (Note that I'm not sure whether the mail-related improvements to
 cg-*patch should be pre-1.0.)
