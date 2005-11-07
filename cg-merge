@@ -148,10 +148,10 @@ if [ -s "$_git/merging" ] && grep -q "$branch" $_git/merging; then
 	echo 0
 fi
 
-#if [ "$base" = "$branch" ]; then
-#	echo "Branch already fully merged." >&2
-#	exit 0
-#fi
+if [ "$base" = "$branch" ]; then
+	echo "Branch already fully merged." >&2
+	exit 0
+fi
 
 
 if [ "$head" = "$base" ] && [ ! "$squash" ]; then
