@@ -223,15 +223,15 @@ LOGMSG=$(mktemp -t gitci.XXXXXX)
 LOGMSG2=$(mktemp -t gitci.XXXXXX)
 
 written=
-if [ "$merging" ]; then
+if [ "$merging" ] && [ "$msgs" ] && [ ! "$forceeditor" ]; then
+	echo "Warning: Suppressing default merge log messages in favour of the custom -m passed to me." >&2
+elif [ "$merging" ]; then
 	echo -n 'Merge with ' >>$LOGMSG
-	[ "$msgs" ] && echo -n 'Merge with '
 	[ -s $_git/merging-sym ] || cp $_git/merging $_git/merging-sym
 	for sym in $(cat $_git/merging-sym); do
 		uri=$(cat $_git/branches/$sym 2>/dev/null)
 		[ "$uri" ] || uri="$sym"
 		echo "$uri" >>$LOGMSG
-		[ "$msgs" ] && echo "$uri"
 	done
 	echo >>$LOGMSG
 	if [ -s "$_git/squashing" ]; then
