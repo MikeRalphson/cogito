@@ -18,6 +18,9 @@
 #
 # FIXME: Make at least some effort to protect against checking in
 # the conflicts.
+#
+# FIXME: What if a symlink replaces a regular file? What if symlinks conflict?
+# What about directory-regularfile conflicts?
 
 . ${COGITO_LIB}cg-Xlib || exit 1
 
