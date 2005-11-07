@@ -234,6 +234,13 @@ if [ "$merging" ]; then
 		[ "$msgs" ] && echo "$uri"
 	done
 	echo >>$LOGMSG
+	if [ -s "$_git/squashing" ]; then
+		# We are squashing all the merged commits to a single one.
+		# Therefore, helpfully pre-fill the commit message with
+		# the messages of all the merged commits.
+		git-rev-list --pretty $(cat "$_git/merging") ^HEAD >>$LOGMSG
+		read
+	fi
 	written=1
 fi
 first=1
@@ -425,6 +432,7 @@ if [ ! "$force" ] && [ ! "$merging" ] && [ "$oldhead" ] &&
 	exit 2;
 fi
 
+[ -s "$_git/squashing" ] && merging=" " # viciously prevent recording a proper merge
 newhead=$(git-commit-tree $treeid $oldheadstr $merging <$LOGMSG)
 rm $LOGMSG
 
@@ -436,7 +444,7 @@ fi
 if [ "$newhead" ]; then
 	echo "Committed as $newhead."
 	echo $newhead >$_git/HEAD
-	[ "$merging" ] && rm $_git/merging $_git/merging-sym $_git/merge-base
+	[ "$merging" ] && rm -f $_git/merging $_git/merging-sym $_git/merge-base $_git/squashing
 	rm -f "$_git/commit-ignore"
 
 	# Trigger the postcommit hook

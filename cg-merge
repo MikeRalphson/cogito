@@ -52,6 +52,18 @@
 #	you do not want; but equally likely, you may actually WANT to join
 #	the projects together, which is what this option does.
 #
+# -s::
+#	"Squash" merge - condense all the to-be-merged commits to a single
+#	merge commit. This means "throw away history of the branch I'm
+#	merging", essentially like in CVS or SVN, with the same problem -
+#	re-merging with that branch later will cause trouble. This is not
+#	recommended unless you actually really want to flatten the history
+#	of the merged branch, e.g. when merging topical branches to your
+#	mainline (you want to have the logical change you developed in
+#	a branch as a single "do it" commit instead of a sequence of
+#	"do it I", "fix it", "do it II", "fix it II", "fix it III" commits
+#	like you would get with a regular merge).
+#
 # FILES
 # -----
 # $GIT_DIR/hooks/merge-pre::
@@ -59,18 +71,18 @@
 #	before the merge itself happens. The script is passed those
 #	arguments:
 #		BRANCHNAME BASE CURHEAD MERGEDHEAD MERGETYPE
-#	MERGETYPE is either "forward" or "tree". The merge is
+#	MERGETYPE is either "forward", "squash", or "tree". The merge is
 #	cancelled if the script returns non-zero exit code.
 #
 # $GIT_DIR/hooks/merge-post::
 #	If the file exists and is executable it will be executed after
 #	the merge is done. The script is passed those arguments:
 #		BRANCHNAME BASE CURHEAD MERGEDHEAD MERGETYPE STATUS
-#	MERGETYPE is either "forward" or "tree". For "forward", the
-#	STATUS is always "ok", while for "tree" the STATUS can be
-#	"localchanges", "conflicts", "nocommit", or "ok".
+#	MERGETYPE is either "forward", "squash", or "tree". For "forward",
+#	the STATUS is always "ok", while for "squash" and "tree" the STATUS
+#	can be "localchanges", "conflicts", "nocommit", or "ok".
 
-USAGE="cg-merge [-c] [-b BASE_COMMIT] [-j] [BRANCH_NAME]"
+USAGE="cg-merge [-c] [-b BASE_COMMIT] [-j] [-s] [BRANCH_NAME]"
 _git_requires_root=1
 
 . ${COGITO_LIB}cg-Xlib || exit 1
@@ -97,6 +109,7 @@ head=$(cg-object-id -c) || exit 1
 careful=
 base=
 join=
+squash=
 while optparse; do
 	if optparse -c; then
 		careful=1
@@ -104,6 +117,8 @@ while optparse; do
 		base=$(cg-object-id -c "$OPTARG") || exit 1
 	elif optparse -j; then
 		join=1
+	elif optparse -s; then
+		squash=1
 	else
 		optfail
 	fi
@@ -133,12 +148,13 @@ if [ -s "$_git/merging" ] && grep -q "$branch" $_git/merging; then
 	echo 0
 fi
 
-if [ "$base" = "$branch" ]; then
-	echo "Branch already fully merged." >&2
-	exit 0
-fi
+#if [ "$base" = "$branch" ]; then
+#	echo "Branch already fully merged." >&2
+#	exit 0
+#fi
 
-if [ "$head" = "$base" ]; then
+
+if [ "$head" = "$base" ] && [ ! "$squash" ]; then
 	# No need to do explicit merge with a merge commit; just bring
 	# the HEAD forward.
 
@@ -155,11 +171,21 @@ fi
 
 [ "$(git-diff-files -s)" ] && git-update-index --refresh >/dev/null
 
-echo "Merging $base -> $branch" >&2
-echo -e "\tto $head..." >&2
+if [ ! "$squash" ]; then
+	[ -s "$_git/squashing" ] && die "cannot combine squashing and non-squashing merges"
 
+	echo "Merging $base -> $branch" >&2
+	echo -e "\tto $head..." >&2
 
-prehook tree
+	mergetype="tree"
+else
+	echo "Squashing $base -> $branch" >&2
+	echo -e "\ton top of $head..." >&2
+
+	mergetype="squash"
+fi
+
+prehook $mergetype
 
 git-diff-index --name-only "$(cg-object-id -t $head)" >>"$_git/commit-ignore"
 # Don't keep around useless empty files
@@ -167,13 +193,14 @@ git-diff-index --name-only "$(cg-object-id -t $head)" >>"$_git/commit-ignore"
 
 if ! git-read-tree -u -m "$(cg-object-id -t $base)" "$(cg-object-id -t $head)" "$(cg-object-id -t $branch)"; then
 	echo "cg-merge: git-read-tree failed (merge likely blocked by local changes)" >&2
-	posthook tree localchanges
+	posthook $mergetype localchanges
 	exit 1
 fi
 
 echo $base >>$_git/merge-base
 echo $branch >>$_git/merging
 echo $branchname >>$_git/merging-sym
+[ "$squash" ] && echo $branch >>"$_git/squashing"
 
 if ! git-merge-index -o -q ${COGITO_LIB}cg-Xmergefile -a || [ "$careful" ]; then
 	[ ! "$careful" ] && cat >&2 <<__END__
@@ -184,7 +211,7 @@ __END__
 		echo "	These files contained local modifications and won't be automatically chosen for committing:" >&2
 		cat "$_git/commit-ignore" >&2
 	fi
-	posthook tree conflicts
+	posthook $mergetype conflicts
 	exit 2
 fi
 
@@ -193,7 +220,7 @@ readtree=
 if ! cg-commit -C; then
 	readtree=1
 	echo "cg-merge: COMMIT FAILED, retry manually" >&2
-	posthook tree nocommit
+	posthook $mergetype nocommit
 fi
 
 [ "$readtree" ] && git-read-tree -m HEAD
@@ -201,4 +228,4 @@ fi
 # survived the read-tree above
 update_index
 
-posthook tree ok
+posthook $mergetype ok

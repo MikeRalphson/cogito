@@ -138,6 +138,7 @@ if [ "$gitstatus" ]; then
 		echo
 		echo "Merging: $(cat "$_git/merging") ($(cat "$_git/merging-sym"))"
 		echo "Merge base: $(cat "$_git/merge-base")"
+		[ "$_git/squashing" ] && echo "Squash-merge."
 	fi
 	if [ -s "$_git/commit-ignore" ]; then
 		echo "Files not to be committed now (contained local changes before the merge):"
