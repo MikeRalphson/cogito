@@ -315,7 +315,7 @@ if [ "$mergebase" ]; then
 fi
 
 if [ "$shortlog" ]; then
-	revls="git-rev-list --pretty $date_from $date_to"
+	revls="git-rev-list --pretty=short $date_from $date_to"
 else
 	revls="git-rev-list --pretty=raw $date_from $date_to"
 fi
