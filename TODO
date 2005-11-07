@@ -31,6 +31,7 @@ cg-*patch should be pre-1.0.)
 	* Handle all possible conflicts
 	* Make sure the user resolved the conflicts
 	  (if possible without requiring him to manually indicate that)
+	* Support for various GIT's "merge strategies"
 	-- post 1.0 --
 	* Somehow show the list of commits getting merged
 	* Vim-merging
