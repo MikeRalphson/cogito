@@ -488,7 +488,7 @@ if [ ! "$_git_repo_unneeded" ]; then
 	       exit 1
 	fi
 	_git_head=master
-	[ -s "$_git/HEAD" ] && _git_head="$(basename "$(git-symbolic-ref HEAD)")"
+	[ -s "$_git/HEAD" ] && { _git_head="$(git-symbolic-ref HEAD)"; _git_head=${_git_head#refs/heads/}; }
 	[ -s "$_git/head-name" ] && _git_head="$(cat "$_git/head-name")"
 fi
 
