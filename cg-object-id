@@ -1,9 +1,7 @@
 #!/usr/bin/env bash
 #
 # Get SHA1 ID of commit or tree associated with given ID or HEAD.
-# Copyright (c) Petr Baudis, 2005
-# Copyright (c) Pavel Roskin, 2005
-# Copyright (c) Philip Pokorny, 2005
+# Copyright (c) Petr Baudis, Pavel Roskin, Philip Pokorny  2005
 #
 # If the ID is not provided, HEAD is used.  The default behavior is to
 # show the commit ID.
