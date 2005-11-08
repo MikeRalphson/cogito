@@ -52,7 +52,7 @@
 #	you do not want; but equally likely, you may actually WANT to join
 #	the projects together, which is what this option does.
 #
-# -s::
+# --squash::
 #	"Squash" merge - condense all the to-be-merged commits to a single
 #	merge commit. This means "throw away history of the branch I'm
 #	merging", essentially like in CVS or SVN, with the same problem -
@@ -82,7 +82,7 @@
 #	the STATUS is always "ok", while for "squash" and "tree" the STATUS
 #	can be "localchanges", "conflicts", "nocommit", or "ok".
 
-USAGE="cg-merge [-c] [-b BASE_COMMIT] [-j] [-s] [BRANCH_NAME]"
+USAGE="cg-merge [-c] [-b BASE_COMMIT] [-j] [--squash] [BRANCH_NAME]"
 _git_requires_root=1
 
 . ${COGITO_LIB}cg-Xlib || exit 1
@@ -117,7 +117,8 @@ while optparse; do
 		base=$(cg-object-id -c "$OPTARG") || exit 1
 	elif optparse -j; then
 		join=1
-	elif optparse -s; then
+	# -s reserved to strategy
+	elif optparse --squash; then
 		squash=1
 	else
 		optfail
