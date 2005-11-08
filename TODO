@@ -10,6 +10,9 @@ Before next version release:
 
 * Switch from ssh-fetch to packs for the git+ssh protocol
 
+
+Before the following minor version release:
+
 * Deal with [PATCH] cogito: use locale date_fmt in obtaining default date format
 
 * cg-mv
