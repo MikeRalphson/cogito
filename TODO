@@ -90,6 +90,8 @@ cg-*patch should be pre-1.0.)
 
 * cg-Xfetchprogress showing smooth progress for packfiles
 
+* Offload most of cg-object-id to git-rev-parse
+
 
 Post 1.0:
 
