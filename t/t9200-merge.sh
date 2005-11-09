@@ -30,15 +30,19 @@ __END__
 
 >branch1/foo
 >branch1/bar
+>branch1/baz
 
 test_expect_success 'initialize branch1' \
-	"(cd branch1 && cg-init -I && cg-add brm foo bar && cg-commit -C -m\"Initial commit\")"
+	"(cd branch1 && cg-init -I && cg-add brm foo bar baz && cg-commit -C -m\"Initial commit\")"
 test_expect_success 'fork branch2' \
 	"cg-clone branch1 branch2"
 test_expect_success 'registering branch2 in branch1' \
 	"(cd branch1 && cg-branch-add origin ../branch2)"
 
 echo appended >>branch2/foo
+echo newinbranch2forfastforward >branch2/quux
+test_expect_success 'adding/removing files in branch2' \
+		"(cd branch2 && cg-rm -f baz && cg-add quux)"
 test_expect_success 'local commit in branch2' \
 		"(cd branch2 && cg-commit -m\"To-be-fastforwarded commit\")"
 test_expect_success 'fetching from branch2 to branch1' \
@@ -47,6 +51,10 @@ test_expect_success 'merging branch2 to branch1 (fast-forward)' \
 		"(cd branch1 && cg-merge </dev/null)"
 test_expect_success 'checking for correct merged content' \
 		"(cmp branch2/foo branch1/foo)"
+test_expect_success 'checking for properly removed file' \
+		"(cd branch1 && [ ! -e baz ])"
+test_expect_success 'checking for properly added file' \
+		"(cd branch1 && [ -e quux ] && git-ls-files | fgrep -x quux)"
 test_expect_success 'checking if it was really a fast-forward' \
 		"(cmp branch1/.git/refs/heads/origin branch1/.git/refs/heads/master)"
 
