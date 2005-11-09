@@ -86,6 +86,8 @@ cg-*patch should be pre-1.0.)
 		You can already alter the list of files to be committed,
 		let's optionally show the patch and let you alter it, too.
 
+* cg-push over HTTP
+
 
 Post 1.0:
 
