@@ -96,7 +96,10 @@ case "${id0:-.}${id1:-.}${id2:-.}" in
 	done
 	error "File $file removed in one branch but modified in the other!"
 	error "The original version saved as '$filev~${ways[0]}', the modified one as '$filev~${ways[$num]}'."
-	mv "$file" "$filev~0"
+	git-update-index --add --cacheinfo "$mode0" "$id0" "$file" &&
+		git-checkout-index -u -f -- "$file" &&
+		mv "$file" "$filev~${ways[0]}" ||
+		error "Cannot create '$filev~${ways[0]}'"
 	git-update-index --add --cacheinfo "$mode" "$id" "$file" &&
 		git-checkout-index -u -f -- "$file" &&
 		mv "$file" "$filev~${ways[$num]}" ||
