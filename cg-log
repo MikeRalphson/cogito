@@ -58,6 +58,9 @@
 #	by their author. This is also known as a "shortlog", suitable
 #	e.g. for contribution summaries of announcements.
 #
+# --no-merges::
+#	Don't display merges in the log.
+#
 # -uUSERNAME::
 #	List only commits where author or committer contains 'USERNAME'.
 #	The search for 'USERNAME' is case-insensitive.
@@ -255,6 +258,7 @@ user=
 mergebase=
 date_from=
 date_to=
+no_merges=
 
 while optparse; do
 	if optparse -c; then
@@ -300,6 +304,8 @@ while optparse; do
 		summary=1
 	elif optparse --summary; then
 		shortlog=1
+	elif optparse --no-merges; then
+		no_merges="--no-merges"
 	else
 		optfail
 	fi
@@ -315,9 +321,9 @@ if [ "$mergebase" ]; then
 fi
 
 if [ "$shortlog" ]; then
-	revls="git-rev-list --pretty=short $date_from $date_to"
+	revls="git-rev-list --pretty=short $no_merges $date_from $date_to"
 else
-	revls="git-rev-list --pretty=raw $date_from $date_to"
+	revls="git-rev-list --pretty=raw $no_merges $date_from $date_to"
 fi
 revls="$revls $date_from $date_to"
 
