@@ -119,7 +119,7 @@ test_expect_success 'fetching from branch2 to branch1' \
 test_expect_failure 'merging branch2 to branch1 (should conflict)' \
 		"(cd branch1 && cg-merge </dev/null)"
 test_expect_success 'checking for the proper conflict being generated for branch2' \
-		"(cmp branch1/file3~master branch2/file3 && [ -x branch2/file3 ])"
+		"(cmp branch1/file3~origin branch2/file3 && [ -x branch2/file3 ])"
 test_expect_success 'checking for the proper conflict being generated (no file3)' \
 		"([ ! -e branch1/file3 ])"
 
