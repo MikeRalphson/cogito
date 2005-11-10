@@ -54,6 +54,18 @@ pmxmc()
 	fi
 }
 
+# Set ways[] to the symbolic names of the particular ways
+load_unescaped_sym_ways()
+{
+	ways=("merge base" "$_git_head" "$(cat "$_git/merging-sym")")
+}
+load_sym_ways()
+{
+	load_unescaped_sym_ways
+	ways[0]="merge/base"
+	ways=("${ways[@]//\//~}")
+}
+
 
 case "${id0:-.}${id1:-.}${id2:-.}" in
 #
@@ -73,21 +85,22 @@ case "${id0:-.}${id1:-.}${id2:-.}" in
 "$id0$id1." | "$id0.$id2")
 	#echo "Removing $file"
 	filev="$file"
+	load_sym_ways
 	if [ "$id1" ]; then
 		num=1; mode="$mode1"; id="$id1"
 	else
 		num=2; mode="$mode2"; id="$id2"
 	fi
-	while [ -e "$filev~0" ] || [ -e "$filev~$num" ]; do
+	while [ -e "$filev~${ways[0]}" ] || [ -e "$filev~${ways[$num]}" ]; do
 		filev="$filev~"
 	done
 	error "File $file removed in one branch but modified in the other!"
-	error "The original version saved as '$filev~0', the modified one as '$filev~$num'."
+	error "The original version saved as '$filev~${ways[0]}', the modified one as '$filev~${ways[$num]}'."
 	mv "$file" "$filev~0"
 	git-update-index --add --cacheinfo "$mode" "$id" "$file" &&
 		git-checkout-index -u -f -- "$file" &&
-		mv "$file" "$filev~$num" ||
-		error "Cannot create '$filev~$num'"
+		mv "$file" "$filev~${ways[$num]}" ||
+		error "Cannot create '$filev~${ways[$num]}'"
 	;;
 #
 # Added in one.
@@ -120,19 +133,20 @@ case "${id0:-.}${id1:-.}${id2:-.}" in
 ".$id1$id2")
 	#echo "Adding $file"
 	filev="$file"
-	while [ -e "$filev~1" ] || [ -e "$filev~2" ]; do
+	load_sym_ways
+	while [ -e "$filev~${ways[1]}" ] || [ -e "$filev~${ways[2]}" ]; do
 		filev="$filev~"
 	done
 	error "File $file added in both branches, but different in each!"
-	error "Conflicting versions saved as '$filev~1' and '$filev~2'."
+	error "Conflicting versions saved as '$filev~${ways[1]}' and '$filev~${ways[2]}'."
 	git-update-index --add --cacheinfo "$mode1" "$id1" "$file" &&
 		git-checkout-index -u -f -- "$file" &&
-		mv "$file" "$filev~1" ||
-		error "Cannot create '$filev~1'"
+		mv "$file" "$filev~${ways[1]}" ||
+		error "Cannot create '$filev~${ways[1]}'"
 	git-update-index --add --cacheinfo "$mode2" "$id2" "$file" &&
 		git-checkout-index -u -f -- "$file" &&
-		mv "$file" "$filev~2" ||
-		error "Cannot create '$filev~2'"
+		mv "$file" "$filev~${ways[2]}" ||
+		error "Cannot create '$filev~${ways[2]}'"
 	exit 1
 	;;
 
