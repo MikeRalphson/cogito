@@ -110,7 +110,7 @@ test_expect_success 'checking for the proper conflict resolution (file4 gone)' \
 
 
 test_expect_success 'removing branch1/file3' \
-		"(cd branch1 && cg-rm -f file3 && cg-commit -m\"Killed file3\")"
+		"(cd branch1 && cp file3 file3- && cg-rm -f file3 && cg-commit -m\"Killed file3\")"
 test_expect_success 'modifying branch2/file3' \
 		"(cd branch2 && echo modificaton >>file3 && chmod a+x file3 && cg-commit -m\"Modified file3\")"
 
@@ -121,7 +121,7 @@ test_expect_failure 'merging branch2 to branch1 (should conflict)' \
 test_expect_success 'checking for the proper conflict being generated for branch2' \
 		"(cmp branch1/file3~origin branch2/file3 && [ -x branch2/file3 ])"
 test_expect_success 'checking for the proper conflict being generated (no file3)' \
-		"([ ! -e branch1/file3 ])"
+		"([ ! -e branch1/file3 ] && cmp branch1/file3- branch1/file3~merge~base)"
 
 
 test_done
