@@ -6,7 +6,10 @@
 # Setup a public GIT repository, that is, one that has no attached working
 # copy and you typically only push into it and pull from it. You need to run
 # this command before you will be able to push into the repository for the
-# first time.
+# first time, but you will be also unable to pull from the repository until
+# you push into it at first. Therefore the workflow is to first init a regular
+# private repository, then use this command to create the public one and push
+# into it then.
 #
 # Use `cg-init` if you want to create a new GIT project instead.
 #
