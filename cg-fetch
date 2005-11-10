@@ -29,7 +29,13 @@
 #	Force the complete fetch even if the heads are the same.
 #
 # -v::
-#	Display more verbose output
+#	Display more verbose output.
+#
+# ENVIRONMENT
+# -----------
+# RSYNC_FLAGS::
+#	Additional flags to be passed to the rsync tool when fetching over
+#	the rsync protocol.
 
 USAGE="cg-fetch [-f] [-v] [BRANCH_NAME]"
 
