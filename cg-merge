@@ -204,13 +204,20 @@ echo $branchname >>$_git/merging-sym
 [ "$squash" ] && echo $branch >>"$_git/squashing"
 
 if ! git-merge-index -o -q ${COGITO_LIB}cg-Xmergefile -a || [ "$careful" ]; then
-	[ ! "$careful" ] && cat >&2 <<__END__
-
-	Conflicts during merge. Do cg-commit after resolving them.
-__END__
+	echo >&2
+	if [ ! "$careful" ]; then
+		echo "	Conflicts during merge. Do cg-commit after resolving them." >&2
+	else
+		echo "	Do cg-commit after reviewing the merge." >&2
+	fi
 	if [ -s "$_git/commit-ignore" ]; then
+		echo "	cg-reset will cancel the merge (but also your pending local changes!)." >&2
+		echo >&2
 		echo "	These files contained local modifications and won't be automatically chosen for committing:" >&2
 		cat "$_git/commit-ignore" >&2
+	else
+		echo "	cg-reset will cancel the merge." >&2
+		echo >&2
 	fi
 	posthook $mergetype conflicts
 	exit 2
@@ -221,6 +228,11 @@ readtree=
 if ! cg-commit -C; then
 	readtree=1
 	echo "cg-merge: COMMIT FAILED, retry manually" >&2
+	if [ -s "$_git/commit-ignore" ]; then
+		echo "	cg-reset will cancel the merge (but also your pending local changes!)." >&2
+	else
+		echo "	cg-reset will cancel the merge." >&2
+	fi
 	posthook $mergetype nocommit
 fi
 
