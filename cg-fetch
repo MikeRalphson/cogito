@@ -111,7 +111,16 @@ fetch_rsync()
 {
 	get_rsync -s -u -d "$2/objects" "$_git_objects" | fetch_progress
 	ret=${PIPESTATUS[0]}
-	[ "$3" ] && cat "$_git/refs/${3%/*}/.${3##*/}-fetching" > "$_git/refs/$3"
+	if [ "$3" ] && [ "$ret" -eq "0" ]; then
+		if [ "$orig_head" ]; then
+			git-rev-list --objects $new_head ^$orig_head |
+				while read obj type; do
+					git-cat-file -t $obj >/dev/null || exit $?
+				done ||
+			die "rsync fetch incomplete, some objects missing"
+		fi
+		cat "$_git/refs/${3%/*}/.${3##*/}-fetching" > "$_git/refs/$3"
+	fi
 	return $ret
 }
 
