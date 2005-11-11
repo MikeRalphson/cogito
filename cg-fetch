@@ -251,21 +251,7 @@ orig_head=
 [ -s "$_git/refs/heads/$name" ] && orig_head="$(cat "$_git/refs/heads/$name")"
 
 
-if echo "$uri" | grep -q '^\(git\|git+pack+ssh\)://'; then
-	# This is a really special case.
-	uri="$(echo "$uri" | sed 's#^git+pack+ssh://\([^/]*\)\(/.*\)$#\1:\2#')"
-	[ "$rembranch" ] || rembranch="HEAD"
-	(
-		git-fetch-pack "$uri" "$rembranch" || echo "failed" "$rembranch"
-	) | while read sha1 remote_name; do
-		[ "$sha1" = "failed" ] && die "fetching pack failed"
-		echo "$sha1" >"$_git/refs/heads/$name"
-	done || exit
-	rm "$_git/info/cg-fetch-$name-dirty"
-	show_changes_summary "$orig_head" "$(cg-object-id "$name")"
-	exit 0
-fi
-
+packed_transport=
 
 if echo "$uri" | grep -q "^http://"; then
 	get=get_http
@@ -273,6 +259,10 @@ if echo "$uri" | grep -q "^http://"; then
 elif echo "$uri" | grep -q "^git+ssh://"; then
 	get=get_ssh
 	fetch=fetch_ssh
+elif echo "$uri" | grep -q "^git+pack+ssh://"; then
+	packed_transport=ssh
+elif echo "$uri" | grep -q "^git://"; then
+	packed_transport=git
 elif echo "$uri" | grep -q "^rsync://"; then
 	echo "WARNING: The rsync access method is DEPRECATED and will be REMOVED in the future!" >&2
 	get=get_rsync
@@ -303,6 +293,23 @@ else
 	fi
 	rm -f "$_git/.,,lntest"
 fi
+
+
+if [ "$packed_transport" ]; then
+	# This is a really special case.
+	uri="$(echo "$uri" | sed 's#^git+pack+ssh://\([^/]*\)\(/.*\)$#\1:\2#')"
+	[ "$rembranch" ] || rembranch="HEAD"
+	(
+		git-fetch-pack "$uri" "$rembranch" || echo "failed" "$rembranch"
+	) | while read sha1 remote_name; do
+		[ "$sha1" = "failed" ] && die "fetching pack failed"
+		echo "$sha1" >"$_git/refs/heads/$name"
+	done || exit
+	rm "$_git/info/cg-fetch-$name-dirty"
+	show_changes_summary "$orig_head" "$(cg-object-id "$name")"
+	exit 0
+fi
+
 
 
 mkdir -p "$_git/refs/heads"
