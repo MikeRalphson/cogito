@@ -130,9 +130,23 @@ branchname="${ARGS[0]}"
 [ "$branchname" ] || die "what to merge?"
 branch=$(cg-object-id -c "$branchname") || exit 1
 
-[ "$base" ] || base=$(git-merge-base "$head" "$branch")
+[ "$base" ] || base=$(git-merge-base --all "$head" "$branch")
 if [ ! "$join" ]; then
 	[ "$base" ] || die "unable to automatically determine merge base (consider cg-merge -j)"
+	baselist=($base)
+	if [ "${#baselist[@]}" -gt "1" ]; then
+		echo "Multiple merge base candidates, please select one manually (by running cg-merge -b BASE [BRANCH]):"
+		echo "${baselist[*]}" | tr ' ' '\n'
+		echo
+		echo -n "The most conservative base (but likely a lot of conflicts): "
+		for (( safecounter=0; $safecounter < 1000; safecounter++ )) ; do
+			baselist=(git-merge-base --all "${baselist[@]}")
+			[ "${#baselist[@]}" -le "1" ] && break
+		done
+		echo "${baselist[*]}"
+		exit 3
+	fi >&2
+
 else
 	[ "$base" ] && die "joining branches with common history is something I refuse to do"
 	index="$(mktemp -t gitmerge.XXXXXX)" || exit $?
