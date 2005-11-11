@@ -146,7 +146,7 @@ fi
 
 if [ -s "$_git/merging" ] && grep -q "$branch" $_git/merging; then
 	echo "Branch already merged in the working tree." >&2
-	echo 0
+	exit 0
 fi
 
 if [ "$base" = "$branch" ]; then
