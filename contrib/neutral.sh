@@ -25,24 +25,25 @@ while [ "$cmd" ]; do
 
 	elif [ "$cmd" = "changeset" ]; then
 		[ "${args[0]}" ] || die "missing changeset id"
-		commit="$(cg-object-id -c "${args[0]}")" || die "bad changeset id"
+		commit="$(git-rev-parse --verify "${args[0]}")" || die "bad changeset id"
 		echo identifier:40:"$commit"
 
-		for parent in $(cg-object-id -p "$commit"); do
+		for parent in $(git-rev-parse --verify "$commit"^); do
 			echo parent:40:$parent
 		done
 
 		grep -r -l "$commit" ${GIT_DIR:-.git}/refs/tags |
-		while IFS=$'\n' read tag; do
-			tag="${tag##*/}"
-			echo tag:${#tag}:"$tag"
-		done
+			while IFS=$'\n' read tag; do
+				tag="${tag##*/}"
+				echo tag:${#tag}:"$tag"
+			done
 
 		# FIXME: doesn't handle filenames containing newlines
-		echo $commit $(cg-object-id -p "$commit") | git-diff-tree -r -m --stdin | grep ^: | cut -f 2- |
-		while IFS=$'\n' read file; do
-			echo file:${#file}:"$file"
-		done
+		echo $commit $(git-rev-parse --verify "$commit"^) |
+			git-diff-tree -r -m --stdin | grep ^: | cut -f 2- |
+			while IFS=$'\n' read file; do
+				echo file:${#file}:"$file"
+			done
 
 		author="$(git-cat-file commit "$commit" | sed -n 's/^author //p;/^$/q')"
 
