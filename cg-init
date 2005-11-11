@@ -21,7 +21,8 @@
 #	parameter and add and perform the initial commit manually.
 #
 # -I::
-#	Do not perform the initial commit.
+#	Do not perform the initial commit. You can perform the initial commit
+#	manually later, but you will need to pass cg-commit the -C parameter.
 #
 # -N::
 #	Only update the cache: do not copy the data into the object database.
