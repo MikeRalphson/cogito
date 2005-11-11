@@ -379,31 +379,37 @@ else
 fi
 rm "$_git/refs/heads/.$name-fetching"
 
-# FIXME: Warn about conflicting tag names?
-# XXX: We now throw stderr to /dev/null since not all repositories
-# may have tags/ and users were confused by the harmless errors.
-[ -d "$_git/refs/tags" ] || mkdir -p "$_git/refs/tags"
-rsyncerr=
-$get -i -s -u -d "$uri/refs/tags" "$_git/refs/tags" || rsyncerr=1
-[ "$rsyncerr" ] && echo "unable to get tags list (non-fatal)" >&2
 
-# Now check if we have the objects pointed at by the tags; if they are
-# tag objects, $fetch didn't get them.
-# XXX: This is the quick'n'dirty way.
-(
-	cd "$_git/refs/tags"
-	for tag in *; do
-		[ "$tag" = "*" ] && break
-		tagid="$(cat "$tag")"
-		GIT_DIR=../.. git-cat-file -t "$tagid" >/dev/null 2>&1 && continue
-		echo -n "Missing object of tag $tag... "
-		if [ "$fetch" != "fetch_rsync" ] && GIT_DIR=../.. $fetch "$tagid" "$uri" 2>/dev/null >&2; then
-			echo "retrieved"
-		else
-			echo "unable to retrieve"
-		fi
-	done
-)
+### Fetch tags
+# FIXME: Warn about conflicting tag names?
+[ -d "$_git/refs/tags" ] || mkdir -p "$_git/refs/tags"
+
+if [ "$get" = "get_rsync" ]; then
+	$get -i -s -u -d "$uri/refs/tags" "$_git/refs/tags" ||
+		echo "unable to get tags list (non-fatal)" >&2
+else
+	git-ls-remote --tags "$uri" |
+		# SHA1 refs/tags/v0.99.8^{} --> SHA1 tags/v0.99.8
+		# where SHA1 is the object v0.99.8 tag points at.
+		sed -ne 's:\([^	]\)	refs/\(tags/.*\)^{}$:\1 \2:p' |
+		while read sha1 tagname; do
+			# Do we have the tag itself?
+			[ -s "$_git/refs/$tagname" ] && continue
+			# Do we have the object pointed at by the tag?
+			git-cat-file -t "$sha1" >/dev/null 2>&1 || continue
+
+			# if so, fetch the tag -- which should be
+			# a cheap operation -- to complete the chain.
+			echo -n "Missing tag ${tagname#tags/}... "
+			if $fetch "$tagname" "$uri" "$tagname" 2>/dev/null >&2; then
+				echo "retrieved"
+			else
+				echo "unable to retrieve"
+			fi
+		done
+	[ "${PIPESTATUS[0]}" -eq "0" ] ||
+		echo "unable to get tags list (non-fatal)" >&2
+fi
 
 
 rm "$_git/info/cg-fetch-$name-dirty"
