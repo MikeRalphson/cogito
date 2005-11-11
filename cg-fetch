@@ -136,7 +136,9 @@ get_http()
 	src="$1"
 	dest="$2"
 
-	wget --execute continue=off -nv -O "$dest" "$src"
+	curl_extra_args=
+	[ "$GIT_SSL_NO_VERIFY" ] && curl_extra_args="-k"
+	curl -nsf $curl_extra_args -o "$dest" "$src"
 }
 
 fetch_http()

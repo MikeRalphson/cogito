@@ -46,7 +46,7 @@ The following tools are very recommended for regular Cogito operation:
 Tool				Description
 -------------------------------------------------------------------------------
 merge				E.g. from the RCS package, for merging.
-wget				For fetching files with the HTTP backend.
+curl				For fetching files with the HTTP backend.
 rsync				For fetching files with the rsync backend.
 ssh				For fetching files with the git+ssh backend.
 -------------------------------------------------------------------------------
