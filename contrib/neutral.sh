@@ -36,6 +36,9 @@ while [ "$cmd" ]; do
 	if [ "$cmd" = "-i" ]; then
 		: # nothing
 
+	elif [ "$cmd" = "version" ]; then
+		interesting "version" && echo "version:1:0"
+
 	elif [ "$cmd" = "identify" ]; then
 		interesting "type" && echo "type:3:git"
 
