@@ -47,7 +47,6 @@ Tool				Description
 -------------------------------------------------------------------------------
 merge				E.g. from the RCS package, for merging.
 curl				For fetching files with the HTTP backend.
-rsync				For fetching files with the rsync backend.
 ssh				For fetching files with the git+ssh backend.
 -------------------------------------------------------------------------------
 
@@ -56,6 +55,7 @@ The following tools are optional but recommended:
 `-------------------------------`----------------------------------------------
 Tool				Description
 -------------------------------------------------------------------------------
+rsync				For fetching files with the rsync backend.
 gnu coreutils			The gnu versions of stat, date and cp \
 				are preferred over the BSD variants.
 asciidoc (>= 7.0), xmlto	For building documentation.
