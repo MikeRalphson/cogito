@@ -138,11 +138,11 @@ blah
 boo
 appended
 appended2
-<<<<<<< brm
+<<<<<<< master
 append conflict1
 =======
 append conflict2
->>>>>>> .merge_file
+>>>>>>> origin
 __END__
 sed 's/merge_file.*$/merge_file/' <branch1/brm >brm-cleaned-up
 test_expect_success 'checking for correct conflict content' \

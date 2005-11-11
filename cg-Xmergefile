@@ -161,11 +161,12 @@ case "${id0:-.}${id1:-.}${id2:-.}" in
 	orig=$(git-unpack-file $id0)
 	src2=$(git-unpack-file $id2)
 
+	load_unescaped_sym_ways
 	# We reset the index to the first branch, making
 	# git-diff-file useful
 	git-update-index --add --cacheinfo "$mode1" "$id1" "$file"
 		git-checkout-index -u -f -- "$file" &&
-		merge "$file" "$orig" "$src2"
+		merge -L "${ways[1]}" -L "${ways[0]}" -L "${ways[2]}" "$file" "$orig" "$src2"
 	ret=$?
 	rm -f -- "$orig" "$src2"
 
