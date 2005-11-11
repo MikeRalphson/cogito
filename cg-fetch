@@ -130,43 +130,13 @@ get_http()
 	[ "$1" = "-b" ] && shift
 	[ "$1" = "-i" ] && shift
 	[ "$1" = "-s" ] && shift
-
-	wget_flags="--execute continue=off -nv"
-
-	update=
-	if [ "$1" = "-u" ]; then
-		wget_flags="$wget_flags -nc"
-		update=1
-		shift
-	fi
-
-	directory=
-	if [ "$1" = "-d" ]; then
-		wget_flags="$wget_flags -r -l 1 -np -nd -P"
-		directory=/
-		shift
-	else
-		wget_flags="$wget_flags -O"
-	fi
+	[ "$1" = "-u" ] && die "INTERNAL ERROR: HTTP no-clobber not implemented"
+	[ "$1" = "-d" ] && die "INTERNAL ERROR: HTTP recursive not implemented"
 
 	src="$1"
-	dest="$2$directory"
+	dest="$2"
 
-	[ "$update" ] && ! [ "$directory" ] && [ -e "$dest" ] && return 1
-
-	if echo "$dest" | grep -q '^\.git/'; then
-		# wget is idiotic and convers . to _
-		dest=$(echo "$dest" | sed 's#^.git/##')
-		pushd "$_git" >/dev/null
-	else
-		pushd . >/dev/null
-	fi
-
-	wget $wget_flags "$dest" "$src" 2>&1 | grep -vF 'robots.txt' | grep -vF 'index.html'
-	ret=${PIPESTATUS[0]}
-	[ -d "$dest" ] && rm -f "$dest"/robots.txt "$dest"/index.html*
-	popd >/dev/null
-	return $ret
+	wget --execute continue=off -nv -O "$dest" "$src"
 }
 
 fetch_http()
@@ -183,31 +153,13 @@ get_ssh()
 	[ "$1" = "-b" ] && shift
 	[ "$1" = "-i" ] && shift
 	[ "$1" = "-s" ] && shift
-
-	scp_flags=
-
-	update=
-	if [ "$1" = "-u" ]; then
-		update=1
-		shift
-	fi
-
-	directory=
-	if [ "$1" = "-d" ]; then
-		scp_flags="$scp_flags -r"
-		directory=1
-		shift
-	fi
+	[ "$1" = "-u" ] && die "INTERNAL ERROR: SSH no-clobber not implemented"
+	[ "$1" = "-d" ] && die "INTERNAL ERROR: SSH recursive not implemented"
 
 	src="$(echo "$1" | sed 's#^git+ssh://\([^/]*\)\(/.*\)$#\1:\2#')"
 	dest="$2"
 
-	[ "$update" ] && ! [ "$directory" ] && [ -e "$dest" ] && return 1
-	[ "$update" ] && [ "$directory" ] &&
-		echo "Warning: Cannot protect against overwriting $dest when fetching over ssh" 2>/dev/null
-
-	[ "$directory" ] && dest="$(dirname "$dest")"
-	scp $scp_flags "$src" "$dest"
+	scp "$src" "$dest"
 }
 
 fetch_ssh()
@@ -226,29 +178,23 @@ fetch_ssh()
 
 get_local()
 {
-	cp_flags_l="-vdpR"
+	cp_flags_l="-v"
 	if [ "$1" = "-b" ]; then
-		cp_flags_l="-vb" # Dereference symlinks
+		# Dereference symlinks
+		# FIXME: Is that so?!
+		cp_flags_l="$cp_flags_l -b"
 		shift
+	else
+		cp_flags_l="$cp_flags_l -dpR"
 	fi
 
 	[ "$1" = "-i" ] && shift
 	[ "$1" = "-s" ] && shift
-
-	if [ "$1" = "-u" ]; then
-		cp_flags_l="$cp_flags_l -fu$can_hardlink"
-		shift
-	fi
-
-	cut_last=
-	if [ "$1" = "-d" ]; then
-		cut_last=1
-		shift
-	fi
+	[ "$1" = "-u" ] && die "INTERNAL ERROR: local-fetch no-clobber not implemented"
+	[ "$1" = "-d" ] && die "INTERNAL ERROR: local-fetch recursive not implemented"
 
 	src="$1"
 	dest="$2"
-	[ "$cut_last" ] && dest="${dest%/*}"
 
 	cp $cp_flags_l "$src" "$dest"
 }
