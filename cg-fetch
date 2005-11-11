@@ -352,7 +352,7 @@ if [ "$rembranch" ]; then
 	$get -i "$uri/refs/heads/$rembranch" "$_git/refs/heads/.$name-fetching" ||
 		die "unable to get the head pointer of branch $rembranch"
 else
-	$get -b -s "$uri/HEAD" "$_git/refs/heads/.$name-fetching" ||
+	$get -b "$uri/HEAD" "$_git/refs/heads/.$name-fetching" ||
 		die "unable to get the HEAD branch"
 fi
 
