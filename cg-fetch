@@ -148,34 +148,6 @@ fetch_http()
 }
 
 
-get_ssh()
-{
-	[ "$1" = "-b" ] && shift
-	[ "$1" = "-i" ] && shift
-	[ "$1" = "-s" ] && shift
-	[ "$1" = "-u" ] && die "INTERNAL ERROR: SSH no-clobber not implemented"
-	[ "$1" = "-d" ] && die "INTERNAL ERROR: SSH recursive not implemented"
-
-	src="$(echo "$1" | sed 's#^git+ssh://\([^/]*\)\(/.*\)$#\1:\2#')"
-	dest="$2"
-
-	scp "$src" "$dest"
-}
-
-fetch_ssh()
-{
-	whead=
-	[ "$3" ] && whead="-w $3"
-	# git-ssh-fetch would theoretically take git+ssh://-style URL, but
-	# it is buggy and won't process it correctly, so let's just
-	# preprocess it to some easier-to-take form.
-	(git-ssh-fetch -a -v $whead $recovery "$1" \
-		"$(echo "$2" | sed 's#^git+ssh://\([^/]*\)\(/.*\)$#\1:\2#')" \
-		2>&1 /dev/null) | fetch_progress
-	return ${PIPESTATUS[0]}
-}
-
-
 get_local()
 {
 	cp_flags_l="-v"
@@ -257,9 +229,6 @@ if echo "$uri" | grep -q "^http://"; then
 	get=get_http
 	fetch=fetch_http
 elif echo "$uri" | grep -q "^git+ssh://"; then
-	get=get_ssh
-	fetch=fetch_ssh
-elif echo "$uri" | grep -q "^git+pack+ssh://"; then
 	packed_transport=ssh
 elif echo "$uri" | grep -q "^git://"; then
 	packed_transport=git
@@ -270,8 +239,7 @@ elif echo "$uri" | grep -q "^rsync://"; then
 elif echo "$uri" | grep -q ":"; then
 	echo "WARNING: I guessed the host:path syntax was used and fell back to the git+ssh protocol." >&2
 	echo "WARNING: The host:path syntax is evil because it is implicit. Please just use a URI." >&2
-	get=get_ssh
-	fetch=fetch_ssh
+	packed_transport=ssh
 else
 	[ -d "$uri/.git" ] && uri="$uri/.git"
 	get=get_local
@@ -297,7 +265,6 @@ fi
 
 if [ "$packed_transport" ]; then
 	# This is a really special case.
-	uri="$(echo "$uri" | sed 's#^git+pack+ssh://\([^/]*\)\(/.*\)$#\1:\2#')"
 	[ "$rembranch" ] || rembranch="HEAD"
 	(
 		git-fetch-pack "$uri" "$rembranch" || echo "failed" "$rembranch"
