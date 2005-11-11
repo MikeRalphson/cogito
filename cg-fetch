@@ -207,7 +207,13 @@ fetch_tags()
 			if $fetch "$tagname" "$uri" "$tagname" 2>/dev/null >&2; then
 				echo "retrieved"
 			else
-				echo "unable to retrieve"
+				# 17 is code from packed transport, which
+				# will grab all of them en masse later
+				if [ "$?" -ne "17" ]; then
+					echo "unable to retrieve"
+				else
+					echo ""
+				fi
 			fi
 		done
 	[ "${PIPESTATUS[0]}" -eq "0" ] ||
@@ -301,12 +307,35 @@ fi
 if [ "$packed_transport" ]; then
 	# This is a really special case.
 	[ "$rembranch" ] || rembranch="HEAD"
-	(
-		git-fetch-pack "$uri" "$rembranch" || echo "failed" "$rembranch"
-	) | while read sha1 remote_name; do
-		[ "$sha1" = "failed" ] && die "fetching pack failed"
-		echo "$sha1" >"$_git/refs/heads/$name"
-	done || exit
+
+	fetch_pack_recorder () {
+		while read sha1 remote_name; do
+			[ "$sha1" = "failed" ] && die "$2"
+			ref="$1"; [ "$ref" ] || ref="$remote_name"
+			echo "$sha1" >"$_git/$ref"
+		done
+	}
+
+	( git-fetch-pack "$uri" "$rembranch" ||
+	  echo "failed" "$rembranch" ) |
+		fetch_pack_recorder "refs/heads/$name" "fetching pack failed" ||
+		exit
+
+	export _cg_taglist="$(mktemp -t gitfetch.XXXXXX)"
+	record_tags_to_fetch () {
+		echo "refs/$1" >>"$_cg_taglist"
+		return 17
+	}
+	fetch=record_tags_to_fetch
+	fetch_tags
+	if [ -s "$_cg_taglist" ]; then
+		( cat "$_cg_taglist" | tr '\n' '\0' |
+			xargs -0 git-fetch-pack "$uri" ||
+		  echo "failed" "$rembranch" ) |
+		fetch_pack_recorder "" "unable to retrieve tags (non-fatal)"
+	fi
+	rm "$_cg_taglist"
+
 	rm "$_git/info/cg-fetch-$name-dirty"
 	show_changes_summary "$orig_head" "$(cg-object-id "$name")"
 	exit 0
