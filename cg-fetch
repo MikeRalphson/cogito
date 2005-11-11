@@ -138,7 +138,7 @@ get_http()
 
 	curl_extra_args=
 	[ "$GIT_SSL_NO_VERIFY" ] && curl_extra_args="-k"
-	curl -nsf $curl_extra_args -o "$dest" "$src"
+	curl -nsfL $curl_extra_args -o "$dest" "$src"
 }
 
 fetch_http()
