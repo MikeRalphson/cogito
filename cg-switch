@@ -1,12 +1,12 @@
 #!/usr/bin/env bash
 #
-# Switch the working tree to a given commit, allowing to branch from there
+# Switch the working tree to another (possibly new) line of development
 # Copyright (c) Yann Dirson, 2005
 #
 # Takes the LoD to switch to as mandatory argument, and a ref to the base commit
 # of a LoD to be created as optional second argument.
 # `cg-switch` allows to change the HEAD to another line of development (LoD),
-# and to create a new LoD at a given point
+# and to create a new LoD at a given point.
 #
 #      $ cg-switch v1.x v1.0    # creates a LoD for 1.x release at the v1.0 commit
 #      $ cg-switch master       # back to trunk for more developement next major release
