@@ -24,30 +24,39 @@
 #	Do not perform the initial commit. You can perform the initial commit
 #	manually later, but you will need to pass cg-commit the -C parameter.
 #
+# -m MESSAGE::
+#	Specify the commit message for the initial commit. See cg-commit(1)
+#	documentation for details.
+#
 # -N::
 #	Only update the cache: do not copy the data into the object database.
 #	This is for special purposes when you might not actually _have_ any
 #	object database. This option is normally not interesting.
 
-USAGE="cg-init [-I] [-N] [-e EXCLUDEPATTERN]..."
+USAGE="cg-init [-I] [-N] [-e EXCLUDEPATTERN]... [-m MESSAGE]..."
 _git_repo_unneeded=1
 
 . ${COGITO_LIB}cg-Xlib || exit 1
 
 excludes=()
 no_initial_commit=
+commitargs=()
 infoonly=
 while optparse; do
 	if optparse -e=; then
 		excludes[${#excludes[@]}]="$OPTARG"
 	elif optparse -I; then
 		no_initial_commit=1
+	elif optparse -m=; then
+		commitargs[${#commitargs[@]}]="-m"
+		commitargs[${#commitargs[@]}]="$OPTARG"
 	elif optparse -N; then
 		infoonly=-N
 	else
 		optfail
 	fi
 done
+[ "${commitargs[*]}" ] || commitargs=(-m "Initial commit" -E)
 
 [ -e $_git ] && die "$_git already exists"
 
@@ -58,7 +67,7 @@ git-init-db
 git-read-tree # Seed the dircache
 if ! [ "$no_initial_commit" ]; then
 	[ "$(ls)" ] && list_untracked_files exclude "${excludes[@]}" | xargs -0 cg-add ${infoonly}
-	cg-commit -C -m"Initial commit" -E ${infoonly}
+	cg-commit -C "${commitargs[@]}" ${infoonly}
 fi
 
 exit 0
