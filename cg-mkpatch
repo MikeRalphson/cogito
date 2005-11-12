@@ -5,6 +5,12 @@
 #
 # Generate a patch with diff statistics and meta info about each commit.
 #
+# Note that if you want to use this as the output interface for your
+# GIT tree containing changes against upstream GIT tree, please consider
+# using the StGIT tool ("quilt for GIT"), which will enable you to
+# update your patches seamlessly, rebase them against the latest upstream
+# version, directly send them over mail, etc.
+#
 # OPTIONS
 # -------
 # -d DIRNAME::
