@@ -3,24 +3,20 @@
 # Switch the working tree to a given commit, allowing to branch from there
 # Copyright (c) Yann Dirson, 2005
 #
-# Takes the target commit ID to switch to as an argument.
-# `cg-switch` is similar to `cg-seek`, in that it brings the working copy
-# to the requested state, but aditionally switches the 'master' ref to that
-# state, so that you can fork a new line of development from there.
+# Takes the LoD to switch to as mandatory argument, and a ref to the base commit
+# of a LoD to be created as optional second argument.
+# `cg-switch` allows to change the HEAD to another line of development (LoD),
+# and to create a new LoD at a given point
 #
-# If the previous master revision would become inaccessible using existing
-# refs, a new 'oldmaster' ref is created at that point so you can easily use
-# `cg-switch` back to that point when you need it.
+#      $ cg-switch v1.x v1.0    # creates a LoD for 1.x release at the v1.0 commit
+#      $ cg-switch master       # back to trunk for more developement next major release
 #
 # This tool is still much a work in progress.  Things to do include:
-# - audit for points of possible failure
-# - delay call to cg-seek to be more robust
-# - rollback on error
-# - optionally force an oldmastername (or none) from command-line
-# - interactive mode to deal with oldmastername ?
-# - improve detection of oldmastername
+# - mode to create the LoD only without really switching
+# - deal with non-committed modifications before switch
+# - allow switching "master" to another LoD (-i for "in-place switch" ?)
 
-USAGE="cg-switch COMMIT_ID"
+USAGE="cg-switch LoD [COMMIT_ID]"
 _git_requires_root=1
 
 . "${COGITO_LIB:-/export/work/yann/git/local/lib/cogito/}"cg-Xlib || exit 1
@@ -29,34 +25,32 @@ _git_requires_root=1
 
 set -e
 
-dstcommit=${ARGS[0]}
+dstlod=${ARGS[0]}
+dstcommit=${ARGS[1]}
 
-oldmaster=$(git-rev-parse master)
-cg-seek $dstcommit
+[ $(readlink $_git/HEAD) != "refs/heads/$dstlod" ] ||
+    die "Already on LoD \`$dstlod'"
 
-# switch master
-rm $_git/refs/heads/master
-git-rev-parse $dstcommit > $_git/refs/heads/master
-
-rm $_git/blocked
-
-# only create an "oldmaster" tag if no head/tag was there already
-oldmastername=$(git-name-rev $oldmaster 2>/dev/null | cut -d' ' -f2)
-
-# restrict to exact names - better way gladly accepted
-if ! expr "$oldmastername" : '.*[~^].*' >/dev/null; then
-    :
-elif expr "$oldmastername" : '.*\^0' >/dev/null; then
-    oldmastername=${oldmastername%^0}
+if [ $(git-rev-parse $dstlod) = "$dstlod" ]; then
+    # not found
+    [ -n "$dstcommit" ] ||
+	die "LoD \`$dstlod' does not exists: please specify a branch-point to create it"
+    [ $(git-rev-parse $dstcommit) != "$dstcommit" ] ||
+	die "Cannot create LoD on unknown ref \`$dstcommit'"
+    echo "Creating new LoD \`$dstlod'"
+    cg-object-id -c $dstcommit > $_git/refs/heads/$dstlod
 else
-    oldmastername=
+    # found
+    [ -z "$dstcommit" ] ||
+	die "LoD \`$dstlod' already exists - NOT switching it to \`$dstcommit'"
+    [ -r "$_git/refs/heads/$dstlod" ] ||
+	die "\`$dstlod' already exists but is not a head"
 fi
 
-if [ -z "$oldmastername" ]; then
-    if [ $(git-rev-parse oldmaster) != oldmaster ]; then
-	die "FIXME: there is already an \`oldmaster' ref, rename it first"
-    fi
-    oldmastername="oldmaster"
-    echo $oldmaster > $_git/refs/heads/oldmaster
-fi
-echo "Old location was \`$oldmastername'."
+# do seek
+cg-seek "$dstlod"
+
+# fixup things to get real LoD's
+rm $_git/HEAD
+ln -s "refs/heads/$dstlod" $_git/HEAD
+rm -f $_git/head-name $_git/refs/heads/cg-seek-point $_git/blocked
