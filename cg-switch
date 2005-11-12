@@ -1,0 +1,62 @@
+#!/usr/bin/env bash
+#
+# Switch the working tree to a given commit, allowing to branch from there
+# Copyright (c) Yann Dirson, 2005
+#
+# Takes the target commit ID to switch to as an argument.
+# `cg-switch` is similar to `cg-seek`, in that it brings the working copy
+# to the requested state, but aditionally switches the 'master' ref to that
+# state, so that you can fork a new line of development from there.
+#
+# If the previous master revision would become inaccessible using existing
+# refs, a new 'oldmaster' ref is created at that point so you can easily use
+# `cg-switch` back to that point when you need it.
+#
+# This tool is still much a work in progress.  Things to do include:
+# - audit for points of possible failure
+# - delay call to cg-seek to be more robust
+# - rollback on error
+# - optionally force an oldmastername (or none) from command-line
+# - interactive mode to deal with oldmastername ?
+# - improve detection of oldmastername
+
+USAGE="cg-switch COMMIT_ID"
+_git_requires_root=1
+
+. "${COGITO_LIB:-/export/work/yann/git/local/lib/cogito/}"cg-Xlib || exit 1
+
+[ "$ARGS" ] || usage
+
+set -e
+
+dstcommit=${ARGS[0]}
+
+oldmaster=$(git-rev-parse master)
+cg-seek $dstcommit
+
+# switch master
+rm $_git/refs/heads/master
+git-rev-parse $dstcommit > $_git/refs/heads/master
+
+rm $_git/blocked
+
+# only create an "oldmaster" tag if no head/tag was there already
+oldmastername=$(git-name-rev $oldmaster 2>/dev/null | cut -d' ' -f2)
+
+# restrict to exact names - better way gladly accepted
+if ! expr "$oldmastername" : '.*[~^].*' >/dev/null; then
+    :
+elif expr "$oldmastername" : '.*\^0' >/dev/null; then
+    oldmastername=${oldmastername%^0}
+else
+    oldmastername=
+fi
+
+if [ -z "$oldmastername" ]; then
+    if [ $(git-rev-parse oldmaster) != oldmaster ]; then
+	die "FIXME: there is already an \`oldmaster' ref, rename it first"
+    fi
+    oldmastername="oldmaster"
+    echo $oldmaster > $_git/refs/heads/oldmaster
+fi
+echo "Old location was \`$oldmastername'."
