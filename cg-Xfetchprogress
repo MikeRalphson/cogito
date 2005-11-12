@@ -27,8 +27,11 @@ while (<>) {
 	chomp;
 
 	# git fetcher
-	if (m#^(link|symlink|copy|got|walk) ([a-f0-9]{2})([a-f0-9]{38})#) {
+	if (m#^(link|symlink|copy|got) ([a-f0-9]{2})([a-f0-9]{38})#) {
 		$object = "$2/$3";
+
+	} elsif (m#^(walk) ([a-f0-9]{2})([a-f0-9]{38})#) {
+		next; # redundant information
 
 	# rsync
 	} elsif (m#^([a-f0-9]{2})/([a-f0-9]{38})$#) {
