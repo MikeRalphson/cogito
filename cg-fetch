@@ -287,6 +287,7 @@ elif echo "$uri" | grep -q ":"; then
 	packed_transport=ssh
 else
 	[ -d "$uri/.git" ] && uri="$uri/.git"
+	[ -d "$uri" ] || die "repository not found"
 	get=get_local
 	fetch=fetch_local
 
