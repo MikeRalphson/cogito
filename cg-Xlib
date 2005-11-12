@@ -259,17 +259,13 @@ tree_timewarp()
 	[ "$no_head_update" ] || git-update-ref HEAD "$branch" || :
 
 	# Kill gone files
-	git-diff-tree -z -r $base $branch | xargs -0 bash -c '
-		while [ "$1" ]; do
-			header="$1"; shift
-			file="$1"; shift
-
+	git-diff-tree -r $base $branch |
+		while IFS=$'\t' read header file; do
 			# match ":100755 000000 14d43b1abf... 000000000... D"
 			if echo "$header" | egrep "^:([^ ][^ ]* ){4}D" >/dev/null; then
 				rm -- "$file"
 			fi
 		done
-	' padding
 	git-checkout-index -f -a
 
 	# FIXME: Can produce bogus "contains only garbage" messages.
