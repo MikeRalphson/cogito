@@ -35,7 +35,18 @@ test_expect_success 'clone in-current-dir repo2 from $(pwd)/../repo1/../repo1.gi
 
 echo file1v2 >repo1/file1
 test_expect_success 'commit in repo1' \
-	"(cd repo1 && cg-commit -m\"Second commit\")"
+	"(cd repo1 && git-update-index file1 && cg-commit -m\"Second commit\")"
+test_expect_success 'incremental fetch in repo2' \
+	"(cd repo2 && cg-fetch)"
+test_expect_success 'verifying incremental fetch' \
+	"(cmp repo1/.git/refs/heads/master repo2/.git/refs/heads/origin &&
+	  cd repo2 && git-fsck-objects)"
+
+echo file1v3 >repo1/file1
+test_expect_success 'commit in repo1' \
+	"(cd repo1 && git-update-index file1 && cg-commit -m\"Third commit\")"
+test_expect_success 'rewriting HEAD of repo1 to symbolic' \
+	'(rm repo1/.git/HEAD && echo "ref: refs/heads/master" >repo1/.git/HEAD)'
 test_expect_success 'incremental fetch in repo2' \
 	"(cd repo2 && cg-fetch)"
 test_expect_success 'verifying incremental fetch' \

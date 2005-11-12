@@ -40,7 +40,17 @@ verify_repo2
 
 echo more stuff >>repo1/file
 test_expect_success 'local commit in repo1' \
-		"(cd repo1 && cg-commit -m\"Second commit\")"
+		"(cd repo1 && git-update-index file && cg-commit -m\"Second commit\")"
+test_expect_success 'updating repo2' \
+		"(cd repo2 && cg-update &&
+		  cmp .git/refs/heads/origin ../repo1/.git/refs/heads/master)"
+verify_repo2
+
+echo more more stuff >>repo1/file
+test_expect_success 'local commit in repo1' \
+		"(cd repo1 && git-update-index file && cg-commit -m\"Third commit\")"
+test_expect_success 'rewriting HEAD of repo1 to symbolic' \
+		'(rm repo1/.git/HEAD && echo "ref: refs/heads/master" >repo1/.git/HEAD)'
 test_expect_success 'updating repo2' \
 		"(cd repo2 && cg-update &&
 		  cmp .git/refs/heads/origin ../repo1/.git/refs/heads/master)"
@@ -48,7 +58,7 @@ verify_repo2
 
 echo even more stuff >>repo1/file
 test_expect_success 'local commit in repo1' \
-		"(cd repo1 && cg-commit -m\"Third commit\")"
+		"(cd repo1 && git-update-index file && cg-commit -m\"Fourth commit\")"
 obj="$(cd repo1 && cg-admin-ls file | cut -f 1 | cut -d ' ' -f 3)"
 test_expect_success 'damaging repo1' \
 		"(cd repo1 && rm -f .git/objects/${obj:0:2}/${obj:2})"
