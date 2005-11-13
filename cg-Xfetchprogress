@@ -41,6 +41,10 @@ while (<>) {
 		# up to 100% ...
 		$percentage = ', ' . int(hex($1) * 100 / 0xff) . '% done';
 
+	# some rsync versions output this
+	} elsif (m#^([a-f0-9]{2})/$#) {
+		next;
+
 	# misc. output
 	} else {
 		if ($last_objects != $objects ) {
