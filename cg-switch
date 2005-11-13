@@ -13,10 +13,9 @@
 # This tool is still much a work in progress.  Things to do include:
 # - mode to create the branch only without really switching
 # - deal with non-committed modifications before switch ?
-# - allow switching "master" to another branch (-i for "in-place switch" ?)
 # - safeguards to avoid problem when playing with remote branches ?
 
-USAGE="cg-switch [-f] BRANCH [COMMIT_ID]"
+USAGE="cg-switch [-r COMMIT_ID] [-f] BRANCH"
 _git_requires_root=1
 
 . "${COGITO_LIB:-/export/work/yann/git/local/lib/cogito/}"cg-Xlib || exit 1
