@@ -58,6 +58,10 @@ is_valid_ref() {
 [ "$(git-symbolic-ref HEAD)" != "refs/heads/$dsthead" ] ||
 	die "Already on branch '$dsthead'"
 
+if [ "$seek" ]; then
+	[ -s "$_git/blocked" ] && die "switch blocked: $(cat "$_git/blocked")"
+fi
+
 if ! is_branch_name "$dsthead"; then
 	# not found
 	[ -n "$dstcommit" ] ||
