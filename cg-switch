@@ -1,0 +1,56 @@
+#!/usr/bin/env bash
+#
+# Switch the working tree to a given commit, allowing to branch from there
+# Copyright (c) Yann Dirson, 2005
+#
+# Takes the LoD to switch to as mandatory argument, and a ref to the base commit
+# of a LoD to be created as optional second argument.
+# `cg-switch` allows to change the HEAD to another line of development (LoD),
+# and to create a new LoD at a given point
+#
+#      $ cg-switch v1.x v1.0    # creates a LoD for 1.x release at the v1.0 commit
+#      $ cg-switch master       # back to trunk for more developement next major release
+#
+# This tool is still much a work in progress.  Things to do include:
+# - mode to create the LoD only without really switching
+# - deal with non-committed modifications before switch
+# - allow switching "master" to another LoD (-i for "in-place switch" ?)
+
+USAGE="cg-switch LoD [COMMIT_ID]"
+_git_requires_root=1
+
+. "${COGITO_LIB:-/export/work/yann/git/local/lib/cogito/}"cg-Xlib || exit 1
+
+[ "$ARGS" ] || usage
+
+set -e
+
+dstlod=${ARGS[0]}
+dstcommit=${ARGS[1]}
+
+[ $(readlink $_git/HEAD) != "refs/heads/$dstlod" ] ||
+    die "Already on LoD \`$dstlod'"
+
+if [ $(git-rev-parse $dstlod) = "$dstlod" ]; then
+    # not found
+    [ -n "$dstcommit" ] ||
+	die "LoD \`$dstlod' does not exists: please specify a branch-point to create it"
+    [ $(git-rev-parse $dstcommit) != "$dstcommit" ] ||
+	die "Cannot create LoD on unknown ref \`$dstcommit'"
+    echo "Creating new LoD \`$dstlod'"
+    cg-object-id -c $dstcommit > $_git/refs/heads/$dstlod
+else
+    # found
+    [ -z "$dstcommit" ] ||
+	die "LoD \`$dstlod' already exists - NOT switching it to \`$dstcommit'"
+    [ -r "$_git/refs/heads/$dstlod" ] ||
+	die "\`$dstlod' already exists but is not a head"
+fi
+
+# do seek
+cg-seek "$dstlod"
+
+# fixup things to get real LoD's
+rm $_git/HEAD
+ln -s "refs/heads/$dstlod" $_git/HEAD
+rm -f $_git/head-name $_git/refs/heads/cg-seek-point $_git/blocked

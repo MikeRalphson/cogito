@@ -17,7 +17,7 @@ SCRIPT=	cg-object-id cg-add cg-admin-lsobj cg-admin-uncommit \
 	cg-export cg-help cg-init cg-log cg-merge cg-mkpatch cg-patch \
 	cg-fetch cg-restore cg-rm cg-seek cg-status cg-tag cg-tag-ls cg-update \
 	cg cg-admin-ls cg-push cg-branch-chg cg-admin-cat cg-clean \
-	cg-admin-setuprepo
+	cg-admin-setuprepo cg-switch
 
 LIB_SCRIPT=cg-Xlib cg-Xmergefile cg-Xfetchprogress
 
