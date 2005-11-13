@@ -83,10 +83,10 @@ else
 fi
 
 if [ "$seek" ]; then
-	cg-seek "$dsthead"
-
-	# fixup things to get real branchs
-	rm "$_git/HEAD"
-	ln -s "refs/heads/$dsthead" "$_git/HEAD"
-	rm -f "$_git/head-name" "$_git/refs/heads/cg-seek-point" "$_git/blocked"
+	curcommit="$(cg-object-id -c)"
+	dstcommit="$(cg-object-id -c "$dsthead")"
+	if [ "$curcommit" != "$dstcommit" ]; then
+		tree_timewarp --no-head-update "along" "please rollback" "$curcommit" "$dstcommit"
+	fi
+	git-symbolic-ref HEAD "refs/heads/$dsthead"
 fi
