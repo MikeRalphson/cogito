@@ -41,8 +41,9 @@ done
 
 dsthead="${ARGS[0]}"
 
+
 do_change_branch() {
-	cg-object-id -c $dstcommit > "$_git/refs/heads/$dsthead"
+	cg-object-id -c "$dstcommit" > "$_git/refs/heads/$dsthead"
 }
 
 is_branch_name() {
@@ -52,6 +53,7 @@ is_branch_name() {
 is_valid_ref() {
 	[ "$(git-rev-parse "$1")" != "$1" ]
 }
+
 
 [ "$(readlink "$_git/HEAD")" != "refs/heads/$dsthead" ] ||
 	die "Already on branch '$dsthead'"
@@ -67,7 +69,7 @@ if ! is_branch_name "$dsthead"; then
 else
 	# found
 	[ -r "$_git/refs/heads/$dsthead" ] ||
-	die "Ref '$dsthead' already exists but is not a branch head"
+		die "Ref '$dsthead' already exists but is not a branch head"
 	if [ -n "$dstcommit" ]; then
 		[ "$force" ] ||
 			die "Branch '$dsthead' already exists - use -f to force switching it to '$dstcommit'"
