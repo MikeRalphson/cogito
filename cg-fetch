@@ -155,8 +155,7 @@ get_local()
 	cp_flags_l="-v"
 	if [ "$1" = "-b" ]; then
 		# Dereference symlinks
-		# FIXME: Is that so?!
-		cp_flags_l="$cp_flags_l -b"
+		cp_flags_l="$cp_flags_l -L"
 		shift
 	else
 		cp_flags_l="$cp_flags_l -dpR"
