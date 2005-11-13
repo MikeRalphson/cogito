@@ -37,7 +37,7 @@ while optparse; do
     fi
 done
 
-[ "$ARGS" ] || usage
+[ ${#ARGS[*]} = 1 ] || usage
 
 dstlod=${ARGS[0]}
 

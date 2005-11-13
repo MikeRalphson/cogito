@@ -44,7 +44,7 @@ while optparse; do
 	fi
 done
 
-[ "$ARGS" ] || usage
+[ ${#ARGS[*]} -ge 1 ] || usage
 
 TMPFILE=$(mktemp -t gitadd.XXXXXX) || exit 1
 error=

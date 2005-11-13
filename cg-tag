@@ -45,7 +45,7 @@ done
 name="${ARGS[0]}"
 id="${ARGS[1]}"
 
-[ "$name" ] || usage
+[ -n "$name" ] || usage
 
 id=$(cg-object-id -n "$id") || exit 1
 type=$(git-cat-file -t "$id")
