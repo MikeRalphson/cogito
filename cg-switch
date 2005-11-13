@@ -39,10 +39,10 @@ done
 
 [ "$ARGS" ] || usage
 
-dstlod=${ARGS[0]}
+dsthead=${ARGS[0]}
 
 do_change_branch() {
-	cg-object-id -c $dstcommit > $_git/refs/heads/$dstlod
+	cg-object-id -c $dstcommit > $_git/refs/heads/$dsthead
 }
 
 is_branch_name() {
@@ -53,36 +53,36 @@ is_valid_ref() {
 	[ $(git-rev-parse "$1") != "$1" ]
 }
 
-[ $(readlink $_git/HEAD) != "refs/heads/$dstlod" ] ||
-	die "Already on branch \`$dstlod'"
+[ $(readlink $_git/HEAD) != "refs/heads/$dsthead" ] ||
+	die "Already on branch \`$dsthead'"
 
-if ! is_branch_name "$dstlod"; then
+if ! is_branch_name "$dsthead"; then
 	# not found
 	[ -n "$dstcommit" ] ||
-		die "Branch \`$dstlod' does not exists: please specify a branch-point to create it"
+		die "Branch \`$dsthead' does not exists: please specify a branch-point to create it"
 	is_valid_ref "$dstcommit" ||
 		die "Cannot create branch on unknown ref \`$dstcommit'"
-	echo "Creating new branch \`$dstlod'"
+	echo "Creating new branch \`$dsthead'"
 	do_change_branch
 else
 	# found
-	[ -r "$_git/refs/heads/$dstlod" ] ||
-	die "Ref \`$dstlod' already exists but is not a branch head"
+	[ -r "$_git/refs/heads/$dsthead" ] ||
+	die "Ref \`$dsthead' already exists but is not a branch head"
 	if [ -n "$dstcommit" ]; then
 		if [ $force != y ]; then
-			die "Branch \`$dstlod' already exists - use -f to force switching it to \`$dstcommit'"
+			die "Branch \`$dsthead' already exists - use -f to force switching it to \`$dstcommit'"
 		fi
-		echo "Moving branch \`$dstlod'"
+		echo "Moving branch \`$dsthead'"
 		do_change_branch
 	fi
 fi
 
 if [ $seek = y ]; then
 	# do seek
-	cg-seek "$dstlod"
+	cg-seek "$dsthead"
 
 	# fixup things to get real branchs
 	rm $_git/HEAD
-	ln -s "refs/heads/$dstlod" $_git/HEAD
+	ln -s "refs/heads/$dsthead" $_git/HEAD
 	rm -f $_git/head-name $_git/refs/heads/cg-seek-point $_git/blocked
 fi
