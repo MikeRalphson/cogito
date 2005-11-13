@@ -39,10 +39,10 @@ done
 
 [ "$ARGS" ] || usage
 
-dsthead=${ARGS[0]}
+dsthead="${ARGS[0]}"
 
 do_change_branch() {
-	cg-object-id -c $dstcommit > $_git/refs/heads/$dsthead
+	cg-object-id -c $dstcommit > "$_git/refs/heads/$dsthead"
 }
 
 is_branch_name() {
@@ -50,10 +50,10 @@ is_branch_name() {
 }
 
 is_valid_ref() {
-	[ $(git-rev-parse "$1") != "$1" ]
+	[ "$(git-rev-parse "$1")" != "$1" ]
 }
 
-[ $(readlink $_git/HEAD) != "refs/heads/$dsthead" ] ||
+[ "$(readlink "$_git/HEAD")" != "refs/heads/$dsthead" ] ||
 	die "Already on branch \`$dsthead'"
 
 if ! is_branch_name "$dsthead"; then
@@ -80,7 +80,7 @@ if [ "$seek" ]; then
 	cg-seek "$dsthead"
 
 	# fixup things to get real branchs
-	rm $_git/HEAD
-	ln -s "refs/heads/$dsthead" $_git/HEAD
-	rm -f $_git/head-name $_git/refs/heads/cg-seek-point $_git/blocked
+	rm "$_git/HEAD"
+	ln -s "refs/heads/$dsthead" "$_git/HEAD"
+	rm -f "$_git/head-name" "$_git/refs/heads/cg-seek-point" "$_git/blocked"
 fi
