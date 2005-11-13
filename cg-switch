@@ -1,56 +1,88 @@
 #!/usr/bin/env bash
 #
-# Switch the working tree to a given commit, allowing to branch from there
+# Switch the working tree to another (possibly new) branch
 # Copyright (c) Yann Dirson, 2005
 #
-# Takes the LoD to switch to as mandatory argument, and a ref to the base commit
-# of a LoD to be created as optional second argument.
-# `cg-switch` allows to change the HEAD to another line of development (LoD),
-# and to create a new LoD at a given point
+# `cg-switch` allows to change the HEAD to another branch, and to
+# create a new branch at a given point.
 #
-#      $ cg-switch v1.x v1.0    # creates a LoD for 1.x release at the v1.0 commit
-#      $ cg-switch master       # back to trunk for more developement next major release
+#   $ cg-switch -r v1.0 v1.x              # creates "1.x" branch and switch working copy to it
+#   $ cg-switch -n -r v1.0 v1.x           # creates "1.x" branch without touching working copy
+#   $ cg-switch master                    # back to trunk
+#   $ cg-switch -f -r that-branch master  # change "master" to refer to that-branch instead
 #
 # This tool is still much a work in progress.  Things to do include:
-# - mode to create the LoD only without really switching
-# - deal with non-committed modifications before switch
-# - allow switching "master" to another LoD (-i for "in-place switch" ?)
+# - deal with non-committed modifications before switch ?
+# - safeguards to avoid problem when playing with remote branches ?
 
-USAGE="cg-switch LoD [COMMIT_ID]"
+USAGE="cg-switch [-r COMMIT_ID] [-f] [-n] BRANCH"
 _git_requires_root=1
 
-. "${COGITO_LIB:-/export/work/yann/git/local/lib/cogito/}"cg-Xlib || exit 1
-
-[ "$ARGS" ] || usage
+. ${COGITO_LIB}cg-Xlib || exit 1
 
 set -e
 
+force=n
+seek=y
+dstcommit=
+while optparse; do
+    if optparse -f; then
+	force=y
+    elif optparse -n; then
+	seek=n
+    elif optparse -r=; then
+	dstcommit="$OPTARG"
+    else
+	optfail
+    fi
+done
+
+[ "$ARGS" ] || usage
+
 dstlod=${ARGS[0]}
-dstcommit=${ARGS[1]}
+
+do_change_branch() {
+    cg-object-id -c $dstcommit > $_git/refs/heads/$dstlod
+}
+
+is_branch_name() {
+    [ -r "$_git/refs/heads/$1" ]
+}
+
+is_valid_ref() {
+    [ $(git-rev-parse "$1") != "$1" ]
+}
 
 [ $(readlink $_git/HEAD) != "refs/heads/$dstlod" ] ||
-    die "Already on LoD \`$dstlod'"
+    die "Already on branch \`$dstlod'"
 
-if [ $(git-rev-parse $dstlod) = "$dstlod" ]; then
+if ! is_branch_name "$dstlod"; then
     # not found
     [ -n "$dstcommit" ] ||
-	die "LoD \`$dstlod' does not exists: please specify a branch-point to create it"
-    [ $(git-rev-parse $dstcommit) != "$dstcommit" ] ||
-	die "Cannot create LoD on unknown ref \`$dstcommit'"
-    echo "Creating new LoD \`$dstlod'"
-    cg-object-id -c $dstcommit > $_git/refs/heads/$dstlod
+	die "Branch \`$dstlod' does not exists: please specify a branch-point to create it"
+    is_valid_ref "$dstcommit" ||
+	die "Cannot create branch on unknown ref \`$dstcommit'"
+    echo "Creating new branch \`$dstlod'"
+    do_change_branch
 else
     # found
-    [ -z "$dstcommit" ] ||
-	die "LoD \`$dstlod' already exists - NOT switching it to \`$dstcommit'"
     [ -r "$_git/refs/heads/$dstlod" ] ||
-	die "\`$dstlod' already exists but is not a head"
+	die "Ref \`$dstlod' already exists but is not a branch head"
+    if [ -n "$dstcommit" ]; then
+	if [ $force != y ]; then
+	    die "Branch \`$dstlod' already exists - use -f to force switching it to \`$dstcommit'"
+	fi
+	echo "Moving branch \`$dstlod'"
+	do_change_branch
+    fi
 fi
 
-# do seek
-cg-seek "$dstlod"
+if [ $seek = y ]; then
+    # do seek
+    cg-seek "$dstlod"
 
-# fixup things to get real LoD's
-rm $_git/HEAD
-ln -s "refs/heads/$dstlod" $_git/HEAD
-rm -f $_git/head-name $_git/refs/heads/cg-seek-point $_git/blocked
+    # fixup things to get real branchs
+    rm $_git/HEAD
+    ln -s "refs/heads/$dstlod" $_git/HEAD
+    rm -f $_git/head-name $_git/refs/heads/cg-seek-point $_git/blocked
+fi
