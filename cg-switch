@@ -26,15 +26,15 @@ force=n
 seek=y
 dstcommit=
 while optparse; do
-    if optparse -f; then
-	force=y
-    elif optparse -n; then
-	seek=n
-    elif optparse -r=; then
-	dstcommit="$OPTARG"
-    else
-	optfail
-    fi
+	if optparse -f; then
+		force=y
+	elif optparse -n; then
+		seek=n
+	elif optparse -r=; then
+		dstcommit="$OPTARG"
+	else
+		optfail
+	fi
 done
 
 [ "$ARGS" ] || usage
@@ -42,47 +42,47 @@ done
 dstlod=${ARGS[0]}
 
 do_change_branch() {
-    cg-object-id -c $dstcommit > $_git/refs/heads/$dstlod
+	cg-object-id -c $dstcommit > $_git/refs/heads/$dstlod
 }
 
 is_branch_name() {
-    [ -r "$_git/refs/heads/$1" ]
+	[ -r "$_git/refs/heads/$1" ]
 }
 
 is_valid_ref() {
-    [ $(git-rev-parse "$1") != "$1" ]
+	[ $(git-rev-parse "$1") != "$1" ]
 }
 
 [ $(readlink $_git/HEAD) != "refs/heads/$dstlod" ] ||
-    die "Already on branch \`$dstlod'"
+	die "Already on branch \`$dstlod'"
 
 if ! is_branch_name "$dstlod"; then
-    # not found
-    [ -n "$dstcommit" ] ||
-	die "Branch \`$dstlod' does not exists: please specify a branch-point to create it"
-    is_valid_ref "$dstcommit" ||
-	die "Cannot create branch on unknown ref \`$dstcommit'"
-    echo "Creating new branch \`$dstlod'"
-    do_change_branch
-else
-    # found
-    [ -r "$_git/refs/heads/$dstlod" ] ||
-	die "Ref \`$dstlod' already exists but is not a branch head"
-    if [ -n "$dstcommit" ]; then
-	if [ $force != y ]; then
-	    die "Branch \`$dstlod' already exists - use -f to force switching it to \`$dstcommit'"
-	fi
-	echo "Moving branch \`$dstlod'"
+	# not found
+	[ -n "$dstcommit" ] ||
+		die "Branch \`$dstlod' does not exists: please specify a branch-point to create it"
+	is_valid_ref "$dstcommit" ||
+		die "Cannot create branch on unknown ref \`$dstcommit'"
+	echo "Creating new branch \`$dstlod'"
 	do_change_branch
-    fi
+else
+	# found
+	[ -r "$_git/refs/heads/$dstlod" ] ||
+	die "Ref \`$dstlod' already exists but is not a branch head"
+	if [ -n "$dstcommit" ]; then
+		if [ $force != y ]; then
+			die "Branch \`$dstlod' already exists - use -f to force switching it to \`$dstcommit'"
+		fi
+		echo "Moving branch \`$dstlod'"
+		do_change_branch
+	fi
 fi
 
 if [ $seek = y ]; then
-    # do seek
-    cg-seek "$dstlod"
+	# do seek
+	cg-seek "$dstlod"
 
-    # fixup things to get real branchs
-    rm $_git/HEAD
-    ln -s "refs/heads/$dstlod" $_git/HEAD
-    rm -f $_git/head-name $_git/refs/heads/cg-seek-point $_git/blocked
+	# fixup things to get real branchs
+	rm $_git/HEAD
+	ln -s "refs/heads/$dstlod" $_git/HEAD
+	rm -f $_git/head-name $_git/refs/heads/cg-seek-point $_git/blocked
 fi
