@@ -190,7 +190,7 @@ list_untracked_files()
 	excludeflag="$1"; shift
 	EXCLUDE=
 	if [ "$excludeflag" != "no" -a "$excludeflag" != "noexclude" ]; then
-		for excl in '*.[ao]' '.*' tags '*~' '#*' ',,merge*' "$@"; do
+		for excl in '*.[ao]' '.*' '!.gitignore' tags '*~' '#*' "$@"; do
 			EXCLUDE="$EXCLUDE --exclude=$excl"
 		done
 		EXCLUDEFILE=$_git/info/exclude

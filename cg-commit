@@ -360,7 +360,7 @@ __END__
 	fi
 	if [ ! "$ignorecache" ] && [ ! "$merging" ]; then
 		eval newcommitfiles=($(grep ^CG:F $LOGMSG2 | sed 's/^CG:F *\(.*\)$/"\1"/'))
-		if [ ! "${newcommitfiles[*]}" ]; then
+		if [ ! "$force" ] && [ ! "${newcommitfiles[*]}" ]; then
 			rm $LOGMSG $LOGMSG2
 			[ "$quiet" ] && exit 0 || die 'Nothing to commit'
 		fi
