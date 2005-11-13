@@ -6,16 +6,16 @@
 # `cg-switch` allows to change the HEAD to another branch, and to
 # create a new branch at a given point.
 #
-#   $ cg-switch -r v1.0 v1.x              # creates a "1.x" branch at the v1.0 tag
+#   $ cg-switch -r v1.0 v1.x              # creates "1.x" branch and switch working copy to it
+#   $ cg-switch -n -r v1.0 v1.x           # creates "1.x" branch without touching working copy
 #   $ cg-switch master                    # back to trunk
 #   $ cg-switch -f -r that-branch master  # change "master" to refer to that-branch instead
 #
 # This tool is still much a work in progress.  Things to do include:
-# - mode to create the branch only without really switching
 # - deal with non-committed modifications before switch ?
 # - safeguards to avoid problem when playing with remote branches ?
 
-USAGE="cg-switch [-r COMMIT_ID] [-f] BRANCH"
+USAGE="cg-switch [-r COMMIT_ID] [-f] [-n] BRANCH"
 _git_requires_root=1
 
 . "${COGITO_LIB:-/export/work/yann/git/local/lib/cogito/}"cg-Xlib || exit 1
@@ -23,10 +23,13 @@ _git_requires_root=1
 set -e
 
 force=n
+seek=y
 dstcommit=
 while optparse; do
     if optparse -f; then
 	force=y
+    elif optparse -n; then
+	seek=n
     elif optparse -r=; then
 	dstcommit="$OPTARG"
     else
@@ -74,10 +77,12 @@ else
     fi
 fi
 
-# do seek
-cg-seek "$dstlod"
+if [ $seek = y ]; then
+    # do seek
+    cg-seek "$dstlod"
 
-# fixup things to get real branchs
-rm $_git/HEAD
-ln -s "refs/heads/$dstlod" $_git/HEAD
-rm -f $_git/head-name $_git/refs/heads/cg-seek-point $_git/blocked
+    # fixup things to get real branchs
+    rm $_git/HEAD
+    ln -s "refs/heads/$dstlod" $_git/HEAD
+    rm -f $_git/head-name $_git/refs/heads/cg-seek-point $_git/blocked
+fi
