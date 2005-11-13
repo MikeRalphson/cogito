@@ -6,9 +6,9 @@
 # `cg-switch` allows to change the HEAD to another branch, and to
 # create a new branch at a given point.
 #
-#   $ cg-switch v1.x v1.0              # creates a "1.x" branch at the v1.0 tag
-#   $ cg-switch master                 # back to trunk
-#   $ cg-switch -f master that-branch  # change "master" to refer to that-branch instead
+#   $ cg-switch -r v1.0 v1.x              # creates a "1.x" branch at the v1.0 tag
+#   $ cg-switch master                    # back to trunk
+#   $ cg-switch -f -r that-branch master  # change "master" to refer to that-branch instead
 #
 # This tool is still much a work in progress.  Things to do include:
 # - mode to create the branch only without really switching
@@ -24,9 +24,12 @@ _git_requires_root=1
 set -e
 
 force=n
+dstcommit=
 while optparse; do
     if optparse -f; then
 	force=y
+    elif optparse -r=; then
+	dstcommit="$OPTARG"
     else
 	optfail
     fi
@@ -35,20 +38,27 @@ done
 [ "$ARGS" ] || usage
 
 dstlod=${ARGS[0]}
-dstcommit=${ARGS[1]}
-
-[ $(readlink $_git/HEAD) != "refs/heads/$dstlod" ] ||
-    die "Already on branch \`$dstlod'"
 
 do_change_branch() {
     cg-object-id -c $dstcommit > $_git/refs/heads/$dstlod
 }
 
-if [ $(git-rev-parse $dstlod) = "$dstlod" ]; then
+is_branch_name() {
+    [ -r "$_git/refs/heads/$1" ]
+}
+
+is_valid_ref() {
+    [ $(git-rev-parse "$1") != "$1" ]
+}
+
+[ $(readlink $_git/HEAD) != "refs/heads/$dstlod" ] ||
+    die "Already on branch \`$dstlod'"
+
+if ! is_branch_name "$dstlod"; then
     # not found
     [ -n "$dstcommit" ] ||
 	die "Branch \`$dstlod' does not exists: please specify a branch-point to create it"
-    [ $(git-rev-parse $dstcommit) != "$dstcommit" ] ||
+    is_valid_ref "$dstcommit" ||
 	die "Cannot create branch on unknown ref \`$dstcommit'"
     echo "Creating new branch \`$dstlod'"
     do_change_branch
