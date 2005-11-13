@@ -22,14 +22,14 @@ _git_requires_root=1
 
 set -e
 
-force=n
-seek=y
+force=
+seek=1
 dstcommit=
 while optparse; do
 	if optparse -f; then
-		force=y
+		force=1
 	elif optparse -n; then
-		seek=n
+		seek=
 	elif optparse -r=; then
 		dstcommit="$OPTARG"
 	else
@@ -69,16 +69,14 @@ else
 	[ -r "$_git/refs/heads/$dsthead" ] ||
 	die "Ref \`$dsthead' already exists but is not a branch head"
 	if [ -n "$dstcommit" ]; then
-		if [ $force != y ]; then
+		[ "$force" ] ||
 			die "Branch \`$dsthead' already exists - use -f to force switching it to \`$dstcommit'"
-		fi
 		echo "Moving branch \`$dsthead'"
 		do_change_branch
 	fi
 fi
 
-if [ $seek = y ]; then
-	# do seek
+if [ "$seek" ]; then
 	cg-seek "$dsthead"
 
 	# fixup things to get real branchs
