@@ -8,28 +8,42 @@
 # `cg-switch` allows to change the HEAD to another line of development (LoD),
 # and to create a new LoD at a given point.
 #
-#      $ cg-switch v1.x v1.0    # creates a LoD for 1.x release at the v1.0 commit
-#      $ cg-switch master       # back to trunk for more developement next major release
+#   $ cg-switch v1.x v1.0              # creates a "1.x" LoD at the v1.0 tag
+#   $ cg-switch master                 # back to trunk
+#   $ cg-switch -f master that-branch  # change "master" to refer to that-branch instead
 #
 # This tool is still much a work in progress.  Things to do include:
 # - mode to create the LoD only without really switching
 # - deal with non-committed modifications before switch
 # - allow switching "master" to another LoD (-i for "in-place switch" ?)
 
-USAGE="cg-switch LoD [COMMIT_ID]"
+USAGE="cg-switch [-f] LoD [COMMIT_ID]"
 _git_requires_root=1
 
 . "${COGITO_LIB:-/export/work/yann/git/local/lib/cogito/}"cg-Xlib || exit 1
 
-[ "$ARGS" ] || usage
-
 set -e
+
+force=n
+while optparse; do
+    if optparse -f; then
+	force=y
+    else
+	optfail
+    fi
+done
+
+[ "$ARGS" ] || usage
 
 dstlod=${ARGS[0]}
 dstcommit=${ARGS[1]}
 
 [ $(readlink $_git/HEAD) != "refs/heads/$dstlod" ] ||
     die "Already on LoD \`$dstlod'"
+
+do_change_branch() {
+    cg-object-id -c $dstcommit > $_git/refs/heads/$dstlod
+}
 
 if [ $(git-rev-parse $dstlod) = "$dstlod" ]; then
     # not found
@@ -38,13 +52,17 @@ if [ $(git-rev-parse $dstlod) = "$dstlod" ]; then
     [ $(git-rev-parse $dstcommit) != "$dstcommit" ] ||
 	die "Cannot create LoD on unknown ref \`$dstcommit'"
     echo "Creating new LoD \`$dstlod'"
-    cg-object-id -c $dstcommit > $_git/refs/heads/$dstlod
+    do_change_branch
 else
     # found
-    [ -z "$dstcommit" ] ||
-	die "LoD \`$dstlod' already exists - NOT switching it to \`$dstcommit'"
     [ -r "$_git/refs/heads/$dstlod" ] ||
-	die "\`$dstlod' already exists but is not a head"
+	die "\`$dstlod' already exists but is not a LoD head"
+    if [ -n "$dstcommit" ]; then
+	if [ $force != y ]; then
+	    die "LoD \`$dstlod' already exists - use -f to force switching it to \`$dstcommit'"
+	fi
+	do_change_branch
+    fi
 fi
 
 # do seek
