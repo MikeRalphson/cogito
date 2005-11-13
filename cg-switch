@@ -60,6 +60,7 @@ else
 	if [ $force != y ]; then
 	    die "Branch \`$dstlod' already exists - use -f to force switching it to \`$dstcommit'"
 	fi
+	echo "Moving branch \`$dstlod'"
 	do_change_branch
     fi
 fi
