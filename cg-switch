@@ -15,7 +15,7 @@
 # - deal with non-committed modifications before switch ?
 # - safeguards to avoid problem when playing with remote branches ?
 
-USAGE="cg-switch [-r COMMIT_ID] [-f] [-n] BRANCH"
+USAGE="cg-switch [-f] [-n] [-r COMMIT_ID] BRANCH"
 _git_requires_root=1
 
 . ${COGITO_LIB}cg-Xlib || exit 1
