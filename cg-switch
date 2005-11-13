@@ -43,7 +43,7 @@ dsthead="${ARGS[0]}"
 
 
 do_change_branch() {
-	cg-object-id -c "$dstcommit" > "$_git/refs/heads/$dsthead"
+	git-update-ref "refs/heads/$dsthead" "$dstcommit"
 }
 
 is_branch_name() {
@@ -55,7 +55,7 @@ is_valid_ref() {
 }
 
 
-[ "$(readlink "$_git/HEAD")" != "refs/heads/$dsthead" ] ||
+[ "$(git-symbolic-ref HEAD)" != "refs/heads/$dsthead" ] ||
 	die "Already on branch '$dsthead'"
 
 if ! is_branch_name "$dsthead"; then
