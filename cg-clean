@@ -44,7 +44,7 @@ while optparse; do
 	fi
 done
 
-[ ${#ARGS[*]} -ge 1 ] || usage
+[ ${#ARGS[*]} = 0 ] || usage
 
 
 clean_dirs()
