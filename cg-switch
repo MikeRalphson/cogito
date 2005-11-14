@@ -47,11 +47,6 @@
 # original contents of the "v1.x" branch, be careful!):
 #
 # 	$ cg-switch -f -r testing v1.x
-#
-# TODO
-# ----
-# This tool is still much a work in progress.  Things to do include:
-# - safeguards to avoid problem when playing with remote branches ?
 
 USAGE="cg-switch [-f] [-n] [-r COMMIT_ID] BRANCH"
 _git_requires_root=1
@@ -78,6 +73,8 @@ done
 [ "$ARGS" ] || usage
 
 dsthead="${ARGS[0]}"
+[ -s "$_git/branches/$dsthead" ] &&
+	die "refusing to switch to a remote branch - see README for lengthy explanation"
 
 
 do_change_branch() {
