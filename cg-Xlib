@@ -246,7 +246,7 @@ tree_timewarp()
 
 	local patchfile=$(mktemp -t gituncommit.XXXXXX)
 	if [ "$rollback" ]; then
-		cg-diff >$patchfile
+		cg-diff -r $base >$patchfile
 		[ -s "$patchfile" ] &&
 			echo "Warning: uncommitted local changes, trying to bring them $dirstr" >&2
 	else

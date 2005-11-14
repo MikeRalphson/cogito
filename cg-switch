@@ -94,6 +94,8 @@ if [ "$seek" ]; then
 fi
 
 
+curcommit="$(cg-object-id -c)"
+
 if [ -s "$_git/refs/heads/$dsthead" ]; then
 	# Existing branch
 	[ -r "$_git/refs/heads/$dsthead" ] ||
@@ -115,7 +117,6 @@ fi
 
 
 if [ "$seek" ]; then
-	curcommit="$(cg-object-id -c)"
 	[ -n "$dstcommit" ] || dstcommit="$(cg-object-id -c "$dsthead")"
 	echo "Switching to branch $dsthead..."
 	if [ "x$curcommit" != "x$dstcommit" ]; then
