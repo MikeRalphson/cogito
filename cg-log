@@ -47,6 +47,9 @@
 #	End the log listing at the merge base of the -r arguments
 #	(defaulting to HEAD and origin).
 #
+# -M, --no-merges::
+#	Don't display merge commits in the log.
+#
 # -s::
 #	Show a one line summary for each log entry. The summary contains
 #	information about the commit date, the author, the first line
@@ -57,9 +60,6 @@
 #	Generate the changes summary, listing the commit titles grouped
 #	by their author. This is also known as a "shortlog", suitable
 #	e.g. for contribution summaries of announcements.
-#
-# --no-merges::
-#	Don't display merges in the log.
 #
 # -uUSERNAME::
 #	List only commits where author or committer contains 'USERNAME'.
@@ -98,7 +98,7 @@
 # things more comfortable to SVN users). See cogito(7) for more details
 # about revision specification.
 
-USAGE="cg-log [-c] [-f] [-m] [-s] [-uUSERNAME] [-d DATE] [-r FROM_ID[..TO_ID]] FILE..."
+USAGE="cg-log [-c] [-f] [-m] [-M] [-s] [-uUSERNAME] [-d DATE] [-r FROM_ID[..TO_ID]] FILE..."
 
 . ${COGITO_LIB}cg-Xlib || exit 1
 # Try to fix the annoying "Broken pipe" output. May not help, but apparently
@@ -300,12 +300,12 @@ while optparse; do
 		fi
 	elif optparse -m; then
 		mergebase=1
+	elif optparse -M || optparse --no-merges; then
+		no_merges="--no-merges"
 	elif optparse -s; then
 		summary=1
 	elif optparse --summary; then
 		shortlog=1
-	elif optparse --no-merges; then
-		no_merges="--no-merges"
 	else
 		optfail
 	fi
