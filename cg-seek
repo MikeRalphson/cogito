@@ -17,7 +17,8 @@
 #
 # For intuitiveness, specifying the branch name (`cg-seek master`) will do
 # the right thing too. If you want to migrate your working tree to another
-# branch, use `cg-clone` or `cg-switch`.
+# branch, use `cg-clone` to create a new tree for the new branch, or
+# `cg-switch` to change your current tree to use the new branch.
 
 USAGE="cg-seek [COMMIT_ID]"
 _git_requires_root=1

@@ -25,7 +25,7 @@
 #	manually later, but you will need to pass cg-commit the -C parameter.
 #
 # -m MESSAGE::
-#	Specify the commit message for the initial commit. See cg-commit(1)
+#	Specify the commit message for the initial commit. See `cg-commit`
 #	documentation for details.
 #
 # -N::
