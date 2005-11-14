@@ -55,6 +55,20 @@ _git_requires_root=1
 
 set -e
 
+
+do_change_branch() {
+	git-update-ref "refs/heads/$dsthead" "$dstcommit"
+}
+
+is_branch_name() {
+	[ -r "$_git/refs/heads/$1" ]
+}
+
+is_valid_ref() {
+	[ "$(git-rev-parse "$1")" != "$1" ]
+}
+
+
 force=
 seek=1
 dstcommit=
@@ -75,19 +89,6 @@ done
 dsthead="${ARGS[0]}"
 [ -s "$_git/branches/$dsthead" ] &&
 	die "refusing to switch to a remote branch - see README for lengthy explanation"
-
-
-do_change_branch() {
-	git-update-ref "refs/heads/$dsthead" "$dstcommit"
-}
-
-is_branch_name() {
-	[ -r "$_git/refs/heads/$1" ]
-}
-
-is_valid_ref() {
-	[ "$(git-rev-parse "$1")" != "$1" ]
-}
 
 
 [ "$(git-symbolic-ref HEAD)" != "refs/heads/$dsthead" ] ||
