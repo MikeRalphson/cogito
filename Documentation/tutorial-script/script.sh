@@ -1,4 +1,4 @@
-#!/bin/sh -e
+#!/bin/bash
 #
 # FIXME: This script has many GITisms. Some of them are unnecessary, while
 # some stem from missing Cogito features (especially no support for pushing
@@ -10,9 +10,15 @@
 # for executing this script to make sure we did not break it with any
 # Cogito changes.
 should_fail () {
-	echo "Expected failure, got success - aborting" >&2
+	echo "Expected failure, got success on line ${BASH_LINENO[0]}" \
+	     "- aborting" >&2
+	trap - exit
 	exit 1
 }
+
+# Conversely, if something fails when it shouldn't, report it and exit.
+set -e
+trap 'echo >&2 "Unexpected error $? on line $LINENO"; exit 1' exit
 
 
 ### Set up playground
@@ -309,4 +315,5 @@ cg-add stack.h
 cg-commit -m "Merge with 0.4"
 
 # Great, we are done.
+trap - exit
 echo "Script completed successfully!"
