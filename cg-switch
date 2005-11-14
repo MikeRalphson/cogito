@@ -84,21 +84,21 @@ dsthead="${ARGS[0]}"
 [ -s "$_git/branches/$dsthead" ] &&
 	die "refusing to switch to a remote branch - see README for lengthy explanation"
 
-
 [ "$(git-symbolic-ref HEAD)" != "refs/heads/$dsthead" ] ||
-	die "Already on branch '$dsthead'"
+	die "already on branch '$dsthead'"
 
 if [ "$seek" ]; then
 	[ -s "$_git/blocked" ] && die "switch blocked: $(cat "$_git/blocked")"
 fi
 
+
 if [ -s "$_git/refs/heads/$dsthead" ]; then
 	# Existing branch
 	[ -r "$_git/refs/heads/$dsthead" ] ||
-		die "Ref '$dsthead' already exists but is not a branch head"
+		die "reference 'refs/heads/$dsthead' is unreadable"
 	if [ "$dstcommit" ]; then
 		[ "$force" ] ||
-			die "Branch '$dsthead' already exists - use -f to force switching it to '$dstcommit'"
+			die "branch '$dsthead' already exists - use -f to force the switch"
 		echo "Moving branch '$dsthead'"
 		do_change_branch
 	fi
@@ -109,6 +109,7 @@ else
 	echo "Creating new branch '$dsthead'"
 	do_change_branch
 fi
+
 
 if [ "$seek" ]; then
 	curcommit="$(cg-object-id -c)"
