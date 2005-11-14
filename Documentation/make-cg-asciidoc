@@ -110,6 +110,6 @@ $COPYRIGHT
 
 SEE ALSO
 --------
-$COMMAND command is part of gitlink:cogito[7],
+$COMMAND command is part of gitlink:${PACKAGE}[7],
 a toolkit for managing gitlink:git[7] trees.
 __END__
