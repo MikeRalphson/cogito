@@ -78,7 +78,7 @@ while optparse; do
 	fi
 done
 
-[ "$ARGS" ] || usage
+[ "${#ARGS[@]}" -eq "1" ] || usage
 
 dsthead="${ARGS[0]}"
 [ -s "$_git/branches/$dsthead" ] &&
