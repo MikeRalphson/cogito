@@ -30,7 +30,7 @@ while optparse; do
 	fi
 done
 
-[ "${ARGS[*]}" ] || usage
+[ -n "${ARGS[*]}" ] || usage
 
 TMPFILE=$(mktemp -t gitrm.XXXXXX) || exit 1
 error=

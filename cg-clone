@@ -46,7 +46,7 @@ done
 
 location=${ARGS[0]}
 
-[ "$location" ] || usage
+[ -n "$location" ] || usage
 location=${location%/}
 
 destdir=${ARGS[1]}

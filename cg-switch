@@ -98,7 +98,7 @@ if [ -s "$_git/refs/heads/$dsthead" ]; then
 	# Existing branch
 	[ -r "$_git/refs/heads/$dsthead" ] ||
 		die "reference '$_git/refs/heads/$dsthead' is unreadable"
-	if [ "$dstcommit" ]; then
+	if [ -n "$dstcommit" ]; then
 		[ "$force" ] ||
 			die "branch $dsthead already exists - use -f to force the switch"
 		srccommit="$(cg-object-id -c "$dsthead")"
@@ -116,9 +116,9 @@ fi
 
 if [ "$seek" ]; then
 	curcommit="$(cg-object-id -c)"
-	[ "$dstcommit" ] || dstcommit="$(cg-object-id -c "$dsthead")"
+	[ -n "$dstcommit" ] || dstcommit="$(cg-object-id -c "$dsthead")"
 	echo "Switching to branch $dsthead..."
-	if [ "$curcommit" != "$dstcommit" ]; then
+	if [ "x$curcommit" != "x$dstcommit" ]; then
 		tree_timewarp --no-head-update "along" "please rollback" "$curcommit" "$dstcommit"
 	fi
 	git-symbolic-ref HEAD "refs/heads/$dsthead"

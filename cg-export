@@ -32,7 +32,7 @@ fi
 
 dest=${ARGS[0]}
 
-([ "$dest" ] && [ "$id" ]) || usage
+([ -n "$dest" ] && [ -n "$id" ]) || usage
 
 [ -e "$dest" ] && die "$dest already exists."
 
