@@ -138,12 +138,9 @@ if [ ! "$join" ]; then
 		echo "Multiple merge base candidates, please select one manually (by running cg-merge -b BASE [BRANCH]):"
 		echo "${baselist[*]}" | tr ' ' '\n'
 		echo
+		conservative_merge_base "${baselist[@]}" # -> _cg_baselist
 		echo -n "The most conservative base (but likely a lot of conflicts): "
-		for (( safecounter=0; $safecounter < 1000; safecounter++ )) ; do
-			baselist=($(git-merge-base --all "${baselist[@]}"))
-			[ "${#baselist[@]}" -le "1" ] && break
-		done
-		echo "${baselist[*]}"
+		echo "${_cg_baselist[*]}"
 		exit 3
 	fi >&2
 

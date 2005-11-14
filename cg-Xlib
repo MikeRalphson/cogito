@@ -277,6 +277,24 @@ tree_timewarp()
 	git-update-index --refresh >/dev/null
 }
 
+# Determine the most conservative merge base of two commits - keep
+# recursing until we get only a single candidate for a merge base.
+# The merge base is returned as $_cg_baselist. If we had to recurse,
+# a non-zero number is stored in $_cg_base_conservative (otherwise,
+# it's set empty).
+conservative_merge_base()
+{
+	local baselist
+	baselist=("$@")
+	_cg_base_conservative=
+	for (( safecounter=0; $safecounter < 1000; safecounter++ )) ; do
+		baselist=($(git-merge-base --all "${baselist[@]}")) || return 1
+		[ "${#baselist[@]}" -le "1" ] && break
+	done
+	[ $safecounter -gt 0 ] && _cg_base_conservative=$safecounter
+	_cg_baselist=("${baselist[@]}")
+}
+
 # update_index will refresh the index and list the local modifications
 # Note that this isn't usually safe, since some of the modifications may
 # be recorded in the index file - modulo adds and removes also cg-restore

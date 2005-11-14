@@ -317,15 +317,18 @@ if [ "$mergebase" ]; then
 	[ "$log_end" ] || log_end="origin"
 	id1=$(cg-object-id -c "$log_start") || exit 1
 	id2=$(cg-object-id -c "$log_end") || exit 1
-	log_start=$(git-merge-base $id1 $id2) || exit 1
+	conservative_merge_base $id1 $id2 || exit 1
+	[ "$_cg_base_conservative" ] &&
+		echo -e "Warning: Multiple merge bases, picking the most conservative one\a" >&2
+	log_start=$_cg_baselist
 fi
 
 if [ "$shortlog" ]; then
-	revls="git-rev-list --pretty=short $no_merges $date_from $date_to"
+	revls="git-rev-list --pretty=short"
 else
-	revls="git-rev-list --pretty=raw $no_merges $date_from $date_to"
+	revls="git-rev-list --pretty=raw"
 fi
-revls="$revls $date_from $date_to"
+revls="$revls $no_merges $date_from $date_to"
 
 id1="$(cg-object-id -c "$log_start")" || exit 1
 if [ "$log_end" ]; then

@@ -143,7 +143,10 @@ if [ "$mergebase" ]; then
 	[ "$log_end" ] || log_end="origin"
 	id1=$(cg-object-id -c "$log_start") || exit 1
 	id2=$(cg-object-id -c "$log_end") || exit 1
-	log_start=$(git-merge-base $id1 $id2) || exit 1
+	conservative_merge_base $id1 $id2 || exit 1
+	[ "$_cg_base_conservative" ] &&
+		echo -e "Warning: Multiple merge bases, picking the most conservative one\a" >&2
+	log_start=$_cg_baselist
 fi
 
 if [ "$log_end" ]; then
