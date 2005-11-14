@@ -124,8 +124,8 @@ if [ "$gitstatus" ]; then
 
 	echo "Heads:"
 	for head in $_git/refs/heads/*; do
-		headsha1=$(cat $head)
-		headname=$(basename $head)
+		headsha1=$(cat "$head")
+		headname=$(basename "$head")
 		[ "$headname" = "cg-seek-point" ] && continue
 		cf=" "; rf=" "
 		[ "$headname" = "$_git_head" ] && cf=">"
