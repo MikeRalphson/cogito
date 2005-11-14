@@ -157,7 +157,10 @@ if [ "$mergebase" ]; then
 	[ "$id2" != " " ] || id2="origin"
 	id1=$(cg-object-id -c "$id1") || exit 1
 	id2=$(cg-object-id -c "$id2") || exit 1
-	id1=$(git-merge-base $id1 $id2) || exit 1
+	conservative_merge_base $id1 $id2 || exit 1
+	[ "$_cg_base_conservative" ] &&
+		echo -e "Warning: Multiple merge bases, picking the most conservative one\a" >&2
+	id1=$_cg_baselist
 fi
 
 
