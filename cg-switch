@@ -109,7 +109,7 @@ if [ -s "$_git/refs/heads/$dsthead" ]; then
 else
 	# New branch
 	[ "$dstcommit" ] || dstcommit="$(cg-object-id -c)"
-	echo "Creating new branch $dsthead"
+	echo "Creating new branch $dsthead: $dstcommit"
 	repoint_head "$dsthead" "$dstcommit"
 fi
 
