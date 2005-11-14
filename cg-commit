@@ -451,7 +451,11 @@ if [ "$newhead" ]; then
 
 	# Trigger the postcommit hook
 	branchname=
-	[ -s $_git/branch-name ] && branchname=$(cat $_git/branch-name)
+	if [ -s $_git/branch-name ]; then
+		echo "Warning: .git/branch-name is deprecated and support for it will be removed soon." >&2
+		echo "Warning: So please stop relying on it, or complain at pasky@suse.cz. Thanks." >&2
+		branchname=$(cat $_git/branch-name)
+	fi
 	[ -z "$branchname" ] && [ "$_git_head" != "master" ] && branchname="$_git_head"
 	if [ -x $_git/hooks/commit-post ]; then
 		# We just hope that for the initial commit, the user didn't
