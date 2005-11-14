@@ -277,15 +277,19 @@ tree_timewarp()
 
 # Determine the most conservative merge base of two commits - keep
 # recursing until we get only a single candidate for a merge base.
-# The merge base is returned as $_cg_baselist.
+# The merge base is returned as $_cg_baselist. If we had to recurse,
+# a non-zero number is stored in $_cg_base_conservative (otherwise,
+# it's set empty).
 conservative_merge_base()
 {
 	local baselist
 	baselist=("$@")
+	_cg_base_conservative=
 	for (( safecounter=0; $safecounter < 1000; safecounter++ )) ; do
 		baselist=($(git-merge-base --all "${baselist[@]}"))
 		[ "${#baselist[@]}" -le "1" ] && break
 	done
+	[ $safecounter -gt 0 ] && _cg_base_conservative=$safecounter
 	_cg_baselist=("${baselist[@]}")
 }
 
