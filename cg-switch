@@ -1,19 +1,54 @@
 #!/usr/bin/env bash
 #
-# Switch the working tree to another (possibly new) branch
-# Copyright (c) Yann Dirson, 2005
+# Switch your current local branch.
+# Copyright (c) Yann Dirson, Petr Baudis  2005
 #
-# `cg-switch` allows to change the HEAD to another branch, and to
-# create a new branch at a given point.
+# `cg-switch` can switch your current local branch (and working copy)
+# to an existing branch, or create a new branch based on a given commit.
 #
-#   $ cg-switch -r v1.0 v1.x              # creates "1.x" branch and switch working copy to it
-#   $ cg-switch -n -r v1.0 v1.x           # creates "1.x" branch without touching working copy
-#   $ cg-switch master                    # back to trunk
-#   $ cg-switch -f -r that-branch master  # change "master" to refer to that-branch instead
+# Terminology note: This command concerns local branches (also called
+# "heads"), not remote branches (those managed by `cg-branch-add`).
 #
-# This tool is still much a work in progress.  Things to do include:
-# - deal with non-committed modifications before switch ?
-# - safeguards to avoid problem when playing with remote branches ?
+# OPTIONS
+# -------
+# -f::
+#	Force the branch's head pointer update even if the branch
+#	already exists. WARNING: The pointer to the original contents
+#	of the branch will be lost! The contents itself will not be
+#	deleted, `git-fsck-objects --unreachable` might help you to
+#	find it.
+#
+# -n::
+#	Do not switch your current branch to the given branch. This
+#	will make cg-switch to only create or update the branch, but
+#	leave your working copy alone.
+#
+# -r COMMIT_ID::
+#	Point the branch at the given commit. Defaults to the current
+#	commit when creating a new branch; when switching to an existing
+#	branch, the branch pointer is not modified if no '-r' is passed.
+#
+# EXAMPLE USAGE
+# -------------
+# To create a "v1.x" branch based on the commit "v1.0" and switch the
+# working copy to it, making it your current branch, do:
+#
+# 	$ cg-switch -r v1.0 v1.x
+#
+# If you want to create the branch but don't switch your working copy
+# to it (so that your current branch stays the same as before), do:
+#
+# 	$ cg-switch -n -r v1.0 v1.x
+#
+# If you want to go back to the 'master' branch, just do:
+#
+# 	$ cg-switch master
+#
+# To change the "v1.x" branch to refer to the latest commit on the
+# "testing" branch, do (WARNING: you will lose the pointer to the
+# original contents of the "v1.x" branch, be careful!):
+#
+# 	$ cg-switch -f -r testing v1.x
 
 USAGE="cg-switch [-f] [-n] [-r COMMIT_ID] BRANCH"
 _git_requires_root=1
@@ -21,25 +56,6 @@ _git_requires_root=1
 . ${COGITO_LIB}cg-Xlib || exit 1
 
 set -e
-
-force=
-seek=1
-dstcommit=
-while optparse; do
-	if optparse -f; then
-		force=1
-	elif optparse -n; then
-		seek=
-	elif optparse -r=; then
-		dstcommit="$OPTARG"
-	else
-		optfail
-	fi
-done
-
-[ ${#ARGS[*]} = 1 ] || usage
-
-dsthead="${ARGS[0]}"
 
 
 do_change_branch() {
@@ -55,6 +71,28 @@ is_valid_ref() {
 }
 
 
+force=
+seek=1
+dstcommit=
+while optparse; do
+	if optparse -f; then
+		force=1
+	elif optparse -n; then
+		seek=
+	elif optparse -r=; then
+		dstcommit="$(cg-object-id -c "$OPTARG")" || exit 1
+	else
+		optfail
+	fi
+done
+
+[ ${#ARGS[*]} = 1 ] || usage
+
+dsthead="${ARGS[0]}"
+[ -s "$_git/branches/$dsthead" ] &&
+	die "refusing to switch to a remote branch - see README for lengthy explanation"
+
+
 [ "$(git-symbolic-ref HEAD)" != "refs/heads/$dsthead" ] ||
 	die "Already on branch '$dsthead'"
 
@@ -63,18 +101,15 @@ if [ "$seek" ]; then
 fi
 
 if ! is_branch_name "$dsthead"; then
-	# not found
-	[ -n "$dstcommit" ] ||
-		die "Branch '$dsthead' does not exists: please specify a branch-point to create it"
-	is_valid_ref "$dstcommit" ||
-		die "Cannot create branch on unknown ref '$dstcommit'"
+	# New branch
+	[ "$dstcommit" ] || dstcommit="$(cg-object-id -c)"
 	echo "Creating new branch '$dsthead'"
 	do_change_branch
 else
-	# found
+	# Existing branch
 	[ -r "$_git/refs/heads/$dsthead" ] ||
 		die "Ref '$dsthead' already exists but is not a branch head"
-	if [ -n "$dstcommit" ]; then
+	if [ "$dstcommit" ]; then
 		[ "$force" ] ||
 			die "Branch '$dsthead' already exists - use -f to force switching it to '$dstcommit'"
 		echo "Moving branch '$dsthead'"
@@ -84,7 +119,7 @@ fi
 
 if [ "$seek" ]; then
 	curcommit="$(cg-object-id -c)"
-	dstcommit="$(cg-object-id -c "$dsthead")"
+	[ "$dstcommit" ] || dstcommit="$(cg-object-id -c "$dsthead")"
 	if [ "$curcommit" != "$dstcommit" ]; then
 		tree_timewarp --no-head-update "along" "please rollback" "$curcommit" "$dstcommit"
 	fi
