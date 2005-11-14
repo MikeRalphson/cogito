@@ -5,6 +5,8 @@
 #
 # Takes a path to a Cogito script. Prints the manpage to stdout.
 
+PACKAGE=${CGPACKAGE:-cogito}
+
 command=$1
 
 if [ ! -e "$command" ]; then
