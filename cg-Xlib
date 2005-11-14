@@ -286,7 +286,7 @@ conservative_merge_base()
 	baselist=("$@")
 	_cg_base_conservative=
 	for (( safecounter=0; $safecounter < 1000; safecounter++ )) ; do
-		baselist=($(git-merge-base --all "${baselist[@]}"))
+		baselist=($(git-merge-base --all "${baselist[@]}")) || return 1
 		[ "${#baselist[@]}" -le "1" ] && break
 	done
 	[ $safecounter -gt 0 ] && _cg_base_conservative=$safecounter
