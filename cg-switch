@@ -58,16 +58,10 @@ _git_requires_root=1
 set -e
 
 
-do_change_branch() {
-	git-update-ref "refs/heads/$dsthead" "$dstcommit"
-}
-
-is_branch_name() {
-	[ -r "$_git/refs/heads/$1" ]
-}
-
-is_valid_ref() {
-	[ "$(git-rev-parse "$1")" != "$1" ]
+repoint_head() {
+	# $oldcommit is optional
+	local dsthead="$1" dstcommit="$2" oldcommit="$3"
+	git-update-ref "refs/heads/$dsthead" "$dstcommit" $oldcommit
 }
 
 
@@ -86,36 +80,39 @@ while optparse; do
 	fi
 done
 
-[ ${#ARGS[*]} = 1 ] || usage
+[ "${#ARGS[@]}" -eq "1" ] || usage
 
 dsthead="${ARGS[0]}"
 [ -s "$_git/branches/$dsthead" ] &&
 	die "refusing to switch to a remote branch - see README for lengthy explanation"
 
-
-[ "$(git-symbolic-ref HEAD)" != "refs/heads/$dsthead" ] ||
-	die "Already on branch '$dsthead'"
+[ "$(git-symbolic-ref HEAD)" != "refs/heads/$dsthead" ] || [ "$dstcommit" ] ||
+	die "already on branch $dsthead"
 
 if [ "$seek" ]; then
 	[ -s "$_git/blocked" ] && die "switch blocked: $(cat "$_git/blocked")"
 fi
 
-if ! is_branch_name "$dsthead"; then
-	# New branch
-	[ -n "$dstcommit" ] || dstcommit="$(cg-object-id -c)"
-	echo "Creating new branch '$dsthead'"
-	do_change_branch
-else
+
+if [ -s "$_git/refs/heads/$dsthead" ]; then
 	# Existing branch
 	[ -r "$_git/refs/heads/$dsthead" ] ||
-		die "Ref '$dsthead' already exists but is not a branch head"
+		die "reference '$_git/refs/heads/$dsthead' is unreadable"
 	if [ -n "$dstcommit" ]; then
 		[ "$force" ] ||
-			die "Branch '$dsthead' already exists - use -f to force switching it to '$dstcommit'"
-		echo "Moving branch '$dsthead'"
-		do_change_branch
+			die "branch $dsthead already exists - use -f to force the switch"
+		srccommit="$(cg-object-id -c "$dsthead")"
+		echo "Repointing branch $dsthead: $srccommit -> $dstcommit"
+		repoint_head "$dsthead" "$dstcommit" "$srccommit"
 	fi
+
+else
+	# New branch
+	[ "$dstcommit" ] || dstcommit="$(cg-object-id -c)"
+	echo "Creating new branch $dsthead: $dstcommit"
+	repoint_head "$dsthead" "$dstcommit"
 fi
+
 
 if [ "$seek" ]; then
 	curcommit="$(cg-object-id -c)"

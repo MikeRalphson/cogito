@@ -19,6 +19,13 @@
 # the right thing too. If you want to migrate your working tree to another
 # branch, use `cg-clone` to create a new tree for the new branch, or
 # `cg-switch` to change your current tree to use the new branch.
+#
+# NOTES
+# -----
+# If you want to permanently switch your branch to a different commit id
+# (forgetting its current contents), you can use the `cg-switch` command:
+#
+#	$ cg-switch -f -r COMMIT_ID CURRENT_HEAD_NAME
 
 USAGE="cg-seek [COMMIT_ID]"
 _git_requires_root=1
