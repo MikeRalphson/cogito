@@ -1,16 +1,55 @@
 #!/usr/bin/env bash
 #
-# Switch the working tree to another (possibly new) branch
-# Copyright (c) Yann Dirson, 2005
+# Switch your current local branch
+# Copyright (c) Yann Dirson, Petr Baudis  2005
 #
-# `cg-switch` allows to change the HEAD to another branch, and to
-# create a new branch at a given point.
+# `cg-switch` can switch your current local branch (and working copy)
+# to an existing branch, or create a new branch based on a given commit.
 #
-#   $ cg-switch -r v1.0 v1.x              # creates "1.x" branch and switch working copy to it
-#   $ cg-switch -n -r v1.0 v1.x           # creates "1.x" branch without touching working copy
-#   $ cg-switch master                    # back to trunk
-#   $ cg-switch -f -r that-branch master  # change "master" to refer to that-branch instead
+# Terminology note: This command concerns local branches (also called
+# "heads"), not remote branches (those managed by `cg-branch-add`).
 #
+# OPTIONS
+# -------
+# -f::
+#	Force the branch's head pointer update even if the branch
+#	already exists. WARNING: The pointer to the original contents
+#	of the branch will be lost! The contents itself will not be
+#	deleted, `git-fsck-objects --unreachable` might help you to
+#	find it.
+#
+# -n::
+#	Do not switch your current branch to the given branch. This
+#	will make cg-switch to only create or update the branch, but
+#	leave your working copy alone.
+#
+# -r COMMIT_ID::
+#	Point the branch at the given commit.
+#
+# EXAMPLE USAGE
+# -------------
+# To create a "v1.x" branch based on the commit "v1.0" and switch the
+# working copy to it, making it your current branch, do:
+#
+# 	$ cg-switch -r v1.0 v1.x
+#
+# If you want to create the branch but don't switch your working copy
+# to it (so that your current branch stays the same as before), do:
+#
+# 	$ cg-switch -n -r v1.0 v1.x
+#
+# If you want to go back to the 'master' branch, just do:
+#
+# 	$ cg-switch master
+#
+# To change the "v1.x" branch to refer to the latest commit on the
+# "testing" branch, do (WARNING: you will lose the pointer to the
+# original contents of the "v1.x" branch, be careful!):
+#
+# 	$ cg-switch -f -r testing v1.x
+#
+# TODO
+# ----
 # This tool is still much a work in progress.  Things to do include:
 # - deal with non-committed modifications before switch ?
 # - safeguards to avoid problem when playing with remote branches ?
