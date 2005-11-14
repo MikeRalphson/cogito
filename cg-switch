@@ -119,7 +119,8 @@ if [ "$seek" ]; then
 	[ -n "$dstcommit" ] || dstcommit="$(cg-object-id -c "$dsthead")"
 	echo "Switching to branch $dsthead..."
 	if [ "x$curcommit" != "x$dstcommit" ]; then
-		tree_timewarp --no-head-update "along" "please rollback" "$curcommit" "$dstcommit"
+		# tree_timewarp returns false on local modifications
+		tree_timewarp --no-head-update "along" "please rollback" "$curcommit" "$dstcommit" || :
 	fi
 	git-symbolic-ref HEAD "refs/heads/$dsthead"
 fi

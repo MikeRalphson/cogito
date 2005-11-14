@@ -229,6 +229,7 @@ showdate()
 # Usage: tree_timewarp [--no-head-update] DIRECTION_STR ROLLBACK_BOOL BASE BRANCH
 # Reset the current tree from version BASE to version BRANCH, properly updating
 # the working copy (if ROLLBACK_BOOL) and trying to keep local changes.
+# Returns false in case of local modifications.
 tree_timewarp()
 {
 	local no_head_update=
@@ -272,6 +273,7 @@ tree_timewarp()
 	cat $patchfile | cg-patch
 	rm $patchfile
 
+	# Returns false for local modifications.
 	git-update-index --refresh >/dev/null
 }
 
