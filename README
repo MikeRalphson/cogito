@@ -409,17 +409,16 @@ repository locally, it can be actually very cheap, basically for free with
 
 But what if you still do not want multiple repositories? The key here is to
 change your "current head" from 'master' to some new head, and then to be
-able to switch back and forth. This is unfortunately something Cogito does
-not let you do directly right now, but you can use core GIT commands
+able to switch back and forth:
 
-	$ git-checkout -b aspyk
+	$ cg-switch aspyk
 
-to create a new 'aspyk' head and switch to it, and
+to create a new 'aspyk' head (based on your current commit) and switch
+to it, and
 
-	$ git-checkout master
+	$ cg-switch master
 
-to switch back to 'master' later, etc. Note that between the switching,
-Cogito will work just fine even if your current head is not 'master'.
+to switch back to 'master' later, etc.
 
 You can get the list of available heads by
 
