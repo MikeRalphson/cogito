@@ -102,14 +102,14 @@ fi
 
 if ! is_branch_name "$dsthead"; then
 	# New branch
-	[ "$dstcommit" ] || dstcommit="$(cg-object-id -c)"
+	[ -n "$dstcommit" ] || dstcommit="$(cg-object-id -c)"
 	echo "Creating new branch '$dsthead'"
 	do_change_branch
 else
 	# Existing branch
 	[ -r "$_git/refs/heads/$dsthead" ] ||
 		die "Ref '$dsthead' already exists but is not a branch head"
-	if [ "$dstcommit" ]; then
+	if [ -n "$dstcommit" ]; then
 		[ "$force" ] ||
 			die "Branch '$dsthead' already exists - use -f to force switching it to '$dstcommit'"
 		echo "Moving branch '$dsthead'"
@@ -119,8 +119,8 @@ fi
 
 if [ "$seek" ]; then
 	curcommit="$(cg-object-id -c)"
-	[ "$dstcommit" ] || dstcommit="$(cg-object-id -c "$dsthead")"
-	if [ "$curcommit" != "$dstcommit" ]; then
+	[ -n "$dstcommit" ] || dstcommit="$(cg-object-id -c "$dsthead")"
+	if [ "x$curcommit" != "x$dstcommit" ]; then
 		tree_timewarp --no-head-update "along" "please rollback" "$curcommit" "$dstcommit"
 	fi
 	git-symbolic-ref HEAD "refs/heads/$dsthead"
