@@ -59,7 +59,8 @@ set -e
 
 
 do_change_branch() {
-	git-update-ref "refs/heads/$dsthead" "$dstcommit"
+	local oldcommit="$1"
+	git-update-ref "refs/heads/$dsthead" "$dstcommit" $oldcommit
 }
 
 
@@ -99,8 +100,9 @@ if [ -s "$_git/refs/heads/$dsthead" ]; then
 	if [ "$dstcommit" ]; then
 		[ "$force" ] ||
 			die "branch '$dsthead' already exists - use -f to force the switch"
-		echo "Moving branch '$dsthead'"
-		do_change_branch
+		srccommit="$(cg-object-id -c "$dsthead")"
+		echo "Repointing branch '$dsthead': $srccommit -> $dstcommit"
+		do_change_branch $srccommit
 	fi
 
 else
