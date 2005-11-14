@@ -86,7 +86,7 @@ dsthead="${ARGS[0]}"
 [ -s "$_git/branches/$dsthead" ] &&
 	die "refusing to switch to a remote branch - see README for lengthy explanation"
 
-[ "$(git-symbolic-ref HEAD)" != "refs/heads/$dsthead" ] || [ "$dstcommit" ] ||
+[ "$(git-symbolic-ref HEAD)" != "refs/heads/$dsthead" ] || [ -n "$dstcommit" ] ||
 	die "already on branch $dsthead"
 
 if [ "$seek" ]; then
