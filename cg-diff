@@ -179,7 +179,7 @@ if [ "$id2" = " " ]; then
 
 	# FIXME: Update ret based on what did we match. And take "$@"
 	# to account after all.
-	ret=
+	#ret=
 	# xargs on FreeBSD is hardcoded to --no-run-if-empty :/
 	if [ -s "$filter" ]; then
 		cat $filter | path_xargs git-diff-index -r -p $tree | colorize | pager
@@ -189,8 +189,9 @@ if [ "$id2" = " " ]; then
 
 	rm $filter
 
-	[ "$ret" ] && die "no files matched"
-	exit $ret
+	#[ "$ret" ] && die "no files matched"
+	#exit $ret
+	exit 0
 fi
 
 
