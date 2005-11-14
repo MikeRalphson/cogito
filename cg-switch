@@ -119,7 +119,7 @@ fi
 
 if [ "$seek" ]; then
 	curcommit="$(cg-object-id -c)"
-	dstcommit="$(cg-object-id -c "$dsthead")"
+	[ "$dstcommit" ] || dstcommit="$(cg-object-id -c "$dsthead")"
 	if [ "$curcommit" != "$dstcommit" ]; then
 		tree_timewarp --no-head-update "along" "please rollback" "$curcommit" "$dstcommit"
 	fi
