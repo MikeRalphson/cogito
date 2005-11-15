@@ -30,7 +30,7 @@ test_expect_success 'seeking to the first commit' \
 test_expect_success 'we should have .git/head-name == master' \
 	"[ $(cat .git/head-name) = master ]"
 test_expect_success 'current branch should be cg-seek-point' \
-	"[ $(basename $(readlink .git/HEAD)) = cg-seek-point ]"
+	"[ $(basename $(git-symbolic-ref HEAD)) = cg-seek-point ]"
 test_expect_success 'current commit should be commit1' \
 	"[ $(cg-object-id -c) = $commit1 ]"
 
@@ -47,14 +47,16 @@ test_expect_success 'identical should be identical' \
 test_expect_success 'seeking to the second commit' \
 	"cg-seek $commit2"
 test_expect_success 'we should not unseeked properly' \
-	"([ -e .git/head-name ] && [ $(basename $(readlink .git/HEAD)) = cg-seek-point ])"
+	"([ -e .git/head-name ] &&
+	 [ $(basename $(git-symbolic-ref HEAD)) = cg-seek-point ])"
 test_expect_success 'current commit should be commit2' \
 	"[ $(cg-object-id -c) = $commit2 ]"
 
 test_expect_success 'seeking to the last (well, still second) commit' \
 	"cg-seek master"
 test_expect_success 'we should be unseeked properly' \
-	"([ ! -e .git/head-name ] && [ $(basename $(readlink .git/HEAD)) = master ])"
+	"([ ! -e .git/head-name ] &&
+	 [ $(basename $(git-symbolic-ref HEAD)) = master ])"
 test_expect_success 'current commit should be commit2' \
 	"[ $(cg-object-id -c) = $commit2 ]"
 
@@ -88,7 +90,8 @@ test_expect_success 'identical should be nonconflicting' \
 test_expect_success 'unseeking' \
 	"cg-seek"
 test_expect_success 'we should be unseeked properly' \
-	"([ ! -e .git/head-name ] && [ $(basename $(readlink .git/HEAD)) = master ])"
+	"([ ! -e .git/head-name ] &&
+	 [ $(basename $(git-symbolic-ref HEAD)) = master ])"
 test_expect_success 'current commit should be commit2' \
 	"[ $(cg-object-id -c) = $commit2 ]"
 
