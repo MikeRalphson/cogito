@@ -42,7 +42,7 @@ endif
 cg-version: $(VERSION) $(GIT_HEAD) Makefile
 	@echo Generating cg-version...
 	@rm -f $@
-	@echo "#!/bin/sh" > $@
+	@echo "#!/usr/bin/env bash" >> $@
 	@echo "#" >> $@
 	@echo "# Show the version of the Cogito toolkit." >> $@
 	@echo "# Copyright (c) Petr Baudis, 2005" >> $@
@@ -53,6 +53,9 @@ cg-version: $(VERSION) $(GIT_HEAD) Makefile
 	@echo "# at the build time." >> $@
 	@echo >> $@
 	@echo "USAGE=\"cg-version\"" >> $@
+	@echo "_git_repo_unneeded=1" >> $@
+	@echo >> $@
+	@echo ". \$${COGITO_LIB}cg-Xlib || exit 1" >> $@
 	@echo >> $@
 	@echo "echo \"$(shell cat $(VERSION))$(GIT_HEAD_ID)\"" >> $@
 	@chmod +x $@
@@ -92,7 +95,7 @@ install-cogito: $(SCRIPT) $(LIB_SCRIPT) $(GEN_SCRIPT)
 	$(INSTALL) -m755 -d $(DESTDIR)$(libdir)
 	$(INSTALL) $(LIB_SCRIPT) $(DESTDIR)$(libdir)
 	cd $(DESTDIR)$(bindir); \
-	for file in $(SCRIPT); do \
+	for file in $(SCRIPT) $(GEN_SCRIPT); do \
 		sed -e 's/\$${COGITO_LIB}/"\$${COGITO_LIB:-$(sedlibdir)\/}"/g' $$file > $$file.new; \
 		cat $$file.new > $$file; rm $$file.new; \
 	done
