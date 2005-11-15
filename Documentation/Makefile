@@ -1,4 +1,4 @@
-CG_IGNORE=$(wildcard ../cg-X* ../cg-*.orig ../cg-*.rej)
+CG_IGNORE=$(wildcard ../cg-X* ../cg-*.orig ../cg-*.rej ../cg-*.in)
 CG_SRC=$(filter-out $(CG_IGNORE), $(wildcard ../cg*))
 
 PACKAGE=cogito

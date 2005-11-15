@@ -37,27 +37,14 @@ cogito: $(GEN_SCRIPT)
 
 ifneq (,$(wildcard .git))
 GIT_HEAD=.git/$(shell git-symbolic-ref HEAD)
-GIT_HEAD_ID=" \($(shell cat $(GIT_HEAD))\)"
+GIT_HEAD_ID=($(shell cat $(GIT_HEAD)))
 endif
-cg-version: $(VERSION) $(GIT_HEAD) Makefile
+cg-version: cg-version.in $(VERSION) $(GIT_HEAD)
 	@echo Generating cg-version...
 	@rm -f $@
-	@echo "#!/usr/bin/env bash" >> $@
-	@echo "#" >> $@
-	@echo "# Show the version of the Cogito toolkit." >> $@
-	@echo "# Copyright (c) Petr Baudis, 2005" >> $@
-	@echo "#" >> $@
-	@echo "# Show which version of Cogito is installed." >> $@
-	@echo "# Additionally, the 'HEAD' of the installed Cogito" >> $@
-	@echo "# is also shown if this information was available" >> $@
-	@echo "# at the build time." >> $@
-	@echo >> $@
-	@echo "USAGE=\"cg-version\"" >> $@
-	@echo "_git_repo_unneeded=1" >> $@
-	@echo >> $@
-	@echo ". \$${COGITO_LIB}cg-Xlib || exit 1" >> $@
-	@echo >> $@
-	@echo "echo \"$(shell cat $(VERSION))$(GIT_HEAD_ID)\"" >> $@
+	@sed -e 's/@@VERSION@@/$(shell cat $(VERSION))/' \
+	     -e 's/@@GIT_HEAD_ID@@/$(GIT_HEAD_ID)/' \
+	     < $< > $@ 
 	@chmod +x $@
 
 doc:
