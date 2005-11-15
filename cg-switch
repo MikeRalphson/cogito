@@ -86,13 +86,15 @@ dsthead="${ARGS[0]}"
 [ -s "$_git/branches/$dsthead" ] &&
 	die "refusing to switch to a remote branch - see README for lengthy explanation"
 
-[ "$(git-symbolic-ref HEAD)" != "refs/heads/$dsthead" ] || [ "$dstcommit" ] ||
+[ "$(git-symbolic-ref HEAD)" != "refs/heads/$dsthead" ] || [ -n "$dstcommit" ] ||
 	die "already on branch $dsthead"
 
 if [ "$seek" ]; then
 	[ -s "$_git/blocked" ] && die "switch blocked: $(cat "$_git/blocked")"
 fi
 
+
+curcommit="$(cg-object-id -c)"
 
 if [ -s "$_git/refs/heads/$dsthead" ]; then
 	# Existing branch
@@ -115,7 +117,6 @@ fi
 
 
 if [ "$seek" ]; then
-	curcommit="$(cg-object-id -c)"
 	[ -n "$dstcommit" ] || dstcommit="$(cg-object-id -c "$dsthead")"
 	echo "Switching to branch $dsthead..."
 	if [ "x$curcommit" != "x$dstcommit" ]; then
