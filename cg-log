@@ -98,7 +98,7 @@
 # things more comfortable to SVN users). See cogito(7) for more details
 # about revision specification.
 
-USAGE="cg-log [-c] [-f] [-m] [-M] [-s] [-uUSERNAME] [-d DATE] [-r FROM_ID[..TO_ID]] FILE..."
+USAGE="cg-log [-c] [-f] [-m] [-M] [-s] [-uUSERNAME] [-d DATE] [-r FROM_ID[..TO_ID]] [--summary] FILE..."
 
 . ${COGITO_LIB}cg-Xlib || exit 1
 # Try to fix the annoying "Broken pipe" output. May not help, but apparently
