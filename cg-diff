@@ -14,8 +14,8 @@
 #	Colorize the diff output
 #
 # -p::
-#	Instead of one ID denotes a parent commit to the specified ID
-#	(which must not be a tree, obviously).
+#	Show diff to the parent of the current commit (or the commit
+#	specified by the -r parameter).
 #
 # -s::
 #	Summarize the diff by showing a histogram for removed and added
