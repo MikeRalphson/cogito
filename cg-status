@@ -34,21 +34,21 @@
 # If neither -g or -w is passed, both is shown; otherwise, only the
 # corresponding parts are shown.
 #
-# -g::
+# -g:: Show the GIT repository information
 #	Show the GIT repository information.
 #
-# -n::
+# -n:: Do not show status flags
 #	Do not show status flags. This is probably useful only when you filter
 #	the flags for a single specific flag using the '-s' option.
 #
-# -s STATUS::
+# -s STATUS:: Limit to files matching the STATUS flags
 #	Show only files with the given status flag, e.g. '-s D'. You can list
 #	multiple flags ('-s MmA') to filter for all of them.
 #
-# -w::
+# -w:: Show working files
 #	Show the working tree file list.
 #
-# -x::
+# -x:: Disable file exclusion
 #	Don't exclude any files from listing.
 #
 # DIRPATH::

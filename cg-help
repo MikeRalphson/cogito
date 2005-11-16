@@ -13,7 +13,7 @@
 #
 # OPTIONS
 # -------
-# -c::
+# -c::	Colorize
 #	Colorize the output.
 
 USAGE="cg-help [-c] [cg-COMMAND | COMMAND]"
@@ -33,6 +33,7 @@ setup_colors()
 	local copyright="$(tput setaf 4)"
 
 	apply_colors="
+	s/^\(-.*\)::.*/$desclist\1$color_none:/
 	s/^\(.*\)::/$desclist\1$color_none:/
 	s/\`\(cg-[a-z-]*\)\`/$cgcmd\1$color_none/g
 	s/\`\([^\`]*\)\`/$codesnippet&$color_none/g
@@ -90,7 +91,7 @@ elif [ "$ARGS" = "tag" ]; then
 	exit
 elif [ "$ARGS" ]; then
 	cmd=$(echo "${ARGS[0]}" | sed 's/^cg-//')
-	print_help $cmd | colorize
+	print_help long $cmd | colorize
 	[ "${PIPESTATUS[0]}" -eq 0 ] && exit
 	echo "cg-help: no help available for command \"${ARGS[0]}\""
 	echo "Call cg-help without any arguments for the list of available commands"
@@ -126,6 +127,6 @@ These expressions can be used interchangeably as "ID"s:
 
 For details on individual commands, do e.g.:
 	cg-help cg-log
-	cg-log --help
+	cg-log --long-help
 (both variants are equivalent)
 __END__

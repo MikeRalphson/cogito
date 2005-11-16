@@ -8,7 +8,7 @@
 #
 # OPTIONS
 # -------
-# -r TREE_ID::
+# -r TREE_ID:: Look for file in the given revision or tree
 #	ID of the revision or tree where to look for the file, instead of
 #	HEAD.
 

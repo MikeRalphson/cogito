@@ -8,22 +8,22 @@
 #
 # OPTIONS
 # -------
-# -c::
+# -c:: Get commit ID
 #	Get ID of commit matching the object ID (error out if it is not
 #	a commit). This is the default if you do not pass any parameter
 #	as well, but that is only for the human usage. For clarity, all
 #	scripted usage of cg-object-id should use -c explicitly if it
 #	wants a commit.
 #
-# -n::
+# -n:: Disable object type checking
 #	Normalize only - don't check the object type.
 #
-# -p::
+# -p:: Get parent commit ID(s)
 #	Get ID of the first parent commit of a given revision or HEAD.
 #	NOTE: Multiple SHA1s separated by newlines will be returned for
 #	commits with multiple parents.
 #
-# -t::
+# -t:: Get tree ID
 #	Get ID of tree associated with given commit or HEAD.
 #
 # OBJECT_ID::

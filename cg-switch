@@ -11,19 +11,19 @@
 #
 # OPTIONS
 # -------
-# -f::
+# -f:: Enable overwriting of existing branches
 #	Force the branch's head pointer update even if the branch
 #	already exists. WARNING: The pointer to the original contents
 #	of the branch will be lost! The contents itself will not be
 #	deleted, `git-fsck-objects --unreachable` might help you to
 #	find it.
 #
-# -n::
+# -n:: No switch; only create and update the branch
 #	Do not switch your current branch to the given branch. This
 #	will make cg-switch to only create or update the branch, but
 #	leave your working copy alone.
 #
-# -r COMMIT_ID::
+# -r COMMIT_ID:: Branch off the given COMMIT_ID
 #	Point the branch at the given commit. Defaults to the current
 #	commit when creating a new branch; when switching to an existing
 #	branch, the branch pointer is not modified if no '-r' is passed.

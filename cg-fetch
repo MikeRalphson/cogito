@@ -25,10 +25,10 @@
 #
 # OPTIONS
 # -------
-# -f::
+# -f:: Force the complete fetch even if the heads are the same.
 #	Force the complete fetch even if the heads are the same.
 #
-# -v::
+# -v:: Enable verbosity
 #	Display more verbose output.
 #
 # ENVIRONMENT

@@ -12,7 +12,7 @@
 #
 # OPTIONS
 # -------
-# -R::
+# -R:: Apply in reverse
 #	Applies the patch in reverse (therefore effectively unapplies it)
 #
 # Takes the diff on stdin.

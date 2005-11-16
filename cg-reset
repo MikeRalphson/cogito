@@ -16,7 +16,7 @@
 #
 # OPTIONS
 # -------
-# --adds-removes::
+# --adds-removes:: Only reset info about added and removed files
 #	Reset ONLY the so-called "index" file. This effectively means that
 #	any adds and removes you did will be unrecorded (but if you removed
 #	the file physically as well, that will not be undone - run

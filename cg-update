@@ -18,10 +18,10 @@
 #
 # OPTIONS
 # -------
-# -f::
+# -f:: Force the complete fetch even if the heads are the same.
 #	Force the complete fetch even if the heads are the same.
 #
-# --squash::
+# --squash:: Use "squash" merge to record pending commits as a single merge commit
 #	"Squash" merge - condense all the to-be-merged commits to a single
 #	merge commit. This is not to be used lightly; see the cg-merge
 #	documenation for further details.

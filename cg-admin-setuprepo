@@ -28,7 +28,7 @@
 #
 # OPTIONS
 # -------
-# -g GROUP::
+# -g GROUP:: Specify group ownership for the repository 
 #	Name of the UNIX group covering the users authorized to push into
 #	the repository. If unspecified, only you (who ran this command) will
 #	have write (push) access.

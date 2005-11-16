@@ -6,6 +6,13 @@
 # Optionally takes a commit or tree ID as a parameter, defaulting to
 # 'HEAD'.
 #
+# OPTIONS
+# -------
+# -t TREE_ID:: List content of the given TREE_ID
+#	List the content of the given TREE_ID.
+#
+# OUTPUT FORMAT
+# -------------
 # Each line in the output has the following format:
 #
 #	<mode>	<type>	<sha1>	<name>

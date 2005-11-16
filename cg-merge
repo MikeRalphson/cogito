@@ -34,17 +34,17 @@
 #
 # OPTIONS
 # -------
-# -b BASE_COMMIT::
+# -b BASE_COMMIT:: Specify the base commit for the merge
 #	Parameter specifies the base commit for the merge. Otherwise, the
 #	least common ancestor is automatically selected.
 #
-# -c::
+# -c:: Disable autocommitting
 #	Parameter specifies that you want to have tree merge never
 #	autocommitted, but want to review and commit it manually. This will
 #	basically make cg-merge always behave like there were conflicts
 #	during the merge.
 #
-# -j::
+# -j:: Join current branch with BRANCH_NAME
 #	Join the current branch and BRANCH_NAME together. This makes sense
 #	when the branches have no common history, meaning they are actually
 #	not branches related at all as far as GIT is concerned. Merging such
@@ -52,7 +52,7 @@
 #	you do not want; but equally likely, you may actually WANT to join
 #	the projects together, which is what this option does.
 #
-# --squash::
+# --squash:: Use "squash" merge to record pending commits as a single merge commit
 #	"Squash" merge - condense all the to-be-merged commits to a single
 #	merge commit. This means "throw away history of the branch I'm
 #	merging", essentially like in CVS or SVN, with the same problem -

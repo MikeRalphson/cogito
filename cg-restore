@@ -23,12 +23,13 @@
 #
 # OPTIONS
 # -------
-# -f::
+# -f:: Undo local changes since last commit
 #	Restore even locally modified files to the version as of
 #	the last commit. Take care!
-# -r COMMIT_ID::
-# -r TREE_ID::
-# -r BLOB_ID::
+#
+# -r COMMIT_ID:: Restore files to given COMMIT_ID
+# -r TREE_ID:: Restore files to given TREE_ID
+# -r BLOB_ID:: Restore files to given BLOB_ID
 #	Restore the file to the state appropriate to the given ID.
 #	The list of files to recover is mandatory in this case.
 

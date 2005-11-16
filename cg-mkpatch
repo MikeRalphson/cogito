@@ -13,14 +13,14 @@
 #
 # OPTIONS
 # -------
-# -d DIRNAME::
+# -d DIRNAME:: Create patches in the DIRNAME directory
 #	Split the patches to separate files with their names in the
 #	format "%02d.patch", created in directory DIRNAME (will be
 #	created if non-existent). Note that this makes sense only
 #	when generating patch series, that is when you use the -r
 #	argument.
 #
-# -f FORMAT::
+# -f FORMAT:: Specify patch file name format
 #	Format string used for generating the patch filename when
 #	outputting the split-out patches (that is, passed the -d
 #	option). This is by default "%s/%02d-%s.patch". The first %s
@@ -28,11 +28,11 @@
 #	sequence number. The last %s is mangled first line of the
 #	commit message - kind of patch title.
 #
-# -m::
+# -m::	Base the diff at the merge base
 #	Base the patches at the merge base of the -r arguments
 #	(defaulting to HEAD and origin).
 #
-# -r FROM_ID[..TO_ID]::
+# -r FROM_ID[..TO_ID]::	Limit to revision range
 #	Specify a set of commits to make patches from using either
 #	'-r FROM_ID[..TO_ID]' or '-r FROM_ID -r TO_ID'. In both cases the
 #	option expects IDs which resolve to commits and will include the
@@ -40,7 +40,7 @@
 #	from 'FROM_ID' to the initial commit will be generated. If no
 #	`-r` option is given the commit ID defaults to 'HEAD'.
 #
-# -s::
+# -s:: Omit patch header
 #	Specify whether to print a short version of the patch without
 #	a patch header with meta info such as author and committer.
 #

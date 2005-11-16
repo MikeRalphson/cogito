@@ -17,11 +17,12 @@
 #
 # OPTIONS
 # -------
-# -N::
+# -N::	Update the lowlevel cache file
 #	Only update the cache: do not copy the data into the object database.
 #	This is for special purposes when you might not actually _have_ any
 #	object database. This option is normally not interesting.
-# -r::
+#
+# -r::	Add files recursively
 #	If you pass cg-add this flag and any directory names, it will try
 #	to add files in those directories recursively (with regard to your
 #	ignore rules - see cg-status documentation for more detailed

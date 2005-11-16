@@ -83,7 +83,7 @@ individual commands, do e.g.
 
 or
 
-	cg-log --help
+	cg-log --long-help
 
 Regular commands
 ~~~~~~~~~~~~~~~~

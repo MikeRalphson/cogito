@@ -14,7 +14,7 @@
 #
 # OPTIONS
 # -------
-# -t TAG::
+# -t TAG:: Push the given TAG
 #	Tells cg-push to also push the given tag. Note that in the
 #	future, cg-push should push tags automatically. Also note
 #	that even if you pass `cg-push` the '-t' arguments, your

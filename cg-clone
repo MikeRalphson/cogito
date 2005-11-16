@@ -13,7 +13,7 @@
 #
 # OPTIONS
 # -------
-# -l::
+# -l::	Symlink the object database when cloning locally
 #	Symlink the object database when cloning locally, instead of
 #	hardlinking all the objects. This is suitable for very fast
 #	cloning of arbitrarily big repositories, but might be a trouble
@@ -23,7 +23,8 @@
 #	as well. The choice is yours.
 #	Note that you MUST NOT prune repository containing a symlink
 #	or being symlinked to.
-# -s::
+#
+# -s::	Clone into the current directory
 #	Clone in the current directory instead of creating a new one.
 #	Specifying both -s and a destination directory makes no sense.
 

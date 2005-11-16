@@ -9,16 +9,16 @@
 #
 # OPTIONS
 # -------
-# -d::
+# -d:: Clean directories
 #	Also clean directories and their contents.
 #
-# -D::
+# -D:: Clean directories more thoroughly
 #	Same as -d but try harder (change permissions first).
 #
-# -q::
+# -q:: Silence progress reporting
 #	Quiet - don't report what's being cleaned.
 #
-# -x::
+# -x:: Clean files ignored by cg-status
 #	Also clean files ignored by cg-status, such as object files.
 
 USAGE="cg-clean [-d] [-D] [-q] [-x]"

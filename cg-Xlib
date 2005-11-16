@@ -347,18 +347,41 @@ deprecated_alias()
 
 print_help()
 {
-	which "cg-$1" >/dev/null 2>&1 || exit 1
+	_cg_cmd=$(type -P "cg-$2")
+	[ -n "$_cg_cmd" ] || exit 1
+
 	sed -n '/^USAGE=/,0s/.*"\(.*\)"/Usage: \1/p;
-	        /^deprecated_alias/,0s/^deprecated_alias \([^ ]*\)/\1 is the new name for/p' < $(which cg-$1) 
+	        /^deprecated_alias/,0s/^deprecated_alias \([^ ]*\)/\1 is the new name for/p' < "$_cg_cmd"
 	echo
-	sed -n '3,/^$/s/^# *//p' < $(which cg-$1)
+	if [ x"$1" = xlong ]; then
+		# TODO: Reduce this to just one sed if possible.
+		sed -n '3,/^$/s/^# *//p' < "$_cg_cmd" | sed 's/^\(-.*\)::.*/\1::/'
+		exit
+	fi
+
+	echo "Options:"
+	_cg_fmt="  %-20s %s\n"
+	sed -n 's/# \(-.*\)::[^A-Za-z0-9]\(.*\)/\1\n\2/p' < "$_cg_cmd" | while read line; do
+		case "$line" in
+		-*)
+			_cg_option="$line"
+			;;
+		*)
+			printf "$_cg_fmt" "$_cg_option" "$line"
+			;;
+		esac
+	done
+	printf "$_cg_fmt" "-h, --help" "Print usage summary"
+	printf "$_cg_fmt" "--long-help" "Print user manual"
 	exit
 }
 
 for option in "$@"; do
 	[ x"$option" = x-- ] && break
-	if [ x"$option" = x"-h" -o x"$option" = x"--help" ]; then
-		print_help ${_cg_cmd##cg-}
+	if [ x"$option" = x"-h" ] || [ x"$option" = x"--help" ]; then
+		print_help short ${_cg_cmd##cg-}
+	elif [ x"$option" = x"--long-help" ]; then
+		print_help long ${_cg_cmd##cg-}
 	fi
 done
 

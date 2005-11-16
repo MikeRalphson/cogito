@@ -10,26 +10,26 @@
 #
 # OPTIONS
 # -------
-# -c::
+# -c:: Colorize
 #	Colorize the diff output
 #
-# -p::
+# -p:: Use ID parent
 #	Show diff to the parent of the current commit (or the commit
 #	specified by the -r parameter).
 #
-# -s::
+# -s:: Summarize and show diff stat
 #	Summarize the diff by showing a histogram for removed and added
 #	lines (similar to the output of diffstat(1)) and information
 #	about added and renamed files and mode changes.
 #
-# -r FROM_ID[..TO_ID]::
+# -r FROM_ID[..TO_ID]:: Limit to revision range
 #	Specify the revisions to diff using either '-r rev1..rev2' or
 #	'-r rev1 -r rev2'. If no revision is specified, the current
 #	working tree is implied. Note that no revision is different from
 #	empty revision which means '-r rev..' compares between 'rev' and
 #	'HEAD', while '-r rev' compares between 'rev' and working tree.
 #
-# -m::
+# -m:: Base the diff at the merge base
 #	Base the diff at the merge base of the -r arguments (defaulting
 #	to HEAD and origin).
 #

@@ -42,7 +42,7 @@ CAPTION=$(echo "$HEADER" | head -n 1 | tr '[A-Z]' '[a-z]' | sed 's/\.$//')
 # were referenced as "`cg-command`". This way references from cg-* combos in
 # code listings will be ignored.
 BODY=$(echo "$HEADER" | sed '0,/^$/d' \
-		      | sed 's/`\(cg-[a-z-]\+\)`/gitlink:\1[1]/')
+		      | sed 's/`\(cg-[a-z-]\+\)`/gitlink:\1[1]/;s/^\(-.*\)::.*/\1::/')
 
 DESCRIPTION=
 OPTIONS=
@@ -100,7 +100,10 @@ OPTIONS
 $OPTIONS
 
 -h, --help::
-	Print usage help.
+	Print usage summary.
+
+--long-help::
+	Print user manual. The same as found in $TITLE.
 
 $MISC
 

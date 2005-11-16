@@ -13,7 +13,7 @@
 # Arguments not interpreted as options will be interpreted as filenames;
 # cg-log then displays only changes in those files.
 #
-# -c::
+# -c::	Colorize
 #	Colorize the output. The used colors are listed below together
 #	with information about which log output (summary, full or both)
 #	they apply to:
@@ -26,10 +26,10 @@
 #		- `date`:	'green'		(summary)
 #		- `trim_mark`:	'magenta'	(summary)
 #
-# -f::
+# -f::	List affected files
 #	List affected files. (No effect when passed along `-s`.)
 #
-# -r FROM_ID[..TO_ID]::
+# -r FROM_ID[..TO_ID]:: Limit to a set of revisions
 #	Limit the log information to a set of revisions using either
 #	'-r FROM_ID[..TO_ID]' or '-r FROM_ID -r TO_ID'. In both cases the
 #	option expects IDs which resolve to commits and will include the
@@ -37,31 +37,31 @@
 #	to the initial commit is shown. If no revisions is specified,
 #	the log information starting from 'HEAD' will be shown.
 #
-# -d DATE::
+# -d DATE:: Limit to revisions newer than given DATE
 #	Limit the log information to revisions newer than given DATE,
 #	and on second time further restrain it to revisions older than
 #	given date. Therefore, '-d "2 days ago" -d "yesterday"' will
 #	show all the commits from the day before yesterday.
 #
-# -m::
+# -m::	End the log at the merge base of the revision set
 #	End the log listing at the merge base of the -r arguments
 #	(defaulting to HEAD and origin).
 #
-# -M, --no-merges::
+# -M, --no-merges:: Ignore merge commits
 #	Don't display merge commits in the log.
 #
-# -s::
+# -s::	Summarize the log entries
 #	Show a one line summary for each log entry. The summary contains
 #	information about the commit date, the author, the first line
 #	of the commit log and the commit ID. Long author names and commit
 #	IDs are trimmed and marked with an ending tilde (~).
 #
-# --summary::
+# --summary:: Group commits by title
 #	Generate the changes summary, listing the commit titles grouped
 #	by their author. This is also known as a "shortlog", suitable
 #	e.g. for contribution summaries of announcements.
 #
-# -uUSERNAME::
+# -uUSERNAME:: Limit to commit where author/committer matches USERNAME
 #	List only commits where author or committer contains 'USERNAME'.
 #	The search for 'USERNAME' is case-insensitive.
 #
