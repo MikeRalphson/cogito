@@ -25,11 +25,21 @@
 #
 # OPTIONS
 # -------
-# -f::
+# -f:: Force the complete fetch even if the heads are the same.
 #	Force the complete fetch even if the heads are the same.
 #
-# -v::
-#	Display more verbose output
+# -v:: Enable verbosity
+#	Display more verbose output.
+#
+# ENVIRONMENT
+# -----------
+# RSYNC::
+#	The command to invoke when we want to call the rsync tool (only used
+#	when fetching over the rsync protocol). Defaults to 'rsync'.
+#
+# RSYNC_FLAGS::
+#	Additional flags to be passed to the rsync tool when fetching over
+#	the rsync protocol.
 
 USAGE="cg-fetch [-f] [-v] [BRANCH_NAME]"
 
@@ -59,7 +69,6 @@ show_changes_summary()
 		fi
 	else
 		echo "Up to date."
-		exit
 	fi
 }
 
@@ -93,8 +102,8 @@ get_rsync()
 		shift
 	fi
 
-	eval rsync $RSYNC_FLAGS $rsync_flags_l -v -Lr \
-		"$1$appenduri" "$2$appenduri" $redir | $filter
+	eval '"${RSYNC:-rsync}"' $RSYNC_FLAGS $rsync_flags_l -v -Lr \
+		'"$1$appenduri"' '"$2$appenduri"' $redir | $filter
 	return ${PIPESTATUS[0]}
 }
 
@@ -102,7 +111,16 @@ fetch_rsync()
 {
 	get_rsync -s -u -d "$2/objects" "$_git_objects" | fetch_progress
 	ret=${PIPESTATUS[0]}
-	[ "$3" ] && cat "$_git/refs/${3%/*}/.${3##*/}-fetching" > "$_git/refs/$3"
+	if [ "$3" ] && [ "$ret" -eq "0" ]; then
+		if [ "$orig_head" ]; then
+			git-rev-list --objects $new_head ^$orig_head |
+				while read obj type; do
+					git-cat-file -t $obj >/dev/null || exit $?
+				done ||
+			die "rsync fetch incomplete, some objects missing"
+		fi
+		cat "$_git/refs/${3%/*}/.${3##*/}-fetching" > "$_git/refs/$3"
+	fi
 	return $ret
 }
 
@@ -112,43 +130,15 @@ get_http()
 	[ "$1" = "-b" ] && shift
 	[ "$1" = "-i" ] && shift
 	[ "$1" = "-s" ] && shift
-
-	wget_flags="--execute continue=off -nv"
-
-	update=
-	if [ "$1" = "-u" ]; then
-		wget_flags="$wget_flags -nc"
-		update=1
-		shift
-	fi
-
-	directory=
-	if [ "$1" = "-d" ]; then
-		wget_flags="$wget_flags -r -l 1 -np -nd -P"
-		directory=/
-		shift
-	else
-		wget_flags="$wget_flags -O"
-	fi
+	[ "$1" = "-u" ] && die "INTERNAL ERROR: HTTP no-clobber not implemented"
+	[ "$1" = "-d" ] && die "INTERNAL ERROR: HTTP recursive not implemented"
 
 	src="$1"
-	dest="$2$directory"
+	dest="$2"
 
-	[ "$update" ] && ! [ "$directory" ] && [ -e "$dest" ] && return 1
-
-	if echo "$dest" | grep -q '^\.git/'; then
-		# wget is idiotic and convers . to _
-		dest=$(echo "$dest" | sed 's#^.git/##')
-		pushd "$_git" >/dev/null
-	else
-		pushd . >/dev/null
-	fi
-
-	wget $wget_flags "$dest" "$src" 2>&1 | grep -vF 'robots.txt' | grep -vF 'index.html'
-	ret=${PIPESTATUS[0]}
-	[ -d "$dest" ] && rm -f "$dest"/robots.txt "$dest"/index.html*
-	popd >/dev/null
-	return $ret
+	curl_extra_args=
+	[ "$GIT_SSL_NO_VERIFY" ] && curl_extra_args="-k"
+	curl -nsfL $curl_extra_args -o "$dest" "$src"
 }
 
 fetch_http()
@@ -160,77 +150,24 @@ fetch_http()
 }
 
 
-get_ssh()
-{
-	[ "$1" = "-b" ] && shift
-	[ "$1" = "-i" ] && shift
-	[ "$1" = "-s" ] && shift
-
-	scp_flags=
-
-	update=
-	if [ "$1" = "-u" ]; then
-		update=1
-		shift
-	fi
-
-	directory=
-	if [ "$1" = "-d" ]; then
-		scp_flags="$scp_flags -r"
-		directory=1
-		shift
-	fi
-
-	src="$(echo "$1" | sed 's#^git+ssh://\([^/]*\)\(/.*\)$#\1:\2#')"
-	dest="$2"
-
-	[ "$update" ] && ! [ "$directory" ] && [ -e "$dest" ] && return 1
-	[ "$update" ] && [ "$directory" ] &&
-		echo "Warning: Cannot protect against overwriting $dest when fetching over ssh" 2>/dev/null
-
-	[ "$directory" ] && dest="$(dirname "$dest")"
-	scp $scp_flags "$src" "$dest"
-}
-
-fetch_ssh()
-{
-	whead=
-	[ "$3" ] && whead="-w $3"
-	# git-ssh-fetch would theoretically take git+ssh://-style URL, but
-	# it is buggy and won't process it correctly, so let's just
-	# preprocess it to some easier-to-take form.
-	(git-ssh-fetch -a -v $whead $recovery "$1" \
-		"$(echo "$2" | sed 's#^git+ssh://\([^/]*\)\(/.*\)$#\1:\2#')" \
-		2>&1 /dev/null) | fetch_progress
-	return ${PIPESTATUS[0]}
-}
-
-
 get_local()
 {
-	cp_flags_l="-vdpR"
+	cp_flags_l="-v"
 	if [ "$1" = "-b" ]; then
-		cp_flags_l="-vb" # Dereference symlinks
+		# Dereference symlinks
+		cp_flags_l="$cp_flags_l -L"
 		shift
+	else
+		cp_flags_l="$cp_flags_l -dpR"
 	fi
 
 	[ "$1" = "-i" ] && shift
 	[ "$1" = "-s" ] && shift
-
-	if [ "$1" = "-u" ]; then
-		cp_flags_l="$cp_flags_l -fu$can_hardlink"
-		shift
-	fi
-
-	cut_last=
-	if [ "$1" = "-d" ]; then
-		cut_last=1
-		shift
-	fi
+	[ "$1" = "-u" ] && die "INTERNAL ERROR: local-fetch no-clobber not implemented"
+	[ "$1" = "-d" ] && die "INTERNAL ERROR: local-fetch recursive not implemented"
 
 	src="$1"
 	dest="$2"
-	[ "$cut_last" ] && dest="${dest%/*}"
 
 	cp $cp_flags_l "$src" "$dest"
 }
@@ -241,6 +178,49 @@ fetch_local()
 	[ "$3" ] && whead="-w $3"
 	(git-local-fetch -a -l -v $whead $recovery "$1" "$2" 2>&1 /dev/null) | fetch_progress
 	return ${PIPESTATUS[0]}
+}
+
+
+fetch_tags()
+{
+	echo "Fetching tags..."
+
+	# FIXME: Warn about conflicting tag names?
+	[ -d "$_git/refs/tags" ] || mkdir -p "$_git/refs/tags"
+
+	if [ "$get" = "get_rsync" ]; then
+		$get -i -s -u -d "$uri/refs/tags" "$_git/refs/tags" ||
+			echo "unable to get tags list (non-fatal)" >&2
+		exit $?
+	fi
+
+	git-ls-remote --tags "$uri" |
+		# SHA1 refs/tags/v0.99.8^{} --> SHA1 tags/v0.99.8
+		# where SHA1 is the object v0.99.8 tag points at.
+		sed -ne 's:\([^	]\)	refs/\(tags/.*\)^{}$:\1 \2:p' |
+		while read sha1 tagname; do
+			# Do we have the tag itself?
+			[ -s "$_git/refs/$tagname" ] && continue
+			# Do we have the object pointed at by the tag?
+			git-cat-file -t "$sha1" >/dev/null 2>&1 || continue
+
+			# if so, fetch the tag -- which should be
+			# a cheap operation -- to complete the chain.
+			echo -n "Missing tag ${tagname#tags/}... "
+			if $fetch "$tagname" "$uri" "$tagname" 2>/dev/null >&2; then
+				echo "retrieved"
+			else
+				# 17 is code from packed transport, which
+				# will grab all of them en masse later
+				if [ "$?" -ne "17" ]; then
+					echo "unable to retrieve"
+				else
+					echo ""
+				fi
+			fi
+		done
+	[ "${PIPESTATUS[0]}" -eq "0" ] ||
+		echo "unable to get tags list (non-fatal)" >&2
 }
 
 
@@ -287,28 +267,15 @@ orig_head=
 [ -s "$_git/refs/heads/$name" ] && orig_head="$(cat "$_git/refs/heads/$name")"
 
 
-if echo "$uri" | grep -q '^\(git\|git+pack+ssh\)://'; then
-	# This is a really special case.
-	uri="$(echo "$uri" | sed 's#^git+pack+ssh://\([^/]*\)\(/.*\)$#\1:\2#')"
-	[ "$rembranch" ] || rembranch="HEAD"
-	(
-		git-fetch-pack "$uri" "$rembranch" || echo "failed" "$rembranch"
-	) | while read sha1 remote_name; do
-		[ "$sha1" = "failed" ] && die "fetching pack failed"
-		echo "$sha1" >"$_git/refs/heads/$name"
-	done || exit
-	rm "$_git/info/cg-fetch-$name-dirty"
-	show_changes_summary "$orig_head" "$(cg-object-id "$name")"
-	exit 0
-fi
-
+packed_transport=
 
 if echo "$uri" | grep -q "^http://"; then
 	get=get_http
 	fetch=fetch_http
 elif echo "$uri" | grep -q "^git+ssh://"; then
-	get=get_ssh
-	fetch=fetch_ssh
+	packed_transport=ssh
+elif echo "$uri" | grep -q "^git://"; then
+	packed_transport=git
 elif echo "$uri" | grep -q "^rsync://"; then
 	echo "WARNING: The rsync access method is DEPRECATED and will be REMOVED in the future!" >&2
 	get=get_rsync
@@ -316,10 +283,10 @@ elif echo "$uri" | grep -q "^rsync://"; then
 elif echo "$uri" | grep -q ":"; then
 	echo "WARNING: I guessed the host:path syntax was used and fell back to the git+ssh protocol." >&2
 	echo "WARNING: The host:path syntax is evil because it is implicit. Please just use a URI." >&2
-	get=get_ssh
-	fetch=fetch_ssh
+	packed_transport=ssh
 else
 	[ -d "$uri/.git" ] && uri="$uri/.git"
+	[ -d "$uri" ] || die "repository not found"
 	get=get_local
 	fetch=fetch_local
 
@@ -341,16 +308,67 @@ else
 fi
 
 
+if [ "$packed_transport" ]; then
+	# This is a really special case.
+	[ "$rembranch" ] || rembranch="HEAD"
+
+	fetch_pack_recorder () {
+		while read sha1 remote_name; do
+			[ "$sha1" = "failed" ] && die "$2"
+			ref="$1"; [ "$ref" ] || ref="$remote_name"
+			echo "$sha1" >"$_git/$ref"
+		done
+	}
+	echo "Fetching pack (head and objects)..."
+	( git-fetch-pack "$uri" "$rembranch" ||
+	  echo "failed" "$rembranch" ) |
+		fetch_pack_recorder "refs/heads/$name" "fetching pack failed" ||
+		exit
+
+	export _cg_taglist="$(mktemp -t gitfetch.XXXXXX)"
+	record_tags_to_fetch () {
+		echo "refs/$1" >>"$_cg_taglist"
+		return 17
+	}
+	fetch=record_tags_to_fetch
+	fetch_tags
+	if [ -s "$_cg_taglist" ]; then
+		( cat "$_cg_taglist" | tr '\n' '\0' |
+			xargs -0 git-fetch-pack "$uri" ||
+		  echo "failed" "$rembranch" ) |
+		fetch_pack_recorder "" "unable to retrieve tags (non-fatal)"
+	fi
+	rm "$_cg_taglist"
+
+	rm "$_git/info/cg-fetch-$name-dirty"
+	show_changes_summary "$orig_head" "$(cg-object-id "$name")"
+	exit 0
+fi
+
+
+### Behold, the fetch itself
+
+## Grab the head
+echo "Fetching head..."
 mkdir -p "$_git/refs/heads"
 if [ "$rembranch" ]; then
 	$get -i "$uri/refs/heads/$rembranch" "$_git/refs/heads/.$name-fetching" ||
 		die "unable to get the head pointer of branch $rembranch"
 else
-	$get -b -s "$uri/HEAD" "$_git/refs/heads/.$name-fetching" ||
+	$get -b "$uri/HEAD" "$_git/refs/heads/.$name-fetching" ||
 		die "unable to get the HEAD branch"
 fi
 
 new_head="$(cat "$_git/refs/heads/.$name-fetching")"
+if [ "${new_head#ref:}" != "$new_head" ]; then
+	new_head="$(echo "$new_head" | sed 's/^ref: *//')"
+	$get -i "$uri/$new_head" "$_git/refs/heads/.$name-fetching" ||
+		die "unable to get the head pointer of branch $new_head (referenced by HEAD)"
+	new_head="$(cat "$_git/refs/heads/.$name-fetching")"
+fi
+
+echo "Fetching objects..."
+## Fetch the objects
 if ! [ "$symlinked" ]; then
 	if [ "$recovery" -o "$orig_head" != "$new_head" ]; then
 		[ -d "$_git_objects" ] || mkdir -p "$_git_objects"
@@ -361,33 +379,9 @@ else
 fi
 rm "$_git/refs/heads/.$name-fetching"
 
-# FIXME: Warn about conflicting tag names?
-# XXX: We now throw stderr to /dev/null since not all repositories
-# may have tags/ and users were confused by the harmless errors.
-[ -d "$_git/refs/tags" ] || mkdir -p "$_git/refs/tags"
-rsyncerr=
-$get -i -s -u -d "$uri/refs/tags" "$_git/refs/tags" || rsyncerr=1
-[ "$rsyncerr" ] && echo "unable to get tags list (non-fatal)" >&2
-
-# Now check if we have the objects pointed at by the tags; if they are
-# tag objects, $fetch didn't get them.
-# XXX: This is the quick'n'dirty way.
-(
-	cd "$_git/refs/tags"
-	for tag in *; do
-		[ "$tag" = "*" ] && break
-		tagid="$(cat "$tag")"
-		GIT_DIR=../.. git-cat-file -t "$tagid" >/dev/null 2>&1 && continue
-		echo -n "Missing object of tag $tag... "
-		if [ "$fetch" != "fetch_rsync" ] && GIT_DIR=../.. $fetch "$tagid" "$uri" 2>/dev/null >&2; then
-			echo "retrieved"
-		else
-			echo "unable to retrieve"
-		fi
-	done
-)
-
+## Fetch the tags
+fetch_tags
 
 rm "$_git/info/cg-fetch-$name-dirty"
-
 show_changes_summary "$orig_head" "$new_head"
+exit 0

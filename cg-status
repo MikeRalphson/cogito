@@ -34,21 +34,21 @@
 # If neither -g or -w is passed, both is shown; otherwise, only the
 # corresponding parts are shown.
 #
-# -g::
+# -g:: Show the GIT repository information
 #	Show the GIT repository information.
 #
-# -n::
+# -n:: Do not show status flags
 #	Do not show status flags. This is probably useful only when you filter
 #	the flags for a single specific flag using the '-s' option.
 #
-# -s STATUS::
+# -s STATUS:: Limit to files matching the STATUS flags
 #	Show only files with the given status flag, e.g. '-s D'. You can list
 #	multiple flags ('-s MmA') to filter for all of them.
 #
-# -w::
+# -w:: Show working files
 #	Show the working tree file list.
 #
-# -x::
+# -x:: Disable file exclusion
 #	Don't exclude any files from listing.
 #
 # DIRPATH::
@@ -116,7 +116,7 @@ if [ "$gitstatus" ]; then
 	[ -s "$_git/branch-name" ] && echo "Branch (informal): $(cat "$_git/branch-name")"
 
 	if [ -s "$_git/head-name" ]; then
-		headsha1=$(cat $_git/HEAD)
+		headsha1=$(cat "$_git/$(git-symbolic-ref HEAD)")
 		echo "Seeked from head: $(cat "$_git/head-name")"
 		echo "Seeked at commit: $headsha1"
 		echo
@@ -124,8 +124,8 @@ if [ "$gitstatus" ]; then
 
 	echo "Heads:"
 	for head in $_git/refs/heads/*; do
-		headsha1=$(cat $head)
-		headname=$(basename $head)
+		headsha1=$(cat "$head")
+		headname=$(basename "$head")
 		[ "$headname" = "cg-seek-point" ] && continue
 		cf=" "; rf=" "
 		[ "$headname" = "$_git_head" ] && cf=">"
@@ -138,6 +138,7 @@ if [ "$gitstatus" ]; then
 		echo
 		echo "Merging: $(cat "$_git/merging") ($(cat "$_git/merging-sym"))"
 		echo "Merge base: $(cat "$_git/merge-base")"
+		[ "$_git/squashing" ] && echo "Squash-merge."
 	fi
 	if [ -s "$_git/commit-ignore" ]; then
 		echo "Files not to be committed now (contained local changes before the merge):"
@@ -150,7 +151,7 @@ if [ "$gitstatus" ]; then
 		sed 's/^/    /' "$_git/blocked"
 	fi
 
-	if [ ! -s .git/HEAD ]; then
+	if [ ! -s "$_git/$(git-symbolic-ref HEAD)" ]; then
 		echo
 		echo "Before initial commit."
 	fi
@@ -175,7 +176,7 @@ if [ "$workstatus" ]; then
 		{ if [ "$basepath" ]; then sed -n "s|^$basepath||p"; else cat; fi } |
 		sed 's,^,? ,'
 
-	if [ ! -s .git/HEAD ]; then
+	if [ ! -s "$_git/$(git-symbolic-ref HEAD)" ]; then
 		# Initial commit
 		should_show_flag 'A' && git-ls-files | sed 's,^,A ,'
 	else

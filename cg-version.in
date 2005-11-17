@@ -1,0 +1,16 @@
+#!/usr/bin/env bash
+#
+# Show the version of the Cogito toolkit.
+# Copyright (c) Petr Baudis, 2005
+#
+# Show which version of Cogito is installed.
+# Additionally, the 'HEAD' of the installed Cogito
+# is also shown if this information was available
+# at the build time.
+
+USAGE="cg-version"
+_git_repo_unneeded=1
+
+. ${COGITO_LIB}cg-Xlib || exit 1
+
+echo "@@VERSION@@ @@GIT_HEAD_ID@@"

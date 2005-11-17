@@ -17,43 +17,44 @@
 #
 # OPTIONS
 # -------
-# -c COMMIT_ID::
+# -c COMMIT_ID:: Copy author info and commit message from COMMIT_ID
 #	Copy the commit from a given commit ID (that is the author information
 #	and the commit message - NOT committer information). This option
 #	is typically used when replaying commits from one lineage or
 #	repository to another.
 #
-# -C::
+# -C:: Ignore cache
 #	Make `cg-commit` ignore the cache and just commit the thing as-is.
-#	Note, this is used internally by 'Cogito' when merging. This option
-#	does not make sense when files are given on the command line.
+#	Note, this is used internally by 'Cogito' when merging, and it is
+#	also useful when you are performing the initial commit manually. This
+#	option does not make sense when files are given on the command line.
 #
-# -m MESSAGE::
+# -m MESSAGE:: Specify commit message
 #	Specify the commit message, which is used instead of starting
 #	up an editor (if the input is not `stdin`, the input is appended
 #	after all the '-m' messages). Multiple '-m' parameters are appended
 #	to a single commit message, each as separate paragraph.
 #
-# -e::
+# -e:: Force message editing of messages given with -m
 #	Force the editor to be brought up even when '-m' parameters were
 #	passed to `cg-commit`.
 #
-# -E::
+# -E:: Force message editing and commit the result
 #	Force the editor to be brought up and do the commit even if
 #	the default commit message is not changed.
 #
-# -f::
+# -f:: Force commit when no changes has been made
 #	Force the commit even when there's "nothing to commit", that is
 #	the tree is the same as the last time you committed, no changes
 #	happened.
 #
-# -N::
+# -N:: Only update the cache
 #	Don't add the files to the object database, just update the caches
 #	and the commit information. This is for special purposes when you
 #	might not actually _have_ any object database. This option is
 #	normally not interesting.
 #
-# -q::
+# -q:: Be very very quiet
 #	Be quiet in case there's "nothing to commit", and silently exit
 #	returning success. In a sense, this is the opposite to '-f'.
 #
@@ -223,17 +224,24 @@ LOGMSG=$(mktemp -t gitci.XXXXXX)
 LOGMSG2=$(mktemp -t gitci.XXXXXX)
 
 written=
-if [ "$merging" ]; then
+if [ "$merging" ] && [ "$msgs" ] && [ ! "$forceeditor" ]; then
+	echo "Warning: Suppressing default merge log messages in favour of the custom -m passed to me." >&2
+elif [ "$merging" ]; then
 	echo -n 'Merge with ' >>$LOGMSG
-	[ "$msgs" ] && echo -n 'Merge with '
 	[ -s $_git/merging-sym ] || cp $_git/merging $_git/merging-sym
 	for sym in $(cat $_git/merging-sym); do
 		uri=$(cat $_git/branches/$sym 2>/dev/null)
 		[ "$uri" ] || uri="$sym"
 		echo "$uri" >>$LOGMSG
-		[ "$msgs" ] && echo "$uri"
 	done
 	echo >>$LOGMSG
+	if [ -s "$_git/squashing" ]; then
+		# We are squashing all the merged commits to a single one.
+		# Therefore, helpfully pre-fill the commit message with
+		# the messages of all the merged commits.
+		git-rev-list --pretty $(cat "$_git/merging") ^HEAD >>$LOGMSG
+		read
+	fi
 	written=1
 fi
 first=1
@@ -352,7 +360,7 @@ __END__
 	fi
 	if [ ! "$ignorecache" ] && [ ! "$merging" ]; then
 		eval newcommitfiles=($(grep ^CG:F $LOGMSG2 | sed 's/^CG:F *\(.*\)$/"\1"/'))
-		if [ ! "${newcommitfiles[*]}" ]; then
+		if [ ! "$force" ] && [ ! "${newcommitfiles[*]}" ]; then
 			rm $LOGMSG $LOGMSG2
 			[ "$quiet" ] && exit 0 || die 'Nothing to commit'
 		fi
@@ -410,8 +418,9 @@ fi
 
 
 oldhead=
-if [ -s "$_git/HEAD" ]; then
-	oldhead=$(cat $_git/HEAD)
+oldheadname="$(git-symbolic-ref HEAD)"
+if [ -s "$_git/$oldheadname" ]; then
+	oldhead="$(cat "$_git/$oldheadname")"
 	oldheadstr="-p $oldhead"
 fi
 
@@ -425,6 +434,7 @@ if [ ! "$force" ] && [ ! "$merging" ] && [ "$oldhead" ] &&
 	exit 2;
 fi
 
+[ -s "$_git/squashing" ] && merging=" " # viciously prevent recording a proper merge
 newhead=$(git-commit-tree $treeid $oldheadstr $merging <$LOGMSG)
 rm $LOGMSG
 
@@ -434,14 +444,19 @@ if [ "$customfiles" ]; then
 fi
 
 if [ "$newhead" ]; then
+	git-update-ref HEAD $newhead $oldhead || die "unable to move to the new commit $newhead"
 	echo "Committed as $newhead."
-	echo $newhead >$_git/HEAD
-	[ "$merging" ] && rm $_git/merging $_git/merging-sym $_git/merge-base
+	[ "$merging" ] && rm -f $_git/merging $_git/merging-sym $_git/merge-base $_git/squashing
 	rm -f "$_git/commit-ignore"
 
 	# Trigger the postcommit hook
 	branchname=
-	[ -s $_git/branch-name ] && branchname=$(cat $_git/branch-name)
+	if [ -s $_git/branch-name ]; then
+		echo "Warning: .git/branch-name is deprecated and support for it will be removed soon." >&2
+		echo "Warning: So please stop relying on it, or complain at pasky@suse.cz. Thanks." >&2
+		branchname=$(cat $_git/branch-name)
+	fi
+	[ -z "$branchname" ] && [ "$_git_head" != "master" ] && branchname="$_git_head"
 	if [ -x $_git/hooks/commit-post ]; then
 		# We just hope that for the initial commit, the user didn't
 		# manage to install the hook yet.

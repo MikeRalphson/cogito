@@ -10,26 +10,26 @@
 #
 # OPTIONS
 # -------
-# -c::
+# -c:: Colorize
 #	Colorize the diff output
 #
-# -p::
-#	Instead of one ID denotes a parent commit to the specified ID
-#	(which must not be a tree, obviously).
+# -p:: Use ID parent
+#	Show diff to the parent of the current commit (or the commit
+#	specified by the -r parameter).
 #
-# -s::
+# -s:: Summarize and show diff stat
 #	Summarize the diff by showing a histogram for removed and added
 #	lines (similar to the output of diffstat(1)) and information
 #	about added and renamed files and mode changes.
 #
-# -r FROM_ID[:TO_ID]::
-#	Specify the revisions to diff using either '-r rev1:rev2' or
+# -r FROM_ID[..TO_ID]:: Limit to revision range
+#	Specify the revisions to diff using either '-r rev1..rev2' or
 #	'-r rev1 -r rev2'. If no revision is specified, the current
 #	working tree is implied. Note that no revision is different from
-#	empty revision which means '-r rev:' compares between 'rev' and
+#	empty revision which means '-r rev..' compares between 'rev' and
 #	'HEAD', while '-r rev' compares between 'rev' and working tree.
 #
-# -m::
+# -m:: Base the diff at the merge base
 #	Base the diff at the merge base of the -r arguments (defaulting
 #	to HEAD and origin).
 #
@@ -45,8 +45,14 @@
 #	This is what the $LESS environment variable value will be set
 #	to before invoking $PAGER. It defaults to $LESS concatenated
 #	with the `R` flag to allow displaying of colorized output.
+#
+# NOTES
+# -----
+# The ':' is equivalent to '..' in revisions range specification (to make
+# things more comfortable to SVN users). See cogito(7) for more details
+# about revision specification.
 
-USAGE="cg-diff [-c] [-m] [-s] [-p] [-r FROM_ID[:TO_ID]] [FILE]..."
+USAGE="cg-diff [-c] [-m] [-s] [-p] [-r FROM_ID[..TO_ID]] [FILE]..."
 
 . ${COGITO_LIB}cg-Xlib || exit 1
 
@@ -151,7 +157,10 @@ if [ "$mergebase" ]; then
 	[ "$id2" != " " ] || id2="origin"
 	id1=$(cg-object-id -c "$id1") || exit 1
 	id2=$(cg-object-id -c "$id2") || exit 1
-	id1=$(git-merge-base $id1 $id2) || exit 1
+	conservative_merge_base $id1 $id2 || exit 1
+	[ "$_cg_base_conservative" ] &&
+		echo -e "Warning: Multiple merge bases, picking the most conservative one\a" >&2
+	id1=$_cg_baselist
 fi
 
 
@@ -173,7 +182,7 @@ if [ "$id2" = " " ]; then
 
 	# FIXME: Update ret based on what did we match. And take "$@"
 	# to account after all.
-	ret=
+	#ret=
 	# xargs on FreeBSD is hardcoded to --no-run-if-empty :/
 	if [ -s "$filter" ]; then
 		cat $filter | path_xargs git-diff-index -r -p $tree | colorize | pager
@@ -183,8 +192,9 @@ if [ "$id2" = " " ]; then
 
 	rm $filter
 
-	[ "$ret" ] && die "no files matched"
-	exit $ret
+	#[ "$ret" ] && die "no files matched"
+	#exit $ret
+	exit 0
 fi
 
 

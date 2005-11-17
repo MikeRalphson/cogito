@@ -13,12 +13,15 @@
 #
 # OPTIONS
 # -------
-# -d DESCRIPTION::
+# -d DESCRIPTION:: Specify tag description
 #	Description of the tag.
-# -k KEYNAME::
+#
+# -k KEYNAME:: Use the given KEYNAME to sign the tag
 #	Use the given key to sign the tag, instead of the default one.
-# -s::
+#
+# -s:: Sign the tag by your private key using GPG.
 #	Sign the tag by your private key using GPG.
+#
 # OBJECT_ID::
 #	This is most usually the ID of the commit to tag. Tagging
 #	other objects than commits is possible, but rather "unusual".
@@ -45,7 +48,7 @@ done
 name="${ARGS[0]}"
 id="${ARGS[1]}"
 
-[ "$name" ] || usage
+[ -n "$name" ] || usage
 
 id=$(cg-object-id -n "$id") || exit 1
 type=$(git-cat-file -t "$id")
@@ -57,7 +60,7 @@ id=${id% *}
 mkdir -p $_git/refs/tags
 
 [ -s "$_git/refs/tags/$name" ] && die "tag already exists ($name)"
-[ "$id" ] || id=$(cat $_git/HEAD)
+[ "$id" ] || id="$(cat "$_git/$(git-symbolic-ref HEAD)")"
 
 
 tagdir="$(mktemp -d -t gittag.XXXXXX)"

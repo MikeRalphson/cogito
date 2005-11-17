@@ -7,7 +7,8 @@ Group: 		Development/Tools
 URL: 		http://kernel.org/pub/software/scm/cogito/
 Source: 	http://kernel.org/pub/software/scm/cogito/%{name}-%{version}.tar.gz
 BuildRoot:	%{_tmppath}/%{name}-%{version}-%{release}-root-%(%{__id_u} -n)
-Requires: 	git-core >= 0.99.7
+Requires: 	git-core >= 0.99.9
+BuildRequires: 	asciidoc
 BuildArch:	noarch
 
 %description
@@ -21,11 +22,13 @@ many other version control systems.
 
 %build
 
-make
+make all doc
 
 %install
 rm -rf $RPM_BUILD_ROOT
-make DESTDIR=$RPM_BUILD_ROOT prefix=%{_prefix} libdir=%{_libdir}/cogito install
+make DESTDIR=$RPM_BUILD_ROOT prefix=%{_prefix} libdir=%{_libdir}/cogito mandir=%{_mandir} \
+	install install-doc
+rm -rf $RPM_BUILD_ROOT/%{_prefix}/share/doc/cogito/txt
 
 %clean
 rm -rf $RPM_BUILD_ROOT
@@ -35,9 +38,13 @@ rm -rf $RPM_BUILD_ROOT
 %{_bindir}/*
 %dir %{_libdir}/cogito
 %{_libdir}/cogito/*
-%doc README COPYING Documentation/*
+%{_mandir}/man*/*
+%doc README COPYING Documentation/tutorial-script
 
 %changelog
+* Tue Nov 1 2005 Pavel Roskin <proski@gnu.org> 0.15.1-1
+- generate and include manuals
+
 * Tue Oct 11 2005 Chris Wright <chrisw@osdl.org> 0.15.1-1
 - use %dist
 

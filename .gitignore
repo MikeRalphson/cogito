@@ -3,3 +3,4 @@ build-stamp
 configure-stamp
 debian/files
 debian/cogito/*
+cogito-*.tar.gz

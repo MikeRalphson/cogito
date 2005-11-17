@@ -5,16 +5,22 @@
 #
 # Generate a patch with diff statistics and meta info about each commit.
 #
+# Note that if you want to use this as the output interface for your
+# GIT tree containing changes against upstream GIT tree, please consider
+# using the StGIT tool ("quilt for GIT"), which will enable you to
+# update your patches seamlessly, rebase them against the latest upstream
+# version, directly send them over mail, etc.
+#
 # OPTIONS
 # -------
-# -d DIRNAME::
+# -d DIRNAME:: Create patches in the DIRNAME directory
 #	Split the patches to separate files with their names in the
 #	format "%02d.patch", created in directory DIRNAME (will be
 #	created if non-existent). Note that this makes sense only
 #	when generating patch series, that is when you use the -r
 #	argument.
 #
-# -f FORMAT::
+# -f FORMAT:: Specify patch file name format
 #	Format string used for generating the patch filename when
 #	outputting the split-out patches (that is, passed the -d
 #	option). This is by default "%s/%02d-%s.patch". The first %s
@@ -22,19 +28,19 @@
 #	sequence number. The last %s is mangled first line of the
 #	commit message - kind of patch title.
 #
-# -m::
+# -m::	Base the diff at the merge base
 #	Base the patches at the merge base of the -r arguments
 #	(defaulting to HEAD and origin).
 #
-# -r FROM_ID[:TO_ID]::
+# -r FROM_ID[..TO_ID]::	Limit to revision range
 #	Specify a set of commits to make patches from using either
-#	'-r FROM_ID[:TO_ID]' or '-r FROM_ID -r TO_ID'. In both cases the
+#	'-r FROM_ID[..TO_ID]' or '-r FROM_ID -r TO_ID'. In both cases the
 #	option expects IDs which resolve to commits and will include the
 #	specified IDs. If 'TO_ID' is omitted patches for all commits
 #	from 'FROM_ID' to the initial commit will be generated. If no
 #	`-r` option is given the commit ID defaults to 'HEAD'.
 #
-# -s::
+# -s:: Omit patch header
 #	Specify whether to print a short version of the patch without
 #	a patch header with meta info such as author and committer.
 #
@@ -43,14 +49,20 @@
 # To make patches for all commits between two releases tagged as
 # 'releasetag-0.9' and 'releasetag-0.10' do:
 #
-#	$ cg-mkpatch -r releasetag-0.9:releasetag-0.10
+#	$ cg-mkpatch -r releasetag-0.9..releasetag-0.10
 #
 # The output will be a continuous dump of patches each separated by
 # the line:
 #
 #	!-------------------------------------------------------------flip-
+#
+# NOTES
+# -----
+# The ':' is equivalent to '..' in revisions range specification (to make
+# things more comfortable to SVN users). See cogito(7) for more details
+# about revision specification.
 
-USAGE="cg-mkpatch [-m] [-s] [-r FROM_ID[:TO_ID] [-d DIRNAME]]"
+USAGE="cg-mkpatch [-m] [-s] [-r FROM_ID[..TO_ID] [-d DIRNAME]]"
 _git_requires_root=1
 
 . ${COGITO_LIB}cg-Xlib || exit 1
@@ -131,7 +143,10 @@ if [ "$mergebase" ]; then
 	[ "$log_end" ] || log_end="origin"
 	id1=$(cg-object-id -c "$log_start") || exit 1
 	id2=$(cg-object-id -c "$log_end") || exit 1
-	log_start=$(git-merge-base $id1 $id2) || exit 1
+	conservative_merge_base $id1 $id2 || exit 1
+	[ "$_cg_base_conservative" ] &&
+		echo -e "Warning: Multiple merge bases, picking the most conservative one\a" >&2
+	log_start=$_cg_baselist
 fi
 
 if [ "$log_end" ]; then

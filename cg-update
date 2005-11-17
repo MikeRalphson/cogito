@@ -22,18 +22,26 @@
 #
 # OPTIONS
 # -------
-# -f::
+# -f:: Force the complete fetch even if the heads are the same.
 #	Force the complete fetch even if the heads are the same.
+#
+# --squash:: Use "squash" merge to record pending commits as a single merge commit
+#	"Squash" merge - condense all the to-be-merged commits to a single
+#	merge commit. This is not to be used lightly; see the cg-merge
+#	documenation for further details.
 
-USAGE="cg-update [-f] [BRANCH_NAME]"
+USAGE="cg-update [-f] [--squash] [BRANCH_NAME]"
 _git_requires_root=1
 
 . ${COGITO_LIB}cg-Xlib || exit 1
 
 force=
+squash=
 while optparse; do
 	if optparse -f; then
 		force=-f
+	elif optparse --squash; then
+		squash=--squash
 	else
 		optfail
 	fi
@@ -53,4 +61,4 @@ else
 fi
 echo
 echo "Applying changes..."
-cg-merge $name
+cg-merge $squash $name

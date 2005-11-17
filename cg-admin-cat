@@ -8,7 +8,7 @@
 #
 # OPTIONS
 # -------
-# -r TREE_ID::
+# -r TREE_ID:: Look for file in the given revision or tree
 #	ID of the revision or tree where to look for the file, instead of
 #	HEAD.
 
@@ -34,7 +34,7 @@ while optparse; do
 	fi
 done
 
-[ "$ARGS" ] || usage
+[ ${#ARGS[*]} -ge 1 ] || usage
 
 id=$(cg-object-id -t "$rev") || exit 1
 

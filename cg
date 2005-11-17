@@ -18,7 +18,7 @@
 #
 # OPTIONS
 # -------
-# --version::
+# --version:: Show the Cogito toolkit version
 #	Show the version of the Cogito toolkit. Equivalent to the output
 #	of `cg-version`.
 

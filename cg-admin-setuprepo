@@ -6,7 +6,10 @@
 # Setup a public GIT repository, that is, one that has no attached working
 # copy and you typically only push into it and pull from it. You need to run
 # this command before you will be able to push into the repository for the
-# first time.
+# first time, but you will be also unable to pull from the repository until
+# you push into it at first. Therefore the workflow is to first init a regular
+# private repository, then use this command to create the public one and push
+# into it then.
 #
 # Use `cg-init` if you want to create a new GIT project instead.
 #
@@ -16,16 +19,30 @@
 # '-g' parameter, which will make `cg-admin-setuprepo` set up the permissions
 # properly.
 #
+# The repository will also be set up so that `git-update-server-info` will
+# be automagically re-ran after each push, making it suitable for HTTP access.
+#
 # Note that you might need to do other additional steps, like touching the
 # 'git-daemon-export-ok' file if you want to make the repository accessible
 # over git-daemon.
 #
 # OPTIONS
 # -------
-# -g GROUP::
+# -g GROUP:: Specify group ownership for the repository 
 #	Name of the UNIX group covering the users authorized to push into
 #	the repository. If unspecified, only you (who ran this command) will
 #	have write (push) access.
+#
+# NOTES
+# -----
+# It may happen that you are using version of GIT missing the default
+# post-update hook, or that the relevant template hooks are not available
+# on your system or with your GIT installation. In that case, in order to
+# have your repository properly accessible with HTTP, you need to add this
+# to .git/hooks/post-update (and then to make it eXecutable):
+#
+#	#!/bin/sh
+#	exec git-update-server-info
 
 USAGE="cg-admin-setuprepo [-g GROUP] DIRECTORY"
 _git_repo_unneeded=1
@@ -61,3 +78,8 @@ if [ "$unixgroup" ]; then
 fi
 
 git-init-db
+
+# Enable git-update-server-info after each push.
+chmod a+x "$_git/hooks/post-update" ||
+	echo "Due to this file missing, HTTP pull will not work properly on this repository." >&2 &&
+	echo "See the NOTES section of cg-admin-setuprepo(1)'s documentation." >&2

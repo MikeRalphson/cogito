@@ -190,7 +190,7 @@ list_untracked_files()
 	excludeflag="$1"; shift
 	EXCLUDE=
 	if [ "$excludeflag" != "no" -a "$excludeflag" != "noexclude" ]; then
-		for excl in '*.[ao]' '.*' tags '*~' '#*' ',,merge*' "$@"; do
+		for excl in '*.[ao]' '.*' '!.gitignore' tags '*~' '#*' "$@"; do
 			EXCLUDE="$EXCLUDE --exclude=$excl"
 		done
 		EXCLUDEFILE=$_git/info/exclude
@@ -229,6 +229,7 @@ showdate()
 # Usage: tree_timewarp [--no-head-update] DIRECTION_STR ROLLBACK_BOOL BASE BRANCH
 # Reset the current tree from version BASE to version BRANCH, properly updating
 # the working copy (if ROLLBACK_BOOL) and trying to keep local changes.
+# Returns false in case of local modifications.
 tree_timewarp()
 {
 	local no_head_update=
@@ -244,8 +245,8 @@ tree_timewarp()
 	[ -s "$_git/merging" ] && die "merge in progress - cancel it by cg-reset first"
 
 	local patchfile=$(mktemp -t gituncommit.XXXXXX)
-	if [ "$rollback" ]; then
-		cg-diff >$patchfile
+	if [ -n "$rollback" ]; then
+		cg-diff -r $base >$patchfile
 		[ -s "$patchfile" ] &&
 			echo "Warning: uncommitted local changes, trying to bring them $dirstr" >&2
 	else
@@ -255,30 +256,43 @@ tree_timewarp()
 		cg-diff -r $branch >$patchfile
 	fi
 
-	#XXX: Two-way merge can be done only when we drop the patches
-	#stuff and do true merge resolving.
-	#if ! git-read-tree -u -m "$base" "$branch"; then
-	git-read-tree -u -m "$branch" || die "$branch: bad commit"
-	[ "$no_head_update" ] || echo "$branch" > $_git/HEAD
+	git-read-tree -m "$branch" || die "$branch: bad commit"
+	[ "$no_head_update" ] || git-update-ref HEAD "$branch" || :
 
 	# Kill gone files
-	git-diff-tree -z -r $base $branch | xargs -0 bash -c '
-		while [ "$1" ]; do
-			header="$1"; shift
-			file="$1"; shift
-
+	git-diff-tree -r $base $branch |
+		while IFS=$'\t' read header file; do
 			# match ":100755 000000 14d43b1abf... 000000000... D"
 			if echo "$header" | egrep "^:([^ ][^ ]* ){4}D" >/dev/null; then
 				rm -- "$file"
 			fi
 		done
-	' padding
+	git-checkout-index -f -a
 
 	# FIXME: Can produce bogus "contains only garbage" messages.
 	cat $patchfile | cg-patch
 	rm $patchfile
 
+	# Returns false for local modifications.
 	git-update-index --refresh >/dev/null
+}
+
+# Determine the most conservative merge base of two commits - keep
+# recursing until we get only a single candidate for a merge base.
+# The merge base is returned as $_cg_baselist. If we had to recurse,
+# a non-zero number is stored in $_cg_base_conservative (otherwise,
+# it's set empty).
+conservative_merge_base()
+{
+	local baselist
+	baselist=("$@")
+	_cg_base_conservative=
+	for (( safecounter=0; $safecounter < 1000; safecounter++ )) ; do
+		baselist=($(git-merge-base --all "${baselist[@]}")) || return 1
+		[ "${#baselist[@]}" -le "1" ] && break
+	done
+	[ $safecounter -gt 0 ] && _cg_base_conservative=$safecounter
+	_cg_baselist=("${baselist[@]}")
 }
 
 # update_index will refresh the index and list the local modifications
@@ -333,18 +347,41 @@ deprecated_alias()
 
 print_help()
 {
-	which "cg-$1" >/dev/null 2>&1 || exit 1
+	_cg_cmd=$(type -P "cg-$2")
+	[ -n "$_cg_cmd" ] || exit 1
+
 	sed -n '/^USAGE=/,0s/.*"\(.*\)"/Usage: \1/p;
-	        /^deprecated_alias/,0s/^deprecated_alias \([^ ]*\)/\1 is the new name for/p' < $(which cg-$1) 
+	        /^deprecated_alias/,0s/^deprecated_alias \([^ ]*\)/\1 is the new name for/p' < "$_cg_cmd"
 	echo
-	sed -n '3,/^$/s/^# *//p' < $(which cg-$1)
+	if [ x"$1" = xlong ]; then
+		# TODO: Reduce this to just one sed if possible.
+		sed -n '3,/^$/s/^# *//p' < "$_cg_cmd" | sed 's/^\(-.*\)::.*/\1::/'
+		exit
+	fi
+
+	echo "Options:"
+	_cg_fmt="  %-20s %s\n"
+	sed -n 's/# \(-.*\)::[^A-Za-z0-9]\(.*\)/\1\n\2/p' < "$_cg_cmd" | while read line; do
+		case "$line" in
+		-*)
+			_cg_option="$line"
+			;;
+		*)
+			printf "$_cg_fmt" "$_cg_option" "$line"
+			;;
+		esac
+	done
+	printf "$_cg_fmt" "-h, --help" "Print usage summary"
+	printf "$_cg_fmt" "--long-help" "Print user manual"
 	exit
 }
 
 for option in "$@"; do
 	[ x"$option" = x-- ] && break
-	if [ x"$option" = x"-h" -o x"$option" = x"--help" ]; then
-		print_help ${_cg_cmd##cg-}
+	if [ x"$option" = x"-h" ] || [ x"$option" = x"--help" ]; then
+		print_help short ${_cg_cmd##cg-}
+	elif [ x"$option" = x"--long-help" ]; then
+		print_help long ${_cg_cmd##cg-}
 	fi
 done
 
@@ -490,7 +527,7 @@ if [ ! "$_git_repo_unneeded" ]; then
 	       exit 1
 	fi
 	_git_head=master
-	[ -L "$_git/HEAD" ] && _git_head="$(basename "$(readlink "$_git/HEAD")")"
+	[ -s "$_git/HEAD" ] && { _git_head="$(git-symbolic-ref HEAD)"; _git_head=${_git_head#refs/heads/}; }
 	[ -s "$_git/head-name" ] && _git_head="$(cat "$_git/head-name")"
 fi
 

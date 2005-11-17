@@ -15,24 +15,24 @@
 # The possible source location specifiers are:
 #
 # 1. Local path - note that fetching will hardlink the objects if possible.
+#
 # 2. rsync - `rsync://host/path`
 #    THE rsync REPOSITORY ACCESS METHOD IS DEPRECATED AND WILL BE REMOVED
 #    IN THE FUTURE! The problem is that it will download _all_ data from
 #    the remote repository, including objects which do not belong to the
 #    one particular branch you want to fetch.
+#
 # 3. HTTP - `http://host/path`
+#
 # 4. SSH - `git+ssh://host/path` or `host:path` (the latter can change);
 #    note that the path must be absolute in the first case.
-# 5. Packed SSH - `git+pack+ssh://host/path` - fetch over SSH, but using
-#    the git-fetch-pack tool. This won't clone tags, but might be much more
-#    network-effective (while also more CPU-intensive especially on the
-#    server side).
-#    THIS SCHEME IS DEPRECATED AND IT WILL BE REMOVED VERY SOON, NEVER USE IT.
-#    The standard git+ssh scheme will be made to behave as git+pack+ssh.
-# 6. GIT-Daemon - `git://host/path` - this won't clone tags.
+#
+# 5. GIT-Daemon - `git://host/path` - this won't clone tags.
+#
 #
 # The URL can have a fragment part, which identifies a branch inside of
-# the remote repository.
+# the remote repository. Otherwise, Cogito defaults to whatever branch
+# the repository's HEAD points to at the time of each fetch.
 #
 # FILES
 # -----
@@ -67,7 +67,7 @@ USAGE="cg-branch-add BRANCH_NAME LOCATION"
 name=${ARGS[0]}
 location=${ARGS[1]}
 
-([ "$name" ] && [ "$location" ] && ! [ "${ARGS[2]}" ]) || usage
+([ -n "$name" ] && [ -n "$location" ] && ! [ -n "${ARGS[2]}" ]) || usage
 (echo $name | egrep -qv '[^a-zA-Z0-9_.@!:-]') || \
 	die "name contains invalid characters"
 if [ "$name" = "this" ] || [ "$name" = "HEAD" ]; then

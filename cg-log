@@ -13,7 +13,7 @@
 # Arguments not interpreted as options will be interpreted as filenames;
 # cg-log then displays only changes in those files.
 #
-# -c::
+# -c::	Colorize
 #	Colorize the output. The used colors are listed below together
 #	with information about which log output (summary, full or both)
 #	they apply to:
@@ -26,34 +26,42 @@
 #		- `date`:	'green'		(summary)
 #		- `trim_mark`:	'magenta'	(summary)
 #
-# -f::
+# -f::	List affected files
 #	List affected files. (No effect when passed along `-s`.)
 #
-# -r FROM_ID[:TO_ID]::
+# -r FROM_ID[..TO_ID]:: Limit to a set of revisions
 #	Limit the log information to a set of revisions using either
-#	'-r FROM_ID[:TO_ID]' or '-r FROM_ID -r TO_ID'. In both cases the
+#	'-r FROM_ID[..TO_ID]' or '-r FROM_ID -r TO_ID'. In both cases the
 #	option expects IDs which resolve to commits and will include the
 #	specified IDs. If 'TO_ID' is omitted all commits from 'FROM_ID'
 #	to the initial commit is shown. If no revisions is specified,
 #	the log information starting from 'HEAD' will be shown.
 #
-# -d DATE::
+# -d DATE:: Limit to revisions newer than given DATE
 #	Limit the log information to revisions newer than given DATE,
 #	and on second time further restrain it to revisions older than
 #	given date. Therefore, '-d "2 days ago" -d "yesterday"' will
 #	show all the commits from the day before yesterday.
 #
-# -m::
+# -m::	End the log at the merge base of the revision set
 #	End the log listing at the merge base of the -r arguments
 #	(defaulting to HEAD and origin).
 #
-# -s::
+# -M, --no-merges:: Ignore merge commits
+#	Don't display merge commits in the log.
+#
+# -s::	Summarize the log entries
 #	Show a one line summary for each log entry. The summary contains
 #	information about the commit date, the author, the first line
 #	of the commit log and the commit ID. Long author names and commit
 #	IDs are trimmed and marked with an ending tilde (~).
 #
-# -uUSERNAME::
+# --summary:: Group commits by title
+#	Generate the changes summary, listing the commit titles grouped
+#	by their author. This is also known as a "shortlog", suitable
+#	e.g. for contribution summaries of announcements.
+#
+# -uUSERNAME:: Limit to commit where author/committer matches USERNAME
 #	List only commits where author or committer contains 'USERNAME'.
 #	The search for 'USERNAME' is case-insensitive.
 #
@@ -76,9 +84,21 @@
 # To show a log of changes between two releases tagged as 'releasetag-0.9'
 # and 'releasetag-0.10' do:
 #
-#	$ cg-log -r releasetag-0.9:releasetag-0.10
+#	$ cg-log -r releasetag-0.9..releasetag-0.10
+#
+# Similarily, to see which commits are in branch A but not yet in branch B,
+#
+#	$ cg-log -r B..A
+#
+# (meaning "all the commits needed along the way from B to A").
+#
+# NOTES
+# -----
+# The ':' is equivalent to '..' in revisions range specification (to make
+# things more comfortable to SVN users). See cogito(7) for more details
+# about revision specification.
 
-USAGE="cg-log [-c] [-f] [-m] [-s] [-uUSERNAME] [-d DATE] [-r FROM_ID[:TO_ID]] FILE..."
+USAGE="cg-log [-c] [-f] [-m] [-M] [-s] [-uUSERNAME] [-d DATE] [-r FROM_ID[..TO_ID]] [--summary] FILE..."
 
 . ${COGITO_LIB}cg-Xlib || exit 1
 # Try to fix the annoying "Broken pipe" output. May not help, but apparently
@@ -149,13 +169,6 @@ process_commit_line()
 
 		if [ "$user" ]; then
 			if ! [[ "$author" == *"$user"* || "$committer" == *"$user"* ]]; then
-				skip_commit=1
-				return
-			fi
-		fi
-		if [ -s "$filter" ]; then
-			parent="${parents[0]}"
-			if ! [ "$(cat $filter | path_xargs git-diff-tree --root -r $commit $parent)" ]; then
 				skip_commit=1
 				return
 			fi
@@ -240,10 +253,12 @@ list_files=
 log_start=
 log_end=
 summary=
+shortlog=
 user=
 mergebase=
 date_from=
 date_to=
+no_merges=
 
 while optparse; do
 	if optparse -c; then
@@ -285,8 +300,12 @@ while optparse; do
 		fi
 	elif optparse -m; then
 		mergebase=1
+	elif optparse -M || optparse --no-merges; then
+		no_merges="--no-merges"
 	elif optparse -s; then
 		summary=1
+	elif optparse --summary; then
+		shortlog=1
 	else
 		optfail
 	fi
@@ -298,10 +317,18 @@ if [ "$mergebase" ]; then
 	[ "$log_end" ] || log_end="origin"
 	id1=$(cg-object-id -c "$log_start") || exit 1
 	id2=$(cg-object-id -c "$log_end") || exit 1
-	log_start=$(git-merge-base $id1 $id2) || exit 1
+	conservative_merge_base $id1 $id2 || exit 1
+	[ "$_cg_base_conservative" ] &&
+		echo -e "Warning: Multiple merge bases, picking the most conservative one\a" >&2
+	log_start=$_cg_baselist
 fi
 
-revls="git-rev-list --pretty=raw $date_from $date_to"
+if [ "$shortlog" ]; then
+	revls="git-rev-list --pretty=short"
+else
+	revls="git-rev-list --pretty=raw"
+fi
+revls="$revls $no_merges $date_from $date_to"
 
 id1="$(cg-object-id -c "$log_start")" || exit 1
 if [ "$log_end" ]; then
@@ -311,19 +338,22 @@ else
 	revls="$revls $id1"
 fi
 
+# Later, we will want to use git-diff-tree --stdin for the filtering
+# instead of git-rev-list, so that we can do custom renames detection.
+# See also <Pine.LNX.4.64.0510212025260.10477@g5.osdl.org>.
+sep=
+[ "${ARGS[*]}" ] && sep=--
 
-filter=$(mktemp -t gitlog.XXXXXX)
-# XXX: Semantic problem: Should cg-log without parameters in a subdirectory
-# list only changes concerning the subdirectory, or all the changes?
-# We follow the principle of least surprise now and list all the changes.
-# [ "$_git_relpath" -a ! "$ARGS" ] && echo "$_git_relpath" >>$filter
-for file in "${ARGS[@]}"; do
-	echo "${_git_relpath}$file" >>$filter
-done
+
+if [ "$shortlog" ]; then
+	# Special care here.
+	$revls $sep "${ARGS[@]}" | git-shortlog | pager
+	exit
+fi
+
 
 # LESS="S" will prevent less to wrap too long titles to multiple lines;
 # you can scroll horizontally.
-$revls | print_commit_log | _local_CG_LESS="S" pager
+$revls $sep "${ARGS[@]}" | print_commit_log | _local_CG_LESS="S" pager
 
-rm $filter
 exit 0

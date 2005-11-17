@@ -1,31 +1,29 @@
 #!/usr/bin/env bash
 #
 # Get SHA1 ID of commit or tree associated with given ID or HEAD.
-# Copyright (c) Petr Baudis, 2005
-# Copyright (c) Pavel Roskin, 2005
-# Copyright (c) Philip Pokorny, 2005
+# Copyright (c) Petr Baudis, Pavel Roskin, Philip Pokorny  2005
 #
 # If the ID is not provided, HEAD is used.  The default behavior is to
 # show the commit ID.
 #
 # OPTIONS
 # -------
-# -c::
+# -c:: Get commit ID
 #	Get ID of commit matching the object ID (error out if it is not
 #	a commit). This is the default if you do not pass any parameter
 #	as well, but that is only for the human usage. For clarity, all
 #	scripted usage of cg-object-id should use -c explicitly if it
 #	wants a commit.
 #
-# -n::
+# -n:: Disable object type checking
 #	Normalize only - don't check the object type.
 #
-# -p::
+# -p:: Get parent commit ID(s)
 #	Get ID of the first parent commit of a given revision or HEAD.
 #	NOTE: Multiple SHA1s separated by newlines will be returned for
 #	commits with multiple parents.
 #
-# -t::
+# -t:: Get tree ID
 #	Get ID of tree associated with given commit or HEAD.
 #
 # OBJECT_ID::
@@ -53,7 +51,7 @@ normalize_id()
 	fi
 
 	if [ ! "$id" ] || [ "$id" = "this" ] || [ "$id" = "HEAD" ]; then
-		read id < "$_git/HEAD"
+		read id < "$_git/$(git-symbolic-ref HEAD)"
 
 	elif [ -r "$_git/refs/tags/$id" ]; then
 		read id < "$_git/refs/tags/$id"
@@ -70,7 +68,8 @@ normalize_id()
 		idmatch=($_git_objects/$idpref/$idpost*)
 
 		if [ ${#idmatch[*]} -eq 1 ] && [ -r "$idmatch" ]; then
-			id=$idpref${idmatch#$_git_objects/$idpref/}
+			exid=$idpref${idmatch#$_git_objects/$idpref/}
+			[ ${#exid} -eq 40 ] && [ "$(git-rev-parse --revs-only "$exid")" ] && id="$exid"
 		elif [ ${#idmatch[*]} -gt 1 ]; then
 			echo "Ambiguous id: $id" >&2
 			echo "${idmatch[@]}" >&2

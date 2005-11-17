@@ -1,0 +1,127 @@
+#!/usr/bin/env bash
+#
+# Switch your current local branch.
+# Copyright (c) Yann Dirson, Petr Baudis  2005
+#
+# `cg-switch` can switch your current local branch (and working copy)
+# to an existing branch, or create a new branch based on a given commit.
+#
+# Terminology note: This command concerns local branches (also called
+# "heads"), not remote branches (those managed by `cg-branch-add`).
+#
+# OPTIONS
+# -------
+# -f:: Enable overwriting of existing branches
+#	Force the branch's head pointer update even if the branch
+#	already exists. WARNING: The pointer to the original contents
+#	of the branch will be lost! The contents itself will not be
+#	deleted, `git-fsck-objects --unreachable` might help you to
+#	find it.
+#
+# -n:: No switch; only create and update the branch
+#	Do not switch your current branch to the given branch. This
+#	will make cg-switch to only create or update the branch, but
+#	leave your working copy alone.
+#
+# -r COMMIT_ID:: Branch off the given COMMIT_ID
+#	Point the branch at the given commit. Defaults to the current
+#	commit when creating a new branch; when switching to an existing
+#	branch, the branch pointer is not modified if no '-r' is passed.
+#
+# EXAMPLE USAGE
+# -------------
+# To create a "v1.x" branch based on the commit "v1.0" and switch the
+# working copy to it, making it your current branch, do:
+#
+# 	$ cg-switch -r v1.0 v1.x
+#
+# If you want to create the branch but don't switch your working copy
+# to it (so that your current branch stays the same as before), do:
+#
+# 	$ cg-switch -n -r v1.0 v1.x
+#
+# If you want to go back to the 'master' branch, just do:
+#
+# 	$ cg-switch master
+#
+# To change the "v1.x" branch to refer to the latest commit on the
+# "testing" branch, do (WARNING: you will lose the pointer to the
+# original contents of the "v1.x" branch, be careful!):
+#
+# 	$ cg-switch -f -r testing v1.x
+
+USAGE="cg-switch [-f] [-n] [-r COMMIT_ID] BRANCH"
+_git_requires_root=1
+
+. ${COGITO_LIB}cg-Xlib || exit 1
+
+set -e
+
+
+repoint_head() {
+	# $oldcommit is optional
+	local dsthead="$1" dstcommit="$2" oldcommit="$3"
+	git-update-ref "refs/heads/$dsthead" "$dstcommit" $oldcommit
+}
+
+
+force=
+seek=1
+dstcommit=
+while optparse; do
+	if optparse -f; then
+		force=1
+	elif optparse -n; then
+		seek=
+	elif optparse -r=; then
+		dstcommit="$(cg-object-id -c "$OPTARG")" || exit 1
+	else
+		optfail
+	fi
+done
+
+[ "${#ARGS[@]}" -eq "1" ] || usage
+
+dsthead="${ARGS[0]}"
+[ -s "$_git/branches/$dsthead" ] &&
+	die "refusing to switch to a remote branch - see README for lengthy explanation"
+
+[ "$(git-symbolic-ref HEAD)" != "refs/heads/$dsthead" ] || [ -n "$dstcommit" ] ||
+	die "already on branch $dsthead"
+
+if [ "$seek" ]; then
+	[ -s "$_git/blocked" ] && die "switch blocked: $(cat "$_git/blocked")"
+fi
+
+
+curcommit="$(cg-object-id -c)"
+
+if [ -s "$_git/refs/heads/$dsthead" ]; then
+	# Existing branch
+	[ -r "$_git/refs/heads/$dsthead" ] ||
+		die "reference '$_git/refs/heads/$dsthead' is unreadable"
+	if [ -n "$dstcommit" ]; then
+		[ "$force" ] ||
+			die "branch $dsthead already exists - use -f to force the switch"
+		srccommit="$(cg-object-id -c "$dsthead")"
+		echo "Repointing branch $dsthead: $srccommit -> $dstcommit"
+		repoint_head "$dsthead" "$dstcommit" "$srccommit"
+	fi
+
+else
+	# New branch
+	[ "$dstcommit" ] || dstcommit="$(cg-object-id -c)"
+	echo "Creating new branch $dsthead: $dstcommit"
+	repoint_head "$dsthead" "$dstcommit"
+fi
+
+
+if [ "$seek" ]; then
+	[ -n "$dstcommit" ] || dstcommit="$(cg-object-id -c "$dsthead")"
+	echo "Switching to branch $dsthead..."
+	if [ "x$curcommit" != "x$dstcommit" ]; then
+		# tree_timewarp returns false on local modifications
+		tree_timewarp --no-head-update "along" "please rollback" "$curcommit" "$dstcommit" || :
+	fi
+	git-symbolic-ref HEAD "refs/heads/$dsthead"
+fi

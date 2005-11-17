@@ -17,7 +17,15 @@
 #
 # For intuitiveness, specifying the branch name (`cg-seek master`) will do
 # the right thing too. If you want to migrate your working tree to another
-# branch, use `cg-clone`.
+# branch, use `cg-clone` to create a new tree for the new branch, or
+# `cg-switch` to change your current tree to use the new branch.
+#
+# NOTES
+# -----
+# If you want to permanently switch your branch to a different commit id
+# (forgetting its current contents), you can use the `cg-switch` command:
+#
+#	$ cg-switch -f -r COMMIT_ID CURRENT_HEAD_NAME
 
 USAGE="cg-seek [COMMIT_ID]"
 _git_requires_root=1
@@ -49,9 +57,9 @@ if [ "$seek_mode" = "away" ]; then
 	# We hold this in a temporary branch so that some of the core
 	# GIT tools (git checkout and git-fsck-objects) don't get confused.
 	echo "$dstcommit" >$_git/refs/heads/cg-seek-point
-	rm $_git/HEAD; ln -s "refs/heads/cg-seek-point" $_git/HEAD
+	git-symbolic-ref HEAD "refs/heads/cg-seek-point"
 else
-	rm $_git/HEAD; ln -s "refs/heads/$_git_head" $_git/HEAD
+	git-symbolic-ref HEAD "refs/heads/$_git_head"
 	rm $_git/refs/heads/cg-seek-point $_git/head-name
 	rm -f $_git/blocked
 fi

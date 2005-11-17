@@ -83,7 +83,7 @@ individual commands, do e.g.
 
 or
 
-	cg-log --help
+	cg-log --long-help
 
 Regular commands
 ~~~~~~~~~~~~~~~~
@@ -108,7 +108,8 @@ $(print_command_listing $HELPER_COMMANDS)
 Command Identifiers
 -------------------
 BRANCH_NAME::
-	Indicates a branch name added with the $(man 1 cg-branch-add) command.
+	Indicates a branch name added with the $(man 1 cg-branch-add) or
+	$(man 1 cg-switch) commands.
 
 COMMAND::
 	Indicates a 'Cogito' command. The \`cg-\` prefix is optional.

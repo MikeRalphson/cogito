@@ -1,8 +1,10 @@
-CG_IGNORE=$(wildcard ../cg-X* ../cg-*.orig ../cg-*.rej)
+CG_IGNORE=$(wildcard ../cg-X* ../cg-*.orig ../cg-*.rej ../cg-*.in)
 CG_SRC=$(filter-out $(CG_IGNORE), $(wildcard ../cg*))
 
+PACKAGE=cogito
+
 MAN1_TXT=$(patsubst ../cg%,cg%.txt,$(CG_SRC))
-MAN7_TXT=cogito.txt
+MAN7_TXT=$(PACKAGE).txt
 
 DOC_HTML=$(patsubst %.txt,%.html,$(MAN1_TXT) $(MAN7_TXT)) introduction.html
 
@@ -14,7 +16,7 @@ bin=$(prefix)/bin
 mandir=$(prefix)/man
 man1=$(mandir)/man1
 man7=$(mandir)/man7
-docdir=$(prefix)/share/doc/cogito
+docdir=$(prefix)/share/doc/$(PACKAGE)
 txtdir=$(docdir)/txt
 htmldir=$(docdir)/html
 
@@ -54,7 +56,7 @@ install-html: html
 	$(INSTALL) $(DOC_HTML) $(DESTDIR)/$(htmldir)
 
 clean:
-	rm -f *.xml *.html *.1 *.7 cg*.txt cogito.txt
+	rm -f *.xml *.html *.1 *.7 cg*.txt $(PACKAGE).txt
 
 .PRECIOUS: cg%.txt
 
@@ -70,12 +72,12 @@ introduction.html: ../README
 %.xml : %.txt
 	asciidoc -b docbook -d manpage -f asciidoc.conf $<
 
-cogito.txt : make-cogito-asciidoc
-	./make-cogito-asciidoc > $@
+$(PACKAGE).txt : make-$(PACKAGE)-asciidoc
+	./make-$(PACKAGE)-asciidoc > $@
 
 # It seems that cg%.txt won't match this so use an explicit rule
 cg.txt : ../cg make-cg-asciidoc
-	./make-cg-asciidoc $< > $@
+	CGPACKAGE=$(PACKAGE) ./make-cg-asciidoc $< > $@
 
 cg-%.txt : ../cg-% make-cg-asciidoc
-	./make-cg-asciidoc $< > $@
+	CGPACKAGE=$(PACKAGE) ./make-cg-asciidoc $< > $@

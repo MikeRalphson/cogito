@@ -16,11 +16,11 @@
 # We are designed to merge $3 _to_ $2, so we will give it
 # a preference.
 #
+# FIXME: Make at least some effort to protect against checking in
+# the conflicts.
 #
-# Handle some trivial cases.. The _really_ trivial cases have
-# been handled already by git-read-tree, but that one doesn't
-# do any merges that might change the tree layout.
-#
+# FIXME: What if a symlink replaces a regular file? What if symlinks conflict?
+# What about directory-regularfile conflicts?
 
 . ${COGITO_LIB}cg-Xlib || exit 1
 
@@ -54,6 +54,18 @@ pmxmc()
 	fi
 }
 
+# Set ways[] to the symbolic names of the particular ways
+load_unescaped_sym_ways()
+{
+	ways=("merge base" "$_git_head" "$(cat "$_git/merging-sym")")
+}
+load_sym_ways()
+{
+	load_unescaped_sym_ways
+	ways[0]="merge/base"
+	ways=("${ways[@]//\//~}")
+}
+
 
 case "${id0:-.}${id1:-.}${id2:-.}" in
 #
@@ -67,6 +79,32 @@ case "${id0:-.}${id1:-.}${id2:-.}" in
 		exec git-update-index --remove -- "$file"
 	;;
 
+#
+# Deleted in one and changed in the other
+#
+"$id0$id1." | "$id0.$id2")
+	#echo "Removing $file"
+	filev="$file"
+	load_sym_ways
+	if [ "$id1" ]; then
+		num=1; mode="$mode1"; id="$id1"
+	else
+		num=2; mode="$mode2"; id="$id2"
+	fi
+	while [ -e "$filev~${ways[0]}" ] || [ -e "$filev~${ways[$num]}" ]; do
+		filev="$filev~"
+	done
+	error "File $file removed in one branch but modified in the other!"
+	error "The original version saved as '$filev~${ways[0]}', the modified one as '$filev~${ways[$num]}'."
+	git-update-index --add --cacheinfo "$mode0" "$id0" "$file" &&
+		git-checkout-index -u -f -- "$file" &&
+		mv "$file" "$filev~${ways[0]}" ||
+		error "Cannot create '$filev~${ways[0]}'"
+	git-update-index --add --cacheinfo "$mode" "$id" "$file" &&
+		git-checkout-index -u -f -- "$file" &&
+		mv "$file" "$filev~${ways[$num]}" ||
+		error "Cannot create '$filev~${ways[$num]}'"
+	;;
 #
 # Added in one.
 #
@@ -98,19 +136,20 @@ case "${id0:-.}${id1:-.}${id2:-.}" in
 ".$id1$id2")
 	#echo "Adding $file"
 	filev="$file"
-	while [ -e "$filev~1" ] || [ -e "$filev~2" ]; do
+	load_sym_ways
+	while [ -e "$filev~${ways[1]}" ] || [ -e "$filev~${ways[2]}" ]; do
 		filev="$filev~"
 	done
 	error "File $file added in both branches, but different in each!"
-	error "Conflicting versions saved as '$filev~1' and '$filev~2'."
+	error "Conflicting versions saved as '$filev~${ways[1]}' and '$filev~${ways[2]}'."
 	git-update-index --add --cacheinfo "$mode1" "$id1" "$file" &&
 		git-checkout-index -u -f -- "$file" &&
-		mv "$file" "$filev~1" ||
-		error "Cannot create '$filev~1'"
+		mv "$file" "$filev~${ways[1]}" ||
+		error "Cannot create '$filev~${ways[1]}'"
 	git-update-index --add --cacheinfo "$mode2" "$id2" "$file" &&
 		git-checkout-index -u -f -- "$file" &&
-		mv "$file" "$filev~2" ||
-		error "Cannot create '$filev~2'"
+		mv "$file" "$filev~${ways[2]}" ||
+		error "Cannot create '$filev~${ways[2]}'"
 	exit 1
 	;;
 
@@ -122,11 +161,12 @@ case "${id0:-.}${id1:-.}${id2:-.}" in
 	orig=$(git-unpack-file $id0)
 	src2=$(git-unpack-file $id2)
 
+	load_unescaped_sym_ways
 	# We reset the index to the first branch, making
 	# git-diff-file useful
 	git-update-index --add --cacheinfo "$mode1" "$id1" "$file"
 		git-checkout-index -u -f -- "$file" &&
-		merge "$file" "$orig" "$src2"
+		merge -L "${ways[1]}" -L "${ways[0]}" -L "${ways[2]}" "$file" "$orig" "$src2"
 	ret=$?
 	rm -f -- "$orig" "$src2"
 
@@ -151,7 +191,7 @@ case "${id0:-.}${id1:-.}${id2:-.}" in
 	;;
 
 *)
-	error "$file: Not handling case: ${id0:-empty} -> ${id1:-empty} -> ${id2:-empty}"
+	error "$file: Not handling case: ${id0:-empty} -> ${id1:-empty} -> ${id2:-empty} (this would be a Cogito bug, please report it)"
 	;;
 esac
 exit 1

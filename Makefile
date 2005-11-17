@@ -16,7 +16,8 @@ SCRIPT=	cg-object-id cg-add cg-admin-lsobj cg-admin-uncommit \
 	cg-branch-add cg-branch-ls cg-reset cg-clone cg-commit cg-diff \
 	cg-export cg-help cg-init cg-log cg-merge cg-mkpatch cg-patch \
 	cg-fetch cg-restore cg-rm cg-seek cg-status cg-tag cg-tag-ls cg-update \
-	cg cg-admin-ls cg-push cg-branch-chg cg-admin-cat cg-clean
+	cg cg-admin-ls cg-push cg-branch-chg cg-admin-cat cg-clean \
+	cg-admin-setuprepo cg-switch
 
 LIB_SCRIPT=cg-Xlib cg-Xmergefile cg-Xfetchprogress
 
@@ -35,25 +36,15 @@ all: cogito
 cogito: $(GEN_SCRIPT)
 
 ifneq (,$(wildcard .git))
-GIT_HEAD=.git/HEAD
-GIT_HEAD_ID=" \($(shell cat $(GIT_HEAD))\)"
+GIT_HEAD=.git/$(shell git-symbolic-ref HEAD)
+GIT_HEAD_ID=($(shell cat $(GIT_HEAD)))
 endif
-cg-version: $(VERSION) $(GIT_HEAD) Makefile
+cg-version: cg-version.in $(VERSION) $(GIT_HEAD)
 	@echo Generating cg-version...
 	@rm -f $@
-	@echo "#!/bin/sh" > $@
-	@echo "#" >> $@
-	@echo "# Show the version of the Cogito toolkit." >> $@
-	@echo "# Copyright (c) Petr Baudis, 2005" >> $@
-	@echo "#" >> $@
-	@echo "# Show which version of Cogito is installed." >> $@
-	@echo "# Additionally, the 'HEAD' of the installed Cogito" >> $@
-	@echo "# is also shown if this information was available" >> $@
-	@echo "# at the build time." >> $@
-	@echo >> $@
-	@echo "USAGE=\"cg-version\"" >> $@
-	@echo >> $@
-	@echo "echo \"$(shell cat $(VERSION))$(GIT_HEAD_ID)\"" >> $@
+	@sed -e 's/@@VERSION@@/$(shell cat $(VERSION))/' \
+	     -e 's/@@GIT_HEAD_ID@@/$(GIT_HEAD_ID)/' \
+	     < $< > $@ 
 	@chmod +x $@
 
 doc:
@@ -91,7 +82,7 @@ install-cogito: $(SCRIPT) $(LIB_SCRIPT) $(GEN_SCRIPT)
 	$(INSTALL) -m755 -d $(DESTDIR)$(libdir)
 	$(INSTALL) $(LIB_SCRIPT) $(DESTDIR)$(libdir)
 	cd $(DESTDIR)$(bindir); \
-	for file in $(SCRIPT); do \
+	for file in $(SCRIPT) $(GEN_SCRIPT); do \
 		sed -e 's/\$${COGITO_LIB}/"\$${COGITO_LIB:-$(sedlibdir)\/}"/g' $$file > $$file.new; \
 		cat $$file.new > $$file; rm $$file.new; \
 	done

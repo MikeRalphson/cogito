@@ -46,8 +46,7 @@ The following tools are very recommended for regular Cogito operation:
 Tool				Description
 -------------------------------------------------------------------------------
 merge				E.g. from the RCS package, for merging.
-wget				For fetching files with the HTTP backend.
-rsync				For fetching files with the rsync backend.
+curl				For fetching files with the HTTP backend.
 ssh				For fetching files with the git+ssh backend.
 -------------------------------------------------------------------------------
 
@@ -56,6 +55,7 @@ The following tools are optional but recommended:
 `-------------------------------`----------------------------------------------
 Tool				Description
 -------------------------------------------------------------------------------
+rsync				For fetching files with the rsync backend.
 gnu coreutils			The gnu versions of stat, date and cp \
 				are preferred over the BSD variants.
 asciidoc (>= 7.0), xmlto	For building documentation.
@@ -216,7 +216,7 @@ If there are any changes, two IDs will be printed during `cg-fetch` or
 parameters to cg-diff and you will get a diff describing changes from
 the last time you fetched. You can also
 
-	$ cg-diff -r origin:HEAD
+	$ cg-diff -r origin..HEAD
 
 which will show changes between the cloned branch and your current branch
 (shall you do any modifications).
@@ -409,17 +409,16 @@ repository locally, it can be actually very cheap, basically for free with
 
 But what if you still do not want multiple repositories? The key here is to
 change your "current head" from 'master' to some new head, and then to be
-able to switch back and forth. This is unfortunately something Cogito does
-not let you do directly right now, but you can use core GIT commands
+able to switch back and forth:
 
-	$ git-checkout -b aspyk
+	$ cg-switch aspyk
 
-to create a new 'aspyk' head and switch to it, and
+to create a new 'aspyk' head (based on your current commit) and switch
+to it, and
 
-	$ git-checkout master
+	$ cg-switch master
 
-to switch back to 'master' later, etc. Note that between the switching,
-Cogito will work just fine even if your current head is not 'master'.
+to switch back to 'master' later, etc.
 
 You can get the list of available heads by
 
