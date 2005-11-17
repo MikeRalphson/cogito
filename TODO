@@ -21,8 +21,10 @@ cg-*patch should be pre-1.0.)
 	Includes merge-order cg-log and cg-diff checking for renames.
 
 * "Volatile" branches
-	Properly follow branches which can rebase (do not do tree
-	merges but "fastforwards").
+	* Properly follow branches which can rebase (do not do tree
+	  merges but "fastforwards").
+	* Make one-time merges easier by enabling cg-update to take
+	  URIs directly, not only head names.
 
 * Support for remotes/
 	More powerful 'n stuff than branches/, ya know.
