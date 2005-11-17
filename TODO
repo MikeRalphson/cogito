@@ -22,7 +22,10 @@ cg-*patch should be pre-1.0.)
 
 * "Volatile" branches
 	* Properly follow branches which can rebase (do not do tree
-	  merges but "fastforwards").
+	  merges but "fastforwards"). This means that when merging
+	  a branch whose old commit id matches your HEAD commit, you
+	  always do a fastforward, even if the new commit is not the
+	  proper superset.
 	* Make one-time merges easier by enabling cg-update to take
 	  URIs directly, not only head names.
 
