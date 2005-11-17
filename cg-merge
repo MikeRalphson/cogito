@@ -206,6 +206,7 @@ git-diff-index --name-only "$(cg-object-id -t $head)" >>"$_git/commit-ignore"
 if ! git-read-tree -u -m "$(cg-object-id -t $base)" "$(cg-object-id -t $head)" "$(cg-object-id -t $branch)"; then
 	echo "cg-merge: git-read-tree failed (merge likely blocked by local changes)" >&2
 	posthook $mergetype localchanges
+	rm -f "$_git/commit-ignore"
 	exit 1
 fi
 
