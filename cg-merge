@@ -62,6 +62,15 @@
 #	STATUS is always "ok", while for "tree" the STATUS can be
 #	"localchanges", "conflicts", "nocommit", or "ok".
 
+# Developer's documentation:
+#
+# ENVIRONMENT
+# -----------
+# _cg_orig_head::
+#	The original commit ID of the to-be-merged branch, if cg-merge
+#	is called right after fetch. This is used to do better decision
+#	about whether to fast-forward or tree-merge.
+
 USAGE="cg-merge [-c] [-b BASE_COMMIT] [BRANCH_NAME]"
 _git_requires_root=1
 
@@ -119,7 +128,7 @@ if [ "$base" = "$branch" ]; then
 	exit 0
 fi
 
-if [ "$head" = "$base" ]; then
+if [ "$head" = "$base" ] || [ "$head" = "$_cg_orig_head" ]; then
 	# No need to do explicit merge with a merge commit; just bring
 	# the HEAD forward.
 

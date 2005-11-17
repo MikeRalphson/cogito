@@ -1,13 +1,17 @@
 #!/usr/bin/env bash
 #
-# Pull and merge changes from a branch to the local repository.
+# Pull and merge changes from a remote branch to the local repository.
 # Copyright (c) Petr Baudis, 2005
 #
 # Takes the branch name as an argument, defaulting to 'origin'.
 #
-# This is basically equivalent to running cg-fetch and cg-merge commands
-# successively. Please refer to the documentation of those commands for
-# more details about the operation.
+# This is similar to running cg-fetch and cg-merge commands successively.
+# Please refer to the documentation of those commands for more details
+# about the operation. Note that if you are not doing own development
+# but only following some project, you it is recommended to use this command
+# instead of `cg-fetch` + `cg-merge` since `cg-update` can handle some
+# additional corner cases (in particular, if the remote branch rebases,
+# `cg-update` will fast-forward instead of doing a tree merge and diverging).
 #
 # Note that in the GIT newspeak, the operation being performed by cg-update
 # is now called 'pull', even though in the past, 'pull' was the name for
@@ -38,6 +42,9 @@ done
 name=${ARGS[0]}
 [ "$name" ] || { [ -s $_git/branches/origin ] && name=origin; }
 [ "$name" ] || die "where to update from?"
+
+# cg-merge can do better decision about fast-forwarding if it sees this.
+[ -s "$_git/refs/heads/$name" ] && export _cg_orig_head="$(cat "$_git/refs/heads/$name")"
 
 if [ -s "$_git/branches/$name" ]; then
 	cg-fetch $force $name || exit 1
