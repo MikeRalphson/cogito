@@ -9,18 +9,6 @@ You may have to deal with md5 mismatches.  Either adjust the md5sum in
 your new Portfile or place the new tarball in
 /opt/local/var/db/dports/distfiles/cogito.
 
-Caveats:
-
-cg-fetch on a local repository requires cp -u, a non-portable gnu
-extension.  This means that cg-fetch, cg-clone and cg-update from a
-local repository are broken.
-
-Workaround #1: Use rsync for local clones.  I.e.  "cg-clone
-rsync://localhost/dir" instead of "cg-clone dir".  This loses the disk
-space savings of normally gained by cg-clone.
-
-Workaround #2: Use gnu cp.  "cd /opt/local/bin; sudo ln -s gcp cp".
-
 Recommendations:
 
 The gnu versions of "stat" and "date" are preferred over their BSD

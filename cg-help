@@ -8,8 +8,9 @@
 # If the argument is left out an overview of all the Cogito commands will
 # be shown.
 #
-# Note help for a command is also available by passing `--help` or `-h`
-# to the command.
+# Note, short help for a command is also available by passing `--help` or
+# `-h` to the command. The complete command manual is shown when passing
+# `--long-help` (and is the same as doing "`cg-help command`").
 #
 # OPTIONS
 # -------

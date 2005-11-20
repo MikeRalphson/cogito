@@ -8,7 +8,7 @@
 # This is similar to running cg-fetch and cg-merge commands successively.
 # Please refer to the documentation of those commands for more details
 # about the operation. Note that if you are not doing own development
-# but only following some project, you it is recommended to use this command
+# but only following some project, it is recommended to use this command
 # instead of `cg-fetch` + `cg-merge` since `cg-update` can handle some
 # additional corner cases (in particular, if the remote branch rebases,
 # `cg-update` will fast-forward instead of doing a tree merge and diverging).
