@@ -31,7 +31,7 @@ rm -rf repo2
 test_expect_failure 'clone now-gone repo2 in-current-dir from repo1' \
 	'cg-clone -s repo1 repo2'
 test_expect_success 'symlinked clone of repo2 from repo1' \
-	'(cd repo2 && cg-clone -l repo1 repo2)'
+	'cg-clone -l repo1 repo2'
 rm -rf repo2
 mkdir repo2
 test_expect_success 'clone in-current-dir repo2 from $(pwd)/../repo1/../repo1.git/' \
