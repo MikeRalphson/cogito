@@ -5,7 +5,8 @@
 test_description="Tests local cg-fetch
 
 Whether it works at all, basically. ;-) Actually, we will be doing
-cg-clones, but that's really just a funny cg-fetch frontend."
+cg-clones, but that's really just a funny cg-fetch frontend. We will
+also test symlinked clone."
 
 . ./test-lib.sh
 
@@ -29,6 +30,9 @@ test_expect_failure 'clone repo2 in-current-dir from repo1' \
 rm -rf repo2
 test_expect_failure 'clone now-gone repo2 in-current-dir from repo1' \
 	'cg-clone -s repo1 repo2'
+test_expect_success 'symlinked clone of repo2 from repo1' \
+	'(cd repo2 && cg-clone -l repo1 repo2)'
+rm -rf repo2
 mkdir repo2
 test_expect_success 'clone in-current-dir repo2 from $(pwd)/../repo1/../repo1.git/' \
 	'(cd repo2 && cg-clone -s $(pwd)/../repo1/../repo1.git/)'
