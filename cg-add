@@ -25,9 +25,8 @@
 # -r::	Add files recursively
 #	If you pass cg-add this flag and any directory names, it will try
 #	to add files in those directories recursively (with regard to your
-#	ignore rules - see cg-status documentation for more detailed
-#	description of those). See also above for more notes about cg-add
-#	vs. directories.
+#	ignore rules - see `cg-status` for a more detailed description of
+#	those). See also above for more notes about cg-add vs. directories.
 
 USAGE="cg-add [-N] [-r] FILE..."
 

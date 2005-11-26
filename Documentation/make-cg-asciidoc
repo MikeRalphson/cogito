@@ -79,6 +79,21 @@ else
 	fi
 fi
 
+# cg(1) does not answer to the help options in the same way as the
+# rest of the commands
+if [ "$COMMAND" = "cg" ]; then
+	HELP_OPTIONS="
+-h, --help::
+	Print overview of Cogito commands. Same as gitlink:cg-help[1]."
+else
+	HELP_OPTIONS="
+-h, --help::
+	Print usage summary.
+
+--long-help::
+	Print user manual. The same as found in $TITLE."
+fi
+
 cat <<__END__
 $TITLE
 $TITLELINE
@@ -98,12 +113,7 @@ $DESCRIPTION
 OPTIONS
 -------
 $OPTIONS
-
--h, --help::
-	Print usage summary.
-
---long-help::
-	Print user manual. The same as found in $TITLE.
+$HELP_OPTIONS
 
 $MISC
 
@@ -113,6 +123,6 @@ $COPYRIGHT
 
 SEE ALSO
 --------
-$COMMAND command is part of gitlink:${PACKAGE}[7],
+$COMMAND is part of gitlink:${PACKAGE}[7],
 a toolkit for managing gitlink:git[7] trees.
 __END__
