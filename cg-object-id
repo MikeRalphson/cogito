@@ -78,7 +78,8 @@ normalize_id()
 	fi
 
 	valid=; [ ${#id} -eq 40 ] && [ "$(git-rev-parse --revs-only "$id")" ] && valid=1
-	if ([ "$id" ] && [ "$id" != " " ]) && [ ! "$valid" ]; then
+	# date does the wrong thing for empty and single-letter ids
+	if [ ${#id} -gt 1 ] && [ ! "$valid" ]; then
 		reqsecs=$(date --date="$id" +'%s' 2>/dev/null)
 
 		if [ "$reqsecs" ]; then
