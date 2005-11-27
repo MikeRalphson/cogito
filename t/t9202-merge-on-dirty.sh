@@ -89,7 +89,7 @@ cp branch1/foo branch1/foo-
 test_expect_failure 'merging branch2 to branch1 (clean)' \
 		"(cd branch1 && cg-merge </dev/null)"
 test_expect_success 'checking if we still have our local change' \
-		'(cd branch1 && cg-status -w | grep -q "^m foo" && cmp foo foo-)'
+		'(cd branch1 && cg-status -w | grep -q "^M foo" && cmp foo foo-)'
 # This test is useful if the previous one failed - did it get lost or
 # accidentally committed?
 test_expect_success 'checking that we didn'\''t commit the local change' \
@@ -163,6 +163,8 @@ test_expect_failure 'merging branch2 to branch1 (conflicting)' \
 test_expect_success 'checking if the merge caused a conflict' \
 		'(cd branch1 && grep "<<<" brm)'
 # <now imagine me resolving the conflict>
+test_expect_success 'checking if we still have our local change' \
+		'(cd branch1 && cg-status -w | grep -q "^m bar" && cmp bar bar-)'
 test_expect_success 'committing "resolved" conflicting merge' \
 		'(cd branch1 && cg-commit -m"Resolved conflicting merge")'
 test_expect_success 'checking if we still have our local change' \
