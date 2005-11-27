@@ -35,7 +35,7 @@ done
 
 name=${ARGS[0]}
 
-[ "$name" ] || { [ -s $_git/refs/heads/origin ] && name=origin; }
+[ "$name" ] || { [ -s $_git/branches/origin ] && name=origin; }
 [ "$name" ] || die "where to push to?"
 uri=$(cat "$_git/branches/$name" 2>/dev/null) || die "unknown branch: $name"
 
