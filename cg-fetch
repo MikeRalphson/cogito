@@ -158,7 +158,7 @@ get_local()
 		cp_flags_l="$cp_flags_l -L"
 		shift
 	else
-		cp_flags_l="$cp_flags_l -dpR"
+		cp_flags_l="$cp_flags_l -pRP"
 	fi
 
 	[ "$1" = "-i" ] && shift
