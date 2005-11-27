@@ -114,7 +114,7 @@ list_commit_files()
 	sep="    * $colfiles"
 	# List all files for for the initial commit
 	if [ -z $tree2 ]; then
-		list_cmd="git-ls-tree $tree1"
+		list_cmd="git-ls-tree -r $tree1"
 	else
 		list_cmd="git-diff-tree -r $tree1 $tree2"
 	fi
