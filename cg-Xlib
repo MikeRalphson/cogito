@@ -504,16 +504,10 @@ fi
 
 _git=${GIT_DIR:-.git}
 if [ ! "$_git_repo_unneeded" ] && [ ! "$GIT_DIR" ] && [ ! -d $_git ]; then
-	rootpath=.
-	# while not /
-	while [ ! -d $rootpath/.git ] && [ "$(stat -c %i $rootpath)" != "$(stat -c %i $rootpath/..)" ]; do
-		rootpath=../$rootpath
-	done
-	if [ -d $rootpath/.git ]; then
-		mainpath="$(echo "$(pwd)/$rootpath" | normpath)"
-		_git_relpath=$(pwd)/
-		export _git_relpath=${_git_relpath:$((${#mainpath}+1))}
-		cd "$rootpath"
+	_git_abs_path="$(git-rev-parse --git-dir 2>/dev/null)"
+	if [ -d "$_git_abs_path" ]; then
+		export _git_relpath="$(git-rev-parse --show-prefix)"
+		cd "$_git_abs_path/.."
 	fi
 fi
 _git_objects="${GIT_OBJECT_DIRECTORY:-$_git/objects}"
