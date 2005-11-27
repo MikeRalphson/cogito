@@ -175,6 +175,8 @@ while optparse; do
 	fi
 done
 
+cg-object-id HEAD >/dev/null 2>&1 || die "no previous commit; use -C for the initial commit"
+
 if [ "$ARGS" -o "$_git_relpath" ]; then
 	[ "$ignorecache" ] && die "-C and listing files to commit does not make sense"
 	[ -s $_git/merging ] && die "cannot commit individual files when merging"
