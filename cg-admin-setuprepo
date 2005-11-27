@@ -80,6 +80,7 @@ fi
 git-init-db
 
 # Enable git-update-server-info after each push.
-chmod a+x "$_git/hooks/post-update" ||
-	echo "Due to this file missing, HTTP pull will not work properly on this repository." >&2 &&
-	echo "See the NOTES section of cg-admin-setuprepo(1)'s documentation." >&2
+if ! chmod a+x "$_git/hooks/post-update"; then
+	echo "Due to the missing post-update hook, HTTP pull will not work properly on this repository." >&2
+	echo "See the NOTES section of cg-admin-setuprepo(1)'s documentation for more details." >&2
+fi
