@@ -35,7 +35,7 @@ test_expect_success 'symlinked clone of repo2 from repo1' \
 rm -rf repo2
 mkdir repo2
 test_expect_success 'clone in-current-dir repo2 from $(pwd)/../repo1/../repo1.git/' \
-	'(cd repo2 && cg-clone -s $(pwd)/../repo1/../repo1.git/)'
+	'(cd repo2 && cg-clone -s "$(pwd)/../repo1/../repo1.git/")'
 
 echo file1v2 >repo1/file1
 test_expect_success 'commit in repo1' \
