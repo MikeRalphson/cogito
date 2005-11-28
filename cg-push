@@ -24,6 +24,15 @@ USAGE="cg-push [BRANCH_NAME] [-t TAG]..."
 
 . ${COGITO_LIB}cg-Xlib || exit 1
 
+
+send_pack_update()
+{
+	name="$1"; shift
+	commit="$(cg-object-id -c)"; old="$(cat "$_git/refs/heads/$name" 2>/dev/null)"
+	git-send-pack "$@" && git-update-ref refs/heads/"$name" "$commit" $old
+}
+
+
 tags=()
 while optparse; do
 	if optparse -t=; then
@@ -50,13 +59,13 @@ fi
 if echo "$uri" | grep -q "^http://"; then
 	die "pushing over HTTP not supported yet"
 elif echo "$uri" | grep -q "^git+ssh://"; then
-	git-send-pack "$(echo "$uri" | sed 's#^git+ssh://\([^/]*\)\(/.*\)$#\1:\2#')" $_git_head$sprembranch "${tags[@]}"
+	send_pack_update "$name" "$(echo "$uri" | sed 's#^git+ssh://\([^/]*\)\(/.*\)$#\1:\2#')" $_git_head$sprembranch "${tags[@]}"
 elif echo "$uri" | grep -q "^rsync://"; then
         die "pushing over rsync not supported"
 elif echo "$uri" | grep -q ":"; then
 	echo "WARNING: I guessed the host:path syntax was used and fell back to the git+ssh protocol."
 	echo "WARNING: The host:path syntax is evil because it is implicit. Please just use a URI."
-	git-send-pack "$uri" $_git_head$sprembranch "${tags[@]}"
+	send_pack_update "$name" "$uri" $_git_head$sprembranch "${tags[@]}"
 else
 	remgit="$uri"; [ -d "$remgit/.git" ] && remgit="$remgit/.git"
 	if is_same_repo "$_git_objects" "$remgit/objects"; then
@@ -68,12 +77,14 @@ else
 		fi
 
 		[ -x "$remgit/hooks/update" ] && "$remgit/hooks/update" "$rembranch" "$remid" "$(cg-object-id -c)"
-		cg-object-id -c >"$remgit"/refs/heads/$rembranch
+		commit="$(cg-object-id -c)"
+		echo "$commit" >"$remgit"/refs/heads/$rembranch
+		git-update-ref refs/heads/"$name" "$commit"
 		for tag in "${tags[@]}"; do
 			cat "$_git"/refs/tags/"$tag" >"$remgit"/refs/tags/"$tag"
 		done
 		[ -x "$remgit/hooks/post-update" ] && "$remgit/hooks/post-update" "$rembranch"
 	else
-		git-send-pack "$uri" $_git_head$sprembranch "${tags[@]}"
+		send_pack_update "$name" "$uri" $_git_head$sprembranch "${tags[@]}"
 	fi
 fi
