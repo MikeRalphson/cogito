@@ -81,8 +81,6 @@ cg-*patch should be pre-1.0.)
 		  whitespace errors and stuff; hooks are good for this too,
 		  but I think it's good to have internal support for the
 		  basic stuff.
-		* -s,--signoff to automatically append a signoff line of
-		  yours to the patch.
 	-- post 1.0 --
 	* Patch-altering cg-commit
 		You can already alter the list of files to be committed,

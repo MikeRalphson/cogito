@@ -58,6 +58,11 @@
 #	Be quiet in case there's "nothing to commit", and silently exit
 #	returning success. In a sense, this is the opposite to '-f'.
 #
+# -s, --signoff:: Automatically append a sign off line
+#	Add Signed-off-by line at the end of the commit message.
+#	Optionally, specify the exact name and email to sign off with by
+#	passing: `--signoff="Author Name <user@example.com>"`.
+#
 # FILES
 # -----
 # $GIT_DIR/author::
@@ -119,7 +124,7 @@
 # EDITOR::
 #	The editor used for entering revision log information.
 
-USAGE="cg-commit [-m MESSAGE]... [-C] [-e | -E] [-c COMMIT_ID] [FILE]... [< MESSAGE]"
+USAGE="cg-commit [-m MESSAGE]... [-C] [-e | -E] [-s | --signoff] [-c COMMIT_ID] [FILE]... [< MESSAGE]"
 
 . ${COGITO_LIB}cg-Xlib || exit 1
 
@@ -148,6 +153,7 @@ ignorecache=
 infoonly=
 commitalways=
 missingok=
+signoff=
 copy_commit=
 msgs=()
 quiet=
@@ -166,6 +172,10 @@ while optparse; do
 		force=1
 	elif optparse -q; then
 		quiet=1
+	elif optparse -s || optparse --signoff; then
+		[ "$signoff" ] || signoff="$(git-var GIT_AUTHOR_IDENT | sed 's/> .*/>/')"
+	elif optparse --signoff=; then
+		signoff="$OPTARG"
 	elif optparse -m=; then
 		msgs[${#msgs[@]}]="$OPTARG"
 	elif optparse -c=; then
@@ -291,6 +301,11 @@ fi >> $LOGMSG
 # Always have at least one blank line, to ease the editing for
 # the poor people whose text editor has no 'O' command.
 [ "$written" ] || echo >>$LOGMSG
+
+if [ "$signoff" ] && ! grep -q -i "signed-off-by: $signoff" $LOGMSG; then
+	grep -q -i sign-off-by $LOGMSG || echo
+	echo "Signed-off-by: $signoff"
+fi >> $LOGMSG
 
 if [ -e "$_git/commit-template" ]; then
 	cat $_git/commit-template >>$LOGMSG
