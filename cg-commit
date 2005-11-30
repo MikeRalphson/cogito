@@ -63,6 +63,12 @@
 #	Optionally, specify the exact name and email to sign off with by
 #	passing: `--signoff="Author Name <user@example.com>"`.
 #
+# --review:: Show and enable editing of changes being committed
+#	Show changes being commited as a patch appended to the commit message
+#	buffer. Changes made to the patch will be reapplied before completing
+#	the commit. This only makes sense if you are going to edit the commit
+#	message interactively.
+#
 # FILES
 # -----
 # $GIT_DIR/author::
@@ -172,6 +178,7 @@ ignorecache=
 infoonly=
 commitalways=
 missingok=
+review=
 signoff=
 copy_commit=
 msgs=()
@@ -191,6 +198,8 @@ while optparse; do
 		force=1
 	elif optparse -q; then
 		quiet=1
+	elif optparse --review; then
+		review=1
 	elif optparse -s || optparse --signoff; then
 		[ "$signoff" ] || signoff="$(git-var GIT_AUTHOR_IDENT | sed 's/> .*/>/')"
 	elif optparse --signoff=; then
@@ -206,6 +215,11 @@ done
 
 [ "$ignorecache" ] || cg-object-id HEAD >/dev/null 2>&1 || die "no previous commit; use -C for the initial commit"
 
+if [ "$review" ]; then
+	PATCH="$(mktemp -t gitci.XXXXXX)"
+	PATCH2="$(mktemp -t gitci.XXXXXX)"
+fi
+
 if [ "$ARGS" -o "$_git_relpath" ]; then
 	[ "$ignorecache" ] && die "-C and listing files to commit does not make sense"
 	[ -s "$_git/merging" ] && die "cannot commit individual files when merging"
@@ -220,6 +234,7 @@ if [ "$ARGS" -o "$_git_relpath" ]; then
 		sed -e 's/"\|\\/\\&/g' -e 's/^\([^	]*\)\(.\)	\(.*\)\(	.*\)*$/"\2 \3"/'))"
 	customfiles=1
 
+	[ "$review" ] && < "$filter" | path_xargs git-diff-index -r -m -p HEAD > "$PATCH"
 	rm "$filter"
 
 else
@@ -245,6 +260,8 @@ else
 			commitfiles=("${newcommitfiles[@]}")
 		fi
 	fi
+
+	[ "$review" ] && git-diff-index -r -m -p HEAD > "$PATCH"
 
 	merging=
 	[ -s "$_git/merging" ] && merging="$(cat "$_git/merging" | sed 's/^/-p /')"
@@ -316,7 +333,7 @@ if [ "$GIT_AUTHOR_NAME" -o "$GIT_AUTHOR_EMAIL" -o "$GIT_AUTHOR_DATE" ]; then
 	echo "CG:" >>"$LOGMSG"
 fi
 
-if [ ! "$ignorecache" ]; then
+if [ ! "$ignorecache" ] && [ ! "$review" ]; then
 	if [ ! "$merging" ]; then
 		if [ ! "$force" ] && [ ! "${commitfiles[*]}" ]; then
 			rm "$LOGMSG" "$LOGMSG2"
@@ -339,9 +356,29 @@ if [ ! "$ignorecache" ]; then
 		echo "CG: You need not worry, the local changes will not interfere with the merge." >>"$LOGMSG"
 	fi
 fi
+if [ "$review" ]; then
+	echo "CG: Changes summary:"
+	echo "CG:"
+	git-apply --stat --summary < "$PATCH" | sed 's/^/CG: /'
+	echo "CG:"
+fi >>"$LOGMSG"
 [ "$commitalways" ] || echo "CG: Do not save this file and just quit if you want to abort the commit." >>"$LOGMSG"
 echo "CG: -----------------------------------------------------------------------" >>"$LOGMSG"
-echo "CG: vim: textwidth=75" >>"$LOGMSG"
+
+if [ "$review" ]; then
+	{
+		echo "CG:"
+		echo "CG: The patch being committed:"
+		echo "CG: (You can edit it; your tree will be modified accordingly and"
+		echo "CG: the modified patch will be committed.)"
+		echo "CG:"
+		cat "$PATCH"
+	} >>"$LOGMSG"
+
+	ftdiff="filetype=diff"
+fi
+
+echo "CG: vim: textwidth=75 $ftdiff" >>"$LOGMSG"
 
 cp "$LOGMSG" "$LOGMSG2"
 if tty -s; then
@@ -353,6 +390,7 @@ if tty -s; then
 				read -p 'Abort or commit? [ac] ' choice
 				if [ "$choice" = "a" ] || [ "$choice" = "q" ]; then
 					rm "$LOGMSG" "$LOGMSG2"
+					[ "$review" ] && rm "$PATCH" "$PATCH2"
 					echo "Commit message not modified, commit aborted" >&2
 					if [ "$merging" ]; then
 						cat >&2 <<__END__
@@ -369,7 +407,7 @@ __END__
 			done
 		fi
 	fi
-	if [ ! "$ignorecache" ] && [ ! "$merging" ]; then
+	if [ ! "$ignorecache" ] && [ ! "$merging" ] && [ ! "$review" ]; then
 		eval "newcommitfiles=($(grep ^CG:F "$LOGMSG2" | sed 's/^CG:F *\(.*\)$/"\1"/'))"
 		if [ ! "$force" ] && [ ! "${newcommitfiles[*]}" ]; then
 			rm "$LOGMSG" "$LOGMSG2"
@@ -393,9 +431,30 @@ __END__
 else
 	cat >>"$LOGMSG2"
 fi
+
 # Remove heading and trailing blank lines.
-grep -v ^CG: "$LOGMSG2" | git-stripspace >"$LOGMSG"
+if [ ! "$review" ]; then
+	grep -v ^CG: "$LOGMSG2" | git-stripspace >"$LOGMSG"
+else
+	sed '/^CG: Changes summary:/,$d' < "$LOGMSG2" | grep -v ^CG: | git-stripspace >"$LOGMSG"
+	sed -n '/^CG: Changes summary:/,$p' < "$LOGMSG2" | grep -v ^CG: > "$PATCH2"
+fi
 rm "$LOGMSG2"
+
+if [ "$review" ]; then
+	if ! cmp -s "$PATCH" "$PATCH2"; then
+		echo "Reverting the original patch..."
+		if ! cg-patch -R < "$PATCH"; then
+			rm "$PATCH" "$LOGMSG"
+			die "unable to revert the original patch; your edited patch is available in $PATCH2"
+		fi
+		echo "Applying the edited patch..."
+		if ! cg-patch < "$PATCH2"; then
+			rm "$PATCH" "$PATCH2" "$LOGMSG"
+			die "unable to apply the edited patch"
+		fi
+	fi
+fi
 
 
 precommit_update()
