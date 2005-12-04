@@ -269,13 +269,13 @@ Note that we gave only a glimpse to the basic usage, but there is a lot more
 pushing (`cg-push`), etc.
 
 
-Understanding GIT branching and merging
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+Understanding Cogito branching and merging
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-Cogito's (inherited from GIT) concept of branching and merging may be a little
-confusing at first, since it can be different from what you knew so far. First,
-"branch" is too abstract word for us, so we will abandon it for now. We will
-present two other key concepts instead:
+Cogito's (partially inherited from GIT) concept of branching and merging may be
+a little confusing at first, since it can be different from what you knew so far.
+First, "branch" is too abstract word for us, so we will abandon it for now.
+We will present two other key concepts instead:
 
 	- Repository - when you did `cg-clone` or `cg-init`, you created
 	  a repository. That is a kind of container holding (usually) all your
