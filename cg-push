@@ -56,13 +56,13 @@ if echo "$uri" | grep -q '#'; then
 	uri=$(echo $uri | cut -d '#' -f 1)
 fi
 
-if echo "$uri" | grep -q "^http://"; then
+if [ "${uri#http://}" != "$uri" ]; then
 	die "pushing over HTTP not supported yet"
-elif echo "$uri" | grep -q "^git+ssh://"; then
+elif [ "${uri#git+ssh://}" != "$uri" ]; then
 	send_pack_update "$name" "$(echo "$uri" | sed 's#^git+ssh://\([^/]*\)\(/.*\)$#\1:\2#')" $_git_head$sprembranch "${tags[@]}"
-elif echo "$uri" | grep -q "^rsync://"; then
+elif [ "${uri#rsync://}" != "$uri" ]; then
         die "pushing over rsync not supported"
-elif echo "$uri" | grep -q ":"; then
+elif [ "${uri#*:}" != "$uri" ]; then
 	echo "WARNING: I guessed the host:path syntax was used and fell back to the git+ssh protocol."
 	echo "WARNING: The host:path syntax is evil because it is implicit. Please just use a URI."
 	send_pack_update "$name" "$uri" $_git_head$sprembranch "${tags[@]}"
