@@ -3,8 +3,10 @@
 # Initialize a GIT repository.
 # Copyright (c) Petr Baudis, 2005
 #
-# If `cg-init` is run in a non-empty directory files in the top and
-# sub directory will automatically be added.
+# `cg-init` called in a non-empty directory will automatically add its contents
+# in the initial commit. (Please note that certain default ignore rules are
+# applied during this operation. If any files were not added due to this,
+# cg-init will advise you what to do.)
 #
 # This command is intended for creating repositories for work on new projects.
 # If you want to clone an existing project, see `cg-clone`. If you want to
@@ -70,6 +72,11 @@ git-read-tree # Seed the dircache
 if ! [ "$no_initial_commit" ]; then
 	[ "$(ls)" ] && list_untracked_files exclude "${excludes[@]}" | xargs -0 cg-add ${infoonly}
 	cg-commit -C "${commitargs[@]}" ${infoonly}
+fi
+
+if [ "$(cg-status -nwx)" ]; then
+	echo "cg-init: Note that some files were not added due to the default ignore rules." >&2
+	echo "cg-init: You can list them by invoking 'cg-status -x'." >&2
 fi
 
 exit 0
