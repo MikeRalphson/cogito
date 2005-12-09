@@ -76,14 +76,14 @@ clean_dirs()
 
 	fpath=${_git_relpath-./}
 	find "$fpath" -type d -print |
-		while IFS=$'\n' read dir; do
+		while read dir; do
 			echo "${dir#$fpath}"
 		done |
 		sed '/^$/d;/^\.git$/d;/^\.git\//d' |
 		cat - "$dirlist" | sort -u |
 		diff - "$dirlist" |
 		sed -n 's/< //p' |
-	for file in $(cat); do
+	while read file; do
 		path="${_git_relpath}$file"
 		if [ ! -d "$path" ]; then
 			# Perhaps directory was removed with its parent
@@ -116,7 +116,7 @@ clean_files()
 	IFS=$'\n'
 
 	cg-status -n -s '?' "$xopt" -w |
-	for file in $(cat); do
+	while read file; do
 		path="${_git_relpath}$file"
 		if [ -d "$path" -a ! -L "$path" ]; then
 			# Sanity check, shouldn't happen
