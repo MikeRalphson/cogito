@@ -51,9 +51,10 @@ clean_dirs()
 {
 	dirlist=$(mktemp -t gitlsfiles.XXXXXX)
 	git-ls-files --cached |
-		sed -n 's|^'"$_git_relpath"'||p' |
 		sed -n 's|/[^/]*$||p' |
 		while IFS=$'\n' read dir; do
+			[ x"${dir#$_git_relpath}" = x"${dir}" ] && continue
+			dir="${dir#$_git_relpath}"
 			while true; do
 				echo "$dir"
 				updir="${dir%/*}"
@@ -68,7 +69,10 @@ clean_dirs()
 
 	fpath=${_git_relpath-./}
 	find "$fpath" -type d -print |
-		sed 's|^'"$fpath"'||;/^$/d;/^\.git$/d;/^\.git\//d' |
+		while IFS=$'\n' read dir; do
+			echo "${dir#$fpath}"
+		done |
+		sed '/^$/d;/^\.git$/d;/^\.git\//d' |
 		cat - "$dirlist" | sort -u |
 		diff - "$dirlist" |
 		sed -n 's/< //p' |

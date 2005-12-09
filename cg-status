@@ -173,7 +173,14 @@ if [ "$workstatus" ]; then
 
 	should_show_flag '?' &&
 		list_untracked_files $exclude | tr '\0' '\n' |
-		{ if [ "$basepath" ]; then sed -n "s|^$basepath||p"; else cat; fi } |
+		if [ "$basepath" ]; then
+			while IFS=$'' read path; do
+				[ x"${path#$basepath}" != x"$path" ] &&
+					echo "${path#$basepath}"
+			done
+		else
+			cat
+		fi |
 		sed 's,^,? ,'
 
 	if [ ! -s "$_git/$(git-symbolic-ref HEAD)" ]; then
