@@ -22,7 +22,7 @@ many other version control systems.
 
 %build
 
-make all doc
+make %{_smp_mflags} all doc
 
 %install
 rm -rf $RPM_BUILD_ROOT
@@ -42,6 +42,9 @@ rm -rf $RPM_BUILD_ROOT
 %doc README COPYING Documentation/tutorial-script
 
 %changelog
+* Thu Dec 8 2005 H. Peter Anvin <hpa@zytor.com>
+- add %{_smp_mflags}
+
 * Tue Nov 1 2005 Pavel Roskin <proski@gnu.org> 0.15.1-1
 - generate and include manuals
 
