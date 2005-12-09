@@ -53,7 +53,10 @@ for file in "${ARGS[@]}"; do
 	if [ -d "$absfile" ]; then
 		if [ "$recursive" ]; then
 			list_untracked_files exclude | tr '\0' '\n' |
-				sed -n "s|^$absfile|$file|p" >>$TMPFILE
+				while IFS=$'' read path; do
+					[ x"${path#$absfile}" != x"$path" ] &&
+						echo "$file${path#$absfile}" >>$TMPFILE
+				done
 		else
 			echo "$file is a directory (use cg-add -r?)" >&2
 			error=1

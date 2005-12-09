@@ -15,13 +15,16 @@
 # -D:: Clean directories more thoroughly
 #	Same as -d but try harder (change permissions first).
 #
+# -n:: Don't actually remove files, just pretend to
+#	Do not actually remove the files, just pretend to do so.
+#
 # -q:: Silence progress reporting
 #	Quiet - don't report what's being cleaned.
 #
 # -x:: Clean files ignored by cg-status
 #	Also clean files ignored by cg-status, such as object files.
 
-USAGE="cg-clean [-d] [-D] [-q] [-x]"
+USAGE="cg-clean [-d] [-D] [-n] [-q] [-x]"
 
 . ${COGITO_LIB}cg-Xlib || exit 1
 
@@ -29,12 +32,16 @@ noexclude=
 cleandir=
 cleandirhard=
 quiet=
+rm=rm
 while optparse; do
 	if optparse -d; then
 		cleandir=1
 	elif optparse -D; then
 		cleandir=1
 		cleandirhard=1
+	elif optparse -n; then
+		pretendrm () { echo rm "$@"; }
+		rm="pretendrm"
 	elif optparse -q; then
 		quiet=1
 	elif optparse -x; then
@@ -51,9 +58,10 @@ clean_dirs()
 {
 	dirlist=$(mktemp -t gitlsfiles.XXXXXX)
 	git-ls-files --cached |
-		sed -n 's|^'"$_git_relpath"'||p' |
 		sed -n 's|/[^/]*$||p' |
 		while IFS=$'\n' read dir; do
+			[ x"${dir#$_git_relpath}" = x"${dir}" ] && continue
+			dir="${dir#$_git_relpath}"
 			while true; do
 				echo "$dir"
 				updir="${dir%/*}"
@@ -68,11 +76,14 @@ clean_dirs()
 
 	fpath=${_git_relpath-./}
 	find "$fpath" -type d -print |
-		sed 's|^'"$fpath"'||;/^$/d;/^\.git$/d;/^\.git\//d' |
+		while read dir; do
+			echo "${dir#$fpath}"
+		done |
+		sed '/^$/d;/^\.git$/d;/^\.git\//d' |
 		cat - "$dirlist" | sort -u |
 		diff - "$dirlist" |
 		sed -n 's/< //p' |
-	for file in $(cat); do
+	while read file; do
 		path="${_git_relpath}$file"
 		if [ ! -d "$path" ]; then
 			# Perhaps directory was removed with its parent
@@ -86,7 +97,7 @@ clean_dirs()
 		if [ "$cleandirhard" ]; then
 			chmod -R 700 "$path"
 		fi
-		rm -rf "$path"
+		$rm -rf "$path"
 		if [ -e "$path" -o -L "$path" ]; then
 			echo "Cannot remove $file/"
 		fi
@@ -105,7 +116,7 @@ clean_files()
 	IFS=$'\n'
 
 	cg-status -n -s '?' "$xopt" -w |
-	for file in $(cat); do
+	while read file; do
 		path="${_git_relpath}$file"
 		if [ -d "$path" -a ! -L "$path" ]; then
 			# Sanity check, shouldn't happen
@@ -113,7 +124,7 @@ clean_files()
 			exit 1
 		elif [ -e "$path" -o -L "$path" ]; then
 			[ "$quiet" ] || echo "Removing $file"
-			rm -f "$path"
+			$rm -f "$path"
 			# rm would complain itself on failure
 		else
 			echo "File $file has disappeared!"
