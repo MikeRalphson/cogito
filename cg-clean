@@ -15,13 +15,16 @@
 # -D::
 #	Same as -d but try harder (change permissions first).
 #
+# -n::
+#	Do not actually remove the files, just pretend to do so.
+#
 # -q::
 #	Quiet - don't report what's being cleaned.
 #
 # -x::
 #	Also clean files ignored by cg-status, such as object files.
 
-USAGE="cg-clean [-d] [-D] [-q] [-x]"
+USAGE="cg-clean [-d] [-D] [-n] [-q] [-x]"
 
 . ${COGITO_LIB}cg-Xlib || exit 1
 
@@ -29,12 +32,16 @@ noexclude=
 cleandir=
 cleandirhard=
 quiet=
+rm=rm
 while optparse; do
 	if optparse -d; then
 		cleandir=1
 	elif optparse -D; then
 		cleandir=1
 		cleandirhard=1
+	elif optparse -n; then
+		pretendrm () { echo rm "$@"; }
+		rm="pretendrm"
 	elif optparse -q; then
 		quiet=1
 	elif optparse -x; then
@@ -90,7 +97,7 @@ clean_dirs()
 		if [ "$cleandirhard" ]; then
 			chmod -R 700 "$path"
 		fi
-		rm -rf "$path"
+		$rm -rf "$path"
 		if [ -e "$path" -o -L "$path" ]; then
 			echo "Cannot remove $file/"
 		fi
@@ -117,7 +124,7 @@ clean_files()
 			exit 1
 		elif [ -e "$path" -o -L "$path" ]; then
 			[ "$quiet" ] || echo "Removing $file"
-			rm -f "$path"
+			$rm -f "$path"
 			# rm would complain itself on failure
 		else
 			echo "File $file has disappeared!"
