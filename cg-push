@@ -71,6 +71,10 @@ else
 	if is_same_repo "$_git_objects" "$remgit/objects"; then
 		commit="$(cg-object-id -c)"
 		remid="$(cat "$remgit"/refs/heads/$rembranch)" || die "$remgit: no branch $master"
+		if [ "$remid" = "$commit" ] && [ ! "${tags[*]}" ]; then
+			echo "$remgit#$rembranch: Already up-to-date." >&2
+			exit 0
+		fi
 		if [ "$remid" != "$(git-merge-base "$remid" "$commit")" ]; then
 			echo "ERROR: Remote '$rembranch' has some changes you don't have in your '$_git_head'" >&2
 			echo "Try to cg-update from it first, then push." >&2
