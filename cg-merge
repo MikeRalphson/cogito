@@ -64,23 +64,21 @@
 #	"do it I", "fix it", "do it II", "fix it II", "fix it III" commits
 #	like you would get with a regular merge).
 #
-# FILES
+# HOOKS
 # -----
-# $GIT_DIR/hooks/merge-pre::
+# '.git/hooks/merge-pre' BRANCH BASE CURHEAD MERGEDHEAD MERGETYPE::
 #	If the file exists and is executable it will be executed right
-#	before the merge itself happens. The script is passed those
-#	arguments:
-#		BRANCHNAME BASE CURHEAD MERGEDHEAD MERGETYPE
-#	MERGETYPE is either "forward", "squash", or "tree". The merge is
-#	cancelled if the script returns non-zero exit code.
+#	before the merge itself happens. The merge is cancelled if the script
+#	returns non-zero exit code.
+#	 - MERGETYPE is either "forward", "squash", or "tree".
 #
-# $GIT_DIR/hooks/merge-post::
+# '.git/hooks/merge-post' BRANCH BASE CURHEAD MERGEDHEAD MERGETYPE STATUS::
 #	If the file exists and is executable it will be executed after
-#	the merge is done. The script is passed those arguments:
-#		BRANCHNAME BASE CURHEAD MERGEDHEAD MERGETYPE STATUS
-#	MERGETYPE is either "forward", "squash", or "tree". For "forward",
-#	the STATUS is always "ok", while for "squash" and "tree" the STATUS
-#	can be "localchanges", "conflicts", "nocommit", or "ok".
+#	the merge is done.
+#	 - MERGETYPE is either "forward", "squash", or "tree".
+#	 - For 'forward', the STATUS is always "ok", while for "squash"
+#	   and "tree" the STATUS can be "localchanges", "conflicts",
+#	   "nocommit", or "ok".
 
 # Developer's documentation:
 #

@@ -344,6 +344,14 @@ fi
 sep=
 [ "${ARGS[*]}" ] && sep=--
 
+# Translate arguments to relpath:
+if [ "$_git_relpath" ]; then
+	for (( i=0; i<${#ARGS[@]}; i++ )); do
+		ARGS[$i]="$_git_relpath${ARGS[$i]}"
+		echo ${ARGS[$i]}
+	done
+fi
+
 
 if [ "$shortlog" ]; then
 	# Special care here.
