@@ -187,8 +187,8 @@ if [ "$ARGS" -o "$_git_relpath" ]; then
 		echo "${_git_relpath}$file" >>$filter
 	done
 
-	eval commitfiles=($(cat $filter | path_xargs git-diff-index -r -m HEAD -- | \
-		sed 's/^\([^	]*\)\(.	.*\)\(	.*\)*$/"\2"/'))
+	eval "commitfiles=($(cat $filter | path_xargs git-diff-index -r -m HEAD -- | \
+		sed 's/^\([^	]*\)\(.	.*\)\(	.*\)*$/"\2"/'))"
 	customfiles=1
 
 	rm $filter
@@ -204,8 +204,8 @@ else
 	if [ ! "$ignorecache" ]; then
 		# \t instead of the tab character itself works only with new
 		# sed versions.
-		eval commitfiles=($(git-diff-index -r -m HEAD | \
-			sed 's/^\([^	]*\)\(.	.*\)\(	.*\)*$/"\2"/'))
+		eval "commitfiles=($(git-diff-index -r -m HEAD | \
+			sed 's/^\([^	]*\)\(.	.*\)\(	.*\)*$/"\2"/'))"
 
 		if [ -s "$_git/commit-ignore" ]; then
 			newcommitfiles=()
@@ -361,7 +361,7 @@ __END__
 		fi
 	fi
 	if [ ! "$ignorecache" ] && [ ! "$merging" ]; then
-		eval newcommitfiles=($(grep ^CG:F $LOGMSG2 | sed 's/^CG:F *\(.*\)$/"\1"/'))
+		eval "newcommitfiles=($(grep ^CG:F $LOGMSG2 | sed 's/^CG:F *\(.*\)$/"\1"/'))"
 		if [ ! "$force" ] && [ ! "${newcommitfiles[*]}" ]; then
 			rm $LOGMSG $LOGMSG2
 			[ "$quiet" ] && exit 0 || die 'Nothing to commit'
@@ -393,8 +393,8 @@ precommit_update()
 {
 	queueN=(); queueD=(); queueM=();
 	for file in "$@"; do
-		op=${file%% *}
-		fname=${file#* }
+		op=${file%%[ 	]*}
+		fname=${file#*[ 	]}
 		[ "$op" = "N" ] && op=A # N is to be renamed to A
 		[ "$op" = "A" ] || [ "$op" = "D" ] || [ "$op" = "M" ] || op=M
 		eval "queue$op[\${#queue$op[@]}]=\"\$fname\""
