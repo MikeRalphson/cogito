@@ -481,7 +481,7 @@ check_tool()
 		for dir in $PATH; do
 			IFS="$save_IFS"
 			cmd="$dir/$exename"
-			if [ -x "$cmd" ] && eval $cmdtest; then
+			if [ -x "$cmd" ] && eval "$cmdtest"; then
 				export $hasname="$cmd"
 				break
 			fi

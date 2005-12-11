@@ -71,7 +71,7 @@ setup_colors()
 	C=${C//=/=\'$'\e'[}
 	C=col${C//:/m\'; col}m\'
 	#coldefault=$(tput op)
-	eval $C
+	eval "$C"
 }
 
 colorize()
