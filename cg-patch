@@ -104,7 +104,7 @@ tee $patchfifo | {
 			continue
 		fi
 
-		if [ "$redzone" ] && (echo "$line" | grep -q '^[nod]'); then
+		if [ "$redzone" ] && [ "${line#[nod]}" != "$line" ]; then
 			mode=$(echo "$line" | awk '
 				/^deleted file mode [0-9]+/ {print "D-"$4}
 				/^old mode [0-9]+/ {print "-"$3}
