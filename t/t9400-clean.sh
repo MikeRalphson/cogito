@@ -39,17 +39,17 @@ list="$topdir/.git/temp/list"
 mklist()
 {
 	cd "$topdir"
-	find . 2>/dev/null |sed -n "/^.\/.git\//d;s/^..//p" | \
+	find . 2>/dev/null | sed -n "/^.\/.git\//d;s/^..//p" |
 		sort > "$list-$1"
 }
 
 check_loss()
 {
 	mklist new
-	echo "$loss" | cat - "$list-new" | \
-	grep -v ^$ | sort >"$list-combined"
-	diff -u "$list-init" "$list-combined" > "$list.diff" && \
-	cp -f "$list-new" "$list-init"
+	echo "$loss" | cat - "$list-new" |
+		grep -v ^$ | sort >"$list-combined"
+	diff -u "$list-init" "$list-combined" > "$list.diff" &&
+		cp -f "$list-new" "$list-init"
 }
 
 mklist init
