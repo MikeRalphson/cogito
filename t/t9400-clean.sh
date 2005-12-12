@@ -4,7 +4,8 @@
 #
 test_description="Tests basic cg-clean functionality
 
-Create files and directories and check that cg-clean removes them."
+Create files and directories and check that cg-clean removes them
+(and keeps files and directories it should keep)."
 
 . ./test-lib.sh
 
