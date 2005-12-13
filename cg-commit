@@ -331,6 +331,7 @@ if [ ! "$ignorecache" ]; then
 		echo "CG: You need not worry, the local changes will not interfere with the merge." >>$LOGMSG
 	fi
 fi
+[ "$commitalways" ] || echo "CG: Do not save this file and just quit if you want to abort the commit." >>$LOGMSG
 echo "CG: -----------------------------------------------------------------------" >>$LOGMSG
 echo "CG: vim: textwidth=75" >>$LOGMSG
 
