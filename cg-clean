@@ -60,8 +60,6 @@ clean_dirs()
 	git-ls-files --cached |
 		sed -n 's|/[^/]*$||p' |
 		while IFS=$'\n' read dir; do
-			[ x"${dir#$_git_relpath}" = x"${dir}" ] && continue
-			dir="${dir#$_git_relpath}"
 			while true; do
 				echo "$dir"
 				updir="${dir%/*}"
@@ -74,32 +72,27 @@ clean_dirs()
 	save_IFS="$IFS"
 	IFS=$'\n'
 
-	fpath=${_git_relpath-./}
-	find "$fpath" -type d -print |
-		while read dir; do
-			echo "${dir#$fpath}"
-		done |
-		sed '/^$/d;/^\.git$/d;/^\.git\//d' |
+	find ./ -type d -print |
+		sed 's/^\.\///;/^$/d;/^\.git$/d;/^\.git\//d' |
 		cat - "$dirlist" | sort -u |
 		diff - "$dirlist" |
 		sed -n 's/< //p' |
-	while read file; do
-		path="${_git_relpath}$file"
-		if [ ! -d "$path" ]; then
+	while read dir; do
+		if [ ! -d "$dir" ]; then
 			# Perhaps directory was removed with its parent
 			continue
 		fi
 		if [ -z "$cleandir" ]; then
-			echo "Not removing $file/"
+			echo "Not removing $dir/"
 			continue
 		fi
-		[ "$quiet" ] || echo "Removing $file/"
+		[ "$quiet" ] || echo "Removing $dir/"
 		if [ "$cleandirhard" ]; then
-			chmod -R 700 "$path"
+			chmod -R 700 "$dir"
 		fi
-		$rm -rf "$path"
-		if [ -e "$path" -o -L "$path" ]; then
-			echo "Cannot remove $file/"
+		$rm -rf "$dir"
+		if [ -e "$dir" -o -L "$dir" ]; then
+			echo "Cannot remove $dir/"
 		fi
 	done
 
@@ -117,14 +110,13 @@ clean_files()
 
 	cg-status -n -s '?' "$xopt" -w |
 	while read file; do
-		path="${_git_relpath}$file"
-		if [ -d "$path" -a ! -L "$path" ]; then
+		if [ -d "$file" -a ! -L "$file" ]; then
 			# Sanity check, shouldn't happen
 			echo "FATAL: cg-status reports directories (internal error)" >&2
 			exit 1
-		elif [ -e "$path" -o -L "$path" ]; then
+		elif [ -e "$file" -o -L "$file" ]; then
 			[ "$quiet" ] || echo "Removing $file"
-			$rm -f "$path"
+			$rm -f "$file"
 			# rm would complain itself on failure
 		else
 			echo "File $file has disappeared!"
@@ -134,6 +126,8 @@ clean_files()
 	IFS="$save_IFS"
 }
 
+
+cd "${_git_relpath-.}"
 
 # Even if -d or -D is not specified, we want to tell user about
 # directories that are not removed
