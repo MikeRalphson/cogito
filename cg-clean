@@ -60,7 +60,7 @@ clean_dirs()
 	git-ls-files --cached |
 		sed -n 's|/[^/]*$||p' |
 		while IFS=$'\n' read dir; do
-			[ x"${dir#$_git_relpath}" = x"${dir}" ] && continue
+			[ -n "$_git_relpath" ] && [ x"${dir#$_git_relpath}" = x"${dir}" ] && continue
 			dir="${dir#$_git_relpath}"
 			while true; do
 				echo "$dir"
