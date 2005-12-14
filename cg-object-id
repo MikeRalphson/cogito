@@ -44,8 +44,8 @@ normalize_id()
 	if [ "${id:(-1):1}" = "^" ]; then
 		# find first parent
 		normalize_id "${id%^}"
-		normid=$(git-cat-file commit "$normid" | \
-			 awk '/^parent/{print $2; exit};/^$/{exit}') || exit 1
+		normid="$(git-cat-file commit "$normid" | \
+			  awk '/^parent/{print $2; exit};/^$/{exit}')" || exit 1
 		type="commit"
 		return
 	fi
@@ -83,10 +83,10 @@ normalize_id()
 	valid=; [ ${#id} -eq 40 ] && [ "$(git-rev-parse --revs-only "$id")" ] && valid=1
 	# date does the wrong thing for empty and single-letter ids
 	if [ ${#id} -gt 1 ] && [ ! "$valid" ]; then
-		reqsecs=$(date --date="$id" +'%s' 2>/dev/null)
+		reqsecs="$(date --date="$id" +'%s' 2>/dev/null)"
 
 		if [ "$reqsecs" ]; then
-			id=$(git-rev-list --min-age=$reqsecs --max-count=1 HEAD)
+			id="$(git-rev-list "--min-age=$reqsecs" --max-count=1 HEAD)"
 			valid=; [ ${#id} -eq 40 ] && [ "$(git-rev-parse --revs-only "$id")" ] && valid=1
 		fi
 	fi
@@ -99,7 +99,7 @@ normalize_id()
 
 	type="$(git-cat-file -t "$id")"
 	if [ "$type" = "tag" ]; then
-		id=$(git-cat-file tag "$id" | head -n 1)
+		id="$(git-cat-file tag "$id" | head -n 1)"
 		id="${id#object }"
 		type=
 	fi
@@ -128,7 +128,7 @@ while optparse; do
 done
 
 # Compatibility code
-case $_cg_cmd in
+case "$_cg_cmd" in
 	*parent*) show_parent=1;;
 	*tree*) show_tree=1;;
 esac
@@ -141,7 +141,7 @@ id="${ARGS[0]}"
 normalize_id "$id"
 
 if [ "$normalize_only" ]; then
-	echo $normid
+	echo "$normid"
 	exit 0
 fi
 
@@ -151,11 +151,11 @@ if [ "$show_parent" ]; then
 	exit 0
 fi
 
-[ "$type" ] || type=$(git-cat-file -t "$normid")
+[ "$type" ] || type="$(git-cat-file -t "$normid")"
 if [ "$show_tree" ]; then
 	if [ "$type" = "commit" ]; then
-		normid=$(git-cat-file commit "$normid" | sed -e 's/tree //;q')
-		type=$(git-cat-file -t "$normid")
+		normid="$(git-cat-file commit "$normid" | sed -e 's/tree //;q')"
+		type="$(git-cat-file -t "$normid")"
 	fi
 
 	if [ "$type" != "tree" ]; then
@@ -169,5 +169,5 @@ else
 	fi
 fi
 
-echo $normid
+echo "$normid"
 

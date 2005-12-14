@@ -30,36 +30,36 @@ if [ -z "$id" ]; then
 	id="$(cg-object-id -c)"
 fi
 
-dest=${ARGS[0]}
+dest="${ARGS[0]}"
 
 ([ -n "$dest" ] && [ -n "$id" ]) || usage
 
 [ -e "$dest" ] && die "$dest already exists."
 
-case $dest in
+case "$dest" in
 	*.tar|*.tar.gz|*.tar.bz2|*.tgz)
-		base=${dest%.tar*}
-		base=${base%.tgz}
-		ext=${dest#$base}
-		base=${base##*/}
-		case $ext in
+		base="${dest%.tar*}"
+		base="${base%.tgz}"
+		ext="${dest#$base}"
+		base="${base##*/}"
+		case "$ext" in
 		.tar.gz|.tgz)
-			git-tar-tree $id "$base" | gzip -c9 $tar > $dest
+			git-tar-tree "$id" "$base" | gzip -c9 "$tar" >"$dest"
 			;;
 		.tar.bz2)
-			git-tar-tree $id "$base" | bzip2 -c $tar > $dest
+			git-tar-tree "$id" "$base" | bzip2 -c "$tar" >"$dest"
 			;;
 		.tar)
-			git-tar-tree $id "$base" > $dest
+			git-tar-tree "$id" "$base" >"$dest"
 			;;
 		esac
 		;;
 	*)
-		mkdir -p $dest || die "cannot create $dest"
+		mkdir -p "$dest" || die "cannot create $dest"
 		export GIT_INDEX_FILE="$dest/.git-index"
 		id="$(cg-object-id -t "$id")"
-		git-read-tree $id
+		git-read-tree "$id"
 		git-checkout-index "--prefix=$dest/" -a
-		rm $GIT_INDEX_FILE
+		rm "$GIT_INDEX_FILE"
 	;;
 esac

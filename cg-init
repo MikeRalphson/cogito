@@ -62,7 +62,7 @@ while optparse; do
 done
 [ "${commitargs[*]}" ] || commitargs=(-m "Initial commit" -E)
 
-[ -e $_git ] && die "$_git already exists"
+[ -e "$_git" ] && die "$_git already exists"
 
 cleanup_trap "rm -rf $_git"
 

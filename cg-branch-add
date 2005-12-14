@@ -64,17 +64,17 @@ USAGE="cg-branch-add BRANCH_NAME LOCATION"
 
 . ${COGITO_LIB}cg-Xlib || exit 1
 
-name=${ARGS[0]}
-location=${ARGS[1]}
+name="${ARGS[0]}"
+location="${ARGS[1]}"
 
 ([ -n "$name" ] && [ -n "$location" ] && ! [ -n "${ARGS[2]}" ]) || usage
-(echo $name | egrep -qv '[^a-zA-Z0-9_.@!:-]') || \
+(echo "$name" | egrep -qv '[^a-zA-Z0-9_.@!:-]') || \
 	die "name contains invalid characters"
 if [ "$name" = "this" ] || [ "$name" = "HEAD" ]; then
 	die "given branch name is reserved"
 fi
 
-mkdir -p $_git/branches
+mkdir -p "$_git/branches"
 [ -s "$_git/branches/$name" ] && die "branch already exists"
 [ -s "$_git/refs/heads/$name" ] && echo "warning: I already have head of this branch" >&2
 
@@ -82,4 +82,4 @@ if ! echo "$location" | grep -q ":" ; then
 	location=$(echo "$location" | sed -e "s#^[^/]#$(pwd)\/&#" | normpath)
 fi
 
-echo "$location" >$_git/branches/$name
+echo "$location" >"$_git/branches/$name"

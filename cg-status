@@ -108,8 +108,8 @@ fi
 
 
 if [ "$gitstatus" ]; then
-	mkdir -p $_git/refs/heads
-	[ "$(find $_git/refs/heads -follow -type f)" ] \
+	mkdir -p "$_git/refs/heads"
+	[ "$(find "$_git/refs/heads" -follow -type f)" ] \
 	       || die "List of heads is empty."
 
 
@@ -124,8 +124,8 @@ if [ "$gitstatus" ]; then
 
 	echo "Heads:"
 	find "$_git/refs/heads" ! -type d | sort | while read head; do 
-		headsha1=$(cat "$head")
-		headname=${head#$_git/refs/heads/}
+		headsha1="$(cat "$head")"
+		headname="${head#$_git/refs/heads/}"
 		[ "$headname" = "cg-seek-point" ] && continue
 		cf=" "; rf=" "
 		[ "$headname" = "$_git_head" ] && cf=">"
@@ -134,7 +134,7 @@ if [ "$gitstatus" ]; then
 	done
 
 	if [ -s "$_git/merging" ]; then
-		tmp=$(cat "$_git/merging")
+		tmp="$(cat "$_git/merging")"
 		echo
 		echo "Merging: $(cat "$_git/merging") ($(cat "$_git/merging-sym"))"
 		echo "Merge base: $(cat "$_git/merge-base")"
@@ -190,7 +190,7 @@ if [ "$workstatus" ]; then
 		commitignore=
 		[ -s "$_git/commit-ignore" ] && commitignore=1
 
-		git-diff-index HEAD $basepath | cut -f5- -d' ' | 
+		git-diff-index HEAD "$basepath" | cut -f5- -d' ' | 
 		while IFS=$'\t' read -r mode file; do
 			if [ "$mode" = D ]; then
 				[ "$(git-diff-files "$file")" ] && mode=!

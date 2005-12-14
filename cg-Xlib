@@ -12,7 +12,7 @@ _cleanup_code=
 
 die()
 {
-	echo $_cg_cmd: $@ >&2
+	echo "$_cg_cmd: $@" >&2
 	eval "$_cleanup_code"
 	exit 1
 }
@@ -50,7 +50,7 @@ pager()
 mktemp()
 {
 	if [ "$has_mktemp" ]; then
-		$has_mktemp "$@"
+		"$has_mktemp" "$@"
 		return
 	fi
 
@@ -61,11 +61,11 @@ mktemp()
 	fi
 	prefix=
 	if [ x"$1" = x"-t" ]; then
-		prefix=${TMPDIR:-/tmp}/
+		prefix="${TMPDIR:-/tmp}/"
 		shift
 	fi
 
-	$(which mktemp) $dirarg $prefix"$1"
+	"$(which mktemp)" $dirarg "$prefix$1"
 }
 
 stat()
@@ -75,7 +75,7 @@ stat()
 		return 1
 	fi
 	if [ "$has_stat" ]; then
-		$has_stat "$@"
+		"$has_stat" "$@"
 		return
 	fi
 
@@ -90,7 +90,7 @@ stat()
 readlink()
 {
 	if [ "$has_readlink" ]; then
-		$has_readlink "$@"
+		"$has_readlink" "$@"
 		return
 	fi
 
@@ -115,7 +115,7 @@ readlink()
 		return 42
 	fi
 
-	line=$(ls -ld "$1" 2>/dev/null) || return 1
+	line="$(ls -ld "$1" 2>/dev/null)" || return 1
 	case "$line" in
 	*-\>*)
 		echo "${line#* -> }";;
@@ -188,25 +188,25 @@ path_xargs()
 list_untracked_files()
 {
 	excludeflag="$1"; shift
-	EXCLUDE=
+	EXCLUDE=()
 	if [ "$excludeflag" != "no" -a "$excludeflag" != "noexclude" ]; then
 		for excl in '*.[ao]' '.*' '!.gitignore' tags '*~' '#*' "$@"; do
-			EXCLUDE="$EXCLUDE --exclude=$excl"
+			EXCLUDE[${#EXCLUDE[@]}]="--exclude=$excl"
 		done
-		EXCLUDEFILE=$_git/info/exclude
-		if [ -f $EXCLUDEFILE ]; then
-			EXCLUDE="$EXCLUDE --exclude-from=$EXCLUDEFILE"
+		EXCLUDEFILE="$_git/info/exclude"
+		if [ -f "$EXCLUDEFILE" ]; then
+			EXCLUDE[${#EXCLUDE[@]}]="--exclude-from=$EXCLUDEFILE"
 		fi
 		# This is just for compatibility (2005-09-16).
 		# To be removed later.
-		EXCLUDEFILE=$_git/exclude
+		EXCLUDEFILE="$_git/exclude"
 		if [ -f $EXCLUDEFILE ]; then
 			echo Warning: .git/exclude is obsolete, use .git/info/exclude instead. >&2
-			EXCLUDE="$EXCLUDE --exclude-from=$EXCLUDEFILE"
+			EXCLUDE[${#EXCLUDE[@]}]="--exclude-from=$EXCLUDEFILE"
 		fi
-		EXCLUDE="$EXCLUDE --exclude-per-directory=.gitignore"
+		EXCLUDE[${#EXCLUDE[@]}]="--exclude-per-directory=.gitignore"
 	fi
-	git-ls-files -z --others $EXCLUDE
+	git-ls-files -z --others "${EXCLUDE[@]}"
 }
 
 # Usage: showdate SECONDS TIMEZONE [FORMAT]
@@ -220,7 +220,7 @@ showdate()
 	secs=$(($secs + $tzhours * 3600 + $tzmins * 60))
 	[ "$format" ] || format="+%a, %d %b %Y %H:%M:%S $2"
 	if [ "$has_gnudate" ]; then
-		_showdate="$(LANG=C $has_gnudate -ud "1970-01-01 UTC + $secs sec" "$format")"
+		_showdate="$(LANG=C "$has_gnudate" -ud "1970-01-01 UTC + $secs sec" "$format")"
 	else
 		_showdate="$(LANG=C date -u -r $secs "$format")"
 	fi
@@ -237,30 +237,30 @@ tree_timewarp()
 		no_head_update=1
 		shift
 	fi
-	local dirstr=$1; shift
-	local rollback=$1; shift
-	local base=$1; shift
-	local branch=$1; shift
+	local dirstr="$1"; shift
+	local rollback="$1"; shift
+	local base="$1"; shift
+	local branch="$1"; shift
 
 	[ -s "$_git/merging" ] && die "merge in progress - cancel it by cg-reset first"
 
-	local patchfile=$(mktemp -t gituncommit.XXXXXX)
+	local patchfile="$(mktemp -t gituncommit.XXXXXX)"
 	if [ -n "$rollback" ]; then
-		cg-diff -r $base >$patchfile
+		cg-diff -r "$base" >"$patchfile"
 		[ -s "$patchfile" ] &&
 			echo "Warning: uncommitted local changes, trying to bring them $dirstr" >&2
 	else
 		# XXX: This may be suboptimal, but it is also non-trivial to keep
 		# the adds/removes properly.  So this is just a quick hack to get it
 		# working without much fuss.
-		cg-diff -r $branch >$patchfile
+		cg-diff -r "$branch" >"$patchfile"
 	fi
 
 	git-read-tree -m "$branch" || die "$branch: bad commit"
 	[ "$no_head_update" ] || git-update-ref HEAD "$branch" || :
 
 	# Kill gone files
-	git-diff-tree -r $base $branch |
+	git-diff-tree -r "$base" "$branch" |
 		while IFS=$'\t' read header file; do
 			# match ":100755 000000 14d43b1abf... 000000000... D"
 			if echo "$header" | egrep "^:([^ ][^ ]* ){4}D" >/dev/null; then
@@ -270,8 +270,8 @@ tree_timewarp()
 	git-checkout-index -f -a
 
 	# FIXME: Can produce bogus "contains only garbage" messages.
-	cat $patchfile | cg-patch
-	rm $patchfile
+	cat "$patchfile" | cg-patch
+	rm "$patchfile"
 
 	# Returns false for local modifications.
 	git-update-index --refresh >/dev/null
@@ -284,7 +284,7 @@ tree_timewarp()
 # it's set empty).
 conservative_merge_base()
 {
-	local baselist
+	local baselist safecounter
 	baselist=("$@")
 	_cg_base_conservative=
 	for (( safecounter=0; $safecounter < 1000; safecounter++ )) ; do
@@ -347,7 +347,7 @@ deprecated_alias()
 
 print_help()
 {
-	_cg_cmd=$(type -P "cg-$2")
+	_cg_cmd="$(type -P "cg-$2")"
 	[ -n "$_cg_cmd" ] || exit 1
 
 	sed -n '/^USAGE=/,0s/.*"\(.*\)"/Usage: \1/p;
@@ -381,9 +381,9 @@ print_help()
 for option in "$@"; do
 	[ x"$option" = x-- ] && break
 	if [ x"$option" = x"-h" ] || [ x"$option" = x"--help" ]; then
-		print_help short ${_cg_cmd##cg-}
+		print_help short "${_cg_cmd##cg-}"
 	elif [ x"$option" = x"--long-help" ]; then
-		print_help long ${_cg_cmd##cg-}
+		print_help long "${_cg_cmd##cg-}"
 	fi
 done
 
@@ -393,9 +393,13 @@ ARGPOS=0
 set '' # clear positional parameters - use $ARGS[] instead
 
 if [ -t 1 -a -e "$HOME/.cgrc" ]; then
-	_cg_name=${_cg_cmd#cg-}
+	_cg_name="${_cg_cmd#cg-}"
+	# We hope that there are no weird (regex-sensitive) characters
+	# in Cogito command names.
 	_cg_defaults1="$(sed -n "/^$_cg_cmd/s/^$_cg_cmd //p" < "$HOME/.cgrc")"
 	_cg_defaults2="$(sed -n "/^$_cg_name/s/^$_cg_name //p" < "$HOME/.cgrc")"
+	# And here we explicitly do not quote, allowing multiple arguments
+	# to be specified - default word splitting will do its work here.
 	ARGS=($_cg_defaults1 $_cg_defaults2 "${ARGS[@]}")
 fi
 
@@ -421,7 +425,7 @@ optparse()
 {
 	unset OPTARG
 	if [ -z "$1" ]; then
-		case ${ARGS[$ARGPOS]} in
+		case "${ARGS[$ARGPOS]}" in
 		--)	optshift; return 1 ;;
 		-*)	return 0 ;;
 		*)	while (( ++ARGPOS < ${#ARGS[@]} )); do
@@ -432,30 +436,30 @@ optparse()
 		esac
 	fi
 
-	CUROPT=${ARGS[$ARGPOS]}
-	local match=${1%=} minmatch=${2:-1} opt=$CUROPT o=$CUROPT val
-	[[ "$1" == *= ]] && val=$match
-	case $match in
+	CUROPT="${ARGS[$ARGPOS]}"
+	local match="${1%=}" minmatch="${2:-1}" opt="$CUROPT" o="$CUROPT" val
+	[[ "$1" == *= ]] && val="$match"
+	case "$match" in
 	--*)
-		[ "$val" ] && o=${o%%=*}
+		[ "$val" ] && o="${o%%=*}"
 		[ ${#o} -ge $((2 + $minmatch)) -a \
 			"${match:0:${#o}}" = "$o" ] || return 1
 		[[ -n "$val" && "$opt" == *=?* ]] \
-			&& ARGS[$ARGPOS]=${opt#*=} \
-			|| optshift $val ;;
+			&& ARGS[$ARGPOS]="${opt#*=}" \
+			|| optshift "$val" ;;
 	-?)
 		[[ "$o" == $match* ]] || return 1
 		[[ "$o" != -?-* || -n "$val" ]] || optfail
 		ARGS[$ARGPOS]=${o#$match}
-		[ "${ARGS[$ARGPOS]}" ] \
-			&& { [ "$val" ] || ARGS[$ARGPOS]=-${ARGS[$ARGPOS]}; } \
-			|| optshift $val ;;
+		[ -n "${ARGS[$ARGPOS]}" ] \
+			&& { [ -n "$val" ] || ARGS[$ARGPOS]=-"${ARGS[$ARGPOS]}"; } \
+			|| optshift "$val" ;;
 	*)
 		die "optparse cannot handle $1" ;;
 	esac
 
 	if [ "$val" ]; then
-		OPTARG=${ARGS[$ARGPOS]}
+		OPTARG="${ARGS[$ARGPOS]}"
 		optshift
 	fi
 }
@@ -494,16 +498,16 @@ check_tool()
 if ! [ "$__cogito_subsequent" ]; then
 	export __cogito_subsequent=1
 
-	check_tool mktemp 'todel=$($cmd -t) && rm $todel' mktemp
-	check_tool stat '$cmd -c %s / >/dev/null' stat gnustat gstat
-	check_tool readlink '$cmd -f / >/dev/null' readlink
-	check_tool gnudate '$cmd -Rud "1970-01-01 UTC" >/dev/null' date gnudate gdate
+	check_tool mktemp 'todel="$("$cmd" -t)" && rm "$todel"' mktemp
+	check_tool stat '"$cmd" -c %s / >/dev/null' stat gnustat gstat
+	check_tool readlink '"$cmd" -f / >/dev/null' readlink
+	check_tool gnudate '"$cmd" -Rud "1970-01-01 UTC" >/dev/null' date gnudate gdate
 fi
 
 
 
-_git=${GIT_DIR:-.git}
-if [ ! "$_git_repo_unneeded" ] && [ ! "$GIT_DIR" ] && [ ! -d $_git ]; then
+_git="${GIT_DIR:-.git}"
+if [ ! "$_git_repo_unneeded" ] && [ ! "$GIT_DIR" ] && [ ! -d "$_git" ]; then
 	_git_abs_path="$(git-rev-parse --git-dir 2>/dev/null)"
 	if [ -d "$_git_abs_path" ]; then
 		export _git_relpath="$(git-rev-parse --show-prefix)"
@@ -523,7 +527,7 @@ if [ ! "$_git_repo_unneeded" ]; then
 	       exit 1
 	fi
 	_git_head=master
-	[ -s "$_git/HEAD" ] && { _git_head="$(git-symbolic-ref HEAD)"; _git_head=${_git_head#refs/heads/}; }
+	[ -s "$_git/HEAD" ] && { _git_head="$(git-symbolic-ref HEAD)"; _git_head="${_git_head#refs/heads/}"; }
 	[ -s "$_git/head-name" ] && _git_head="$(cat "$_git/head-name")"
 fi
 

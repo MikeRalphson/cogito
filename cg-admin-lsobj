@@ -39,22 +39,22 @@ USAGE="cg-admin-lsobj [OBJECT_TYPE]"
 
 . ${COGITO_LIB}cg-Xlib || exit 1
 
-target=${ARGS[0]}
+target="${ARGS[0]}"
 
 
-subdir=$_git_objects
+subdir="$_git_objects"
 
 for high in 0 1 2 3 4 5 6 7 8 9 a b c d e f ; do
 	for low in 0 1 2 3 4 5 6 7 8 9 a b c d e f ; do
 		top=$high$low
 
-		for f in $subdir/$top/* ; do
-			if [ ! -r $f ]; then
+		for f in "$subdir/$top/*"; do
+			if [ ! -r "$f" ]; then
 				continue
 			fi
-			base=`basename $f`
-			type=`git-cat-file -t $top$base`
-			if [ ! "$target" ] || [ $target == $type ]; then
+			base="$(basename "$f")"
+			type="$(git-cat-file -t "$top$base")"
+			if [ ! "$target" ] || [ "$target" == "$type" ]; then
 				echo -e "$top$base\t$type"
 			fi
 		done

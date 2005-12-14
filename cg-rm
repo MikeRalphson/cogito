@@ -33,17 +33,17 @@ done
 
 [ -n "${ARGS[*]}" ] || usage
 
-TMPFILE=$(mktemp -t gitrm.XXXXXX) || exit 1
+TMPFILE="$(mktemp -t gitrm.XXXXXX)" || exit 1
 error=
 for file in "${ARGS[@]}"; do
 	echo "$file" >>$TMPFILE
 done
 
-cat $TMPFILE | sed 's/^/Removing file /'
-[ "$delete" ] && ( cd ${_git_relpath:-.} && rm -f "${ARGS[@]}" )
-cat $TMPFILE | sed "s|^|$_git_relpath|" | path_xargs git-update-index --force-remove -- || error=1
+cat "$TMPFILE" | sed 's/^/Removing file /'
+[ "$delete" ] && ( cd "${_git_relpath:-.}" && rm -f "${ARGS[@]}" )
+cat "$TMPFILE" | sed "s|^|$_git_relpath|" | path_xargs git-update-index --force-remove -- || error=1
 
-rm $TMPFILE
+rm "$TMPFILE"
 
 [ "$error" ] && die "warning: not all files could have been removed"
 exit 0

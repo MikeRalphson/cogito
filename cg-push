@@ -42,30 +42,30 @@ while optparse; do
 	fi
 done
 
-name=${ARGS[0]}
+name="${ARGS[0]}"
 
-[ "$name" ] || { [ -s $_git/branches/origin ] && name=origin; }
+[ "$name" ] || { [ -s "$_git/branches/origin" ] && name=origin; }
 [ "$name" ] || die "where to push to?"
-uri=$(cat "$_git/branches/$name" 2>/dev/null) || die "unknown branch: $name"
+uri="$(cat "$_git/branches/$name" 2>/dev/null)" || die "unknown branch: $name"
 
 rembranch=master
 sprembranch=
 if echo "$uri" | grep -q '#'; then
-	rembranch=$(echo $uri | cut -d '#' -f 2)
+	rembranch="$(echo "$uri" | cut -d '#' -f 2)"
 	sprembranch=":$rembranch"
-	uri=$(echo $uri | cut -d '#' -f 1)
+	uri="$(echo "$uri" | cut -d '#' -f 1)"
 fi
 
 if [ "${uri#http://}" != "$uri" ]; then
 	die "pushing over HTTP not supported yet"
 elif [ "${uri#git+ssh://}" != "$uri" ]; then
-	send_pack_update "$name" "$(echo "$uri" | sed 's#^git+ssh://\([^/]*\)\(/.*\)$#\1:\2#')" $_git_head$sprembranch "${tags[@]}"
+	send_pack_update "$name" "$(echo "$uri" | sed 's#^git+ssh://\([^/]*\)\(/.*\)$#\1:\2#')" "$_git_head$sprembranch" "${tags[@]}"
 elif [ "${uri#rsync://}" != "$uri" ]; then
         die "pushing over rsync not supported"
 elif [ "${uri#*:}" != "$uri" ]; then
 	echo "WARNING: I guessed the host:path syntax was used and fell back to the git+ssh protocol."
 	echo "WARNING: The host:path syntax is evil because it is implicit. Please just use a URI."
-	send_pack_update "$name" "$uri" $_git_head$sprembranch "${tags[@]}"
+	send_pack_update "$name" "$uri" "$_git_head$sprembranch" "${tags[@]}"
 else
 	remgit="$uri"; [ -d "$remgit/.git" ] && remgit="$remgit/.git"
 	if is_same_repo "$_git_objects" "$remgit/objects"; then
@@ -86,10 +86,10 @@ else
 		echo "$commit" >"$remgit"/refs/heads/$rembranch
 		git-update-ref refs/heads/"$name" "$commit"
 		for tag in "${tags[@]}"; do
-			cat "$_git"/refs/tags/"$tag" >"$remgit"/refs/tags/"$tag"
+			cat "$_git/refs/tags/$tag" >"$remgit/refs/tags/$tag"
 		done
 		[ -x "$remgit/hooks/post-update" ] && "$remgit/hooks/post-update" "$rembranch"
 	else
-		send_pack_update "$name" "$uri" $_git_head$sprembranch "${tags[@]}"
+		send_pack_update "$name" "$uri" "$_git_head$sprembranch" "${tags[@]}"
 	fi
 fi

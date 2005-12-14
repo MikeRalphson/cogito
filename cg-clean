@@ -56,7 +56,7 @@ done
 
 clean_dirs()
 {
-	dirlist=$(mktemp -t gitlsfiles.XXXXXX)
+	dirlist="$(mktemp -t gitlsfiles.XXXXXX)"
 	git-ls-files --cached |
 		sed -n 's|/[^/]*$||p' |
 		while IFS=$'\n' read dir; do
@@ -116,7 +116,7 @@ clean_files()
 			exit 1
 		elif [ -e "$file" -o -L "$file" ]; then
 			[ "$quiet" ] || echo "Removing $file"
-			$rm -f "$file"
+			"$rm" -f "$file"
 			# rm would complain itself on failure
 		else
 			echo "File $file has disappeared!"

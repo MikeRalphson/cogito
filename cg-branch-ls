@@ -17,13 +17,13 @@ USAGE="cg-branch-ls"
 
 . ${COGITO_LIB}cg-Xlib || exit 1
 
-mkdir -p $_git/branches
-[ "$(find $_git/branches -follow -type f)" ] \
+mkdir -p "$_git/branches"
+[ "$(find "$_git/branches" -follow -type f)" ] \
 	|| die "List of branches is empty. See cg-branch-add."
 
-cd $_git/branches
+cd "$_git/branches"
 for branch in *; do
-	echo -n $branch
+	echo -n "$branch"
 	echo -ne "\t"
-	cat $branch
+	cat "$branch"
 done

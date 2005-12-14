@@ -238,7 +238,7 @@ while optparse; do
 	fi
 done
 
-name=${ARGS[0]}
+name="${ARGS[0]}"
 
 [ "$name" ] || { [ -s "$_git/branches/origin" ] && name=origin; }
 [ "$name" ] || die "where to fetch from?"
@@ -296,7 +296,7 @@ else
 
 	# See if we can hardlink and add "-l" to cp flags.
 	can_hardlink=
-	sample_file="$(find $uri -type f -print | head -n 1)"
+	sample_file="$(find "$uri" -type f -print | head -n 1)"
 	rm -f "$_git/.,,lntest"
 	if cp -fl "$sample_file" "$_git/.,,lntest" 2>/dev/null; then
 		can_hardlink=l

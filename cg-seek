@@ -32,36 +32,36 @@ _git_requires_root=1
 
 . ${COGITO_LIB}cg-Xlib || exit 1
 
-dstcommit=${ARGS[0]}
+dstcommit="${ARGS[0]}"
 
 
-[ -s $_git/blocked ] && grep -vq '^seeked from ' $_git/blocked && die "action blocked: $(cat $_git/blocked)"
+[ -s "$_git/blocked" ] && grep -vq '^seeked from ' "$_git/blocked" && die "action blocked: $(cat "$_git/blocked")"
 
-curcommit=$(cg-object-id -c) || exit 1
+curcommit="$(cg-object-id -c)" || exit 1
 
 if [ "$dstcommit" ] && [ "$dstcommit" != "$_git_head" ]; then
 	seek_mode=away
 else
 	seek_mode=back
-	dstcommit=$(cg-object-id -c "$_git_head") || exit 1
+	dstcommit="$(cg-object-id -c "$_git_head")" || exit 1
 fi
 
-dstcommit=$(cg-object-id -c "$dstcommit") || exit 1
+dstcommit="$(cg-object-id -c "$dstcommit")" || exit 1
 if [ "$curcommit" != "$dstcommit" ]; then
-	tree_timewarp --no-head-update "along" "please rollback" $curcommit $dstcommit
+	tree_timewarp --no-head-update "along" "please rollback" "$curcommit" "$dstcommit"
 fi
 
 if [ "$seek_mode" = "away" ]; then
-	echo "$_git_head" >$_git/head-name
-	[ -s $_git/blocked ] || echo "seeked from $_git_head" >$_git/blocked
+	echo "$_git_head" >"$_git/head-name"
+	[ -s "$_git/blocked" ] || echo "seeked from $_git_head" >"$_git/blocked"
 	# We hold this in a temporary branch so that some of the core
 	# GIT tools (git checkout and git-fsck-objects) don't get confused.
-	echo "$dstcommit" >$_git/refs/heads/cg-seek-point
+	echo "$dstcommit" >"$_git/refs/heads/cg-seek-point"
 	git-symbolic-ref HEAD "refs/heads/cg-seek-point"
 else
 	git-symbolic-ref HEAD "refs/heads/$_git_head"
-	rm $_git/refs/heads/cg-seek-point $_git/head-name
-	rm -f $_git/blocked
+	rm "$_git/refs/heads/cg-seek-point" "$_git/head-name"
+	rm -f "$_git/blocked"
 fi
 
 echo "On commit $dstcommit"

@@ -47,18 +47,18 @@ while optparse; do
 	fi
 done
 
-name=${ARGS[0]}
-[ "$name" ] || { [ -s $_git/branches/origin ] && name=origin; }
+name="${ARGS[0]}"
+[ "$name" ] || { [ -s "$_git/branches/origin" ] && name=origin; }
 [ "$name" ] || die "where to update from?"
 
 # cg-merge can do better decision about fast-forwarding if it sees this.
 [ -s "$_git/refs/heads/$name" ] && export _cg_orig_head="$(cat "$_git/refs/heads/$name")"
 
 if [ -s "$_git/branches/$name" ]; then
-	cg-fetch $force $name || exit 1
+	cg-fetch "$force" "$name" || exit 1
 else
 	echo "Updating from a local branch."
 fi
 echo
 echo "Applying changes..."
-cg-merge $squash $name
+cg-merge "$squash" "$name"

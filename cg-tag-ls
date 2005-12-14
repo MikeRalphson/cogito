@@ -31,13 +31,13 @@ USAGE="cg-tag-ls"
 
 . ${COGITO_LIB}cg-Xlib || exit 1
 
-mkdir -p $_git/refs/tags
-[ "$(find $_git/refs/tags -follow -type f)" ] \
+mkdir -p "$_git/refs/tags"
+[ "$(find "$_git/refs/tags" -follow -type f)" ] \
        || die "List of tags is empty. See cg-tag."
 
-cd $_git/refs/tags
+cd "$_git/refs/tags"
 for tag in *; do
-       echo -n $tag
+       echo -n "$tag"
        echo -ne "\t"
-       cat $tag
+       cat "$tag"
 done

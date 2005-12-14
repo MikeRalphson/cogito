@@ -177,6 +177,8 @@ process_commit_line()
 			# Print summary
 			commit="${commit%:*}"
 			author="${author% <*}"
+			# We want wordsplitting in the $date here, to get
+			# TZ as separate argument.
 			date=(${committer#*> })
 			showdate ${date[*]} '+%F %H:%M'; date="$_showdate"
 			read -r title
@@ -193,22 +195,24 @@ process_commit_line()
 			return
 		fi
 
-		echo ${colheader}commit ${commit%:*} $coldefault
-		echo ${colheader}tree $tree $coldefault
+		echo "${colheader}commit ${commit%:*} $coldefault"
+		echo "${colheader}tree $tree $coldefault"
 
 		for parent in "${parents[@]}"; do
-			echo ${colheader}parent $parent $coldefault
+			echo "${colheader}parent $parent $coldefault"
 		done
 
+		# We want wordsplitting in the $date here, to get
+		# TZ as separate argument.
 		date=(${author#*> })
 		showdate ${date[*]}; pdate="$_showdate"
 		[ "$pdate" ] && author="${author%> *}> $pdate"
-		echo ${colauthor}author $author $coldefault
+		echo "${colauthor}author $author $coldefault"
 
 		date=(${committer#*> })
 		showdate ${date[*]}; pdate="$_showdate"
 		[ "$pdate" ] && committer="${committer%> *}> $pdate"
-		echo ${colcommitter}committer $committer $coldefault
+		echo "${colcommitter}committer $committer $coldefault"
 
 		if [ -n "$list_files" ]; then
 			list_commit_files "$tree" "${parents[0]}"
@@ -280,13 +284,13 @@ while optparse; do
 		user="$OPTARG"
 	elif optparse -r=; then
 		if echo "$OPTARG" | fgrep -q '..'; then
-			log_end=${OPTARG#*..}
+			log_end="${OPTARG#*..}"
 			[ "$log_end" ] || log_end="HEAD"
-			log_start=${OPTARG%..*}
+			log_start="${OPTARG%..*}"
 		elif echo "$OPTARG" | grep -q ':'; then
-			log_end=${OPTARG#*:}
+			log_end="${OPTARG#*:}"
 			[ "$log_end" ] || log_end="HEAD"
-			log_start=${OPTARG%:*}
+			log_start="${OPTARG%:*}"
 		elif [ -z "$log_start" ]; then
 			log_start="$OPTARG"
 		else
@@ -315,12 +319,12 @@ done
 if [ "$mergebase" ]; then
 	[ "$log_start" ] || log_start="HEAD"
 	[ "$log_end" ] || log_end="origin"
-	id1=$(cg-object-id -c "$log_start") || exit 1
-	id2=$(cg-object-id -c "$log_end") || exit 1
-	conservative_merge_base $id1 $id2 || exit 1
+	id1="$(cg-object-id -c "$log_start")" || exit 1
+	id2="$(cg-object-id -c "$log_end")" || exit 1
+	conservative_merge_base "$id1" "$id2" || exit 1
 	[ "$_cg_base_conservative" ] &&
 		echo -e "Warning: Multiple merge bases, picking the most conservative one\a" >&2
-	log_start=$_cg_baselist
+	log_start="$_cg_baselist"
 fi
 
 if [ "$shortlog" ]; then
@@ -328,6 +332,7 @@ if [ "$shortlog" ]; then
 else
 	revls="git-rev-list --pretty=raw"
 fi
+# Word splitting is ok here and we want to auto-drop empty dates.
 revls="$revls $no_merges $date_from $date_to"
 
 id1="$(cg-object-id -c "$log_start")" || exit 1

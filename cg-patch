@@ -35,7 +35,7 @@ redzone_border()
 	[ "$redzone" ] || return
 
 	if [ "$op" = "delete" ]; then
-		torm=$(echo "$file1" | sed 's/[^\/]*\///') #-p1
+		torm="$(echo "$file1" | sed 's/[^\/]*\///')" #-p1
 		if ! [ "$reverse" ]; then
 			(git-ls-files | fgrep -qx "$torm") && echo -ne "rm\0$torm\0"
 			redzone_reset
@@ -44,7 +44,7 @@ redzone_border()
 			(git-ls-files | fgrep -qx "$torm") || echo -ne "add\0$torm\0"
 		fi
 	elif [ "$op" = "add" ]; then
-		toadd=$(echo "$file2" | sed 's/^[^\/]*\///') #-p1
+		toadd="$(echo "$file2" | sed 's/^[^\/]*\///')" #-p1
 		if ! [ "$reverse" ]; then
 			(git-ls-files | fgrep -qx "$toadd") || echo -ne "add\0$toadd\0"
 		else
@@ -76,27 +76,30 @@ if [ "${ARGS[0]}" = "-R" ]; then
 fi
 
 
-gonefile=$(mktemp -t gitapply.XXXXXX)
-todo=$(mktemp -t gitapply.XXXXXX)
-patchfifo=$(mktemp -t gitapply.XXXXXX)
-rm $patchfifo && mkfifo -m 600 $patchfifo
+gonefile="$(mktemp -t gitapply.XXXXXX)"
+todo="$(mktemp -t gitapply.XXXXXX)"
+patchfifo="$(mktemp -t gitapply.XXXXXX)"
+rm "$patchfifo" && mkfifo -m 600 "$patchfifo"
 
-git-ls-files --deleted >$gonefile
+git-ls-files --deleted >"$gonefile"
 
 # patch file removal behaviour cannot be sensibly controlled, so we
 # just handle it all ourselves.
 patch_args="-p1 -N"
 [ "$reverse" ] && patch_args="$patch_args -R"
-patch $patch_args <$patchfifo &
+patch $patch_args <"$patchfifo" &
 
-tee $patchfifo | {
+tee "$patchfifo" | {
 	redzone_reset
 
 	while read -r line; do
 		if [ "${line:0:10}" = "diff --git" ]; then
 			redzone_border
 
+			# The diff line is fundamentally unsafe wrt. spaces,
+			# nothing we can do here.
 			cmd="$(echo "$line" | sed 's/^diff --git //')"
+			# TODO: Simplify.
 			file1="$(bash -c 'echo $1' padding $cmd)"
 			file2="$(bash -c 'echo $2' padding $cmd)"
 
@@ -105,23 +108,23 @@ tee $patchfifo | {
 		fi
 
 		if [ "$redzone" ] && [ "${line#[nod]}" != "$line" ]; then
-			mode=$(echo "$line" | awk '
+			mode="$(echo "$line" | awk '
 				/^deleted file mode [0-9]+/ {print "D-"$4}
 				/^old mode [0-9]+/ {print "-"$3}
 				/^new file mode [0-9]+/ {print "A+"$4}
 				/^new mode [0-9]+/ {print "+"$3}
-			')
+			')"
 			if [ "${mode:0:1}" = "D" ]; then
 				op=delete
-				mode=${mode:1}
+				mode="${mode:1}"
 			elif [ "${mode:0:1}" = "A" ]; then
 				op=add
-				mode=${mode:1}
+				mode="${mode:1}"
 			fi
 			if [ "${mode:0:1}" = "-" ]; then
-				origmode=${mode:1}
+				origmode="${mode:1}"
 			elif [ "${mode:0:1}" = "+" ]; then
-				newmode=${mode:1}
+				newmode="${mode:1}"
 			fi
 			continue
 		fi
@@ -137,26 +140,26 @@ wait
 # This is done on the assumption that we are never going to have
 # too many files deleted in the first place anyway.
 
-touchfiles="$(git-ls-files --deleted | join -v 2 $gonefile -)"
-[ "$touchfiles" ] && touch $touchfiles
+IFS=$'\n' touchfiles=($(git-ls-files --deleted | join -v 2 "$gonefile" -))
+[ "${touchfiles[*]}" ] && touch "${touchfiles[@]}"
 
-cat $todo | xargs -0 bash -c '
+cat "$todo" | xargs -0 bash -c '
 while [ "$1" ]; do
 	op="$1"; shift;
 	case "$op" in
 	"add") cg-add "$1"; shift;;
 	"rm")  rm -- "$1" && cg-rm "$1"; shift;;
 	"cm")
-		mode=$1; shift
+		mode="$1"; shift
 		# $mode contains leading space due to echo braindamage
 		if [ "${mode:(-3):1}" = "7" ]; then
-			mask=$(printf %o $((8#777&~8#$(umask))))
+			mask="$(printf %o $((8#777&~8#$(umask))))"
 		else
-			mask=$(printf %o $((8#666&~8#$(umask))))
+			mask="$(printf %o $((8#666&~8#$(umask))))"
 		fi
 		chmod "$mask" "$1"; shift;;
 	esac
 done
 ' padding
 
-rm $patchfifo $todo $gonefile
+rm "$patchfifo" "$todo" "$gonefile"

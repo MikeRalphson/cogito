@@ -51,9 +51,9 @@ print_command_listing()
 {
 	for command in "$@"; do
 		[ -f "$command" -a ! -L "$command" ] || continue
-		cmdname=$(basename $command)
+		cmdname="$(basename "$command")"
 
-		shortdesc=$(sed -n 'n;n;p;q' < $command)
+		shortdesc="$(sed -n 'n;n;p;q' <"$command")"
 		# Some minimal sanity check that we didn't pick up some
 		# random binary named cg-*
 		[ "${shortdesc:0:1}" = "#" ] || continue
@@ -75,24 +75,24 @@ while optparse; do
 	fi
 done
 
-bin_path="$(dirname $0)"
+bin_path="$(dirname "$0")"
 
 
 if [ "$ARGS" = "admin" ]; then
 	echo "The advanced (low-level, dangerous, or administrative) commands:"
-	print_command_listing $(ls $bin_path/cg-admin*)
+	IFS=$'\n' print_command_listing $(ls "$bin_path"/cg-admin*)
 	exit
 elif [ "$ARGS" = "branch" ]; then
 	echo "The branch commands family:"
-	print_command_listing $(ls $bin_path/cg-branch*)
+	IFS=$'\n' print_command_listing $(ls "$bin_path"/cg-branch*)
 	exit
 elif [ "$ARGS" = "tag" ]; then
 	echo "The tag commands family:"
-	print_command_listing $(ls $bin_path/cg-tag*)
+	IFS=$'\n' print_command_listing $(ls "$bin_path"/cg-tag*)
 	exit
 elif [ "$ARGS" ]; then
-	cmd=$(echo "${ARGS[0]}" | sed 's/^cg-//')
-	print_help long $cmd | colorize
+	cmd="$(echo "${ARGS[0]}" | sed 's/^cg-//')"
+	print_help long "$cmd" | colorize
 	[ "${PIPESTATUS[0]}" -eq 0 ] && exit
 	echo "cg-help: no help available for command \"${ARGS[0]}\""
 	echo "Call cg-help without any arguments for the list of available commands"
@@ -100,13 +100,13 @@ elif [ "$ARGS" ]; then
 fi
 
 
-REGULAR_COMMANDS="$(ls $bin_path/cg-* | grep -v /cg-X | grep -v /cg-admin | grep -v /cg-branch | grep -v /cg-tag)"
+REGULAR_COMMANDS="$(ls "$bin_path"/cg-* | grep -v /cg-X | grep -v /cg-admin | grep -v /cg-branch | grep -v /cg-tag)"
 # TODO: Some uberevil `column` tricks...
-BRANCH_COMMANDS="$(ls $bin_path/cg-branch* | sed 's#.*/##' | tr '\n' ' ')"
-TAG_COMMANDS="$(ls $bin_path/cg-tag* | sed 's#.*/##' | tr '\n' ' ')"
-ADVANCED_COMMANDS="$(ls $bin_path/cg-admin-* | sed 's#.*/##' | tr '\n' ' ')"
+BRANCH_COMMANDS="$(ls "$bin_path"/cg-branch* | sed 's#.*/##' | tr '\n' ' ')"
+TAG_COMMANDS="$(ls "$bin_path"/cg-tag* | sed 's#.*/##' | tr '\n' ' ')"
+ADVANCED_COMMANDS="$(ls "$bin_path"/cg-admin-* | sed 's#.*/##' | tr '\n' ' ')"
 
-colorize <<__END__
+IFS=$'\n' colorize <<__END__
 The Cogito version control system  $(cg-version)
 
 Available regular commands:

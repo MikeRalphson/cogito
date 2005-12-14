@@ -49,6 +49,6 @@ while optparse; do
 	fi
 done
 
-id=$(cg-object-id -t $tree_id) || exit 1
+id="$(cg-object-id -t "$tree_id")" || exit 1
 
 git-ls-tree "$id" "${ARGS[@]}"

@@ -33,7 +33,7 @@ _git_requires_root=1
 
 . ${COGITO_LIB}cg-Xlib || exit 1
 
-[ -s $_git/blocked ] && die "uncommitting blocked: $(cat $_git/blocked)"
+[ -s "$_git/blocked" ] && die "uncommitting blocked: $("cat $_git/blocked")"
 
 rollback_tree=
 while optparse; do
@@ -45,17 +45,17 @@ while optparse; do
 done
 
 
-base=$(cg-object-id -c) || exit 1
+base="$(cg-object-id -c)" || exit 1
 
-commit=$(cg-object-id -c "${ARGS[0]}") || exit 1
+commit="$(cg-object-id -c "${ARGS[0]}")" || exit 1
 [ "$(git-rev-list ^$commit $base)" ] && \
 	die "$commit: not an ancestor of HEAD"
 
-parent=$(cg-object-id -p "$commit" | head -n 1) || exit 1
+parent="$(cg-object-id -p "$commit" | head -n 1)" || exit 1
 [ "$parent" ] || die "cannot rewind behind the initial commit"
 
 
 echo "Rewinding $base (HEAD) -> $parent" >&2
 
-tree_timewarp "backwards" "$rollback_tree" $base $parent
+tree_timewarp "backwards" "$rollback_tree" "$base" "$parent"
 exit 0

@@ -46,7 +46,7 @@ done
 
 [ ${#ARGS[*]} -ge 1 ] || usage
 
-TMPFILE=$(mktemp -t gitadd.XXXXXX) || exit 1
+TMPFILE="$(mktemp -t gitadd.XXXXXX)" || exit 1
 error=
 for file in "${ARGS[@]}"; do
 	absfile="$_git_relpath$file"
@@ -55,7 +55,7 @@ for file in "${ARGS[@]}"; do
 			list_untracked_files exclude | tr '\0' '\n' |
 				while IFS=$'' read path; do
 					[ x"${path#$absfile}" != x"$path" ] &&
-						echo "$file${path#$absfile}" >>$TMPFILE
+						echo "$file${path#$absfile}" >>"$TMPFILE"
 				done
 		else
 			echo "$file is a directory (use cg-add -r?)" >&2
@@ -65,14 +65,14 @@ for file in "${ARGS[@]}"; do
 		echo "$file does not exist or is not a regular file" >&2
 		error=1
 	else
-		echo "$file" >>$TMPFILE
+		echo "$file" >>"$TMPFILE"
 	fi
 done
 
-cat $TMPFILE | sed 's/^/Adding file /'
-cat $TMPFILE | sed "s|^|$_git_relpath|" | path_xargs git-update-index --add ${infoonly} -- || error=1
+cat "$TMPFILE" | sed 's/^/Adding file /'
+cat "$TMPFILE" | sed "s|^|$_git_relpath|" | path_xargs git-update-index --add ${infoonly} -- || error=1
 
-rm $TMPFILE
+rm "$TMPFILE"
 
 [ "$error" ] && die "warning: not all files could have been added"
 exit 0

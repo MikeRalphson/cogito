@@ -50,14 +50,14 @@ id="${ARGS[1]}"
 
 [ -n "$name" ] || usage
 
-id=$(cg-object-id -n "$id") || exit 1
-type=$(git-cat-file -t "$id")
-id=${id% *}
+id="$(cg-object-id -n "$id")" || exit 1
+type="$(git-cat-file -t "$id")"
+id="${id% *}"
 
-(echo $name | egrep -qv '[^a-zA-Z0-9_.@!:-]') || \
+(echo "$name" | egrep -qv '[^a-zA-Z0-9_.@!:-]') || \
 	die "name contains invalid characters"
 
-mkdir -p $_git/refs/tags
+mkdir -p "$_git/refs/tags"
 
 [ -s "$_git/refs/tags/$name" ] && die "tag already exists ($name)"
 [ "$id" ] || id="$(cat "$_git/$(git-symbolic-ref HEAD)")"
@@ -83,7 +83,7 @@ if [ "$sign" ]; then
 	fi
 	cat "$tagdir/tag.asc" >>"$tagdir/tag"
 fi
-if ! git-mktag <"$tagdir/tag" >$_git/refs/tags/$name; then
+if ! git-mktag <"$tagdir/tag" >"$_git/refs/tags/$name"; then
 	rm -rf "$tagdir"
 	die "error creating tag"
 fi

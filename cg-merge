@@ -97,20 +97,20 @@ _git_requires_root=1
 
 prehook()
 {
-	if [ -x $_git/hooks/merge-pre ]; then
-		$_git/hooks/merge-pre "$branchname" "$base" "$head" "$branch" "$@" || die "merge cancelled by hook"
+	if [ -x "$_git/hooks/merge-pre" ]; then
+		"$_git/hooks/merge-pre" "$branchname" "$base" "$head" "$branch" "$@" || die "merge cancelled by hook"
 	fi
 }
 
 posthook()
 {
-	if [ -x $_git/hooks/merge-post ]; then
-		$_git/hooks/merge-post "$branchname" "$base" "$head" "$branch" "$@"
+	if [ -x "$_git/hooks/merge-post" ]; then
+		"$_git/hooks/merge-post" "$branchname" "$base" "$head" "$branch" "$@"
 	fi
 }
 
 
-head=$(cg-object-id -c) || exit 1
+head="$(cg-object-id -c)" || exit 1
 
 
 careful=
@@ -121,7 +121,7 @@ while optparse; do
 	if optparse -c; then
 		careful=1
 	elif optparse -b=; then
-		base=$(cg-object-id -c "$OPTARG") || exit 1
+		base="$(cg-object-id -c "$OPTARG")" || exit 1
 	elif optparse -j; then
 		join=1
 	# -s reserved to strategy
@@ -133,7 +133,7 @@ while optparse; do
 done
 
 branchname="${ARGS[0]}"
-[ "$branchname" ] || { [ -s $_git/branches/origin ] && branchname=origin; }
+[ "$branchname" ] || { [ -s "$_git/branches/origin" ] && branchname=origin; }
 [ "$branchname" ] || die "what to merge?"
 branch=$(cg-object-id -c "$branchname") || exit 1
 
@@ -155,14 +155,14 @@ else
 	[ "$base" ] && die "joining branches with common history is something I refuse to do"
 	index="$(mktemp -t gitmerge.XXXXXX)" || exit $?
 	GIT_INDEX_FILE="$index" git-read-tree
-	base=$(GIT_INDEX_FILE="$index" git-write-tree)
+	base="$(GIT_INDEX_FILE="$index" git-write-tree)"
 	rm "$index"
 fi
 
 
-[ -s $_git/blocked ] && die "merge blocked: $(cat $_git/blocked)"
+[ -s "$_git/blocked" ] && die "merge blocked: $(cat "$_git/blocked")"
 
-if [ -s "$_git/merging" ] && grep -q "$branch" $_git/merging; then
+if [ -s "$_git/merging" ] && grep -q "$branch" "$_git/merging"; then
 	echo "Branch already merged in the working tree." >&2
 	exit 0
 fi
@@ -180,7 +180,7 @@ if { [ "$head" = "$base" ] || [ "$head" = "$_cg_orig_head" ]; } && [ ! "$squash"
 	echo -e "\ton top of $head..." >&2
 
 	prehook forward
-	tree_timewarp "forward" "yes, rollback (or rather rollforth) the tree!" $base $branch
+	tree_timewarp "forward" "yes, rollback (or rather rollforth) the tree!" "$base" "$branch"
 	posthook forward ok
 
 	exit 0
@@ -203,25 +203,25 @@ else
 	mergetype="squash"
 fi
 
-prehook $mergetype
+prehook "$mergetype"
 
 git-diff-index --name-only "$(cg-object-id -t $head)" >>"$_git/commit-ignore"
 # Don't keep around useless empty files
 [ -s "$_git/commit-ignore" ] || rm "$_git/commit-ignore"
 
-if ! git-read-tree -u -m "$(cg-object-id -t $base)" "$(cg-object-id -t $head)" "$(cg-object-id -t $branch)"; then
+if ! git-read-tree -u -m "$(cg-object-id -t "$base")" "$(cg-object-id -t "$head")" "$(cg-object-id -t "$branch")"; then
 	echo "cg-merge: git-read-tree failed (merge likely blocked by local changes)" >&2
-	posthook $mergetype localchanges
+	posthook "$mergetype" localchanges
 	rm -f "$_git/commit-ignore"
 	exit 1
 fi
 
-echo $base >>$_git/merge-base
-echo $branch >>$_git/merging
-echo $branchname >>$_git/merging-sym
-[ "$squash" ] && echo $branch >>"$_git/squashing"
+echo "$base" >>"$_git/merge-base"
+echo "$branch" >>"$_git/merging"
+echo "$branchname" >>"$_git/merging-sym"
+[ "$squash" ] && echo "$branch" >>"$_git/squashing"
 
-if ! git-merge-index -o -q ${COGITO_LIB}cg-Xmergefile -a || [ "$careful" ]; then
+if ! git-merge-index -o -q "${COGITO_LIB}cg-Xmergefile" -a || [ "$careful" ]; then
 	echo >&2
 	if [ ! "$careful" ]; then
 		echo "	Conflicts during merge. Do cg-commit after resolving them." >&2
@@ -237,7 +237,7 @@ if ! git-merge-index -o -q ${COGITO_LIB}cg-Xmergefile -a || [ "$careful" ]; then
 		echo "	cg-reset will cancel the merge." >&2
 		echo >&2
 	fi
-	posthook $mergetype conflicts
+	posthook "$mergetype" conflicts
 	exit 2
 fi
 
@@ -251,7 +251,7 @@ if ! cg-commit -C; then
 	else
 		echo "	cg-reset will cancel the merge." >&2
 	fi
-	posthook $mergetype nocommit
+	posthook "$mergetype" nocommit
 fi
 
 [ "$readtree" ] && git-read-tree -m HEAD
@@ -259,4 +259,4 @@ fi
 # survived the read-tree above
 update_index
 
-posthook $mergetype ok
+posthook "$mergetype" ok

@@ -121,13 +121,13 @@ while optparse; do
 		opt_summary=1
 	elif optparse -r=; then
 		if echo "$OPTARG" | fgrep -q '..'; then
-			id2=${OPTARG#*..}
+			id2="${OPTARG#*..}"
 			[ "$id2" ] || log_end="HEAD"
-			id1=${OPTARG%..*}
+			id1="${OPTARG%..*}"
 		elif echo "$OPTARG" | grep -q ':'; then
-			id2=${OPTARG#*:}
+			id2="${OPTARG#*:}"
 			[ "$id2" ] || log_end="HEAD"
-			id1=${OPTARG%:*}
+			id1="${OPTARG%:*}"
 		elif [ "$id1" = " " ]; then
 			id1="$OPTARG"
 		else
@@ -144,10 +144,10 @@ if [ "$parent" ]; then
 	id2="$id1"
 	id="$id2"; [ "$id" = " " ] && id=""
 
-	ids=$(cg-object-id -p "$id")
+	ids="$(cg-object-id -p "$id")"
 	[ "$(echo "$ids" | wc -l)" -gt 1 ] && \
 		echo "Warning: Choosing the first parent of a merge commit. This may not be what you want." >&2
-	id1=$(echo "$ids" | head -n 1) || exit 1
+	id1="$(echo "$ids" | head -n 1)" || exit 1
 
 	[ "$id1" ] || exit 1
 fi
@@ -155,26 +155,26 @@ fi
 if [ "$mergebase" ]; then
 	[ "$id1" != " " ] || id1="HEAD"
 	[ "$id2" != " " ] || id2="origin"
-	id1=$(cg-object-id -c "$id1") || exit 1
-	id2=$(cg-object-id -c "$id2") || exit 1
-	conservative_merge_base $id1 $id2 || exit 1
+	id1="$(cg-object-id -c "$id1")" || exit 1
+	id2="$(cg-object-id -c "$id2")" || exit 1
+	conservative_merge_base "$id1" "$id2" || exit 1
 	[ "$_cg_base_conservative" ] &&
 		echo -e "Warning: Multiple merge bases, picking the most conservative one\a" >&2
-	id1=$_cg_baselist
+	id1="$_cg_baselist"
 fi
 
 
-filter=$(mktemp -t gitdiff.XXXXXX)
-[ "$_git_relpath" -a ! "$ARGS" ] && echo "$_git_relpath" >>$filter
+filter="$(mktemp -t gitdiff.XXXXXX)"
+[ "$_git_relpath" -a ! "$ARGS" ] && echo "$_git_relpath" >>"$filter"
 for file in "${ARGS[@]}"; do
-	echo "${_git_relpath}$file" >>$filter
+	echo "${_git_relpath}$file" >>"$filter"
 done
 
 if [ "$id2" = " " ]; then
 	if [ "$id1" != " " ]; then
-		tree=$(cg-object-id -t "$id1") || exit 1
+		tree="$(cg-object-id -t "$id1")" || exit 1
 	else
-		tree=$(cg-object-id -t) || exit 1
+		tree="$(cg-object-id -t)" || exit 1
 	fi
 
 	# Ensure to only diff modified files
@@ -185,12 +185,12 @@ if [ "$id2" = " " ]; then
 	#ret=
 	# xargs on FreeBSD is hardcoded to --no-run-if-empty :/
 	if [ -s "$filter" ]; then
-		cat $filter | path_xargs git-diff-index -r -p $tree | colorize | pager
+		cat "$filter" | path_xargs git-diff-index -r -p "$tree" | colorize | pager
 	else
-		git-diff-index -r -p $tree | colorize | pager
+		git-diff-index -r -p "$tree" | colorize | pager
 	fi
 
-	rm $filter
+	rm "$filter"
 
 	#[ "$ret" ] && die "no files matched"
 	#exit $ret
@@ -198,17 +198,17 @@ if [ "$id2" = " " ]; then
 fi
 
 
-id1=$(cg-object-id -t "$id1") || exit 1
-id2=$(cg-object-id -t "$id2") || exit 1
+id1="$(cg-object-id -t "$id1")" || exit 1
+id2="$(cg-object-id -t "$id2")" || exit 1
 
 [ "$id1" = "$id2" ] && exit 0
 
 # xargs on FreeBSD is hardcoded to --no-run-if-empty :/
 if [ -s "$filter" ]; then
-	cat $filter | path_xargs git-diff-tree -r -p $id1 $id2 | colorize | pager
+	cat "$filter" | path_xargs git-diff-tree -r -p "$id1" "$id2" | colorize | pager
 else
-	git-diff-tree -r -p $id1 $id2 | colorize | pager
+	git-diff-tree -r -p "$id1" "$id2" | colorize | pager
 fi
 
-rm $filter
+rm "$filter"
 exit 0

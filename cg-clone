@@ -45,17 +45,17 @@ while optparse; do
 	fi
 done
 
-location=${ARGS[0]}
+location="${ARGS[0]}"
 
 [ -n "$location" ] || usage
-location=${location%/}
+location="${location%/}"
 
-destdir=${ARGS[1]}
+destdir="${ARGS[1]}"
 if [ "$destdir" ]; then
 	[ ! "$same_dir" ] || die "specifying both -s and DESTDIR makes no sense"
-	dir=$destdir
+	dir="$destdir"
 else
-	dir=${location%#*}; dir=${dir%/.git}; dir=${dir##*/} dir=${dir%.git}
+	dir="${location%#*}"; dir="${dir%/.git}"; dir="${dir##*/}"; dir="${dir%.git}"
 fi
 
 if ! echo "$location" | grep -q ":" ; then
@@ -78,16 +78,16 @@ cleanup_trap "cd .. && rm -rf $dir"
 
 cg-init -I || die "init failed"
 if [ "$symlink" ]; then
-	rmdir $_git/objects/*
-	rmdir $_git/objects
+	rmdir "$_git/objects/"*
+	rmdir "$_git/objects"
 	src="$location"
 	[ -d "$src/.git" ] && src="$src/.git"
-	ln -s $src/objects $_git/objects
+	ln -s "$src/objects" "$_git/objects"
 fi
 cg-branch-add origin "$location"
 cg-fetch origin || die "fetch failed"
 
-cp $_git/refs/heads/origin $_git/refs/heads/master &&
+cp "$_git/refs/heads/origin" "$_git/refs/heads/master" &&
 	git-read-tree HEAD &&
 	git-checkout-index -a &&
 	git-update-index --refresh ||
