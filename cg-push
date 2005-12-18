@@ -44,7 +44,7 @@ if echo "$uri" | grep -q '#'; then
 	rembranch=$(echo $uri | cut -d '#' -f 2)
 	uri=$(echo $uri | cut -d '#' -f 1)
 fi
-sprembranch=":$rembranch"
+sprembranch=":refs/heads/$rembranch"
 
 if echo "$uri" | grep -q "^http://"; then
 	die "pushing over HTTP not supported yet"
