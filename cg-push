@@ -40,12 +40,11 @@ name=${ARGS[0]}
 uri=$(cat "$_git/branches/$name" 2>/dev/null) || die "unknown branch: $name"
 
 rembranch=master
-sprembranch=
 if echo "$uri" | grep -q '#'; then
 	rembranch=$(echo $uri | cut -d '#' -f 2)
-	sprembranch=":$rembranch"
 	uri=$(echo $uri | cut -d '#' -f 1)
 fi
+sprembranch=":$rembranch"
 
 if echo "$uri" | grep -q "^http://"; then
 	die "pushing over HTTP not supported yet"
