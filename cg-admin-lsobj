@@ -7,6 +7,9 @@
 # Lists IDs of all the objects of a given type found in the dircache.
 # Takes the object type as the first parameter, defaults to all objects.
 #
+# WARNING! This command does not list packed objects, so its usefulness
+# is rather limited right now. That's a big TODO.
+#
 # The possible object types are:
 #
 # blob::
