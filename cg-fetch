@@ -189,9 +189,10 @@ fetch_tags()
 	[ -d "$_git/refs/tags" ] || mkdir -p "$_git/refs/tags"
 
 	if [ "$get" = "get_rsync" ]; then
-		$get -i -s -u -d "$uri/refs/tags" "$_git/refs/tags" ||
+		if ! $get -i -s -u -d "$uri/refs/tags" "$_git/refs/tags"; then
 			echo "unable to get tags list (non-fatal)" >&2
-		exit $?
+			return $?
+		fi
 	fi
 
 	git-ls-remote --tags "$uri" |
