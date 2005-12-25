@@ -58,6 +58,7 @@ Tool				Description
 rsync				For fetching files with the rsync backend.
 gnu coreutils			The gnu versions of stat, date and cp \
 				are preferred over the BSD variants.
+gawk				Necessary for cg-diff -c (mawk can't cope).
 asciidoc (>= 7.0), xmlto	For building documentation.
 -------------------------------------------------------------------------------
 
