@@ -49,7 +49,11 @@ deprecated_alias cg-fetch cg-pull
 
 fetch_progress()
 {
-	exec "${COGITO_LIB}cg-Xfetchprogress" "$_git_objects"
+	if [ -t 1 ]; then
+		exec "${COGITO_LIB}cg-Xfetchprogress" "$_git_objects"
+	else
+		exec cat >/dev/null
+	fi
 }
 
 show_changes_summary()
