@@ -44,10 +44,10 @@ case "$dest" in
 		base="${base##*/}"
 		case "$ext" in
 		.tar.gz|.tgz)
-			git-tar-tree "$id" "$base" | gzip -c9 "$tar" >"$dest"
+			git-tar-tree "$id" "$base" | gzip -c9 >"$dest"
 			;;
 		.tar.bz2)
-			git-tar-tree "$id" "$base" | bzip2 -c "$tar" >"$dest"
+			git-tar-tree "$id" "$base" | bzip2 -c >"$dest"
 			;;
 		.tar)
 			git-tar-tree "$id" "$base" >"$dest"
