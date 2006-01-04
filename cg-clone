@@ -79,7 +79,7 @@ cg-init -I || die "init failed"
 if [ "$symlink" ]; then
 	rmdir $_git/objects/*
 	rmdir $_git/objects
-	src="$location"
+	src="${location%#*}"
 	[ -d "$src/.git" ] && src="$src/.git"
 	ln -s $src/objects $_git/objects
 fi
