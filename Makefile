@@ -3,6 +3,7 @@ prefix=$(HOME)
 
 bindir=$(prefix)/bin
 libdir=$(prefix)/lib/cogito
+sharedir=$(prefix)/share/cogito
 
 INSTALL?=install
 
@@ -24,6 +25,8 @@ LIB_SCRIPT=cg-Xlib cg-Xmergefile cg-Xfetchprogress
 GEN_SCRIPT= cg-version
 
 VERSION= VERSION
+
+SHARE_FILES= default-exclude
 
 
 
@@ -62,6 +65,7 @@ test: all
 ### Installation rules
 
 sedlibdir=$(shell echo $(libdir) | sed 's/\//\\\//g')
+sedsharedir=$(shell echo $(sharedir) | sed 's/\//\\\//g')
 
 .PHONY: install install-cogito install-doc
 install: install-cogito
@@ -83,14 +87,20 @@ install-cogito: $(SCRIPT) $(LIB_SCRIPT) $(GEN_SCRIPT)
 	$(INSTALL) $(LIB_SCRIPT) $(DESTDIR)$(libdir)
 	cd $(DESTDIR)$(bindir); \
 	for file in $(SCRIPT) $(GEN_SCRIPT); do \
-		sed -e 's/\$${COGITO_LIB}/"\$${COGITO_LIB:-$(sedlibdir)\/}"/g' $$file > $$file.new; \
+		sed -e 's/\$${COGITO_LIB}/"\$${COGITO_LIB:-$(sedlibdir)\/}"/g; \
+		        s/\$${COGITO_SHARE}/"\$${COGITO_SHARE:-$(sedsharedir)\/}"/g' \
+		       $$file > $$file.new; \
 		cat $$file.new > $$file; rm $$file.new; \
 	done
 	cd $(DESTDIR)$(libdir); \
 	for file in $(LIB_SCRIPT); do \
-		sed -e 's/\$${COGITO_LIB}/"\$${COGITO_LIB:-$(sedlibdir)\/}"/g' $$file > $$file.new; \
+		sed -e 's/\$${COGITO_LIB}/"\$${COGITO_LIB:-$(sedlibdir)\/}"/g; \
+		        s/\$${COGITO_SHARE}/"\$${COGITO_SHARE:-$(sedsharedir)\/}"/g' \
+		       $$file > $$file.new; \
 		cat $$file.new > $$file; rm $$file.new; \
 	done
+	$(INSTALL) -m755 -d $(DESTDIR)$(sharedir)
+	$(INSTALL) -m644 $(SHARE_FILES) $(DESTDIR)$(sharedir)
 
 install-doc:
 	$(MAKE) -C Documentation install
@@ -98,6 +108,7 @@ install-doc:
 uninstall:
 	cd $(DESTDIR)$(bindir) && rm -f $(SCRIPT) $(GEN_SCRIPT)
 	cd $(DESTDIR)$(libdir) && rm -f $(LIB_SCRIPT)
+	cd $(DESTDIR)$(sharedir) && rm -f $(SHARE_FILES)
 
 
 

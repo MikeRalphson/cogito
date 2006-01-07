@@ -179,6 +179,23 @@ path_xargs()
 	normpath | tr '\n' '\0' | xargs -0 "$@"
 }
 
+# Setup COGITO_REAL_SHARE to COGITO_SHARE if make install'd, or to
+# the most probable location if not.
+find_cogito_share()
+{
+	if [ -n "${COGITO_SHARE}" ]; then
+		COGITO_REAL_SHARE="${COGITO_SHARE}"
+		return
+	fi
+	if [ "${0%/*}" != "$0" ]; then
+		COGITO_REAL_SHARE="${0%/*}/"
+		return
+	fi
+	# I'm not sure if the following normally ever gets triggered.
+	# I can only do it by `sh cg-status`. --pasky
+	COGITO_REAL_SHARE="./$_git_relpath/"
+}
+
 # Equivalent to cg-status -w -n -s '?', but the filenames are delimited
 # by '\0' instead of '\n'.
 # Usage: list_untracked_files DO_EXCLUDE [EXTRAEXCLUDE]...
@@ -190,9 +207,14 @@ list_untracked_files()
 	excludeflag="$1"; shift
 	EXCLUDE=()
 	if [ "$excludeflag" != "no" -a "$excludeflag" != "noexclude" ]; then
-		for excl in '*.[ao]' '.*' '!.gitignore' tags '*~' '#*' "$@"; do
+		for excl in "$@"; do
 			EXCLUDE[${#EXCLUDE[@]}]="--exclude=$excl"
 		done
+		find_cogito_share
+		EXCLUDEFILE="${COGITO_REAL_SHARE}default-exclude"
+		if [ -f "$EXCLUDEFILE" ]; then
+			EXCLUDE[${#EXCLUDE[@]}]="--exclude-from=$EXCLUDEFILE"
+		fi
 		EXCLUDEFILE="$_git/info/exclude"
 		if [ -f "$EXCLUDEFILE" ]; then
 			EXCLUDE[${#EXCLUDE[@]}]="--exclude-from=$EXCLUDEFILE"
