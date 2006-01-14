@@ -85,6 +85,7 @@ if [ "$symlink" ]; then
 	ln -s "$src/objects" "$_git/objects"
 fi
 cg-branch-add origin "$location"
+export _cg_cloning=1 # Hint cg-fetch to optimize for initial clone.
 cg-fetch origin || die "fetch failed"
 
 cp "$_git/refs/heads/origin" "$_git/refs/heads/master" &&

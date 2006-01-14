@@ -41,6 +41,17 @@
 #	Additional flags to be passed to the rsync tool when fetching over
 #	the rsync protocol.
 
+# Developer's documentation:
+#
+# ENVIRONMENT
+# -----------
+# _cg_cloning::
+#	Hint cg-fetch that it should optimize for the initial clone case
+#	rather than the incremental fetch case. Currently just makes it
+#	use git-clone-pack instead of git-fetch-pack, since git-clone-pack
+#	won't unpack the transferred pack.
+
+
 USAGE="cg-fetch [-f] [-v] [BRANCH_NAME]"
 
 . ${COGITO_LIB}cg-Xlib || exit 1
@@ -312,6 +323,9 @@ if [ "$packed_transport" ]; then
 	# This is a really special case.
 	[ "$rembranch" ] || rembranch="HEAD"
 
+	cloneorfetch= #fetch
+	[ "$_cg_cloning" ] && cloneorfetch=-k #clone
+
 	fetch_pack_recorder () {
 		while read sha1 remote_name; do
 			[ "$sha1" = "failed" ] && die "$2"
@@ -320,7 +334,7 @@ if [ "$packed_transport" ]; then
 		done
 	}
 	echo "Fetching pack (head and objects)..."
-	( git-fetch-pack "$uri" "$rembranch" ||
+	( git-fetch-pack $cloneorfetch "$uri" "$rembranch" ||
 	  echo "failed" "$rembranch" ) |
 		fetch_pack_recorder "refs/heads/$name" "fetching pack failed" ||
 		exit
@@ -334,8 +348,9 @@ if [ "$packed_transport" ]; then
 	fetch_tags
 	if [ -s "$_cg_taglist" ]; then
 		( cat "$_cg_taglist" | tr '\n' '\0' |
-			xargs -0 git-fetch-pack "$uri" ||
+			xargs -0 git-fetch-pack $cloneorfetch "$uri" ||
 		  echo "failed" "$rembranch" ) |
+
 		fetch_pack_recorder "" "unable to retrieve tags (non-fatal)"
 	fi
 	rm "$_cg_taglist"
