@@ -221,6 +221,7 @@ fetch_tags()
 		done
 	[ "${PIPESTATUS[0]}" -eq "0" ] ||
 		echo "unable to get tags list (non-fatal)" >&2
+	return 0
 }
 
 
@@ -380,8 +381,11 @@ fi
 rm "$_git/refs/heads/.$name-fetching"
 
 ## Fetch the tags
-fetch_tags
+ret=0
+if ! fetch_tags; then
+	ret=$?
+fi
 
 rm "$_git/info/cg-fetch-$name-dirty"
 show_changes_summary "$orig_head" "$new_head"
-exit 0
+exit $ret
