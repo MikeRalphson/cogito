@@ -44,6 +44,7 @@ if [ "$dstcommit" ] && [ "$dstcommit" != "$_git_head" ]; then
 else
 	seek_mode=back
 	dstcommit="$(cg-object-id -c "$_git_head")" || exit 1
+	[ "$(git-symbolic-ref HEAD)" = "refs/heads/cg-seek-point" ] || die "trying to unseek while not seeked"
 fi
 
 dstcommit="$(cg-object-id -c "$dstcommit")" || exit 1
