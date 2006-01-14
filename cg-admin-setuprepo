@@ -78,11 +78,13 @@ else
 fi
 
 mkdir "$_git" || exit 1
+shared=
 if [ "$unixgroup" ]; then
 	chgrp "$unixgroup" "$_git" && chmod 2775 "$_git" || exit 1
+	shared=--shared
 fi
 
-git-init-db
+git-init-db $shared
 
 # Enable git-update-server-info after each push.
 if ! chmod a+x "$_git/hooks/post-update"; then
