@@ -29,7 +29,8 @@
 #	Force the complete fetch even if the heads are the same.
 #
 # -v:: Enable verbosity
-#	Display more verbose output.
+#	Display more verbose output - most notably list all the files
+#	touched by the fetched changes.
 #
 # ENVIRONMENT
 # -----------
@@ -74,9 +75,6 @@ show_changes_summary()
 		echo "Tree change: $orig_head:$new_head"
 		if [ "$verbose" ] ; then
 			git-diff-tree -r "$(cg-object-id -t "$orig_head")" "$(cg-object-id -t "$new_head")"
-		else
-			git-diff-tree -r "$(cg-object-id -t "$orig_head")" "$(cg-object-id -t "$new_head")" | \
-				awk '{ print $5" "$6 }'
 		fi
 	else
 		echo "Up to date."
