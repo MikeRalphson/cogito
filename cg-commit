@@ -198,7 +198,7 @@ if [ "$ARGS" -o "$_git_relpath" ]; then
 	done
 
 	eval "commitfiles=($(cat "$filter" | path_xargs git-diff-index -r -m HEAD -- | \
-		sed 's/^\([^	]*\)\(.	.*\)\(	.*\)*$/"\2"/'))"
+		sed 's/^\([^	]*\)\(.\)	\(.*\)\(	.*\)*$/"\2 \3"/'))"
 	customfiles=1
 
 	rm "$filter"
@@ -215,7 +215,7 @@ else
 		# \t instead of the tab character itself works only with new
 		# sed versions.
 		eval "commitfiles=($(git-diff-index -r -m HEAD | \
-			sed 's/^\([^	]*\)\(.	.*\)\(	.*\)*$/"\2"/'))"
+			sed 's/^\([^	]*\)\(.\)	\(.*\)\(	.*\)*$/"\2 \3"/'))"
 
 		if [ -s "$_git/commit-ignore" ]; then
 			newcommitfiles=()
@@ -409,8 +409,8 @@ precommit_update()
 {
 	queueN=(); queueD=(); queueM=();
 	for file in "$@"; do
-		op="${file%%[ 	]*}"
-		fname="${file#*[ 	]}"
+		op="${file%% *}"
+		fname="${file#* }"
 		[ "$op" = "N" ] && op=A # N is to be renamed to A
 		[ "$op" = "A" ] || [ "$op" = "D" ] || [ "$op" = "M" ] || op=M
 		eval "queue$op[\${#queue$op[@]}]=\"\$fname\""
