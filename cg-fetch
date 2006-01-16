@@ -61,7 +61,11 @@ deprecated_alias cg-fetch cg-pull
 
 fetch_progress()
 {
-	exec "${COGITO_LIB}cg-Xfetchprogress" "$_git_objects"
+	if [ -t 1 ]; then
+		exec "${COGITO_LIB}cg-Xfetchprogress" "$_git_objects"
+	else
+		exec cat >/dev/null
+	fi
 }
 
 show_changes_summary()
@@ -198,9 +202,10 @@ fetch_tags()
 	[ -d "$_git/refs/tags" ] || mkdir -p "$_git/refs/tags"
 
 	if [ "$get" = "get_rsync" ]; then
-		$get -i -s -u -d "$uri/refs/tags" "$_git/refs/tags" ||
+		if ! $get -i -s -u -d "$uri/refs/tags" "$_git/refs/tags"; then
 			echo "unable to get tags list (non-fatal)" >&2
-		exit $?
+			return $?
+		fi
 	fi
 
 	git-ls-remote --tags "$uri" |
@@ -230,6 +235,7 @@ fetch_tags()
 		done
 	[ "${PIPESTATUS[0]}" -eq "0" ] ||
 		echo "unable to get tags list (non-fatal)" >&2
+	return 0
 }
 
 
@@ -393,8 +399,11 @@ fi
 rm "$_git/refs/heads/.$name-fetching"
 
 ## Fetch the tags
-fetch_tags
+ret=0
+if ! fetch_tags; then
+	ret=$?
+fi
 
 rm "$_git/info/cg-fetch-$name-dirty"
 show_changes_summary "$orig_head" "$new_head"
-exit 0
+exit $ret
