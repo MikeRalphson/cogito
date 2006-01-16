@@ -56,13 +56,6 @@ cg-*patch should be pre-1.0.)
 	Always perform three-way merge instead of applying patches - when
 	fast-forwarding trees, uncommitting, etc.
 
-* cg-switch
-	Full-fledged multibranch support - allow switching between
-	several branches in a single working tree, as well as creating
-	new ones (much alike git checkout -b), possibly based on
-	an arbitrary commit. (You should be also able to clone remote
-	branch at a particular commit.)
-
 * cg-mkpatch overhaul
 	cg-mkpatch was overlooked for too long, while it could do a huge
 	number of cool things (after some cleanups, and probably factoring
