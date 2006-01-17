@@ -252,7 +252,6 @@ elif [ "$merging" ]; then
 		# Therefore, helpfully pre-fill the commit message with
 		# the messages of all the merged commits.
 		git-rev-list --pretty "$(cat "$_git/merging")" ^HEAD >>"$LOGMSG"
-		read
 	fi
 	written=1
 fi
