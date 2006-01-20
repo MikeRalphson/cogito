@@ -122,6 +122,33 @@ test_expect_success 'checking for the proper conflict being generated for branch
 		"(cmp branch1/file3~origin branch2/file3 && [ -x branch2/file3 ])"
 test_expect_success 'checking for the proper conflict being generated (no file3)' \
 		"([ ! -e branch1/file3 ] && cmp branch1/file3- branch1/file3~merge~base)"
+test_expect_success 'resolving the file3 conflict' \
+		"(cd branch1 && cg-rm file3 && cg-commit -m\"Resolved file3 (removed)\")"
 
+
+test_expect_success 'removing branch1/file2' \
+		"(cd branch1 && cg-rm -f file2 && cg-commit -m\"Killed file2\")"
+test_expect_success 'adding branch2/file5' \
+		"(cd branch2 && echo file5b2 >file5 && cg-add file5 && cg-commit -m\"Added file5\")"
+
+test_expect_success 'fetching from branch2 to branch1' \
+		"(cd branch1 && cg-fetch)"
+test_expect_success 'merging branch2 to branch1 (should not conflict)' \
+		"(cd branch1 && cg-merge </dev/null)"
+test_expect_success 'checking if file2 is still gone and file5 is there' \
+		"([ ! -e branch1/file2 ] && [ -e branch1/file5 ])"
+
+
+test_expect_success 'removing branch2/file5' \
+		"(cd branch2 && cg-rm -f file5 && cg-commit -m\"Killed file5\")"
+
+test_expect_success 'fetching from branch2 to branch1' \
+		"(cd branch1 && cg-fetch)"
+test_expect_success 'merging branch2 to branch1 (should not conflict)' \
+		"(cd branch1 && cg-merge </dev/null)"
+test_expect_success 'checking if file5 is gone' \
+		"([ ! -e branch1/file5 ])"
+test_expect_success 'checking if everything is committed properly' \
+		"([ ! \"\$(cg-status -w | grep -v ^\?)\" ])"
 
 test_done
