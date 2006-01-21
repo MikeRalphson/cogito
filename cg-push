@@ -10,7 +10,8 @@
 # Note that if the remote repository is associated with a working
 # tree copy, this command won't update that. Use cg-reset at the
 # remote side to bring it in sync (but throw away any local changes
-# in that tree).
+# in that tree). Consider setting up a standalone repository (see
+# `cg-admin-setuprepo`).
 #
 # Takes the branch name as an argument, defaulting to "origin".
 #
