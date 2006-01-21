@@ -35,7 +35,7 @@
 
 USAGE="cg-restore [-f] [-r ID] [FILE]..."
 
-. ${COGITO_LIB}cg-Xlib || exit 1
+. "${COGITO_LIB}"cg-Xlib || exit 1
 
 force=
 objid=

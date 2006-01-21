@@ -26,7 +26,7 @@
 
 USAGE="cg-clean [-d] [-D] [-n] [-q] [-x]"
 
-. ${COGITO_LIB}cg-Xlib || exit 1
+. "${COGITO_LIB}"cg-Xlib || exit 1
 
 noexclude=
 cleandir=

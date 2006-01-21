@@ -22,7 +22,7 @@
 # FIXME: What if a symlink replaces a regular file? What if symlinks conflict?
 # What about directory-regularfile conflicts?
 
-. ${COGITO_LIB}cg-Xlib || exit 1
+. "${COGITO_LIB}"cg-Xlib || exit 1
 
 id0="${ARGS[0]}"
 id1="${ARGS[1]}"

@@ -22,7 +22,7 @@
 
 USAGE="cg-push [BRANCH_NAME] [-t TAG]..."
 
-. ${COGITO_LIB}cg-Xlib || exit 1
+. "${COGITO_LIB}"cg-Xlib || exit 1
 
 
 send_pack_update()

@@ -23,7 +23,7 @@
 
 USAGE="cg-admin-cat [-r TREE_ID] FILE..."
 
-. ${COGITO_LIB}cg-Xlib || exit 1
+. "${COGITO_LIB}"cg-Xlib || exit 1
 
 rev=HEAD
 while optparse; do

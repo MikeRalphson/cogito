@@ -30,7 +30,7 @@
 
 USAGE="cg-add [-N] [-r] FILE..."
 
-. ${COGITO_LIB}cg-Xlib || exit 1
+. "${COGITO_LIB}"cg-Xlib || exit 1
 
 infoonly=
 recursive=

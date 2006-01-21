@@ -126,7 +126,7 @@
 
 USAGE="cg-commit [-m MESSAGE]... [-C] [-e | -E] [-s | --signoff] [-c COMMIT_ID] [FILE]... [< MESSAGE]"
 
-. ${COGITO_LIB}cg-Xlib || exit 1
+. "${COGITO_LIB}"cg-Xlib || exit 1
 
 
 [ -s "$_git/blocked" ] && die "committing blocked: $(cat "$_git/blocked")"

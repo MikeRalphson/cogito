@@ -92,7 +92,7 @@
 USAGE="cg-merge [-c] [-b BASE_COMMIT] [-j] [--squash] [BRANCH_NAME]"
 _git_requires_root=1
 
-. ${COGITO_LIB}cg-Xlib || exit 1
+. "${COGITO_LIB}"cg-Xlib || exit 1
 
 
 prehook()
@@ -221,7 +221,7 @@ echo "$branch" >>"$_git/merging"
 echo "$branchname" >>"$_git/merging-sym"
 [ "$squash" ] && echo "$branch" >>"$_git/squashing"
 
-if ! git-merge-index -o -q "${COGITO_LIB}cg-Xmergefile" -a || [ "$careful" ]; then
+if ! git-merge-index -o -q ""${COGITO_LIB}"cg-Xmergefile" -a || [ "$careful" ]; then
 	echo >&2
 	if [ ! "$careful" ]; then
 		echo "	Conflicts during merge. Do cg-commit after resolving them." >&2

@@ -38,7 +38,7 @@
 
 USAGE="cg-admin-ls [-t TREE_ID] [PATH]"
 
-. ${COGITO_LIB}cg-Xlib || exit 1
+. "${COGITO_LIB}"cg-Xlib || exit 1
 
 tree_id=
 while optparse; do

@@ -70,7 +70,7 @@
 
 USAGE="cg-status [-g] [[-n] -s STATUS] [-w] [-x] [DIRPATH]"
 
-. ${COGITO_LIB}cg-Xlib || exit 1
+. "${COGITO_LIB}"cg-Xlib || exit 1
 
 
 should_show_flag() {

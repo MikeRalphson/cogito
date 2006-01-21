@@ -29,7 +29,7 @@
 
 USAGE="cg-tag-ls"
 
-. ${COGITO_LIB}cg-Xlib || exit 1
+. "${COGITO_LIB}"cg-Xlib || exit 1
 
 mkdir -p "$_git/refs/tags"
 [ "$(find "$_git/refs/tags" -follow -type f)" ] \

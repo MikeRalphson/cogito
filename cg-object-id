@@ -31,7 +31,7 @@
 
 USAGE="cg-object-id [-c | -n | -p | -t] [OBJECT_ID]"
 
-. ${COGITO_LIB}cg-Xlib
+. "${COGITO_LIB}"cg-Xlib
 deprecated_alias cg-object-id commit-id cg-commit-id parent-id cg-parent-id tree-id cg-tree-id
 
 

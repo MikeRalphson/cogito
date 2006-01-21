@@ -20,7 +20,7 @@
 USAGE="cg-patch [-R] < patch on stdin"
 _git_requires_root=1
 
-. ${COGITO_LIB}cg-Xlib || exit 1
+. "${COGITO_LIB}"cg-Xlib || exit 1
 
 redzone_reset()
 {

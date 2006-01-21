@@ -56,7 +56,7 @@
 USAGE="cg-switch [-f] [-n] [-r COMMIT_ID] BRANCH"
 _git_requires_root=1
 
-. ${COGITO_LIB}cg-Xlib || exit 1
+. "${COGITO_LIB}"cg-Xlib || exit 1
 
 set -e
 

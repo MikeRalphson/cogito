@@ -100,7 +100,7 @@
 
 USAGE="cg-log [-c] [-f] [-m] [-M] [-s] [-uUSERNAME] [-d DATE] [-r FROM_ID[..TO_ID]] [--summary] FILE..."
 
-. ${COGITO_LIB}cg-Xlib || exit 1
+. "${COGITO_LIB}"cg-Xlib || exit 1
 # Try to fix the annoying "Broken pipe" output. May not help, but apparently
 # at least somewhere it does. Bash is broken.
 trap exit SIGPIPE

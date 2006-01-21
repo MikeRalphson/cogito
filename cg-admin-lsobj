@@ -40,7 +40,7 @@
 
 USAGE="cg-admin-lsobj [OBJECT_TYPE]"
 
-. ${COGITO_LIB}cg-Xlib || exit 1
+. "${COGITO_LIB}"cg-Xlib || exit 1
 
 target="${ARGS[0]}"
 

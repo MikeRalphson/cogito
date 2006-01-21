@@ -31,7 +31,7 @@
 USAGE="cg-clone [-l] [-s] LOCATION [DESTDIR]"
 _git_repo_unneeded=1
 
-. ${COGITO_LIB}cg-Xlib || exit 1
+. "${COGITO_LIB}"cg-Xlib || exit 1
 
 same_dir=
 symlink=

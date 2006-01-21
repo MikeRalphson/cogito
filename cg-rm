@@ -18,7 +18,7 @@
 
 USAGE="cg-rm [-f] [-n] FILE..."
 
-. ${COGITO_LIB}cg-Xlib || exit 1
+. "${COGITO_LIB}"cg-Xlib || exit 1
 
 delete=
 while optparse; do

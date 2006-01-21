@@ -13,7 +13,7 @@
 USAGE="cg-export [-r TREE_ID] DESTFILE"
 _git_requires_root=1
 
-. ${COGITO_LIB}cg-Xlib || exit 1
+. "${COGITO_LIB}"cg-Xlib || exit 1
 
 id=
 while optparse; do

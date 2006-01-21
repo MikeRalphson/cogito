@@ -28,7 +28,7 @@
 
 USAGE="cg-tag [-d DESCRIPTION] [-s [-k KEYNAME]] TAG_NAME [OBJECT_ID]"
 
-. ${COGITO_LIB}cg-Xlib || exit 1
+. "${COGITO_LIB}"cg-Xlib || exit 1
 
 sign=
 keyname=
