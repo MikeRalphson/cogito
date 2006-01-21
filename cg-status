@@ -172,7 +172,7 @@ if [ "$workstatus" ]; then
 	[ "${ARGS[0]}" ] && basepath="$(echo "${ARGS[0]}" | normpath)"
 
 	should_show_flag '?' &&
-		list_untracked_files $exclude | tr '\0' '\n' |
+		list_untracked_files $exclude squashdirs | tr '\0' '\n' |
 		if [ "$basepath" ]; then
 			while IFS=$'' read path; do
 				[ x"${path#$basepath}" != x"$path" ] &&

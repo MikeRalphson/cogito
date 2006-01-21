@@ -198,13 +198,16 @@ find_cogito_share()
 
 # Equivalent to cg-status -w -n -s '?', but the filenames are delimited
 # by '\0' instead of '\n'.
-# Usage: list_untracked_files DO_EXCLUDE [EXTRAEXCLUDE]...
+# Usage: list_untracked_files DO_EXCLUDE SQUASH_DIRS [EXTRAEXCLUDE]...
 # DO_EXCLUDE: "no", "noexclude" means not to exclude anything,
 #             otherwise the exclude rules apply
+# SQUASH_DIRS: "squashdirs" means that if a whole directory is untracked,
+#              only the dirname/ will be listed, not all its contents
 # EXTRAEXCLUDE: extra exclude pattern
 list_untracked_files()
 {
 	excludeflag="$1"; shift
+	squashflag="$1"; shift
 	EXCLUDE=()
 	if [ "$excludeflag" != "no" -a "$excludeflag" != "noexclude" ]; then
 		for excl in "$@"; do
@@ -228,7 +231,9 @@ list_untracked_files()
 		fi
 		EXCLUDE[${#EXCLUDE[@]}]="--exclude-per-directory=.gitignore"
 	fi
-	git-ls-files -z --others --directory "${EXCLUDE[@]}"
+	local listdirs=
+	[ "$squashflag" = "squashdirs" ] && listdirs=--directory
+	git-ls-files -z --others $listdirs "${EXCLUDE[@]}"
 }
 
 # Usage: showdate SECONDS TIMEZONE [FORMAT]

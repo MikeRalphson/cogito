@@ -45,7 +45,7 @@ while optparse; do
 	elif optparse -q; then
 		quiet=1
 	elif optparse -x; then
-		noexclude=1
+		noexclude=noexclude
 	else
 		optfail
 	fi
@@ -102,14 +102,18 @@ clean_dirs()
 
 clean_files()
 {
-	xopt=
-	[ "$noexclude" ] && xopt="-x"
-
 	save_IFS="$IFS"
 	IFS=$'\n'
 
-	cg-status -n -s '?' "$xopt" -w |
+	list_untracked_files "$noexclude" nosquashdirs | tr '\0' '\n' |
+	(cd "${_git_relpath-.}" &&
 	while read -r file; do
+		if [ -z "$_git_relpath" ] || [ x"${file#$_git_relpath}" != x"$file" ]; then
+			file="${file#$_git_relpath}"
+		else
+			continue
+		fi
+
 		if [ -d "$file" -a ! -L "$file" ]; then
 			# Sanity check, shouldn't happen
 			echo "FATAL: cg-status reports directories (internal error)" >&2
@@ -121,18 +125,16 @@ clean_files()
 		else
 			echo "File $file has disappeared!"
 		fi
-	done
+	done)
 
 	IFS="$save_IFS"
 }
 
 
-cd "${_git_relpath-.}"
-
 # Even if -d or -D is not specified, we want to tell user about
 # directories that are not removed
 if [ -z "$quiet" -o "$cleandir" ]; then
-	clean_dirs
+	( cd "${_git_relpath-.}" && clean_dirs )
 fi
 
 clean_files

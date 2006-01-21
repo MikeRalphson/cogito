@@ -52,7 +52,7 @@ for file in "${ARGS[@]}"; do
 	absfile="$_git_relpath$file"
 	if [ -d "$absfile" ]; then
 		if [ "$recursive" ]; then
-			list_untracked_files exclude | tr '\0' '\n' |
+			list_untracked_files exclude nosquashdirs | tr '\0' '\n' |
 				while IFS=$'' read path; do
 					[ x"${path#$absfile}" != x"$path" ] &&
 						echo "$file${path#$absfile}" >>"$TMPFILE"
