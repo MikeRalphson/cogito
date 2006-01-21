@@ -109,7 +109,7 @@ clean_files()
 	IFS=$'\n'
 
 	cg-status -n -s '?' "$xopt" -w |
-	while IFS=$'\n' read -r file; do
+	while read -r file; do
 		if [ -d "$file" -a ! -L "$file" ]; then
 			# Sanity check, shouldn't happen
 			echo "FATAL: cg-status reports directories (internal error)" >&2
