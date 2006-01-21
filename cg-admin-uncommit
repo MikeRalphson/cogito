@@ -48,7 +48,7 @@ done
 base="$(cg-object-id -c)" || exit 1
 
 commit="$(cg-object-id -c "${ARGS[0]}")" || exit 1
-[ "$(git-rev-list ^$commit $base)" ] && \
+[ "$(git-rev-list $commit ^$base)" ] && \
 	die "$commit: not an ancestor of HEAD"
 
 parent="$(cg-object-id -p "$commit" | head -n 1)" || exit 1
