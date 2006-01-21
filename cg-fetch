@@ -77,9 +77,7 @@ show_changes_summary()
 
 	elif [ "$orig_head" != "$new_head" ]; then
 		echo "Tree change: $orig_head:$new_head"
-		if [ "$verbose" ] ; then
-			git-diff-tree --abbrev -r "$(cg-object-id -t "$orig_head")" "$(cg-object-id -t "$new_head")"
-		fi
+		[ "$verbose" ] && git-diff-tree --abbrev -r "$(cg-object-id -t "$orig_head")" "$(cg-object-id -t "$new_head")"
 	else
 		echo "Up to date."
 	fi
