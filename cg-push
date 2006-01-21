@@ -54,6 +54,7 @@ while optparse; do
 	fi
 done
 
+[ ${#ARGS[@]} -gt 1 ] && die "too many arguments, I can push only one branch at once"
 name="${ARGS[0]}"
 
 [ "$name" ] || { [ -s "$_git/branches/origin" ] && name=origin; }
