@@ -59,7 +59,7 @@ clean_dirs()
 	dirlist="$(mktemp -t gitlsfiles.XXXXXX)"
 	git-ls-files --cached |
 		sed -n 's|/[^/]*$||p' |
-		while IFS=$'\n' read dir; do
+		while IFS=$'\n' read -r dir; do
 			while true; do
 				echo "$dir"
 				updir="${dir%/*}"
@@ -77,7 +77,7 @@ clean_dirs()
 		cat - "$dirlist" | sort -u |
 		diff - "$dirlist" |
 		sed -n 's/< //p' |
-	while read dir; do
+	while read -r dir; do
 		if [ ! -d "$dir" ]; then
 			# Perhaps directory was removed with its parent
 			continue
@@ -109,7 +109,7 @@ clean_files()
 	IFS=$'\n'
 
 	cg-status -n -s '?' "$xopt" -w |
-	while read file; do
+	while IFS=$'\n' read -r file; do
 		if [ -d "$file" -a ! -L "$file" ]; then
 			# Sanity check, shouldn't happen
 			echo "FATAL: cg-status reports directories (internal error)" >&2
