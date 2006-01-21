@@ -64,6 +64,10 @@
 #	"do it I", "fix it", "do it II", "fix it II", "fix it III" commits
 #	like you would get with a regular merge).
 #
+# -v:: Enable verbosity
+#	Display more verbose output - most notably list all the files
+#	touched by the merged changes.
+#
 # HOOKS
 # -----
 # '.git/hooks/merge-pre' BRANCH BASE CURHEAD MERGEDHEAD MERGETYPE::
@@ -89,7 +93,7 @@
 #	is called right after fetch. This is used to do better decision
 #	about whether to fast-forward or tree-merge.
 
-USAGE="cg-merge [-c] [-b BASE_COMMIT] [-j] [--squash] [BRANCH_NAME]"
+USAGE="cg-merge [-c] [-b BASE_COMMIT] [-j] [--squash] [-v] [BRANCH_NAME]"
 _git_requires_root=1
 
 . "${COGITO_LIB}"cg-Xlib || exit 1
@@ -117,6 +121,7 @@ careful=
 base=
 join=
 squash=
+verbose=
 while optparse; do
 	if optparse -c; then
 		careful=1
@@ -127,6 +132,8 @@ while optparse; do
 	# -s reserved to strategy
 	elif optparse --squash; then
 		squash=1
+	elif optparse -v; then
+		verbose=1
 	else
 		optfail
 	fi
@@ -179,6 +186,8 @@ if { [ "$head" = "$base" ] || [ "$head" = "$_cg_orig_head" ]; } && [ ! "$squash"
 	echo "Fast-forwarding $base -> $branch" >&2
 	echo -e "\ton top of $head..." >&2
 
+	[ "$verbose" ] && git-diff-tree --abbrev -r "$(cg-object-id -t "$base")" "$(cg-object-id -t "$branch")"
+
 	prehook forward
 	tree_timewarp "forward" "yes, rollback (or rather rollforth) the tree!" "$base" "$branch"
 	posthook forward ok
@@ -202,6 +211,8 @@ else
 
 	mergetype="squash"
 fi
+
+[ "$verbose" ] && git-diff-tree --abbrev -r "$(cg-object-id -t "$base")" "$(cg-object-id -t "$branch")"
 
 prehook "$mergetype"
 
