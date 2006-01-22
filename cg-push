@@ -69,7 +69,7 @@ fi
 sprembranch=":refs/heads/$rembranch"
 
 if [ "${uri#http://}" != "$uri" ]; then
-	die "pushing over HTTP not supported yet"
+	git-http-push "$uri/" $locbranch
 elif [ "${uri#git+ssh://}" != "$uri" ]; then
 	send_pack_update "$name" "$(echo "$uri" | sed 's#^git+ssh://\([^/]*\)\(/.*\)$#\1:\2#')" "$locbranch$sprembranch" "${tags[@]}"
 elif [ "${uri#rsync://}" != "$uri" ]; then
