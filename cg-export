@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 #
-# Exports a particular revision from a GIT repository.
+# Export a particular revision from a GIT repository.
 # Copyright (c) Johannes E. Schindelin, 2005
 #
 # Takes a destination and optionally a tree ID as a parameter,
