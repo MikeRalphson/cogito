@@ -69,7 +69,7 @@ show_changes_summary()
 			git-diff-tree -r "$(cg-object-id -t "$orig_head")" "$(cg-object-id -t "$new_head")"
 		else
 			git-diff-tree -r "$(cg-object-id -t "$orig_head")" "$(cg-object-id -t "$new_head")" | \
-				awk '{ print $5" "$6 }'
+				cut -d' ' -f 5- |  sed 's/^\(.\)	/\1 /'
 		fi
 	else
 		echo "Up to date."
