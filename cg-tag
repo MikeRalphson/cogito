@@ -18,6 +18,8 @@
 #
 # -k KEYNAME:: Use the given KEYNAME to sign the tag
 #	Use the given key to sign the tag, instead of the default one.
+#	You can use any key identifier GPG recognizes - the argument
+#	is passed verbatim as the '--default-key' argument to GPG.
 #
 # -s:: Sign the tag by your private key using GPG.
 #	Sign the tag by your private key using GPG.
