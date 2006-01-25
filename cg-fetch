@@ -113,7 +113,7 @@ get_rsync()
 		shift
 	fi
 
-	eval '"${RSYNC:-rsync}"' $RSYNC_FLAGS $rsync_flags_l -v -Lr \
+	eval '"${RSYNC:-rsync}"' $RSYNC_FLAGS $rsync_flags_l -v --partial -Lr \
 		'"$1$appenduri"' '"$2$appenduri"' $redir | $filter
 	return ${PIPESTATUS[0]}
 }
