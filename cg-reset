@@ -67,5 +67,4 @@ fi
 rm -f "$_git/blocked" "$_git/merging" "$_git/merging-sym" "$_git/merge-base" "$_git/commit-ignore" "$_git/squashing"
 git-read-tree --reset HEAD
 
-git-checkout-index -f -a
-git-update-index --refresh
+git-checkout-index -u -f -a
