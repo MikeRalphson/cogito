@@ -59,8 +59,11 @@ for file in "${ARGS[@]}"; do
 done
 
 cat "$TMPFILE" | sed 's/^/Removing file /'
-[ "$delete" ] && ( cd "${_git_relpath:-.}" && cat "$TMPFILE" | tr '\n' '\0' | xargs -0 rm -f )
-[ "$delete" ] && ( cd "${_git_relpath:-.}" && cat "$TMPDIRFILE" | tr '\n' '\0' | xargs -0 rmdir --ignore-fail-on-non-empty -p )
+if [ "$delete" ]; then (
+	cd "${_git_relpath:-.}"
+	cat "$TMPFILE" | tr '\n' '\0' | xargs -0 rm -f
+	[ -s "$TMPDIRFILE" ] && cat "$TMPDIRFILE" | tr '\n' '\0' | xargs -0 rmdir --ignore-fail-on-non-empty -p
+); fi
 cat "$TMPFILE" | sed "s|^|$_git_relpath|" | path_xargs git-update-index --force-remove -- || error=1
 
 rm "$TMPFILE" "$TMPDIRFILE"
