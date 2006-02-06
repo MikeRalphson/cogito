@@ -33,6 +33,11 @@
 # -v:: Enable verbosity
 #	Display more verbose output - most notably list all the files
 #	touched by the pulled changes.
+#
+# ENVIRONMENT
+# -----------
+# CGFETCH_FLAGS::
+#	Additional flags to pass cg-fetch (useful e.g. for -v -v).
 
 USAGE="cg-update [-f] [--squash] [-v] [BRANCH_NAME]"
 _git_requires_root=1
@@ -62,7 +67,7 @@ name="${ARGS[0]}"
 [ -s "$_git/refs/heads/$name" ] && export _cg_orig_head="$(cat "$_git/refs/heads/$name")"
 
 if [ -s "$_git/branches/$name" ]; then
-	cg-fetch $force "$name" || exit 1
+	cg-fetch $CGFETCH_FLAGS $force "$name" || exit 1
 else
 	echo "Updating from a local branch."
 fi
