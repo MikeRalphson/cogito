@@ -96,6 +96,11 @@
 #	to change this to the actual author of the change if the patch
 #	was submitted by someone else etc.
 #
+#	Note that in shell, you can set those variables just for a single
+#	`cg-commit` call conveniently by doing e.g.:
+#
+#		GIT_AUTHOR_NAME="Pav E. Lma" cg-commit -m"Check in stuff."
+#
 # GIT_AUTHOR_NAME::
 #	Author's name. This defaults to the GECOS field of your /etc/passwd
 #	entry, which is taken almost verbatim. (Note that this is carried
