@@ -294,14 +294,14 @@ tree_timewarp()
 				rm -- "$file"
 			fi
 		done
-	git-checkout-index -f -a
+	git-checkout-index -u -f -a
 
 	# FIXME: Can produce bogus "contains only garbage" messages.
 	cat "$patchfile" | cg-patch
+	localmods=0
+	[ -s "$patchfile" ] && localmods=1
 	rm "$patchfile"
-
-	# Returns false for local modifications.
-	git-update-index --refresh >/dev/null
+	return $localmods
 }
 
 # Determine the most conservative merge base of two commits - keep
