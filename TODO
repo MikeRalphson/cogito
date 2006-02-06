@@ -6,8 +6,6 @@ Cogito-only stuff:
 
 Before the following minor version release:
 
-* Deal with [PATCH] cogito: use locale date_fmt in obtaining default date format
-
 * cg-mv
 
 
