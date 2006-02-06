@@ -30,7 +30,8 @@
 #
 # -v:: Enable verbosity
 #	Display more verbose output - most notably list all the files
-#	touched by the fetched changes.
+#	touched by the fetched changes. Use twice to get even more verbosity,
+#	that is raw progress information instead of the progress bar.
 #
 # ENVIRONMENT
 # -----------
@@ -61,6 +62,7 @@ deprecated_alias cg-fetch cg-pull
 
 fetch_progress()
 {
+	[ $verbose -ge 2 ] && exec cat
 	if [ -t 1 ]; then
 		exec "${COGITO_LIB}"cg-Xfetchprogress "$_git_objects"
 	else
@@ -77,7 +79,7 @@ show_changes_summary()
 
 	elif [ "$orig_head" != "$new_head" ]; then
 		echo "Tree change: $orig_head:$new_head"
-		[ "$verbose" ] && git-diff-tree --abbrev -r "$(cg-object-id -t "$orig_head")" "$(cg-object-id -t "$new_head")"
+		[ $verbose -ge 1 ] && git-diff-tree --abbrev -r "$(cg-object-id -t "$orig_head")" "$(cg-object-id -t "$new_head")"
 	else
 		echo "Up to date."
 	fi
@@ -120,7 +122,12 @@ get_rsync()
 
 fetch_rsync()
 {
-	get_rsync -s -u -d "$2/objects" "$_git_objects" | fetch_progress
+	if [ $verbose -ge 2 ]; then
+		# We must not pipe to prevent buffered I/O
+		get_rsync -s -u -d "$2/objects" "$_git_objects"
+	else
+		get_rsync -s -u -d "$2/objects" "$_git_objects" | fetch_progress
+	fi
 	ret=${PIPESTATUS[0]}
 	if [ "$3" ] && [ "$ret" -eq "0" ]; then
 		if [ "$orig_head" ]; then
@@ -238,14 +245,14 @@ fetch_tags()
 
 
 recovery=
-verbose=
+verbose=0
 while optparse; do
 	if optparse -f; then
 		# When forcing, let the fetch tools make more extensive
 		# walk over the dependency tree with --recover.
 		recovery=--recover
 	elif optparse -v; then
-		verbose=1
+		verbose=$((verbose+1))
 	else
 		optfail
 	fi
