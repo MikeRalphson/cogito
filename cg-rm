@@ -15,17 +15,24 @@
 #	Do not delete the files from the tree physically, if they are
 #	still there. So it effectively just makes Cogito to stop caring
 #	about the file. This is the default.
+#
+# -r:: Remove files recursively
+#	If you pass cg-rm this flag and any directory names, it will try
+#	to remove files in those directories recursively.
 
-USAGE="cg-rm [-f] [-n] FILE..."
+USAGE="cg-rm [-f] [-n] [-r] FILE..."
 
 . "${COGITO_LIB}"cg-Xlib || exit 1
 
 delete=
+recursive=
 while optparse; do
 	if optparse -f; then
 		delete=1
 	elif optparse -n; then
 		delete=
+	elif optparse -r; then
+		recursive=1
 	else
 		optfail
 	fi
@@ -34,16 +41,29 @@ done
 [ -n "${ARGS[*]}" ] || usage
 
 TMPFILE="$(mktemp -t gitrm.XXXXXX)" || exit 1
+TMPDIRFILE="$(mktemp -t gitrm.XXXXXX)" || exit 1
 error=
 for file in "${ARGS[@]}"; do
-	echo "$file" >>$TMPFILE
+	absfile="$_git_relpath$file"
+	if [ -d "$absfile" ]; then
+		if [ "$recursive" ]; then
+			echo "$file" >>"$TMPDIRFILE"
+			git-ls-files "$absfile" >>"$TMPFILE"
+		else
+			echo "$file is a directory (use cg-rm -r?)" >&2
+			error=1
+		fi
+	else
+		echo "$file" >>"$TMPFILE"
+	fi
 done
 
 cat "$TMPFILE" | sed 's/^/Removing file /'
-[ "$delete" ] && ( cd "${_git_relpath:-.}" && rm -f "${ARGS[@]}" )
+[ "$delete" ] && ( cd "${_git_relpath:-.}" && cat "$TMPFILE" | tr '\n' '\0' | xargs -0 rm -f )
+[ "$delete" ] && ( cd "${_git_relpath:-.}" && cat "$TMPDIRFILE" | tr '\n' '\0' | xargs -0 rmdir --ignore-fail-on-non-empty -p )
 cat "$TMPFILE" | sed "s|^|$_git_relpath|" | path_xargs git-update-index --force-remove -- || error=1
 
-rm "$TMPFILE"
+rm "$TMPFILE" "$TMPDIRFILE"
 
 [ "$error" ] && die "warning: not all files could have been removed"
 exit 0
