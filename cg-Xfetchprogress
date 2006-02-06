@@ -17,13 +17,50 @@ $| = 1;
 my $_git_objects = shift;
 
 my $objects = 0;
-my $last_objects = 0;
 my $size = 0;
+my $osize = 0;
 my $percentage = '';
 
-while (<>) {
-	my $object = '';
+my $object = '';
+my $timeout = 1;
 
+my $rin = '';
+vec($rin, fileno(STDIN), 1) = 1;
+my $ein = $rin;
+while (1) {
+	my ($rout, $eout);
+	# POSIX might be mad at us about <> vs. select(), but what can go
+	# wrong with $|==1?
+	if (not select($rout = $rin, undef, $eout = $ein, $timeout)) {
+		# Timeout, show file progress
+		$timeout = 0.25; # Update more frequently
+		if ($object) {
+			my ($objid) = ($object =~ /([a-f0-9]{12})[^\/]*$/);
+			my $fobject = "$_git_objects/$object";
+			if (-e $fobject or -e ($fobject .= ".temp")) {
+				my $fsize = (stat("$fobject"))[7];
+				$size = $osize + $fsize;
+				progress(', now fetching '.$objid.'... ('.$fsize.' bytes)');
+			}
+		}
+
+	} elsif (vec($eout, fileno(STDIN), 1)) {
+finish:
+		# Error - fetch agent is probably finished
+		print "\n";
+		exit 0;
+
+	} else {
+		# Next line from the fetch agent
+		$timeout = 1; # ...seconds before we show per-file progress
+		getline() or goto finish;
+	}
+}
+
+
+sub getline {
+	$_ = <STDIN>;
+	return 0 if not defined $_;
 	chomp;
 
 	# git fetcher
@@ -31,7 +68,7 @@ while (<>) {
 		$object = "$2/$3";
 
 	} elsif (m#^(walk) ([a-f0-9]{2})([a-f0-9]{38})#) {
-		next; # redundant information
+		return 1; # redundant information
 
 	# rsync
 	} elsif (m#^([a-f0-9]{2})/([a-f0-9]{38})$#) {
@@ -41,25 +78,39 @@ while (<>) {
 		# up to 100% ...
 		$percentage = ', ' . int(hex($1) * 100 / 0xff) . '% done';
 
+	# rsync packs
+	} elsif (m#^pack/pack-(.+)$#) {
+		$object = $_;
+		print "Getting pack file $_\033[K\n";
+		progress('');
+		return 1;
+
 	# some rsync versions output this
 	} elsif (m#^([a-f0-9]{2})/$#) {
-		next;
+		return 1;
 
 	# misc. output
 	} else {
-		if ($last_objects != $objects ) {
-			$last_objects = $objects;
-			print "\n";
+		if (m#^Getting index for pack ([a-f0-9]{40})#) {
+			$object = "pack/pack-$1.idx";
+		} elsif (m#^Getting pack ([a-f0-9]{40})#) {
+			$object = "pack/pack-$1.pack";
 		}
-		print "$_\n";
-		next;
+
+		print "$_\033[K\n";
+		progress('');
+		return 1;
 	}
 
-	$object = "$_git_objects/$object";
-	-e $object and $size += (stat($object))[7];
+	my $fobject = "$_git_objects/$object";
+	-e $fobject and $size += (stat($fobject))[7];
+	$osize = $size;
 	$objects++;
 
-	print "progress: $objects objects, $size bytes$percentage\r";
+	progress('');
+	return 1;
 }
 
-$last_objects != $objects and print "\n";
+sub progress {
+	print "progress: $objects objects, $size bytes$percentage$_[0]\033[K\r";
+}
