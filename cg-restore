@@ -82,6 +82,7 @@ if [ "$ARGS" ]; then
 	fi
 
 	if [ "$objtype" = "tree" ]; then
+		TMPFILE="$(mktemp -t gitrestore.XXXXXX)" || exit 1
 		if ! git-ls-tree -r "$objid" "${files[@]}" |
 			sed -ne 's/^\([0-7]*\) blob \(.*\)$/\1 \2/p' |
 			( ret=0; while read mode id name; do
@@ -92,6 +93,8 @@ if [ "$ARGS" ]; then
 					echo "Error: Cannot mark ${file#$_git_relpath} for update" >&2
 					ret=1
 					continue
+				else
+					echo "$name" >>$TMPFILE
 				fi
 			done; exit $ret ); then
 				ret=$?
@@ -101,7 +104,8 @@ if [ "$ARGS" ]; then
 		#	exit $?
 		#}
 		fi
-		git-checkout-index -u $force -- "${files[@]}" || ret=1
+		cat "$TMPFILE" | tr '\n' '\0' | xargs -0 git-checkout-index -u $force -- || ret=1
+		rm "$TMPFILE"
 
 	elif [ "$objtype" = "blob" ]; then
 		[ "${#files[@]}" -gt 1 ] && echo "Warning: Restoring multiple files to a single blob" >&2
