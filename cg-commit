@@ -124,7 +124,7 @@
 # EDITOR::
 #	The editor used for entering revision log information.
 
-USAGE="cg-commit [-m MESSAGE]... [-C] [-e | -E] [-s | --signoff] [-c COMMIT_ID] [FILE]... [< MESSAGE]"
+USAGE="cg-commit [-m MESSAGE]... [-e] [-c COMMIT_ID] [OTHER_OPTIONS] [FILE]... [< MESSAGE]"
 
 . "${COGITO_LIB}"cg-Xlib || exit 1
 
