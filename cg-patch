@@ -70,10 +70,13 @@ redzone_border()
 
 
 reverse=
-if [ "${ARGS[0]}" = "-R" ]; then
-	reverse=1
-	shift
-fi
+while optparse; do
+	if optparse -R; then
+		reverse=1
+	else
+		optfail
+	fi
+done
 
 
 gonefile="$(mktemp -t gitapply.XXXXXX)"
