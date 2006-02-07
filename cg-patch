@@ -12,6 +12,11 @@
 #
 # OPTIONS
 # -------
+# -d DIRNAME:: Apply all patches in directory
+#	Instead of applying the patch from stdin, apply and separately commit
+#	all patches in the specified directory. This can be used to import
+#	a range of patches made by cg-mkpatch -d.
+#
 # -R:: Apply in reverse
 #	Applies the patch in reverse (therefore effectively unapplies it)
 #
@@ -68,11 +73,32 @@ redzone_border()
 	redzone_reset
 }
 
+apply_directory() {
+	directory="$1"
+	patch="$(mktemp -t gitpatch.XXXXXX)"
+
+	find "$directory" -name '[0-9]*-*' | while read file; do
+		sed -n '/^---$/,$p' < "$file" > "$patch"
+		[ -s "$patch" ] || die "No patch found in '$file'"
+
+		author="$(sed -n '/^author /p' < "$patch")"
+		[ "$author" ] || die "No author info found in '$file'"
+
+		eval "$(echo "$author" | pick_author)"
+		echo "Applying ${file#$directory/}"
+		cg-patch < "$patch"
+		sed '/^---$/,$d' < "$file" | cg-commit
+	done
+}
 
 reverse=
 while optparse; do
 	if optparse -R; then
 		reverse=1
+	elif optparse -d=; then
+		[ -d "$OPTARG" ] || die "Not a directory '$OPTARG'."
+		apply_directory "$(echo "$OPTARG" | sed 's,/*$,,')"
+		exit
 	else
 		optfail
 	fi
