@@ -122,7 +122,7 @@ fi
 
 
 if [ "$show_parent" ]; then
-	git-rev-parse "$normid^"
+	git-cat-file commit "$normid" | awk '/^parent/{print $2};/^$/{exit}'
 	exit 0
 fi
 
