@@ -61,8 +61,8 @@ for file in "${ARGS[@]}"; do
 			echo "$file is a directory (use cg-add -r?)" >&2
 			error=1
 		fi
-	elif [ ! -f "$absfile" ]; then
-		echo "$file does not exist or is not a regular file" >&2
+	elif [ ! -f "$absfile" ] && [ -h "$absfile" ]; then
+		echo "$file does not exist or is not a regular file or a symlink" >&2
 		error=1
 	else
 		echo "$file" >>"$TMPFILE"
