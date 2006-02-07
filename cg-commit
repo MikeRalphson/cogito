@@ -188,7 +188,7 @@ while optparse; do
 	elif optparse -m=; then
 		msgs[${#msgs[@]}]="$OPTARG"
 	elif optparse -c=; then
-		copy_commit="$(cg-object-id -c "$OPTARG")"
+		copy_commit="$(cg-object-id -c "$OPTARG")" || exit 1
 	else
 		optfail
 	fi
