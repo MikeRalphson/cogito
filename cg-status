@@ -21,12 +21,12 @@
 # D::
 #	'<file>' has been deleted.
 # !::
-#	'<file>' is gone from your working copy but not deleted by cg-rm.
+#	'<file>' is gone from your working copy but not deleted by `cg-rm`.
 # M::
 #	'<file>' has been touched or modified.
 # m::
 #	'<file>' has been touched or modified, but will not be automatically
-#	committed the next time you call cg-commit. This is used during a
+#	committed the next time you call `cg-commit`. This is used during a
 #	merge to mark files which contained local changes before the merge.
 #
 # OPTIONS
@@ -54,6 +54,14 @@
 # DIRPATH::
 #	Path to the directory to use as the base for the working tree
 #	file list (instead of the current directory).
+#
+# NOTES
+# -----
+# If a file has been removed with `cg-rm` without using the `-f` option
+# to remove it physically from the tree it will be reported as both being
+# deleted and unknown. The reason for this is that the file is internally
+# marked as deleted and thus also untracked. After next commit it will only
+# be reported as being untracked.
 #
 # FILES
 # -----
