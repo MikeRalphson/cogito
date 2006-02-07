@@ -236,6 +236,32 @@ list_untracked_files()
 	git-ls-files -z --others $listdirs "${EXCLUDE[@]}"
 }
 
+pick_author()
+{
+	local pick_author_script='
+		/^author /{
+			s/'\''/'\''\\'\'\''/g
+			h
+			s/^author \([^<]*\) <[^>]*> .*$/\1/
+			s/'\''/'\''\'\'\''/g
+			s/.*/export GIT_AUTHOR_NAME='\''&'\''/p
+
+			g
+			s/^author [^<]* <\([^>]*\)> .*$/\1/
+			s/'\''/'\''\'\'\''/g
+			s/.*/export GIT_AUTHOR_EMAIL='\''&'\''/p
+
+			g
+			s/^author [^<]* <[^>]*> \(.*\)$/\1/
+			s/'\''/'\''\'\'\''/g
+			s/.*/export GIT_AUTHOR_DATE='\''&'\''/p
+
+			q
+		}
+	'
+	LANG=C LC_ALL=C sed -ne "$pick_author_script"
+}
+
 # Usage: showdate SECONDS TIMEZONE [FORMAT]
 # Display date nicely based on how GIT stores it.
 # Save the date to $_showdate
