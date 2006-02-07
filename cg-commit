@@ -134,6 +134,10 @@ USAGE="cg-commit [-m MESSAGE]... [-e] [-c COMMIT_ID] [OTHER_OPTIONS] [FILE]... [
 . "${COGITO_LIB}"cg-Xlib || exit 1
 
 
+### XXX: The spaghetti code below got rather messy and convoluted over
+### the time. Someone should clean it up. :/ --pasky
+
+
 [ -s "$_git/blocked" ] && die "committing blocked: $(cat "$_git/blocked")"
 
 if [ -s "$_git/author" ]; then
