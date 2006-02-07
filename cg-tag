@@ -56,7 +56,7 @@ id="$(cg-object-id -n "$id")" || exit 1
 type="$(git-cat-file -t "$id")"
 id="${id% *}"
 
-(echo "$name" | egrep -qv '[^a-zA-Z0-9_.@!:-]') || \
+git-check-ref-format "refs/tags/$name" || \
 	die "name contains invalid characters"
 
 mkdir -p "$_git/refs/tags"

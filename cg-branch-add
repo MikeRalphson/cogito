@@ -68,7 +68,7 @@ name="${ARGS[0]}"
 location="${ARGS[1]}"
 
 ([ -n "$name" ] && [ -n "$location" ] && ! [ -n "${ARGS[2]}" ]) || usage
-(echo "$name" | egrep -qv '[^a-zA-Z0-9_.@!:-]') || \
+git-check-ref-format "refs/heads/$name" || \
 	die "name contains invalid characters"
 if [ "$name" = "this" ] || [ "$name" = "HEAD" ]; then
 	die "given branch name is reserved"
