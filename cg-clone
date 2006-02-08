@@ -67,7 +67,7 @@ fi
 
 if [ ! "$same_dir" ]; then
 	[ -e "$dir" ] && die "$dir/ already exists"
-	mkdir "$dir" || exit $?
+	mkdir -p "$dir" || exit $?
 	cd "$dir" || exit $?
 else
 	dir=.
