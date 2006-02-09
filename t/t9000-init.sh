@@ -37,7 +37,8 @@ test_expect_success 'initialize with the initial commit' \
 test_expect_success 'check if we have a commit' \
 	'[ -s .git/refs/heads/master ] && cg-object-id -c HEAD'
 test_expect_success 'check if the commit is proper' \
-	'[ "$(git-cat-file commit HEAD | sed -n '\''/^parent/q; /^$/{n; :a p; n; b a}'\'')" = "silly commit message" ]'
+	'[ "$(git-cat-file commit HEAD | sed -n '\''/^parent/q; /^$/{n; :a p; n; b a}'\'')" = "Initial commit
+silly commit message" ]'
 test_expect_success 'check if we have populated index' \
 	'[ "$(git-ls-files | tr '\''\n'\'' " ")" = "file1 file2 " ]'
 test_expect_success 'blow away the repository' \
