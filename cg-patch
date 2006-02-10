@@ -16,8 +16,14 @@
 #	Automatically extract the commit message and authorship information
 #	(if provided) from the patch and commit it after applying it
 #	successfuly.
+#
+# -C COMMIT:: Replicate the changes of the given commit on the current HEAD
+#	Instead of applying a patch from stdin, apply and commit the patch
+#	introduced by the given commit. This is basically an extension of
+#	`cg-commit -c`.
+#
 # -d DIRNAME:: Apply all patches in directory
-#	Instead of applying the patch from stdin, apply and separately commit
+#	Instead of applying a patch from stdin, apply and separately commit
 #	all patches in the specified directory. This can be used to import
 #	a range of patches made by cg-mkpatch -d. Implies -c.
 #
@@ -97,7 +103,7 @@ apply_directory()
 	find "$directory" -name '[0-9]*-*' | while read -r file; do
 		lookover_patch "$file" " in $file"
 		echo "* Applying ${file#$directory/}"
-		cg-patch <"$file" || die "Aborting because of conflicts"
+		cg-patch <"$file" || die "aborting because of conflicts"
 		commit_patch "$file"
 	done
 }
@@ -106,6 +112,14 @@ reverse=
 while optparse; do
 	if optparse -R; then
 		reverse=1
+
+	elif optparse -C=; then
+		commit="$(cg-object-id -c "$OPTARG")" || exit 1
+		[ "$(cg-object-id -p "$commit" | wc -l)" -gt 1 ] &&
+			die "refusing to pick merge commits"
+		cg-diff -p -r "$commit" | cg-patch || exit 1
+		cg-commit -c "$commit"
+		exit
 
 	elif optparse -c; then
 		file="$(mktemp -t gitpatch.XXXXXX)"

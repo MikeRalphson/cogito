@@ -21,7 +21,7 @@
 #	Copy the commit from a given commit ID (that is the author information
 #	and the commit message - NOT committer information). This option
 #	is typically used when replaying commits from one lineage or
-#	repository to another.
+#	repository to another - see also `cg-patch -C`.
 #
 # -C:: Ignore cache
 #	Make `cg-commit` ignore the cache and just commit the thing as-is.
