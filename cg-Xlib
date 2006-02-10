@@ -260,6 +260,8 @@ pick_author()
 		}
 	'
 	LANG=C LC_ALL=C sed -ne "$pick_author_script"
+	# Ensure non-empty author name.
+	echo "[ -z \$GIT_AUTHOR_NAME ] && export GIT_AUTHOR_NAME=\"\${GIT_AUTHOR_EMAIL%%@*}\""
 }
 
 # Usage: showdate SECONDS TIMEZONE [FORMAT]
