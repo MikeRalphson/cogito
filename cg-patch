@@ -81,7 +81,7 @@ apply_directory() {
 		eval "$(echo "$author" | pick_author)"
 
 		echo "Applying ${file#$directory/}"
-		cg-patch < "$file"
+		cg-patch <"$file" || die "Aborting because of conflicts"
 		sed '/^\(---\|-- \)$/,$d' < "$file" | cg-commit
 	done
 }
@@ -156,7 +156,7 @@ tee "$patchfifo" | {
 	redzone_border
 } >$todo
 
-wait
+wait %1; ret=$?
 
 # Now we just recreate all the supposedly deleted files and
 # kill only those who really are gone.
@@ -187,3 +187,5 @@ done
 ' padding
 
 rm "$patchfifo" "$todo" "$gonefile"
+
+exit $ret
