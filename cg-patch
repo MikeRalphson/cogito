@@ -75,19 +75,14 @@ redzone_border()
 
 apply_directory() {
 	directory="$1"
-	patch="$(mktemp -t gitpatch.XXXXXX)"
-
 	find "$directory" -name '[0-9]*-*' | while read file; do
-		sed -n '/^---$/,$p' < "$file" > "$patch"
-		[ -s "$patch" ] || die "No patch found in '$file'"
-
-		author="$(sed -n '/^author /p' < "$patch")"
-		[ "$author" ] || die "No author info found in '$file'"
-
+		author="$(sed -n '/^\(---\|-- \)$/,$p' < "$file" | sed -n '/^author /p')"
+		[ "$author" ] || echo "Warning: No author info found in '$file', assuming your authorship" >&2
 		eval "$(echo "$author" | pick_author)"
+
 		echo "Applying ${file#$directory/}"
-		cg-patch < "$patch"
-		sed '/^---$/,$d' < "$file" | cg-commit
+		cg-patch < "$file"
+		sed '/^\(---\|-- \)$/,$d' < "$file" | cg-commit
 	done
 }
 
