@@ -30,6 +30,13 @@
 # -R:: Apply in reverse
 #	Applies the patch in reverse (therefore effectively unapplies it)
 #
+# -u:: Assume unified diff instead of GIT diff
+#	Make `cg-patch` assume the patch on the input is a classic unified
+#	diff instead of a diff produced by GIT or Cogito. This means only
+#	that file adds and removals will be recorded even if the patch file
+#	does not explicitly describe them. Use this if the patch was not
+#	produced by `cg-diff` or similar but by a traditional `diff` tool.
+#
 # Takes the diff on stdin.
 
 USAGE="cg-patch [-R] < patch on stdin"
@@ -109,6 +116,7 @@ apply_directory()
 }
 
 reverse=
+unidiff=
 while optparse; do
 	if optparse -R; then
 		reverse=1
@@ -135,17 +143,22 @@ while optparse; do
 		apply_directory "$(echo "$OPTARG" | sed 's,/*$,,')"
 		exit
 
+	elif optparse -u; then
+		unidiff=1
+
 	else
 		optfail
 	fi
 done
 
 
+[ "$unidiff" ] && newsfile="$(mktemp -t gitapply.XXXXXX)"
 gonefile="$(mktemp -t gitapply.XXXXXX)"
 todo="$(mktemp -t gitapply.XXXXXX)"
 patchfifo="$(mktemp -t gitapply.XXXXXX)"
 rm "$patchfifo" && mkfifo -m 600 "$patchfifo"
 
+[ "$unidiff" ] && git-ls-files --others >"$newsfile"
 git-ls-files --deleted >"$gonefile"
 
 # patch file removal behaviour cannot be sensibly controlled, so we
@@ -199,14 +212,19 @@ tee "$patchfifo" | {
 
 wait %1; ret=$?
 
-# Now we just recreate all the supposedly deleted files and
-# kill only those who really are gone.
-#
-# This is done on the assumption that we are never going to have
-# too many files deleted in the first place anyway.
-
-IFS=$'\n' touchfiles=($(git-ls-files --deleted | join -v 2 "$gonefile" -))
-[ "${touchfiles[*]}" ] && touch "${touchfiles[@]}"
+IFS=$'\n' emptyfiles=($(git-ls-files --deleted | join -v 2 "$gonefile" -))
+if [ "$unidiff" ]; then
+	[ "${emptyfiles[*]}" ] && cg-rm "${emptyfiles[@]}"
+	IFS=$'\n' freshfiles=($(git-ls-files --others | join -v 2 "$newsfile" -))
+	[ "${freshfiles[*]}" ] && cg-add "${freshfiles[@]}"
+else
+	# Now we just recreate all the supposedly deleted files and
+	# kill only those who really are gone.
+	#
+	# This is done on the assumption that we are never going to have
+	# too many files deleted in the first place anyway.
+	[ "${emptyfiles[*]}" ] && touch "${emptyfiles[@]}"
+fi
 
 cat "$todo" | xargs -0 bash -c '
 while [ "$1" ]; do
@@ -228,5 +246,6 @@ done
 ' padding
 
 rm "$patchfifo" "$todo" "$gonefile"
+[ "$unidiff" ] && rm "$newsfile"
 
 exit $ret
