@@ -90,7 +90,7 @@ if [ "$ARGS" ]; then
 				# TODO: Use git-update-index --index-info when we
 				# will depend on git new enough. --pasky
 				if ! git-update-index --add --cacheinfo "$mode" "$id" "$name"; then
-					echo "Error: Cannot mark ${file#$_git_relpath} for update" >&2
+					echo "Error: Cannot mark ${name#$_git_relpath} for update" >&2
 					ret=1
 					continue
 				else
