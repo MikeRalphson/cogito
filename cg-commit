@@ -128,6 +128,15 @@
 #
 # EDITOR::
 #	The editor used for entering revision log information.
+#
+# CONFIGURATION VARIABLES
+# -----------------------
+# The following GIT configuration file variables are recognized:
+#
+# cogito.hooks.commit.post.allmerged::
+#	If set to "true" and you are committing a merge, the post-hook will
+#	be called for all the merged commits in sequence (the earliest first).
+#	Otherwise, the hook will be called only for the merge commit.
 
 USAGE="cg-commit [-m MESSAGE]... [-e] [-c COMMIT_ID] [OTHER_OPTIONS] [FILE]... [< MESSAGE]"
 
@@ -485,11 +494,15 @@ if [ "$newhead" ]; then
 	fi
 	[ -z "$branchname" ] && [ "$_git_head" != "master" ] && branchname="$_git_head"
 	if [ -x "$_git/hooks/commit-post" ]; then
-		# We just hope that for the initial commit, the user didn't
-		# manage to install the hook yet.
-		for merged in $(git-rev-list $newhead ^$oldhead | tac); do
-			"$_git/hooks/commit-post" "$merged" "$branchname"
-		done
+		if [ "$(git-repo-config cogito.hooks.commit.post.allmerged)" = "true" ]; then
+			# We just hope that for the initial commit, the user didn't
+			# manage to install the hook yet.
+			for merged in $(git-rev-list $newhead ^$oldhead | tac); do
+				"$_git/hooks/commit-post" "$merged" "$branchname"
+			done
+		else
+			"$_git/hooks/commit-post" "$newhead" "$branchname"
+		fi
 	fi
 
 	exit 0
