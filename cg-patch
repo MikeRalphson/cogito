@@ -213,7 +213,7 @@ while [ "$1" ]; do
 	op="$1"; shift;
 	case "$op" in
 	"add") cg-add "$1"; shift;;
-	"rm")  rm -- "$1" && cg-rm "$1"; shift;;
+	"rm")  cg-rm -f "$1"; shift;;
 	"cm")
 		mode="$1"; shift
 		# $mode contains leading space due to echo braindamage
