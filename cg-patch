@@ -12,10 +12,14 @@
 #
 # OPTIONS
 # -------
+# -c:: Automatically commit the patch
+#	Automatically extract the commit message and authorship information
+#	(if provided) from the patch and commit it after applying it
+#	successfuly.
 # -d DIRNAME:: Apply all patches in directory
 #	Instead of applying the patch from stdin, apply and separately commit
 #	all patches in the specified directory. This can be used to import
-#	a range of patches made by cg-mkpatch -d.
+#	a range of patches made by cg-mkpatch -d. Implies -c.
 #
 # -R:: Apply in reverse
 #	Applies the patch in reverse (therefore effectively unapplies it)
@@ -73,16 +77,28 @@ redzone_border()
 	redzone_reset
 }
 
-apply_directory() {
-	directory="$1"
-	find "$directory" -name '[0-9]*-*' | while read file; do
-		author="$(sed -n '/^\(---\|-- \)$/,$p' < "$file" | sed -n '/^author /p')"
-		[ "$author" ] || echo "Warning: No author info found in '$file', assuming your authorship" >&2
-		eval "$(echo "$author" | pick_author)"
+lookover_patch()
+{
+	local file="$1" where="$2"
+	local author="$(sed -n '/^\(---\|-- \)$/,$p' < "$file" | sed -n '/^author /p')"
+	[ "$author" ] || echo "Warning: No author info found$where, assuming your authorship" >&2
+	eval "$(echo "$author" | pick_author)"
+}
 
+commit_patch()
+{
+	local file="$1"
+	sed '/^\(---\|-- \)$/,$d' < "$file" | cg-commit
+}
+
+apply_directory()
+{
+	local directory="$1"
+	find "$directory" -name '[0-9]*-*' | while read -r file; do
+		lookover_patch "$file" " in $file"
 		echo "Applying ${file#$directory/}"
 		cg-patch <"$file" || die "Aborting because of conflicts"
-		sed '/^\(---\|-- \)$/,$d' < "$file" | cg-commit
+		commit_patch "$file"
 	done
 }
 
@@ -90,10 +106,21 @@ reverse=
 while optparse; do
 	if optparse -R; then
 		reverse=1
+
+	elif optparse -c; then
+		file="$(mktemp -t gitpatch.XXXXXX)"
+		cat >"$file"
+		lookover_patch "$file"
+		cg-patch <"$file" || exit 1
+		commit_patch "$file"
+		rm "$file"
+		exit
+
 	elif optparse -d=; then
 		[ -d "$OPTARG" ] || die "Not a directory '$OPTARG'."
 		apply_directory "$(echo "$OPTARG" | sed 's,/*$,,')"
 		exit
+
 	else
 		optfail
 	fi

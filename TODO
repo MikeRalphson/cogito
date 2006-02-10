@@ -55,8 +55,7 @@ cg-*patch should be pre-1.0.)
 	interfacing with email directly...
 
 * cg-patch improvements
-	* Again, an email interface - frontend to applymbox and stuff,
-	autocommitting, sucking commit messages from the patch...
+	* Again, an email interface - frontend to applymbox and stuff...
 	* Dealing with renames and stuff
 
 * cg-commit enhancements
