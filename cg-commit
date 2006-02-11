@@ -216,7 +216,7 @@ if [ "$ARGS" -o "$_git_relpath" ]; then
 	done
 
 	eval "commitfiles=($(cat "$filter" | path_xargs git-diff-index -r -m HEAD -- | \
-		sed 's/^\([^	]*\)\(.\)	\(.*\)\(	.*\)*$/"\2 \3"/'))"
+		sed -e 's/"\|\\/\\&/g' -e 's/^\([^	]*\)\(.\)	\(.*\)\(	.*\)*$/"\2 \3"/'))"
 	customfiles=1
 
 	rm "$filter"
@@ -233,7 +233,7 @@ else
 		# \t instead of the tab character itself works only with new
 		# sed versions.
 		eval "commitfiles=($(git-diff-index -r -m HEAD | \
-			sed 's/^\([^	]*\)\(.\)	\(.*\)\(	.*\)*$/"\2 \3"/'))"
+			sed -e 's/"\|\\/\\&/g' -e 's/^\([^	]*\)\(.\)	\(.*\)\(	.*\)*$/"\2 \3"/'))"
 
 		if [ -s "$_git/commit-ignore" ]; then
 			newcommitfiles=()
