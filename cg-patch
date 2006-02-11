@@ -27,6 +27,11 @@
 #	all patches in the specified directory. This can be used to import
 #	a range of patches made by cg-mkpatch -d. Implies -c.
 #
+# -pN:: Strip path to the level N
+#	Strip path of filenames in the diff to the level N. This works
+#	exactly the same as in the `patch` tool except that the default
+#	strip level is not infinite but 1.
+#
 # -R:: Apply in reverse
 #	Applies the patch in reverse (therefore effectively unapplies it)
 #
@@ -52,12 +57,33 @@ redzone_reset()
 	op=
 }
 
+strip_path()
+{
+	read -r path
+	if [ x"$path" = x"/dev/null" ]; then
+		echo "$path"
+		return
+	fi
+	echo "$path" | sed 's#^\([^/]*/\)\{'$strip'\}##'
+}
+
 redzone_border()
 {
 	[ "$redzone" ] || return
 
+	if [ $strip -gt 0 ] && [ x"$file1" != x"/dev/null" ] &&
+	   [ x"$(echo "$file1" | strip_path)" = x"$file1" ]; then
+		echo "$file1: too shallow filename for -p$strip, ignoring" >&2
+		return
+	fi
+	if [ $strip -gt 0 ] && [ x"$file2" != x"/dev/null" ] &&
+	   [ x"$(echo "$file2" | strip_path)" = x"$file2" ]; then
+		echo "$file2: too shallow filename for -p$strip, ignoring" >&2
+		return
+	fi
+
 	if [ "$op" = "delete" ]; then
-		torm="$(echo "$file1" | sed 's/[^\/]*\///')" #-p1
+		torm="$(echo "$file1" | strip_path)"
 		if ! [ "$reverse" ]; then
 			(git-ls-files | fgrep -qx "$torm") && echo -ne "rm\0$torm\0"
 			redzone_reset
@@ -66,7 +92,7 @@ redzone_border()
 			(git-ls-files | fgrep -qx "$torm") || echo -ne "add\0$torm\0"
 		fi
 	elif [ "$op" = "add" ]; then
-		toadd="$(echo "$file2" | sed 's/^[^\/]*\///')" #-p1
+		toadd="$(echo "$file2" | strip_path)"
 		if ! [ "$reverse" ]; then
 			(git-ls-files | fgrep -qx "$toadd") || echo -ne "add\0$toadd\0"
 		else
@@ -78,10 +104,10 @@ redzone_border()
 
 	if [ "$origmode" != "$newmode" ]; then
 		if ! [ "$reverse" ]; then
-			tocm=$(echo "$file2" | sed 's/[^\/]*\///') #-p1
+			tocm=$(echo "$file2" | strip_path)
 			mode="$newmode"
 		else
-			tocm=$(echo "$file1" | sed 's/[^\/]*\///') #-p1
+			tocm=$(echo "$file1" | strip_path)
 			mode="$origmode"
 		fi
 		echo -ne "cm\0 $mode\000$tocm\0"
@@ -117,6 +143,7 @@ apply_directory()
 
 reverse=
 unidiff=
+strip=1
 while optparse; do
 	if optparse -R; then
 		reverse=1
@@ -143,6 +170,11 @@ while optparse; do
 		apply_directory "$(echo "$OPTARG" | sed 's,/*$,,')"
 		exit
 
+	elif optparse -p=; then
+		strip="$OPTARG"
+		[ "$(echo "$strip" | tr -d 0-9)" ] &&
+			die "-p argument must be numeric"
+
 	elif optparse -u; then
 		unidiff=1
 
@@ -163,7 +195,7 @@ git-ls-files --deleted >"$gonefile"
 
 # patch file removal behaviour cannot be sensibly controlled, so we
 # just handle it all ourselves.
-patch_args="-p1 -N"
+patch_args="-p$strip -N"
 [ "$reverse" ] && patch_args="$patch_args -R"
 patch $patch_args <"$patchfifo" &
 
