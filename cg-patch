@@ -153,7 +153,6 @@ commit_patch()
 commitid=
 commit=
 commitdir=
-commitfail=
 strip=$((1+$(echo "$_git_relpath" | tr -cd / | wc -c)))
 reverse=
 unidiff=
@@ -176,15 +175,12 @@ while optparse; do
 		strip="$OPTARG"
 		[ -n "$(echo "$strip" | tr -d 0-9)" ] &&
 			die "the -p argument must be numeric"
-		commitfail=1
 
 	elif optparse -R; then
 		reverse=1
-		commitfail=1
 
 	elif optparse -u; then
 		unidiff=1
-		commitfail=1
 
 	else
 		optfail
@@ -193,10 +189,12 @@ done
 
 
 if [ "$commitid" ] || [ "$commit" ] || [ "$commitdir" ]; then
-	[ "$commitfail" ] && die "invalid combination of options"
+	[ "$reverse" ] && die "cannot do -R here"
 	[ "$_git_relpath" ] && die "must be ran from project root"
 
 	if [ "$commitid" ]; then
+		[ "$unidiff" ] && die "-u does not make sense here"
+
 		files="$(mktemp -t gitpatch.XXXXXX)"
 		git-diff-tree -m -r "$commitparent" "$commitid" | cut -f 2- >"$files"
 		if [ -n "$(git-diff-index -m -r HEAD | cut -f 2- | join "$files" -)" ]; then
