@@ -90,17 +90,6 @@
 #
 # ENVIRONMENT VARIABLES
 # ---------------------
-# GIT_AUTHOR_* general notes::
-#	Those variables describe who is the author of the change being
-#	committed. It defaults to you, but it is considered good practice
-#	to change this to the actual author of the change if the patch
-#	was submitted by someone else etc.
-#
-#	Note that in shell, you can set those variables just for a single
-#	`cg-commit` call conveniently by doing e.g.:
-#
-#		GIT_AUTHOR_NAME="Pav E. Lma" cg-commit -m"Check in stuff."
-#
 # GIT_AUTHOR_NAME::
 #	Author's name. This defaults to the GECOS field of your /etc/passwd
 #	entry, which is taken almost verbatim. (Note that this is carried
@@ -128,6 +117,18 @@
 #
 # EDITOR::
 #	The editor used for entering revision log information.
+#
+# Commit author
+# ~~~~~~~~~~~~~
+# Some general notes about the GIT_AUTHOR_* variables. They describe
+# who is the author of the change being committed. It defaults to you,
+# but it is considered good practice to change this to the actual
+# author of the change if the patch was submitted by someone else etc.
+#
+# In the shell, you can set those variables just for a single
+# `cg-commit` call conveniently by doing e.g.:
+#
+#	GIT_AUTHOR_NAME="Pav E. Lma" cg-commit -m"Check in stuff."
 #
 # CONFIGURATION VARIABLES
 # -----------------------
