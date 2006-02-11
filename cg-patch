@@ -154,12 +154,18 @@ commit_patch()
 	sed '/^\(---\|-- \)$/,$d' < "$file" | cg-commit
 }
 
+resume_filter()
+{
+	sed "0,/\/$lastpatch$/d"
+}
+
 
 commitid=
 commit=
 commitdir=
 strip=$((1+$(echo "$_git_relpath" | tr -cd / | wc -c)))
 reverse=
+resolved=
 unidiff=
 while optparse; do
 	if optparse -C=; then
@@ -180,6 +186,9 @@ while optparse; do
 		strip="$OPTARG"
 		[ -n "$(echo "$strip" | tr -d 0-9)" ] &&
 			die "the -p argument must be numeric"
+
+	elif optparse --resolved; then
+		resolved=1
 
 	elif optparse -R; then
 		reverse=1
@@ -237,12 +246,42 @@ if [ "$commitid" ] || [ "$commit" ] || [ "$commitdir" ]; then
 	if [ "$commitdir" ]; then
 		[ "$reverse" ] && die "cannot do -R here"
 
-		[ "$(git-diff-index -m -r HEAD)" ] &&
+		resume="$commitdir/.cg-patch-resume"
+		if [ -s "$resume" ]; then
+			if [ ! "$resolved" ]; then
+				echo "cg-patch: previous import in progress" >&2
+				echo "Use --resolved to resume after conflicts." >&2
+				echo "Cancel resume by deleting the file: $resume" >&2
+				exit 1
+			fi
+
+			echo "Resuming import of $commitdir:"
+			filter=resume_filter
+
+			lastpatch="$(cat "$resume")"
+			echo "* $lastpatch"
+			commit_patch "$commitdir/$lastpatch"
+			rm -f "$resume"
+
+		elif [ "$(git-diff-index -m -r HEAD)" ]; then
 			die "cannot auto-commit patches when the tree has local changes"
-		find "$commitdir" -name '[0-9]*-*' | while read -r file; do
+
+		else
+			echo "Importing $commitdir:"
+			filter=cat
+		fi
+
+		find "$commitdir" -name '[0-9]*-*' | "$filter" | \
+		while read -r file; do
 			lookover_patch "$file" " in $file"
-			echo "* Applying ${file#$directory/}"
-			cg-patch <"$file" || die "aborting because of conflicts"
+			echo "* ${file#$commitdir/}"
+			if ! cg-patch < "$file"; then
+				echo "${file#$commitdir/}" > "$resume"
+				echo "cg-patch: conflicts during import" >&2
+				echo "Rerun cg-patch with the --resolved argument to resume after resolving them." >&2
+				echo "Cancel resume by deleting the file: $resume" >&2
+				exit 1
+			fi
 			commit_patch "$file"
 		done
 	fi
