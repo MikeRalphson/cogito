@@ -91,7 +91,7 @@ else
 	Print usage summary.
 
 --long-help::
-	Print user manual. The same as found in $TITLE."
+	Print user manual. The same as found in gitlink:$COMMAND[1]."
 fi
 
 cat <<__END__
