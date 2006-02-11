@@ -41,7 +41,7 @@
 #	works).
 #
 # -R:: Apply in reverse
-#	Applies the patch in reverse (therefore effectively unapplies it)
+#	Apply the patch in reverse (therefore effectively unapply it).
 #
 # -u:: Assume unified diff instead of GIT diff
 #	Make `cg-patch` assume the patch on the input is a classic unified
@@ -161,6 +161,7 @@ while optparse; do
 	if optparse -C=; then
 		commitid="$(cg-object-id -c "$OPTARG")" || exit 1
 		commitparent="$(cg-object-id -p "$commitid")" || exit 1
+		[ -z "$commitparent" ] && die "cannot pick initial commit"
 		[ "$(echo "$commitparent" | wc -l)" -gt 1 ] &&
 			die "refusing to pick merge commits"
 
@@ -196,11 +197,21 @@ if [ "$commitid" ] || [ "$commit" ] || [ "$commitdir" ]; then
 	[ "$_git_relpath" ] && die "must be ran from project root"
 
 	if [ "$commitid" ]; then
-		cg-diff -p -r "$commitid" | cg-patch || exit 1
-		cg-commit -c "$commitid"
+		files="$(mktemp -t gitpatch.XXXXXX)"
+		git-diff-tree -m -r "$commitparent" "$commitid" | cut -f 2- >"$files"
+		if [ -n "$(git-diff-index -m -r HEAD | cut -f 2- | join "$files" -)" ]; then
+			rm "$files"
+			die "cherry-pick blocked by local changes"
+		fi
+
+		cg-diff -p -r "$commitid" | cg-patch || { rm "$files"; exit 1; }
+		cat "$files" | tr '\n' '\0' | xargs -0 cg-commit -c "$commitid"
+		rm "$files"
 	fi
 
 	if [ "$commit" ]; then
+		[ "$(git-diff-index -m -r HEAD)" ] &&
+			die "cannot auto-commit patches when the tree has local changes"
 		file="$(mktemp -t gitpatch.XXXXXX)"
 		cat >"$file"
 		lookover_patch "$file"
@@ -210,6 +221,8 @@ if [ "$commitid" ] || [ "$commit" ] || [ "$commitdir" ]; then
 	fi
 
 	if [ "$commitdir" ]; then
+		[ "$(git-diff-index -m -r HEAD)" ] &&
+			die "cannot auto-commit patches when the tree has local changes"
 		find "$commitdir" -name '[0-9]*-*' | while read -r file; do
 			lookover_patch "$file" " in $file"
 			echo "* Applying ${file#$directory/}"
