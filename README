@@ -132,7 +132,7 @@ new directory be called, as follows:
 
 	$ cg-clone http://www.kernel.org/pub/scm/cogito/cogito.git cogitodir
 
-You will see a whole bunch of output, and when it is over there will be a
+You will watch a progressbar for a while and when it is over there will be a
 new directory called 'cogitodir' (or whatever name you chose) in the current
 directory. `cd` into it. Because we used the Cogito URL, you will see the
 Cogito source tree, with its own `.git` directory keeping track of everything.
