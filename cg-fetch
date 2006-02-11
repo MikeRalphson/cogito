@@ -43,16 +43,6 @@
 #	Additional flags to be passed to the rsync tool when fetching over
 #	the rsync protocol.
 
-# Developer's documentation:
-#
-# ENVIRONMENT
-# -----------
-# _cg_cloning::
-#	Hint cg-fetch that it should optimize for the initial clone case
-#	rather than the incremental fetch case. Currently just makes it
-#	use git-clone-pack instead of git-fetch-pack, since git-clone-pack
-#	won't unpack the transferred pack.
-
 
 USAGE="cg-fetch [-f] [-v] [BRANCH_NAME]"
 
@@ -83,6 +73,17 @@ show_changes_summary()
 	else
 		echo "Up to date."
 	fi
+}
+
+initial_done()
+{
+	rm -f ___
+	cp "$_git/refs/heads/origin" "$_git/refs/heads/master" &&
+		git-read-tree HEAD &&
+		git-checkout-index -a &&
+		git-update-index --refresh ||
+		die "initial checkout failed"
+	rm "$_git/info/cg-fetch-initial"
 }
 
 
@@ -276,7 +277,11 @@ if [ -s "$_git/info/cg-fetch-$name-dirty" ]; then
 	kill -0 $(cat "$_git/info/cg-fetch-$name-dirty") 2>/dev/null && \
 		echo "Warning: Aren't you fetching $name twice at once? (waiting 10s)" >&2 && \
 		sleep 10
-	echo "Recovering from a previously interrupted fetch..."
+	if [ -s "$_git/info/cg-fetch-initial" ]; then
+		echo "Recovering from a previously interrupted initial clone..."
+	else
+		echo "Recovering from a previously interrupted fetch..."
+	fi
 	recovery=--recover
 fi
 mkdir -p "$_git/info"
@@ -333,7 +338,7 @@ if [ "$packed_transport" ]; then
 	[ "$rembranch" ] || rembranch="HEAD"
 
 	cloneorfetch= #fetch
-	[ "$_cg_cloning" ] && cloneorfetch=-k #clone
+	[ -s "$_git/info/cg-fetch-initial" ] && cloneorfetch=-k #clone
 
 	fetch_pack_recorder () {
 		while read sha1 remote_name; do
@@ -366,6 +371,7 @@ if [ "$packed_transport" ]; then
 
 	rm "$_git/info/cg-fetch-$name-dirty"
 	show_changes_summary "$orig_head" "$(cg-object-id "$name")"
+	[ -s "$_git/info/cg-fetch-initial" ] && initial_done
 	exit 0
 fi
 
@@ -411,4 +417,5 @@ fi
 
 rm "$_git/info/cg-fetch-$name-dirty"
 show_changes_summary "$orig_head" "$new_head"
+[ -s "$_git/info/cg-fetch-initial" ] && initial_done
 exit $ret
