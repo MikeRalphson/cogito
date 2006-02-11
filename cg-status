@@ -75,6 +75,13 @@
 #	.gitignore in the working tree will be used as an exclude file.
 #	The excludes are applied from the project root approaching the
 #	current subdirectory.
+#
+# BUGS
+# ----
+# One known bug is that when you `cg-add` a new file and then delete it
+# but do not call `cg-rm`, it will not be listed in `cg-status` output,
+# but from the merging point of view there will still be "local changes"
+# and `cg-diff` will show a diff.
 
 USAGE="cg-status [-g] [[-n] -s STATUS] [-w] [-x] [DIRPATH]"
 
