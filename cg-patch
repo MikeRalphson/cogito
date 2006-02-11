@@ -22,6 +22,11 @@
 #	introduced by the given commit. This is basically an extension of
 #	`cg-commit -c`.
 #
+#	In combination with '-R', this does the opposite - it will revert
+#	the given commit and then try to commit a revert commit - it will
+#	prefill the headline and open the commit editor for you to write
+#	further details.
+#
 #	Note that even though this is functionally equivalent to the
 #	cherry-picking concept present in other version control systems,
 #	this does not play very well together with regular merges and if
@@ -189,11 +194,11 @@ done
 
 
 if [ "$commitid" ] || [ "$commit" ] || [ "$commitdir" ]; then
-	[ "$reverse" ] && die "cannot do -R here"
 	[ "$_git_relpath" ] && die "must be ran from project root"
 
 	if [ "$commitid" ]; then
 		[ "$unidiff" ] && die "-u does not make sense here"
+		[ $strip -ne 1 ] && die "-p does not make sense here"
 
 		files="$(mktemp -t gitpatch.XXXXXX)"
 		git-diff-tree -m -r "$commitparent" "$commitid" | cut -f 2- >"$files"
@@ -201,13 +206,24 @@ if [ "$commitid" ] || [ "$commit" ] || [ "$commitdir" ]; then
 			rm "$files"
 			die "cherry-pick blocked by local changes"
 		fi
-
-		cg-diff -p -r "$commitid" | cg-patch || { rm "$files"; exit 1; }
-		cat "$files" | tr '\n' '\0' | xargs -0 cg-commit -c "$commitid"
+		eval "afiles=($(cat "$files" | sed -e 's/"\|\\/\\&/g' -e 's/^.*$/"&"/'))"
 		rm "$files"
+
+		ciargs=()
+		if ! [ "$reverse" ]; then
+			ciargs=(-c "$commitid")
+		else
+			ciargs=(-m "Revert ${commitid:0:12}" -e)
+			reverse=-R
+		fi
+
+		cg-diff -p -r "$commitid" | cg-patch $reverse || exit 1
+		cg-commit "${ciargs[@]}" "${afiles[@]}"
 	fi
 
 	if [ "$commit" ]; then
+		[ "$reverse" ] && die "cannot do -R here"
+
 		[ "$(git-diff-index -m -r HEAD)" ] &&
 			die "cannot auto-commit patches when the tree has local changes"
 		file="$(mktemp -t gitpatch.XXXXXX)"
@@ -219,6 +235,8 @@ if [ "$commitid" ] || [ "$commit" ] || [ "$commitdir" ]; then
 	fi
 
 	if [ "$commitdir" ]; then
+		[ "$reverse" ] && die "cannot do -R here"
+
 		[ "$(git-diff-index -m -r HEAD)" ] &&
 			die "cannot auto-commit patches when the tree has local changes"
 		find "$commitdir" -name '[0-9]*-*' | while read -r file; do
