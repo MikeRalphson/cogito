@@ -42,9 +42,9 @@
 #	does not explicitly describe them. Use this if the patch was not
 #	produced by `cg-diff` or similar but by a traditional `diff` tool.
 #
-# Takes the diff on stdin.
+# Takes the diff on stdin (unless specified otherwise).
 
-USAGE="cg-patch [-R] < patch on stdin"
+USAGE="cg-patch [-c] [-C COMMIT] [-pN] [-R] [-u] [OTHER_OPTIONS] < PATCH"
 _git_requires_root=1
 
 . "${COGITO_LIB}"cg-Xlib || exit 1
@@ -130,58 +130,74 @@ commit_patch()
 	sed '/^\(---\|-- \)$/,$d' < "$file" | cg-commit
 }
 
-apply_directory()
-{
-	local directory="$1"
-	find "$directory" -name '[0-9]*-*' | while read -r file; do
-		lookover_patch "$file" " in $file"
-		echo "* Applying ${file#$directory/}"
-		cg-patch <"$file" || die "aborting because of conflicts"
-		commit_patch "$file"
-	done
-}
-
+commitid=
+commit=
+commitdir=
+commitfail=
+strip=1
 reverse=
 unidiff=
-strip=1
 while optparse; do
-	if optparse -R; then
-		reverse=1
-
-	elif optparse -C=; then
-		commit="$(cg-object-id -c "$OPTARG")" || exit 1
+	if optparse -C=; then
+		commitid="$(cg-object-id -c "$OPTARG")" || exit 1
 		[ "$(cg-object-id -p "$commit" | wc -l)" -gt 1 ] &&
 			die "refusing to pick merge commits"
-		cg-diff -p -r "$commit" | cg-patch || exit 1
-		cg-commit -c "$commit"
-		exit
 
 	elif optparse -c; then
+		commit=1
+
+	elif optparse -d=; then
+		commitdir="$(echo "$OPTARG" | sed 's,/*$,,')"
+		[ -d "$commitdir" ] || die "$commitdir: not a directory"
+
+	elif optparse -p=; then
+		strip="$OPTARG"
+		[ -n "$(echo "$strip" | tr -d 0-9)" ] &&
+			die "the -p argument must be numeric"
+		commitfail=1
+
+	elif optparse -R; then
+		reverse=1
+		commitfail=1
+
+	elif optparse -u; then
+		unidiff=1
+		commitfail=1
+
+	else
+		optfail
+	fi
+done
+
+
+if [ "$commitid" ] || [ "$commit" ] || [ "$commitdir" ]; then
+	[ "$commitfail" ] && die "invalid combination of options"
+
+	if [ "$commitid" ]; then
+		cg-diff -p -r "$commitid" | cg-patch || exit 1
+		cg-commit -c "$commitid"
+	fi
+
+	if [ "$commit" ]; then
 		file="$(mktemp -t gitpatch.XXXXXX)"
 		cat >"$file"
 		lookover_patch "$file"
 		cg-patch <"$file" || exit 1
 		commit_patch "$file"
 		rm "$file"
-		exit
-
-	elif optparse -d=; then
-		[ -d "$OPTARG" ] || die "Not a directory '$OPTARG'."
-		apply_directory "$(echo "$OPTARG" | sed 's,/*$,,')"
-		exit
-
-	elif optparse -p=; then
-		strip="$OPTARG"
-		[ "$(echo "$strip" | tr -d 0-9)" ] &&
-			die "-p argument must be numeric"
-
-	elif optparse -u; then
-		unidiff=1
-
-	else
-		optfail
 	fi
-done
+
+	if [ "$commitdir" ]; then
+		find "$commitdir" -name '[0-9]*-*' | while read -r file; do
+			lookover_patch "$file" " in $file"
+			echo "* Applying ${file#$directory/}"
+			cg-patch <"$file" || die "aborting because of conflicts"
+			commit_patch "$file"
+		done
+	fi
+
+	exit
+fi
 
 
 [ "$unidiff" ] && newsfile="$(mktemp -t gitapply.XXXXXX)"
