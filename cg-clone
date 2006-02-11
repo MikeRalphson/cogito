@@ -3,8 +3,7 @@
 # Clone a remote GIT repository.
 # Copyright (c) Petr Baudis, 2005
 #
-# This is like cg-init, but it will create a new directory where it will do
-# the checkout.
+# This clones a remote GIT repository and checks it out locally.
 #
 # Takes a parameter specifying the location of the source repository and an
 # optional second parameter specifying the destination. If the second
