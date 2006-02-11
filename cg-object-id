@@ -15,6 +15,12 @@
 #	scripted usage of cg-object-id should use -c explicitly if it
 #	wants a commit.
 #
+# -d:: Get commit string description
+#	Get a commit description in form of a short string. It shows the
+#	most recent tag in past of the commit and if it is not the commit
+#	itself, it appends first few chars of the commit id to id. See
+#	`git-describe`(1) for details.
+#
 # -n:: Disable object type checking
 #	Normalize only - don't check the object type.
 #
@@ -29,7 +35,7 @@
 # OBJECT_ID::
 #	An ID resolving to a commit.
 
-USAGE="cg-object-id [-c | -n | -p | -t] [OBJECT_ID]"
+USAGE="cg-object-id [-c | -d | -n | -p | -t] [OBJECT_ID]"
 
 . "${COGITO_LIB}"cg-Xlib
 deprecated_alias cg-object-id commit-id cg-commit-id parent-id cg-parent-id tree-id cg-tree-id
@@ -85,12 +91,15 @@ normalize_id()
 
 
 show_commit= # this is really only for the options-exclusivity-checking
+describe=
 show_parent=
 show_tree=
 normalize_only=
 while optparse; do
 	if optparse -c; then
 		show_commit=1
+	elif optparse -d; then
+		describe=1
 	elif optparse -n; then
 		normalize_only=1
 	elif optparse -p; then
@@ -108,7 +117,7 @@ case "$_cg_cmd" in
 	*tree*) show_tree=1;;
 esac
 
-case "$show_commit$show_parent$show_tree$normalize_only" in
+case "$show_commit$describe$show_parent$show_tree$normalize_only" in
 	11*)	usage;;
 esac
 
@@ -117,6 +126,10 @@ normalize_id "$id"
 
 if [ "$normalize_only" ]; then
 	echo "$normid"
+	exit 0
+fi
+if [ "$describe" ]; then
+	git-describe "$normid"
 	exit 0
 fi
 
