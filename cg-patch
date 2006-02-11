@@ -30,7 +30,9 @@
 # -pN:: Strip path to the level N
 #	Strip path of filenames in the diff to the level N. This works
 #	exactly the same as in the `patch` tool except that the default
-#	strip level is not infinite but 1.
+#	strip level is not infinite but 1 (or more if you are in a
+#	subdirectory; in short, `cg-diff | cg-patch -R` and such always
+#	works).
 #
 # -R:: Apply in reverse
 #	Applies the patch in reverse (therefore effectively unapplies it)
@@ -45,7 +47,6 @@
 # Takes the diff on stdin (unless specified otherwise).
 
 USAGE="cg-patch [-c] [-C COMMIT] [-pN] [-R] [-u] [OTHER_OPTIONS] < PATCH"
-_git_requires_root=1
 
 . "${COGITO_LIB}"cg-Xlib || exit 1
 
@@ -73,13 +74,24 @@ redzone_border()
 
 	if [ $strip -gt 0 ] && [ x"$file1" != x"/dev/null" ] &&
 	   [ x"$(echo "$file1" | strip_path)" = x"$file1" ]; then
-		echo "$file1: too shallow filename for -p$strip, ignoring" >&2
+		echo "$file1: too shallow a filename for -p$strip, ignoring" >&2
 		return
 	fi
 	if [ $strip -gt 0 ] && [ x"$file2" != x"/dev/null" ] &&
 	   [ x"$(echo "$file2" | strip_path)" = x"$file2" ]; then
-		echo "$file2: too shallow filename for -p$strip, ignoring" >&2
+		echo "$file2: too shallow a filename for -p$strip, ignoring" >&2
 		return
+	fi
+
+	local sfile1="${file1#*/}" sfile2="${file2#*/}"
+	if [ $strip -gt 1 ] && [ x"$file1" != x"/dev/null" ] &&
+	   [ "$_git_relpath" ] && [ x"${sfile1#$_git_relpath}" = x"$sfile1" ]; then
+		echo "Warning: $file1 was not located in your current subdirectory before stripping" >&2
+	fi
+	if [ $strip -gt 1 ] && [ x"$file2" != x"/dev/null" ] &&
+	   [ "$_git_relpath" ] && [ x"${sfile2#$_git_relpath}" = x"$sfile2" ] &&
+	   [ x"$file2" != x"$file1" ]; then
+		echo "Warning: $file2 was not located in your current subdirectory before stripping" >&2
 	fi
 
 	if [ "$op" = "delete" ]; then
@@ -116,6 +128,7 @@ redzone_border()
 	redzone_reset
 }
 
+
 lookover_patch()
 {
 	local file="$1" where="$2"
@@ -130,11 +143,12 @@ commit_patch()
 	sed '/^\(---\|-- \)$/,$d' < "$file" | cg-commit
 }
 
+
 commitid=
 commit=
 commitdir=
 commitfail=
-strip=1
+strip=$((1+$(echo "$_git_relpath" | tr -cd / | wc -c)))
 reverse=
 unidiff=
 while optparse; do
@@ -172,6 +186,7 @@ done
 
 if [ "$commitid" ] || [ "$commit" ] || [ "$commitdir" ]; then
 	[ "$commitfail" ] && die "invalid combination of options"
+	[ "$_git_relpath" ] && die "must be ran from project root"
 
 	if [ "$commitid" ]; then
 		cg-diff -p -r "$commitid" | cg-patch || exit 1
@@ -198,6 +213,11 @@ if [ "$commitid" ] || [ "$commit" ] || [ "$commitdir" ]; then
 
 	exit
 fi
+
+
+# We want to run patch in the subdirectory and at any rate protect other
+# parts of the tree from inadverent pollution.
+[ -n "$_git_relpath" ] && cd "$_git_relpath"
 
 
 [ "$unidiff" ] && newsfile="$(mktemp -t gitapply.XXXXXX)"
