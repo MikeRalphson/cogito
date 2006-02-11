@@ -17,10 +17,16 @@
 #	(if provided) from the patch and commit it after applying it
 #	successfuly.
 #
-# -C COMMIT:: Replicate the changes of the given commit on the current HEAD
+# -C COMMIT:: Cherry-pick the given commit
 #	Instead of applying a patch from stdin, apply and commit the patch
 #	introduced by the given commit. This is basically an extension of
 #	`cg-commit -c`.
+#
+#	Note that even though this is functionally equivalent to the
+#	cherry-picking concept present in other version control systems,
+#	this does not play very well together with regular merges and if
+#	you both cherry-pick and merge between two branches, the picking
+#	may increase the number of conflicts you will get when merging.
 #
 # -d DIRNAME:: Apply all patches in directory
 #	Instead of applying a patch from stdin, apply and separately commit
@@ -154,7 +160,8 @@ unidiff=
 while optparse; do
 	if optparse -C=; then
 		commitid="$(cg-object-id -c "$OPTARG")" || exit 1
-		[ "$(cg-object-id -p "$commit" | wc -l)" -gt 1 ] &&
+		commitparent="$(cg-object-id -p "$commitid")" || exit 1
+		[ "$(echo "$commitparent" | wc -l)" -gt 1 ] &&
 			die "refusing to pick merge commits"
 
 	elif optparse -c; then
