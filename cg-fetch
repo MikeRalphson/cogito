@@ -340,6 +340,8 @@ if [ "$packed_transport" ]; then
 	cloneorfetch= #fetch
 	[ -s "$_git/info/cg-fetch-initial" ] && cloneorfetch=-k #clone
 
+	rm -f "$_git/info/cg-fetch-earlydie"
+
 	fetch_pack_recorder () {
 		while read sha1 remote_name; do
 			[ "$sha1" = "failed" ] && die "$2"
@@ -396,6 +398,8 @@ if [ "${new_head#ref:}" != "$new_head" ]; then
 		die "unable to get the head pointer of branch $new_head (referenced by HEAD)"
 	new_head="$(cat "$_git/refs/heads/.$name-fetching")"
 fi
+
+rm -f "$_git/info/cg-fetch-earlydie"
 
 echo "Fetching objects..."
 ## Fetch the objects

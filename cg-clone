@@ -81,6 +81,17 @@ else
 fi
 
 
+cleanup ()
+{
+	if [ -s "$_git/info/cg-fetch-earlydie" ] && [ ! "$same_dir" ]; then
+		cd ..
+		rm -rf "$dir"
+	fi
+}
+
+cleanup_trap "cleanup"
+
+
 cg-init -I || die "init failed"
 if [ "$symlink" ]; then
 	rmdir "$_git/objects/"*
@@ -92,6 +103,7 @@ fi
 cg-branch-add origin "$location"
 
 echo $$ >"$_git/info/cg-fetch-initial"
+echo $$ >"$_git/info/cg-fetch-earlydie"
 cat >___ <<__EOT__
 This is a clone-in-progress GIT working tree containing a GIT repository
 in the .git subdirectory. If you see this file and noone is fetching or
@@ -100,6 +112,6 @@ it by issuing this command (it's enough as-is):
 
 	cg-fetch
 __EOT__
-cg-fetch origin || exit 1
+cg-fetch origin || { cleanup; exit 1; }
 
 echo "Cloned to $dir/ (origin $location available as branch \"origin\")"
