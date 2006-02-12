@@ -163,7 +163,7 @@ commit_patch()
 
 resume_filter()
 {
-	sed "0,/\/$lastpatch$/d"
+	sed "0,/\/$(echo "$lastpatch" | sed 's#/#\\/#g')$/d"
 }
 
 
@@ -207,6 +207,9 @@ while optparse; do
 		optfail
 	fi
 done
+
+
+[ "$resolved" ] && [ -z "$commitdir" ] && die "--resolved can be passed only with -d"
 
 
 if [ "$commitid" ] || [ "$commit" ] || [ "$commitdir" ]; then
@@ -258,7 +261,7 @@ if [ "$commitid" ] || [ "$commit" ] || [ "$commitdir" ]; then
 			if [ ! "$resolved" ]; then
 				echo "cg-patch: previous import in progress" >&2
 				echo "Use --resolved to resume after conflicts." >&2
-				echo "Cancel resume by deleting the file: $resume" >&2
+				echo "Cancel the resume by deleting the file $resume" >&2
 				exit 1
 			fi
 
@@ -280,13 +283,13 @@ if [ "$commitid" ] || [ "$commit" ] || [ "$commitdir" ]; then
 
 		find "$commitdir" -name '[0-9]*-*' | "$filter" | \
 		while read -r file; do
-			lookover_patch "$file" " in $file"
 			echo "* ${file#$commitdir/}"
+			lookover_patch "$file" " in $file"
 			if ! cg-patch < "$file"; then
 				echo "${file#$commitdir/}" > "$resume"
 				echo "cg-patch: conflicts during import" >&2
 				echo "Rerun cg-patch with the --resolved argument to resume after resolving them." >&2
-				echo "Cancel resume by deleting the file: $resume" >&2
+				echo "Cancel the resume by deleting the file $resume" >&2
 				exit 1
 			fi
 			commit_patch "$file"
