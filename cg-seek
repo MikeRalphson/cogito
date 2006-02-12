@@ -41,6 +41,8 @@ curcommit="$(cg-object-id -c)" || exit 1
 
 if [ "$dstcommit" ] && [ "$dstcommit" != "$_git_head" ]; then
 	seek_mode=away
+	[ -s "$_git/head-name" ] && [ "$_git_head" != "cg-seek-point" ] &&
+		die "seeked away by some other tool, refusing to meddle (you can still use cg-seek without any arguments to unseek)"
 else
 	seek_mode=back
 	dstcommit="$(cg-object-id -c "$_git_head")" || exit 1
