@@ -68,10 +68,6 @@ cg-*patch should be pre-1.0.)
 	  but I think it's good to have internal support for the
 	  basic stuff. (Get inspired in git-commit.)
 
-* cg-push over HTTP
-
-* cg-Xfetchprogress showing smooth progress for packfiles
-
 
 Post 1.0:
 
