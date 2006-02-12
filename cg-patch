@@ -48,6 +48,13 @@
 # -R:: Apply in reverse
 #	Apply the patch in reverse (therefore effectively unapply it).
 #
+# --resolved:: Resume -d after conflicts were resolved
+#	In case '-d' failed in some patch in the middle with conflicts and
+#	you resolved them, running cg-patch with with the '-d' argument
+#	as well as '--resolved' will cause it to pick up where it dropped off
+#	and go on applying. (This includes committing the failed patch;
+#	do not commit it on your own!)
+#
 # -u:: Assume unified diff instead of GIT diff
 #	Make `cg-patch` assume the patch on the input is a classic unified
 #	diff instead of a diff produced by GIT or Cogito. This means only
