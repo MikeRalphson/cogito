@@ -64,7 +64,7 @@ if [ "$ARGS" ]; then
 	fi
 
 	files=()
-	if [ "$force" ]; then
+	if [ -n "$force" ]; then
 		for file in "${ARGS[@]}"; do
 			files[${#files[@]}]="${_git_relpath}$file"
 		done
