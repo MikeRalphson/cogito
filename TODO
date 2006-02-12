@@ -58,12 +58,15 @@ cg-*patch should be pre-1.0.)
 	* Again, an email interface - frontend to applymbox and stuff...
 	* Dealing with renames and stuff
 
+* cg-tag enhancements
+	* Provide the same -m and editor and stdin interface as cg-commit;
+	  the shared stuff should be libraryized.
+
 * cg-commit enhancements
-	* Things coming to git-commit:
-		* Possibly verify the patch being committed against
-		  whitespace errors and stuff; hooks are good for this too,
-		  but I think it's good to have internal support for the
-		  basic stuff.
+	* Possibly verify the patch being committed against
+	  whitespace errors and stuff; hooks are good for this too,
+	  but I think it's good to have internal support for the
+	  basic stuff. (Get inspired in git-commit.)
 
 * cg-push over HTTP
 
