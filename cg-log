@@ -86,11 +86,11 @@
 #
 #	$ cg-log -r releasetag-0.9..releasetag-0.10
 #
-# Similarily, to see which commits are in branch A but not yet in branch B,
+# Similarily, to see which commits are in branch A but not in branch B,
 #
 #	$ cg-log -r B..A
 #
-# (meaning "all the commits needed along the way from B to A").
+# (meaning "all the commits which newly appear along the way from B to A").
 #
 # NOTES
 # -----
