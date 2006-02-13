@@ -252,7 +252,7 @@ if [ "$ARGS" -o "$_git_relpath" ]; then
 		sed -e 's/"\|\\/\\&/g' -e 's/^\([^	]*\)\(.\)	\(.*\)\(	.*\)*$/"\2 \3"/'))"
 	customfiles=1
 
-	[ "$review" ] && cat "$filter" | path_xargs git-diff-index -r -m -p HEAD > "$PATCH"
+	[ "$review" ] && cat "$filter" | path_xargs git-diff-index -r -m -p HEAD -- > "$PATCH"
 	rm "$filter"
 
 else
