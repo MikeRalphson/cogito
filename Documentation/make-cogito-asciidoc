@@ -5,7 +5,7 @@
 
 REGULAR_COMMANDS="$(ls ../cg-* | grep -v cg-admin- | grep -v cg-X)"
 ADVANCED_COMMANDS="$(ls ../cg-admin-*)"
-HELPER_COMMANDS="$(ls ../cg-X*) $(ls ../*-id | grep -v git-)"
+HELPER_COMMANDS="$(ls ../cg-X*)"
 
 # Shorthand for the link markup.
 man()
