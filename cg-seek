@@ -27,7 +27,8 @@
 # and you want to commit a compilation fix, as long as you are aware that
 # the commit of the fix will be rendered unreachable (you will be able to
 # get back to it only if you remember its ID) at the moment you do next
-# seek or a reset.
+# seek or a reset. If you want to save the commit, you can save it to
+# a separate branch using `cg-switch -n`.
 #
 # Takes the target commit ID to seek to as an argument.
 #
