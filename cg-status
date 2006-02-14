@@ -138,6 +138,10 @@ if [ "$gitstatus" ]; then
 	fi
 
 	echo "Heads:"
+	maxlen="$(find "$_git/refs/heads" ! -type d |
+	          while read l; do l=${l#$_git/refs/heads}; echo ${#l}; done |
+	          sort -nr | head -n 1)"
+	[ "$maxlen" -gt 35 ] && maxlen=35
 	find "$_git/refs/heads" ! -type d | sort | while read head; do 
 		headsha1="$(cat "$head")"
 		headname="${head#$_git/refs/heads/}"
@@ -145,7 +149,7 @@ if [ "$gitstatus" ]; then
 		cf=" "; rf=" "
 		[ "$headname" = "$_git_head" ] && cf=">"
 		[ -s "$_git/branches/$headname" ] && rf="R"
-		printf "  %s%s%-35s\t%s\n" "$rf" "$cf" "$headname" "$headsha1"
+		printf "  %s%s%-${maxlen}s\t%s\n" "$rf" "$cf" "$headname" "$headsha1"
 	done
 
 	if [ -s "$_git/merging" ]; then
