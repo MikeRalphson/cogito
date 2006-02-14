@@ -35,6 +35,10 @@
 #	after all the '-m' messages). Multiple '-m' parameters are appended
 #	to a single commit message, each as separate paragraph.
 #
+# -M FILE:: Read commit message from a file
+#	Include commit message from a file (this has the same effect as if
+#	you would cat it to stdin).
+#
 # -e:: Force message editing of messages given with -m
 #	Force the editor to be brought up even when '-m' parameters were
 #	passed to `cg-commit`.
@@ -182,6 +186,7 @@ review=
 signoff=
 copy_commit=
 msgs=()
+msgfile=
 quiet=
 while optparse; do
 	if optparse -C; then
@@ -206,6 +211,8 @@ while optparse; do
 		signoff="$OPTARG"
 	elif optparse -m=; then
 		msgs[${#msgs[@]}]="$OPTARG"
+	elif optparse -M=; then
+		msgfile="$OPTARG"
 	elif optparse -c=; then
 		copy_commit="$(cg-object-id -c "$OPTARG")" || exit 1
 	else
@@ -295,22 +302,24 @@ elif [ "$merging" ]; then
 	fi
 	written=1
 fi
-first=1
 for msg in "${msgs[@]}"; do
-	if [ "$first" ]; then
-		first=
-	else
-		echo >>"$LOGMSG"
-	fi
+	[ "$written" ] && echo >>"$LOGMSG"
 	echo "$msg" | fmt -s >>"$LOGMSG"
 	written=1
 done
 
 if [ "$copy_commit" ]; then
+	[ "$written" ] && echo >>"$LOGMSG"
 	eval "$(git-cat-file commit "$copy_commit" | pick_author)"
-	git-cat-file commit "$copy_commit" | sed -e '1,/^$/d'
+	git-cat-file commit "$copy_commit" | sed -e '1,/^$/d' >>"$LOGMSG"
         written=1
-fi >>"$LOGMSG"
+fi
+
+if [ "$msgfile" ]; then
+	[ "$written" ] && echo >>"$LOGMSG"
+	cat "$msgfile" >>"$LOGMSG" || exit 1
+	written=1
+fi
 
 # Always have at least one blank line, to ease the editing for
 # the poor people whose text editor has no 'O' command.
