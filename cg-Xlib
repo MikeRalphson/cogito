@@ -230,6 +230,22 @@ list_untracked_files()
 			EXCLUDE[${#EXCLUDE[@]}]="--exclude-from=$EXCLUDEFILE"
 		fi
 		EXCLUDE[${#EXCLUDE[@]}]="--exclude-per-directory=.gitignore"
+		# Workaround for git < 1.2.0
+		if [ -n "$_git_relpath" ]; then
+			local dir="${_git_relpath%/}"
+			local reldir=".."
+			while [ "$dir" != "." ]; do
+				if [ "${dir%/*}" = "$dir" ]; then
+					dir="."
+				else
+					dir="${dir%/*}"
+				fi
+				if [ -f "$reldir/.gitignore" ]; then
+					EXCLUDE[${#EXCLUDE[@]}]="--exclude-from=$dir/.gitignore"
+				fi
+				reldir="../$reldir"
+			done
+		fi
 	fi
 	local listdirs=
 	[ "$squashflag" = "squashdirs" ] && listdirs=--directory
