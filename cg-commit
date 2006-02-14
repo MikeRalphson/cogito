@@ -221,7 +221,7 @@ done
 
 if [ -s "$_git/blocked" ]; then
 	if [ "$force" ]; then
-		echo "Warning: Committing to a blocked repository. Assuming you know what are you doing." >&2
+		warn "committing to a blocked repository. Assuming you know what are you doing."
 	else
 		die "committing blocked: $(cat "$_git/blocked")"
 	fi
@@ -291,7 +291,7 @@ LOGMSG2="$(mktemp -t gitci.XXXXXX)"
 
 written=
 if [ "$merging" ] && [ ! "$editor" ]; then
-	echo "Warning: Suppressing default merge log messages in favour of the custom -m passed to me." >&2
+	warn "suppressing default merge log messages in favour of the custom -m passed to me."
 elif [ "$merging" ]; then
 	echo -n 'Merge with ' >>"$LOGMSG"
 	[ -s "$_git/merging-sym" ] || cp "$_git/merging" "$_git/merging-sym"
@@ -542,8 +542,8 @@ if [ "$newhead" ]; then
 	# Trigger the postcommit hook
 	branchname=
 	if [ -s "$_git/branch-name" ]; then
-		echo "Warning: .git/branch-name is deprecated and support for it will be removed soon." >&2
-		echo "Warning: So please stop relying on it, or complain at pasky@suse.cz. Thanks." >&2
+		warn ".git/branch-name is deprecated and support for it will be removed soon."
+		warn "So please stop relying on it, or complain at pasky@suse.cz. Thanks."
 		branchname="$(cat "$_git/branch-name")"
 	fi
 	[ -z "$branchname" ] && [ "$_git_head" != "master" ] && branchname="$_git_head"

@@ -61,7 +61,7 @@ if [ "$dstcommit" ] && [ "$dstcommit" != "$_git_head" ]; then
 	[ -s "$_git/head-name" ] && [ "$(git-symbolic-ref HEAD)" != "refs/heads/cg-seek-point" ] &&
 		die "seeked away by some other tool, refusing to meddle (you can still use cg-seek without any arguments to unseek)"
 	[ -s "$_git/refs/heads/$dstcommit" ] &&
-		echo "Warning: Seeking to a branch head; this is not for permanent switching, please see cg-switch" >&2
+		warn "seeking to a branch head; this is not for permanent switching, please see cg-switch"
 else
 	seek_mode=back
 	dstcommit="$(cg-object-id -c "$_git_head")" || exit 1

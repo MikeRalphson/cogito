@@ -104,12 +104,12 @@ redzone_border()
 	local sfile1="${file1#*/}" sfile2="${file2#*/}"
 	if [ $strip -gt 1 ] && [ x"$file1" != x"/dev/null" ] &&
 	   [ "$_git_relpath" ] && [ x"${sfile1#$_git_relpath}" = x"$sfile1" ]; then
-		echo "Warning: $file1 was not located in your current subdirectory before stripping" >&2
+		warn "$file1 was not located in your current subdirectory before stripping"
 	fi
 	if [ $strip -gt 1 ] && [ x"$file2" != x"/dev/null" ] &&
 	   [ "$_git_relpath" ] && [ x"${sfile2#$_git_relpath}" = x"$sfile2" ] &&
 	   [ x"$file2" != x"$file1" ]; then
-		echo "Warning: $file2 was not located in your current subdirectory before stripping" >&2
+		warn "$file2 was not located in your current subdirectory before stripping"
 	fi
 
 	if [ "$op" = "delete" ]; then
@@ -151,7 +151,7 @@ lookover_patch()
 {
 	local file="$1" where="$2"
 	local author="$(sed -n '/^\(---\|-- \)$/,$p' < "$file" | sed -n '/^author /p')"
-	[ "$author" ] || echo "Warning: No author info found$where, assuming your authorship" >&2
+	[ "$author" ] || warn "no author info found$where, assuming your authorship"
 	eval "$(echo "$author" | pick_author)"
 }
 

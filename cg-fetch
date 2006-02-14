@@ -275,7 +275,7 @@ fi
 # we won't die but rather let the user check quickly.
 if [ -s "$_git/info/cg-fetch-$name-dirty" ]; then
 	kill -0 $(cat "$_git/info/cg-fetch-$name-dirty") 2>/dev/null && \
-		echo "Warning: Aren't you fetching $name twice at once? (waiting 10s)" >&2 && \
+		warn "aren't you fetching $name twice at once? (waiting 10s)" && \
 		sleep 10
 	if [ -s "$_git/info/cg-fetch-initial" ]; then
 		echo "Recovering from a previously interrupted initial clone..."

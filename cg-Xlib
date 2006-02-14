@@ -10,6 +10,19 @@ _cg_cmd=${0##*/}
 _cleanup_code=
 
 
+warn()
+{
+	local beep=
+
+	if [ "$1" = "-b" ]; then
+		beep=1
+		shift
+	fi
+
+	echo "Warning: $@" >&2
+	[ "$beep" ] && echo -e "\a" >&2
+}
+
 die()
 {
 	echo "$_cg_cmd: $@" >&2
@@ -226,7 +239,7 @@ list_untracked_files()
 		# To be removed later.
 		EXCLUDEFILE="$_git/exclude"
 		if [ -f $EXCLUDEFILE ]; then
-			echo Warning: .git/exclude is obsolete, use .git/info/exclude instead. >&2
+			warn ".git/exclude is obsolete, use .git/info/exclude instead."
 			EXCLUDE[${#EXCLUDE[@]}]="--exclude-from=$EXCLUDEFILE"
 		fi
 		EXCLUDE[${#EXCLUDE[@]}]="--exclude-per-directory=.gitignore"
@@ -319,7 +332,7 @@ tree_timewarp()
 	if [ -n "$rollback" ]; then
 		cg-diff -r "$base" >"$patchfile"
 		[ -s "$patchfile" ] &&
-			echo "Warning: uncommitted local changes, trying to bring them $dirstr" >&2
+			warn "uncommitted local changes, trying to bring them $dirstr"
 	else
 		# XXX: This may be suboptimal, but it is also non-trivial to keep
 		# the adds/removes properly.  So this is just a quick hack to get it
@@ -411,7 +424,7 @@ deprecated_alias()
 	propername="$1"; shift
 	for a in "$@"; do
 		[ "$cmd" = "$a" ] && \
-			echo "Warning: '$a' is a deprecated alias, please use '$propername' instead" >&2
+			warn "'$a' is a deprecated alias, please use '$propername' instead"
 	done
 }
 

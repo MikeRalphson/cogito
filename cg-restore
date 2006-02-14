@@ -108,10 +108,10 @@ if [ "$ARGS" ]; then
 		rm "$TMPFILE"
 
 	elif [ "$objtype" = "blob" ]; then
-		[ "${#files[@]}" -gt 1 ] && echo "Warning: Restoring multiple files to a single blob" >&2
+		[ "${#files[@]}" -gt 1 ] && warn "restoring multiple files to a single blob"
 		for file in "${files[@]}"; do
 			echo "Restoring file ${file#$_git_relpath}"
-			echo "Warning: File ${file#$_git_relpath} likely will not have correct permissions" >&2
+			warn "file ${file#$_git_relpath} likely will not have correct permissions"
 			git-cat-file blob "$objid" >"$file"
 			git-update-index -- "$file" || ret=1
 		done

@@ -146,7 +146,7 @@ if [ "$parent" ]; then
 
 	ids="$(cg-object-id -p "$id")"
 	[ "$(echo "$ids" | wc -l)" -gt 1 ] && \
-		echo "Warning: Choosing the first parent of a merge commit. This may not be what you want." >&2
+		warn "choosing the first parent of a merge commit. This may not be what you want."
 	id1="$(echo "$ids" | head -n 1)" || exit 1
 
 	[ "$id1" ] || exit 1
@@ -159,7 +159,7 @@ if [ "$mergebase" ]; then
 	id2="$(cg-object-id -c "$id2")" || exit 1
 	conservative_merge_base "$id1" "$id2" || exit 1
 	[ "$_cg_base_conservative" ] &&
-		echo -e "Warning: Multiple merge bases, picking the most conservative one\a" >&2
+		warn -b "multiple merge bases, picking the most conservative one"
 	id1="$_cg_baselist"
 fi
 

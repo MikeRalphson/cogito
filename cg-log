@@ -325,7 +325,7 @@ if [ "$mergebase" ]; then
 	id2="$(cg-object-id -c "$log_end")" || exit 1
 	conservative_merge_base "$id1" "$id2" || exit 1
 	[ "$_cg_base_conservative" ] &&
-		echo -e "Warning: Multiple merge bases, picking the most conservative one\a" >&2
+		warn -b "multiple merge bases, picking the most conservative one"
 	log_start="$_cg_baselist"
 fi
 
