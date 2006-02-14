@@ -215,6 +215,10 @@ done
 
 [ "$ignorecache" ] || cg-object-id HEAD >/dev/null 2>&1 || die "no previous commit; use -C for the initial commit"
 
+editor=
+[ "$forceeditor" ] && editor=1
+[ ! "$msgs" ] && [ ! "$msgfile" ] && [ ! "$copy_commit" ] && editor=1
+
 if [ "$review" ]; then
 	PATCH="$(mktemp -t gitci.XXXXXX)"
 	PATCH2="$(mktemp -t gitci.XXXXXX)"
@@ -272,7 +276,7 @@ LOGMSG="$(mktemp -t gitci.XXXXXX)"
 LOGMSG2="$(mktemp -t gitci.XXXXXX)"
 
 written=
-if [ "$merging" ] && [ "$msgs" ] && [ ! "$forceeditor" ]; then
+if [ "$merging" ] && [ ! "$editor" ]; then
 	echo "Warning: Suppressing default merge log messages in favour of the custom -m passed to me." >&2
 elif [ "$merging" ]; then
 	echo -n 'Merge with ' >>"$LOGMSG"
@@ -348,7 +352,7 @@ if [ ! "$ignorecache" ] && [ ! "$review" ]; then
 		# TODO: Prepend a letter describing whether it's addition,
 		# removal or update. Or call git status on those files.
 		echo "CG:F   $file" >>"$LOGMSG"
-		[ "$msgs" ] && ! [ "$forceeditor" ] && echo "$file"
+		[ ! "$editor" ] && echo "$file"
 	done
 	if [ -s "$_git/commit-ignore" ]; then
 		echo "CG:" >>"$LOGMSG"
@@ -382,7 +386,7 @@ echo "CG: vim: textwidth=75 $ftdiff" >>"$LOGMSG"
 
 cp "$LOGMSG" "$LOGMSG2"
 if tty -s; then
-	if ! ([ "$copy_commit" ] || [ "$msgs" ]) || [ "$forceeditor" ]; then
+	if [ "$editor" ]; then
 		${EDITOR:-vi} "$LOGMSG2"
 		if ! [ "$commitalways" ] && ! [ "$LOGMSG2" -nt "$LOGMSG" ]; then
 			echo "Log message unchanged or not specified" >&2
