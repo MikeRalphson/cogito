@@ -3,7 +3,6 @@
 # Seek the working tree to a given commit.
 # Copyright (c) Petr Baudis, 2005
 #
-# Takes the target commit ID to seek to as an argument.
 # Seeking will bring the working tree from its current 'HEAD' to a given
 # commit. Note that it changes just the 'HEAD' of the working tree, not
 # the branch it is corresponding to. It will return to the 'HEAD' of
@@ -16,16 +15,23 @@
 #	$ cg-seek		# will restore what we had before
 #
 # For intuitiveness, specifying the branch name (`cg-seek master`) will do
-# the right thing too. If you want to migrate your working tree to another
+# the right thing too. If you want to migrate your working tree to _another_
 # branch, use `cg-clone` to create a new tree for the new branch, or
-# `cg-switch` to change your current tree to use the new branch.
+# `cg-switch` to also change your current tree to use the new branch.
+#
+# Takes the target commit ID to seek to as an argument.
 #
 # NOTES
 # -----
-# If you want to permanently switch your branch to a different commit id
-# (forgetting its current contents), you can use the `cg-switch` command:
+# The `cg-admin-uncommit` command is meant only for temporary excursions
+# to the commit history. If you want to permanently switch your branch
+# to a different commit id (forgetting its current contents), you can use
+# the `cg-switch` command:
 #
 #	$ cg-switch -f -r COMMIT_ID CURRENT_HEAD_NAME
+#
+# Note that this command has some serious caveats! Please read the
+# `cg-switch` documentation for details.
 
 USAGE="cg-seek [COMMIT_ID]"
 _git_requires_root=1

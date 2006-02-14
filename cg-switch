@@ -17,6 +17,9 @@
 #	WARNING: The pointer to the original contents of the branch will
 #	be lost! The contents itself will not be deleted right away,
 #	`git-fsck-objects --unreachable` might help you to find it.
+#	Besides, this can get very troublesome if you are pushing the
+#	branch out - please refer to the documentation of a close
+#	relative, `cg-admin-uncommit`.
 #
 # -n:: No switch; only create and update the branch
 #	Do not switch your current branch to the given branch. This

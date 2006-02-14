@@ -9,6 +9,12 @@
 # commit ('HEAD'). Read the CAVEATS section before using it for the
 # first time.
 #
+# This command is a close relative of `cg-switch -f` (which does
+# essentially the same thing, but is slightly more powerful at the
+# expense of a more elaborate usage). Do not confuse either with the
+# operation performed by `cg-seek`, which is meant only for temporary
+# excursions to the project history.
+#
 # OPTIONS
 # -------
 # -t:: Restore the working copy of the previous commit
