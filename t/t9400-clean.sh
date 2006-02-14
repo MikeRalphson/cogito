@@ -84,10 +84,8 @@ echo "ign file 3" >"repo dir/ign file 3.ign"
 echo "ign file 4" >"repo dir/ign file 4.ign1"
 mklist init
 
-# FIXME: cg-clean shouldn't clean unknown directories without "-d"
 loss='extra file 1
 ign file 2.ign1
-extra dir 1/extra file 3
 repo dir/extra file 2'
 test_expect_success 'cg-clean in top-level dir' \
 	"(cg-clean && check_loss)"
@@ -99,6 +97,7 @@ test_expect_success 'cg-clean -x in top-level dir' \
 	"(cg-clean -x && check_loss)"
 
 loss='extra dir 1
+extra dir 1/extra file 3
 repo dir/extra dir 2'
 test_expect_success 'cg-clean -d in top-level dir' \
 	"(cg-clean -d && check_loss)"
