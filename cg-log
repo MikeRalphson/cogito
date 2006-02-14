@@ -37,10 +37,10 @@
 #	to the initial commit is shown. If no revisions is specified,
 #	the log information starting from 'HEAD' will be shown.
 #
-# -d DATE:: Limit to revisions newer than given DATE
+# -D DATE:: Limit to revisions newer than given DATE
 #	Limit the log information to revisions newer than given DATE,
 #	and on second time further restrain it to revisions older than
-#	given date. Therefore, '-d "2 days ago" -d "yesterday"' will
+#	given date. Therefore, '-D "2 days ago" -D "yesterday"' will
 #	show all the commits from the day before yesterday.
 #
 # -m::	End the log at the merge base of the revision set
@@ -98,7 +98,7 @@
 # things more comfortable to SVN users). See cogito(7) for more details
 # about revision specification.
 
-USAGE="cg-log [-d DATE] [-r FROM_ID[..TO_ID]] [-s] [--summary] [OTHER_OPTIONS] FILE..."
+USAGE="cg-log [-D DATE] [-r FROM_ID[..TO_ID]] [-s] [--summary] [OTHER_OPTIONS] FILE..."
 
 . "${COGITO_LIB}"cg-Xlib || exit 1
 # Try to fix the annoying "Broken pipe" output. May not help, but apparently
@@ -296,12 +296,14 @@ while optparse; do
 		else
 			log_end="$OPTARG"
 		fi
-	elif optparse -d=; then
+	elif optparse -D=; then
 		if [ -z "$date_from" ]; then
 			date_from="--max-age=$(date -d "$OPTARG" +%s)" || exit 1
 		else
 			date_to="--min-age=$(date -d "$OPTARG" +%s)" || exit 1
 		fi
+	elif optparse -d=; then
+		die "the -d option was renamed to -D"
 	elif optparse -m; then
 		mergebase=1
 	elif optparse -M || optparse --no-merges; then
