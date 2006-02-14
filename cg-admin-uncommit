@@ -57,8 +57,10 @@ commit="$(cg-object-id -c "${ARGS[0]}")" || exit 1
 [ "$(git-rev-list $commit ^$base)" ] && \
 	die "$commit: not an ancestor of HEAD"
 
-parent="$(cg-object-id -p "$commit" | head -n 1)" || exit 1
+parent="$(cg-object-id -p "$commit")" || exit 1
 [ "$parent" ] || die "cannot rewind behind the initial commit"
+[ "$(echo "$parent" | wc -l)" -gt 1 ] &&
+	die "cannot rewind merges; please 'cg-switch -f -r parentid $_git_head' instead"
 
 
 echo "Rewinding $base (HEAD) -> $parent" >&2
