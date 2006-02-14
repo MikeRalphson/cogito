@@ -50,7 +50,8 @@
 # -f:: Force commit when no changes has been made
 #	Force the commit even when there's "nothing to commit", that is
 #	the tree is the same as the last time you committed, no changes
-#	happened.
+#	happened. This also forces the commit even if committing is blocked
+#	for some reason.
 #
 # -N:: Only update the cache
 #	Don't add the files to the object database, just update the caches
@@ -158,8 +159,6 @@ USAGE="cg-commit [-m MESSAGE]... [-e] [-c COMMIT_ID] [OTHER_OPTIONS] [FILE]... [
 ### the time. Someone should clean it up. :/ --pasky
 
 
-[ -s "$_git/blocked" ] && die "committing blocked: $(cat "$_git/blocked")"
-
 if [ -s "$_git/author" ]; then
 	if [ -z "$GIT_AUTHOR_NAME" ] && grep -q '^[^<]' "$_git/author"; then
 		export GIT_AUTHOR_NAME="$(sed 's/ *<.*//' "$_git/author")"
@@ -219,6 +218,14 @@ while optparse; do
 		optfail
 	fi
 done
+
+if [ -s "$_git/blocked" ]; then
+	if [ "$force" ]; then
+		echo "Warning: Committing to a blocked repository. Assuming you know what are you doing." >&2
+	else
+		die "committing blocked: $(cat "$_git/blocked")"
+	fi
+fi
 
 [ "$ignorecache" ] || cg-object-id HEAD >/dev/null 2>&1 || die "no previous commit; use -C for the initial commit"
 

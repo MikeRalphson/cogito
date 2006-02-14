@@ -19,6 +19,16 @@
 # branch, use `cg-clone` to create a new tree for the new branch, or
 # `cg-switch` to also change your current tree to use the new branch.
 #
+# Note that during the time you are seeked out, commits, merges, and some
+# other operations are blocked, since the next `cg-seek` or `cg-reset`
+# invocation will happily wipe out their products silently. You can override
+# this in the `cg-commit` command by passing it a '-f' parameter - this
+# can be useful e.g. when you seeked to a commit which cannot be compiled
+# and you want to commit a compilation fix, as long as you are aware that
+# the commit of the fix will be rendered unreachable (you will be able to
+# get back to it only if you remember its ID) at the moment you do next
+# seek or a reset.
+#
 # Takes the target commit ID to seek to as an argument.
 #
 # NOTES
@@ -63,7 +73,7 @@ fi
 
 if [ "$seek_mode" = "away" ]; then
 	echo "$_git_head" >"$_git/head-name"
-	[ -s "$_git/blocked" ] || echo "seeked from $_git_head" >"$_git/blocked"
+	[ -s "$_git/blocked" ] || echo "seeked from $_git_head (some commands can be still forced)" >"$_git/blocked"
 	# We hold this in a temporary branch so that some of the core
 	# GIT tools (git checkout and git-fsck-objects) don't get confused.
 	echo "$dstcommit" >"$_git/refs/heads/cg-seek-point"
