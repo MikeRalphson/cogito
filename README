@@ -449,8 +449,8 @@ login to the remote server and do:
 	$ mkdir /srv/git
 	$ cg-admin-setuprepo -g gitcommit /srv/git/projectname.git
 
-Note: All the developers with "push" access must belong to the 'gitcommit'
-group and have a 002 umask set on the remote server.
+Note: All the developers with "push" access must then obviously belong
+to the 'gitcommit' group on the remote server.
 
 Going back to your Cogito working copy, run:
 
