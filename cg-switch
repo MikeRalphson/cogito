@@ -9,6 +9,11 @@
 # Terminology note: This command concerns local branches (also called
 # "heads"), not remote branches (those managed by `cg-branch-add`).
 #
+# Note that `cg-switch` is meant for permanent switching of your current
+# local branch (permanent in the sense that you are going to work on it;
+# you can obviously `cg-switch` again later). If you want to just causually
+# explore the current state of a particular branch of commit, use `cg-seek`.
+#
 # OPTIONS
 # -------
 # -f:: Enable overwriting of existing branches
@@ -90,7 +95,7 @@ done
 
 dsthead="${ARGS[0]}"
 [ -s "$_git/branches/$dsthead" ] &&
-	die "refusing to switch to a remote branch - see README for lengthy explanation"
+	die "refusing to switch to a remote branch - see README for lengthy explanation; use cg-seek to just quickly inspect it"
 
 [ "$(git-symbolic-ref HEAD)" != "refs/heads/$dsthead" ] || [ -n "$dstcommit" ] ||
 	die "already on branch $dsthead"
