@@ -38,6 +38,8 @@ rm -rf $RPM_BUILD_ROOT
 %{_bindir}/*
 %dir %{_libdir}/cogito
 %{_libdir}/cogito/*
+%dir %{_datadir}/cogito
+%{_datadir}/cogito/*
 %{_mandir}/man*/*
 %doc README COPYING Documentation/tutorial-script
 
