@@ -96,10 +96,10 @@ else
 
 		echo "Pushing $commit to $remgit#$rembranch" >&2
 		[ -x "$remgit/hooks/update" ] && "$remgit/hooks/update" "$rembranch" "$remid" "$commit"
-		echo "$commit" >"$remgit"/refs/heads/$rembranch
+		GIT_DIR="$remgit" git-update-ref refs/heads/"$rembranch" "$commit" "$remid" || die "push failed"
 		git-update-ref refs/heads/"$name" "$commit"
 		for tag in "${tags[@]}"; do
-			cat "$_git/refs/tags/$tag" >"$remgit/refs/tags/$tag"
+			GIT_DIR="$remgit" git-update-ref refs/tags/"$tag" "$(cat "$_git/refs/tags/$tag")"
 		done
 		[ -x "$remgit/hooks/post-update" ] && "$remgit/hooks/post-update" "$rembranch"
 	else
