@@ -34,7 +34,15 @@ case "$cmd" in
 esac
 
 exe="cg-$cmd"
-type -P "$exe" >/dev/null && exec "$exe" "$@"
+
+# Cut'n'pasted from cg-Xlib
+save_IFS="$IFS"; IFS=:
+for dir in $PATH; do
+	IFS="$save_IFS"
+	exefile="$dir/$exe"
+	[ -x "$exefile" ] && exec "$exefile" "$@"
+done
+IFS="$save_IFS"
 
 echo "cg: unknown command '$cmd' (try 'cg help')" >&2
 exit 1

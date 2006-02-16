@@ -565,6 +565,7 @@ check_tool()
 		# We do our own $PATH iteration as it's faster than the fork()
 		# of $(which), and this happens many times every time we
 		# execute some cg tool.
+		# Cut'n'pasted to the 'cg' source.
 		save_IFS="$IFS"; IFS=:
 		for dir in $PATH; do
 			IFS="$save_IFS"
