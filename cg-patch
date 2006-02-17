@@ -68,6 +68,8 @@ USAGE="cg-patch [-c] [-C COMMIT] [-pN] [-R] [-u] [OTHER_OPTIONS] < PATCH"
 
 . "${COGITO_LIB}"cg-Xlib || exit 1
 
+set -m # Force enable job control for our patch+wait pair
+
 redzone_reset()
 {
 	redzone=
