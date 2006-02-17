@@ -54,7 +54,7 @@ normalize_id()
 	fi
 
 	revid="$(git-rev-parse --verify "$id" 2>/dev/null)"
-	if [ "$revid" ]; then
+	if [ "$revid" ] && [ ${#revid} -eq 40 ] && [ "${revid//[0-9a-f]/}" = "" ]; then
 		id="$revid"
 		valid=1
 	fi
