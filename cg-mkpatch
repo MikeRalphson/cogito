@@ -158,10 +158,15 @@ if [ "$log_end" ]; then
 		pnum=001
 	fi
 
+	# Merge order (the nice one) is supported only when GIT is linked
+	# with OpenSSL.
+	ordering=--merge-order
+	git-rev-list $ordering HEAD ^HEAD >/dev/null 2>&1 || ordering=--topo-order
+
 	# tac is not POSIX :-(
 	# tac() { sed -n '1!G;$p;h'; } - too cryptic
 	tac() { perl -e 'print reverse <>'; }
-	git-rev-list --merge-order "$id2" "^$id1" | tac | while read id; do
+	git-rev-list $ordering "$id2" "^$id1" | tac | while read id; do
 		if [ "$outdir" ]; then
 			title="$(git-cat-file commit "$id" |
 			         sed -n '/^$/{n;
