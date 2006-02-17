@@ -1,9 +1,12 @@
 #!/usr/bin/env bash
 #
-# Change GIT branch's repository URL.
+# Change the remote branch repository URL.
 # Copyright (c) Petr Baudis, 2005
 #
 # Takes the branch name and new source location as parameters.
+#
+# Terminology note: This command concerns remote branches, not the local
+# ones (those managed by `cg-switch`).
 
 USAGE="cg-branch-chg BRANCH_NAME NEW_LOCATION"
 

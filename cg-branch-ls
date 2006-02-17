@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 #
-# List configured GIT branches.
+# List configured remote branches.
 # Copyright (c) Steven Cole 2005
 #
 # Print a listing of all known branches.
@@ -12,6 +12,9 @@
 # For example
 #
 #	origin  http://www.kernel.org/pub/scm/cogito/cogito.git
+#
+# Terminology note: This command concerns remote branches, not the local
+# ones (those managed by `cg-switch` and listed by `cg-status -g`).
 
 USAGE="cg-branch-ls"
 

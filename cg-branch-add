@@ -12,6 +12,9 @@
 # After you add a remote branch, you can `cg-fetch` from it to get the
 # latest changes on the branch, as they appeared in the remote repository.
 #
+# Terminology note: This command concerns remote branches, not the local
+# ones (those managed by `cg-switch`).
+#
 # The possible source location specifiers are:
 #
 # 1. Local path - note that fetching will hardlink the objects if possible.
