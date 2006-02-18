@@ -104,19 +104,15 @@ get_rsync()
 		shift
 	fi
 
-	rsync_flags_l=
-	if [ "$1" = "-u" ]; then # update
-		rsync_flags_l="--ignore-existing"
-		shift
-	fi
-
 	appenduri=
 	if [ "$1" = "-d" ]; then # directory
 		appenduri="/." # CowboyNeal
 		shift
 	fi
 
-	eval '"${RSYNC:-rsync}"' $RSYNC_FLAGS $rsync_flags_l -v --partial -Lr \
+	echo "${RSYNC:-rsync}" $RSYNC_FLAGS -v --partial -Lr \
+		"$1$appenduri" "$2$appenduri" $redir
+	eval '"${RSYNC:-rsync}"' $RSYNC_FLAGS -v --partial -Lr \
 		'"$1$appenduri"' '"$2$appenduri"' $redir | $filter
 	return ${PIPESTATUS[0]}
 }
@@ -125,9 +121,9 @@ fetch_rsync()
 {
 	if [ $verbose -ge 2 ]; then
 		# We must not pipe to prevent buffered I/O
-		get_rsync -s -u -d "$2/objects" "$_git_objects"
+		get_rsync -s -d "$2/objects" "$_git_objects"
 	else
-		get_rsync -s -u -d "$2/objects" "$_git_objects" | fetch_progress
+		get_rsync -s -d "$2/objects" "$_git_objects" | fetch_progress
 	fi
 	ret=${PIPESTATUS[0]}
 	if [ "$3" ] && [ "$ret" -eq "0" ]; then
@@ -149,7 +145,6 @@ get_http()
 	[ "$1" = "-b" ] && shift
 	[ "$1" = "-i" ] && shift
 	[ "$1" = "-s" ] && shift
-	[ "$1" = "-u" ] && die "INTERNAL ERROR: HTTP no-clobber not implemented"
 	[ "$1" = "-d" ] && die "INTERNAL ERROR: HTTP recursive not implemented"
 
 	src="$1"
@@ -182,7 +177,6 @@ get_local()
 
 	[ "$1" = "-i" ] && shift
 	[ "$1" = "-s" ] && shift
-	[ "$1" = "-u" ] && die "INTERNAL ERROR: local-fetch no-clobber not implemented"
 	[ "$1" = "-d" ] && die "INTERNAL ERROR: local-fetch recursive not implemented"
 
 	src="$1"
@@ -208,7 +202,7 @@ fetch_tags()
 	[ -d "$_git/refs/tags" ] || mkdir -p "$_git/refs/tags"
 
 	if [ "$get" = "get_rsync" ]; then
-		if ! $get -i -s -u -d "$uri/refs/tags" "$_git/refs/tags"; then
+		if ! $get -i -s -d "$uri/refs/tags" "$_git/refs/tags"; then
 			echo "unable to get tags list (non-fatal)" >&2
 			return $?
 		fi
