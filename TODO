@@ -51,8 +51,7 @@ cg-*patch should be pre-1.0.)
 	cg-mkpatch was overlooked for too long, while it could do a huge
 	number of cool things (after some cleanups, and probably factoring
 	out the common parts of cg-mkpatch, cg-log and cg-diff):
-	Preparing patch series, frontending git-request-fetch,
-	interfacing with email directly...
+	Frontending git-request-fetch, interfacing with email directly...
 
 * cg-patch improvements
 	* Again, an email interface - frontend to applymbox and stuff...
