@@ -38,7 +38,7 @@ done
 # Strip trailing / which is something GIT does not bear well.
 ARGS2=()
 for arg in "${ARGS[@]}"; do
-	ARGS2["${#ARGS2[@]}"]="$_git_relpath${arg%/}"
+	ARGS2[${#ARGS2[@]}]="$_git_relpath${arg%/}"
 done
 
 git-mv $force "${ARGS2[@]}"
