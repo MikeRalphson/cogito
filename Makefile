@@ -59,6 +59,7 @@ doc:
 
 test: all
 	$(MAKE) -C t/ all
+	$(MAKE) -C Documentation/ test
 
 
 
