@@ -1,8 +1,15 @@
 #!/bin/bash
 #
-# FIXME: This script has many GITisms. Some of them are unnecessary, while
-# some stem from missing Cogito features (especially no support for pushing
-# tags, and consequently no support for remotes/).
+# FIXME: This script has some GITisms. They stem from missing Cogito
+# features, such as exporting patches to mbox format, applying patches
+# from e-mail, merging multiple tags at once, verifying signed tags and
+# repacking the repository.
+#
+# Not that there would be anything wrong per se with this; GIT and Cogito
+# can interoperate fine (except few quite special situations; see the README
+# for details) and you can mix the commands; Cogito might never provide
+# wrappers for some of the GIT features which are nevertheless awesomely
+# useful, like `git bisect`.
 
 
 # This function is appended as "&& should_fail" to commands which should
@@ -34,7 +41,7 @@ cd $ALICE
 tar xf $TOP/0001-alice.tar
 cd rpn
 
-# Being a tidy girl, she places it under git
+# Being a tidy girl, she places it under Cogito
 echo "Alice's first version" | cg-init
 cg-tag -d "First ever version of RPN" rpn-0.1
  
@@ -108,8 +115,8 @@ cg-export ../rpn-0.3.tar.bz2
 ### Bob tells Alice of his changes, Alice prepares to get them.
 cd $ALICE/rpn
 
-git checkout -b bob
-git branch
+cg-switch -r master bob
+cg-status -g
 
 # Alice needs to register his remote branch
 cg-branch-add bobswork $BOB/rpn
@@ -163,14 +170,16 @@ cg-commit -m "Add proper header file for lexer" \
           -m "Update dependencies in Makefile"
 
 # Charlie emails the patch to Alice:
+# cg-mkpatch -d .. -r rpn-0.3..master
 git format-patch -o .. --mbox --signoff -r rpn-0.3
-      # Result is in $TOP/0014-charlie-email
+# Only git can create mbox formatted output
+# Compare the result to 0014-charlie-email
 
 
 ### Alice is busy meanwhile...
 cd $ALICE/rpn
 
-git checkout master
+cg-switch master
 
 patch -p1 -i $TOP/0015-alice-mod.patch
 
@@ -189,21 +198,23 @@ cg-push public
 ### Alice gets Charlie's fix, creates a new branch for his changes
 cd $ALICE/rpn
 
-git checkout master
-git checkout -b charlie rpn-0.3
-git branch
+cg-switch -r rpn-0.3 charlie
+cg-status -g
 
+# Check what's inside the patch.  There is no Cogito equivalent yet.
 git apply --stat $TOP/0014-charlie-email
 git apply --summary $TOP/0014-charlie-email
 git apply --check $TOP/0014-charlie-email
 
 # Everything looks OK
 git applymbox $TOP/0014-charlie-email
+# This doesn't work well yet
+# cg-patch < $TOP/0014-charlie-email
 
 ### Alice integrates the changes in the branches for the next release
 cd $ALICE/rpn
 
-git checkout master
+cg-switch master
 # Alice tries "git merge" instead of "cg-merge" since she wanted to
 # merge both branches at once, which "cg-merge" cannot do.
 git merge "Integrate changes from Bob and Charlie" master bob charlie \
