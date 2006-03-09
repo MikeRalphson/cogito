@@ -10,6 +10,10 @@
 # parameter is omitted, the basename of the source repository is used as the
 # destination.
 #
+# For detailed description of the location of the source repository format
+# (available protocols, specifying different remote branch, etc) please see
+# the `cg-branch-add` documentation.
+#
 # OPTIONS
 # -------
 # -l::	Symlink the object database when cloning locally

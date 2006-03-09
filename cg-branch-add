@@ -34,8 +34,9 @@
 #
 #
 # The URL can have a fragment part, which identifies a branch inside of
-# the remote repository. Otherwise, Cogito defaults to whatever branch
-# the repository's HEAD points to at the time of each fetch.
+# the remote repository (in the form "repoURL#branchname"). Otherwise,
+# Cogito defaults to whatever branch the repository's HEAD points to
+# at the time of each fetch.
 #
 # FILES
 # -----
