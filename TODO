@@ -8,6 +8,10 @@ Pre-1.0 stuff:
 (Note that I'm not sure whether the mail-related improvements to
 cg-*patch should be pre-1.0.)
 
+* Support for mass-cloning all remote refs at once
+	Requires first multi-origin support (if origin is a dir, fall
+	back to origin/master).
+
 * Tutorial
 
 * Cogito homepage
