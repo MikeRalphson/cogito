@@ -184,7 +184,7 @@ if { [ "$head" = "$base" ] || [ "$head" = "$_cg_orig_head" ]; } && [ ! "$squash"
 	# the HEAD forward.
 
 	echo "Fast-forwarding $base -> $branch" >&2
-	echo -e "\ton top of $head..." >&2
+	echo -e "\ton top of $head ..." >&2
 
 	[ "$verbose" ] && git-diff-tree --abbrev -r "$(cg-object-id -t "$base")" "$(cg-object-id -t "$branch")"
 
@@ -202,12 +202,12 @@ if [ ! "$squash" ]; then
 	[ -s "$_git/squashing" ] && die "cannot combine squashing and non-squashing merges"
 
 	echo "Merging $base -> $branch" >&2
-	echo -e "\tto $head..." >&2
+	echo -e "\tto $head ..." >&2
 
 	mergetype="tree"
 else
 	echo "Squashing $base -> $branch" >&2
-	echo -e "\ton top of $head..." >&2
+	echo -e "\ton top of $head ..." >&2
 
 	mergetype="squash"
 fi
