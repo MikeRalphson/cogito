@@ -3,13 +3,13 @@ CG_SRC=$(filter-out $(CG_IGNORE), $(wildcard ../cg*))
 
 PACKAGE=cogito
 
-MAN1_TXT=$(patsubst ../cg%,cg%.txt,$(CG_SRC))
-MAN7_TXT=$(PACKAGE).txt
+MAN1_TXT=$(patsubst ../cg%,cg%.1.txt,$(CG_SRC))
+MAN7_TXT=$(PACKAGE).7.txt
 
 DOC_HTML=$(patsubst %.txt,%.html,$(MAN1_TXT) $(MAN7_TXT)) introduction.html
 
-DOC_MAN1=$(patsubst %.txt,%.1,$(MAN1_TXT))
-DOC_MAN7=$(patsubst %.txt,%.7,$(MAN7_TXT))
+DOC_MAN1=$(patsubst %.txt,%,$(MAN1_TXT))
+DOC_MAN7=$(patsubst %.txt,%,$(MAN7_TXT))
 
 prefix=$(HOME)
 bin=$(prefix)/bin
@@ -56,28 +56,43 @@ install-html: html
 	$(INSTALL) $(DOC_HTML) $(DESTDIR)/$(htmldir)
 
 clean:
-	rm -f *.xml *.html *.1 *.7 cg*.txt $(PACKAGE).txt
+	rm -f *.xml *.html *.1 *.7 cg*.[17].txt $(PACKAGE).7.txt
 
 .PRECIOUS: cg%.txt
 
 introduction.html: ../README
 	asciidoc -b xhtml11 -d article -f asciidoc.conf -o $@ $<
 
-%.html : %.txt
+%.1.html : %.1.txt
 	asciidoc -b xhtml11 -d manpage -f asciidoc.conf $<
 
-%.1 %.7 : %.xml
-	xmlto man $<
+%.7.html : %.7.txt
+	asciidoc -b xhtml11 -d manpage -f asciidoc.conf $<
 
-%.xml : %.txt
+%.html : %.txt
+	asciidoc -b xhtml11 -d article -f asciidoc.conf -o $@ $<
+
+%.1.xml : %.1.txt
 	asciidoc -b docbook -d manpage -f asciidoc.conf $<
 
-$(PACKAGE).txt : make-$(PACKAGE)-asciidoc
+%.7.xml : %.7.txt
+	asciidoc -b docbook -d manpage -f asciidoc.conf $<
+
+%.xml : %.txt
+	asciidoc -b docbook -d article -f asciidoc.conf $<
+
+%.1 : %.1.xml
+	xmlto man $<
+
+%.7 : %.7.xml
+	xmlto man $<
+
+$(PACKAGE).7.txt : make-$(PACKAGE)-asciidoc
 	./make-$(PACKAGE)-asciidoc > $@
 
 # It seems that cg%.txt won't match this so use an explicit rule
-cg.txt : ../cg make-cg-asciidoc
+cg.1.txt : ../cg make-cg-asciidoc
 	CGPACKAGE=$(PACKAGE) ./make-cg-asciidoc $< > $@
 
-cg-%.txt : ../cg-% make-cg-asciidoc
+cg-%.1.txt : ../cg-% make-cg-asciidoc
 	CGPACKAGE=$(PACKAGE) ./make-cg-asciidoc $< > $@
