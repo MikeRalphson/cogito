@@ -179,7 +179,7 @@ if [ "$base" = "$branch" ]; then
 	exit 0
 fi
 
-if { [ "$head" = "$base" ] || [ "$head" = "$_cg_orig_head" ]; } && [ ! "$squash" ]; then
+if { [ "$head" = "$base" ] || [ "$head" = "$_cg_orig_head" ]; } && [ ! "$squash" ] && [ ! -s "$_git/merging" ]; then
 	# No need to do explicit merge with a merge commit; just bring
 	# the HEAD forward.
 
