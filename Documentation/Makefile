@@ -11,6 +11,8 @@ DOC_HTML=$(patsubst %.txt,%.html,$(MAN1_TXT) $(MAN7_TXT)) introduction.html
 DOC_MAN1=$(patsubst %.txt,%,$(MAN1_TXT))
 DOC_MAN7=$(patsubst %.txt,%,$(MAN7_TXT))
 
+DOC_PDF=$(patsubst %.txt,%.pdf,$(MAN1_TXT) $(MAN7_TXT)) introduction.pdf
+
 prefix=$(HOME)
 bin=$(prefix)/bin
 mandir=$(prefix)/man
@@ -35,14 +37,16 @@ all: html man txt
 
 html: $(DOC_HTML)
 
-
 man: man1 man7
 man1: $(DOC_MAN1)
 man7: $(DOC_MAN7)
 
+pdf: $(DOC_PDF)
+
 txt: txt1 txt7
 txt1: $(MAN1_TXT)
 txt7: $(MAN7_TXT)
+
 
 install: man txt
 	$(INSTALL) -m755 -d $(DESTDIR)/$(txtdir)
@@ -56,12 +60,15 @@ install-html: html
 	$(INSTALL) $(DOC_HTML) $(DESTDIR)/$(htmldir)
 
 clean:
-	rm -f *.xml *.html *.1 *.7 cg*.[17].txt $(PACKAGE).7.txt
+	rm -f *.xml *.html *.pdf *.1 *.7 cg*.[17].txt $(PACKAGE).7.txt
 
 .PRECIOUS: cg%.txt
 
 introduction.html: ../README
 	asciidoc -b xhtml11 -d article -f asciidoc.conf -o $@ $<
+
+introduction.xml: ../README
+	asciidoc -b docbook -d article -f asciidoc.conf -o $@ $<
 
 %.1.html : %.1.txt
 	asciidoc -b xhtml11 -d manpage -f asciidoc.conf $<
@@ -86,6 +93,9 @@ introduction.html: ../README
 
 %.7 : %.7.xml
 	xmlto man $<
+
+%.pdf : %.xml
+	docbook2pdf $<
 
 $(PACKAGE).7.txt : make-$(PACKAGE)-asciidoc
 	./make-$(PACKAGE)-asciidoc > $@
