@@ -9,6 +9,11 @@
 # The destination can be either a `.tar`, `.tar.gz`, `.tar.bz2` or `.tgz`
 # for generating a tarball. Other destination specifiers are assumed
 # to be directory names, and the tree is exported to the given directory.
+#
+# OPTIONS
+# -------
+# -r TREE_ID:: Specify the tree version to export
+#	Base the export on the given tree.
 
 USAGE="cg-export [-r TREE_ID] DESTFILE"
 _git_requires_root=1
