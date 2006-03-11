@@ -4,14 +4,14 @@ CG_SRC=$(filter-out $(CG_IGNORE), $(wildcard ../cg*))
 PACKAGE=cogito
 
 MAN1_TXT=$(patsubst ../cg%,cg%.1.txt,$(CG_SRC))
-MAN7_TXT=$(PACKAGE).7.txt
+MAN7_TXT=$(PACKAGE).7.txt cg-ref.7.txt
 
-DOC_HTML=$(patsubst %.txt,%.html,$(MAN1_TXT) $(MAN7_TXT)) introduction.html
+DOC_HTML=$(patsubst %.txt,%.html,$(MAN1_TXT) $(MAN7_TXT)) cg-ref.html introduction.html
 
 DOC_MAN1=$(patsubst %.txt,%,$(MAN1_TXT))
 DOC_MAN7=$(patsubst %.txt,%,$(MAN7_TXT))
 
-DOC_PDF=$(patsubst %.txt,%.pdf,$(MAN1_TXT) $(MAN7_TXT)) introduction.pdf
+DOC_PDF=$(patsubst %.txt,%.pdf,$(MAN1_TXT) $(MAN7_TXT)) cg-ref.pdf introduction.pdf
 
 prefix=$(HOME)
 bin=$(prefix)/bin
@@ -99,6 +99,9 @@ introduction.xml: ../README
 
 $(PACKAGE).7.txt : make-$(PACKAGE)-asciidoc
 	./make-$(PACKAGE)-asciidoc > $@
+
+cg-ref.7.txt : cg-ref.txt make-cg-ref-asciidoc
+	CGPACKAGE=$(PACKAGE) ./make-cg-ref-asciidoc $< > $@
 
 # It seems that cg%.txt won't match this so use an explicit rule
 cg.1.txt : ../cg make-cg-asciidoc

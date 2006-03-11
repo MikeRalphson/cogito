@@ -1,0 +1,70 @@
+#!/usr/bin/env bash
+#
+# Generate asciidoc manpage markup from Cogito quick reference file.
+# Copyright (c) Jonas Fonseca, 2006
+#
+# Takes the path to the reference file. Prints the manpage to stdout.
+
+PACKAGE=${CGPACKAGE:-cogito}
+
+ref=$1
+
+cat <<__END__
+cg-ref(7)
+=========
+
+NAME
+----
+cg-ref - Cogito quick reference
+
+SYNOPSIS
+--------
+A list of frequently used commands grouped with related commands.
+
+DESCRIPTION
+-----------
+
+__END__
+
+sed '
+	0,/^$/d
+	/^`---/d
+	/frame="none"/,1d
+	s/\\$//
+	s/[*]\([^*]*\)[*]/\1/g
+	s/[`]\([^`]*\)[`]/\1/g
+	s/['\'']\([^'\'']*\)['\'']/\1/g
+' < "$ref" | \
+while read line; do
+	col1=$(echo "$line" | cut -f 1)
+	case "$line" in
+	*":")
+		echo "$line"
+		echo "$line" | sed "s/[^~]/~/g"
+		echo
+		echo "[verse]"
+		continue
+		;;
+	"-----"*|"")
+		echo "$line" | sed 's/-/./g'
+		continue
+		;;
+	"{cg-refopt}"*)
+		col1=$(echo "$col1" | sed 's/.*cg-refopt}/   /')
+		;;
+	esac
+	col2=$(echo "$line" | sed 's/.*[	]\+//')
+	printf "%-30s  %s\n" "$col1" "$col2"
+done
+
+cat << __END__
+
+COPYRIGHT
+---------
+Copyright (C) Jonas Fonseca, 2006.
+
+SEE ALSO
+--------
+gitlink:cg-ref[7] is part of gitlink:${PACKAGE}[7],
+a toolkit for managing gitlink:git[7] trees.
+__END__
