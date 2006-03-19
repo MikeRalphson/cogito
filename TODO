@@ -24,6 +24,10 @@ cg-*patch should be pre-1.0.)
 
 	Includes merge-order cg-log and cg-diff checking for renames.
 
+* Support branches containing slashes properly
+
+* Support cg-clone -a for cloning all branches
+
 * Show only first 12 (or so) nibbles of the hashes everywhere
 	Even this might be too much, but more than this is really useless
 	for anyone remotely human. And it's less scary, too.
