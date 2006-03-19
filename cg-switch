@@ -31,7 +31,7 @@
 #	will make cg-switch to only create or update the branch, but
 #	leave your working copy alone.
 #
-# -r COMMIT_ID:: Branch off the given COMMIT_ID
+# -r COMMIT_ID:: Branch off the given COMMIT_ID, create branch if non-existing
 #	Point the branch at the given commit. Required when creating
 #	a new branch (use "HEAD" if you want to just base the new
 #	head on the current commit). When switching to an existing
