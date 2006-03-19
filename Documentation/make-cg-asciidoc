@@ -112,8 +112,31 @@ $DESCRIPTION
 
 OPTIONS
 -------
-$OPTIONS
+
+--
+__END__
+
+# Only indent the first paragraph of multi-paragraph list items.
+multipara=
+echo "$OPTIONS" | while read line; do
+	case "$line" in
+	*::)
+		multipara=
+		;;
+	"")
+		multipara=t
+		;;
+	*)
+		[ "$multipara" ] || line="	$line"
+	esac
+
+	echo "$line"
+done
+
+cat <<__END__
+
 $HELP_OPTIONS
+--
 
 $MISC
 
