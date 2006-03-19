@@ -1,5 +1,5 @@
 /^#include "stack\.h"/+1d
 /^#include "lexer\.h"/+1,/^#include "stack\.h"/d
-/^<<<<<<< rpn\.c/-1,/^>>>>>>> \.merge_file_/d
+/^<<<<<<< master/-1,/^>>>>>>> origin/d
 w
 q

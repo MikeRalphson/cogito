@@ -1,7 +1,7 @@
-/^<<<<<<< Makefile/d
+/^<<<<<<< master/d
 /^rpn\.o:/s/\.h.*$/.h lexer.h/
 /^lexer\.o:/s/:.*$/: lexer.h/
-/^=======/,/^>>>>>>> \.merge_file_/d
+/^=======/,/^>>>>>>> charlie/d
 w
 q
 

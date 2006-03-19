@@ -127,13 +127,13 @@ cg-update bobswork && should_fail
 # difference between her version and Bob's:
 
 #: ...
-#: <<<<<<< rpn.c
+#: <<<<<<< bob
 #: extern double pop(void);
 #: extern void push(double);
 #: extern void clear(void);
 #: 
 #: =======
-#: >>>>>>> .merge_file_5wCNZT
+#: >>>>>>> bobswork
 #: extern int getsym(void);
 #: ...
  
@@ -246,7 +246,7 @@ cg-merge charlie && should_fail
 # Merge conflicts!
 
 #: ...
-#: <<<<<<< Makefile
+#: <<<<<<< master
 #:         $(CC) $(CFLAGS) $^ -lm -o $@
 #:        
 #: rpn.o: stack.h
@@ -257,12 +257,12 @@ cg-merge charlie && should_fail
 #:                
 #: rpn.o lexer.o: lexer.h
 #: 
-#: >>>>>>> .merge_file_huuX9C
+#: >>>>>>> charlie
 
 ed Makefile < $TOP/0018-alice-charlie-fixup1.ed
 
 #: ...
-#: <<<<<<< rpn.c
+#: <<<<<<< master
 #: extern int getsym(void);
 #: 
 #: =======
@@ -270,7 +270,7 @@ ed Makefile < $TOP/0018-alice-charlie-fixup1.ed
 #: extern void push(double);
 #: extern void clear(void);
 #:
-#: >>>>>> .merge_file_qtv6VA
+#: >>>>>> charlie
 #: ...
 
 ed rpn.c    < $TOP/0019-alice-charlie-fixup2.ed
@@ -284,7 +284,7 @@ cg-add CONTRIBUTORS
 cg-commit -m "Add CONTRIBUTORS"
 
 # Wrong file name...
-git rename CONTRIBUTORS CREDITS
+cg-mv CONTRIBUTORS CREDITS
 cg-commit -m "Rename CONTRIBUTORS to CREDITS"
 
 
@@ -316,10 +316,11 @@ git verify-tag rpn-0.4 && should_fail
 echo "Merge with 0.4" | cg-merge && should_fail
 
 # Merge conflicts in Makefile, rpn.c
-# Mishandled stack.h
 ed Makefile < $TOP/0021-bob-alice-fixup1.ed
 ed rpn.c    < $TOP/0022-bob-alice-fixup2.ed
-ed stack.h  < $TOP/0023-bob-alice-fixup3.ed
+# Resolve conflicting addition of two versions of stack.h
+rm stack.h~master
+mv stack.h~origin stack.h
 cg-add stack.h
 
 # Now commit the whole
