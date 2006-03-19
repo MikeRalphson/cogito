@@ -7,16 +7,43 @@
 # from `stdin`. If the commit message is not modified the commit will be
 # aborted.
 #
-# By default, the commit is recorded as made by you, but you can change
-# that - useful if you are e.g. applying a patch submitted by someone
-# else. See the ENVIRONMENT section below.
-#
 # Note that you can undo a commit by the `cg-admin-uncommit` command,
 # but that is possible only under special circumstances. See the CAVEATS
 # section of its documentation.
 #
+# Commit author
+# ~~~~~~~~~~~~~
+# Each commit has two user identification fields - commit author and committer.
+# By default, it is recorded that you authored the commit, but it is considered
+# a good practice to change this to the actual author of the change if you are
+# merely applying someone else's patch. It is always recorded that you were the
+# patch committer.
+#
+# The commit author is determined by examining various sources in this order:
+#
+# * '--author' (see OPTIONS)
+#
+# * 'GIT_AUTHOR_*' (see ENVIRONMENT)
+#
+# * '.git/author' (see FILES)
+#
+# * System information: The author name defaults to the GECOS field of your
+#   '/etc/passwd' entry, which is taken almost verbatim. The author email
+#   defaults to your 'username@hostname.domainname' (but you should change this
+#   to the real email address you use if it is any different).
+#
 # OPTIONS
 # -------
+# --author AUTHOR_STRING:: Set the author information according to the argument
+#	Set the commit author information according to the argument instead
+#	of your environment, .git/author, or user information.
+#
+#	The 'AUTHOR_STRING' format is `Author Name <author@email> Date`. The
+#	author name and date is optional, only the email is required to be
+#	always present (e.g. '--author "<pasky@ucw.cz>"' will use the current
+#	date and the real name set for your system account (usually in
+#	the gecos field), but a different email address).
+#
 # -c COMMIT_ID:: Copy author info and commit message from COMMIT_ID
 #	Copy the commit from a given commit ID (that is the author information
 #	and the commit message - NOT committer information). This option
@@ -80,8 +107,8 @@
 #	If exists, it should be in the format
 #		Person Name <email@addy>
 #	(both parts are optional) and the GIT_AUTHOR_* environment variables
-#	will be set accordingly if they are not present in the environment
-#	yet.
+#	will be set accordingly - if they are not present in the environment
+#	yet!
 #
 # $GIT_DIR/commit-template::
 #	If the file exists it will be used as a template when creating
@@ -101,15 +128,14 @@
 #
 # ENVIRONMENT VARIABLES
 # ---------------------
+# See the 'Commit author' section above for details about the name/email/date
+# environment variables meaning and default values.
+#
 # GIT_AUTHOR_NAME::
-#	Author's name. This defaults to the GECOS field of your /etc/passwd
-#	entry, which is taken almost verbatim. (Note that this is carried
-#	over by GIT, not Cogito, and may change in the future GIT versions.)
+#	Author's name.
 #
 # GIT_AUTHOR_EMAIL::
-#	Author's e-mail address. This defaults to your
-#	username@hostname.domainname, but you should change it to your
-#	real email you use if it is different.
+#	Author's e-mail address.
 #
 # GIT_AUTHOR_DATE::
 #	Date, useful when applying patches submitted over e-mail.
@@ -129,18 +155,6 @@
 # EDITOR::
 #	The editor used for entering revision log information.
 #
-# Commit author
-# ~~~~~~~~~~~~~
-# Some general notes about the GIT_AUTHOR_* variables. They describe
-# who is the author of the change being committed. It defaults to you,
-# but it is considered good practice to change this to the actual
-# author of the change if the patch was submitted by someone else etc.
-#
-# In the shell, you can set those variables just for a single
-# `cg-commit` call conveniently by doing e.g.:
-#
-#	GIT_AUTHOR_NAME="Pav E. Lma" cg-commit -m"Check in stuff."
-#
 # CONFIGURATION VARIABLES
 # -----------------------
 # The following GIT configuration file variables are recognized:
@@ -159,13 +173,22 @@ USAGE="cg-commit [-m MESSAGE]... [-e] [-c COMMIT_ID] [OTHER_OPTIONS] [FILE]... [
 ### the time. Someone should clean it up. :/ --pasky
 
 
+load_author()
+{
+	local astr="$1" force="$2"
+	if [ "$force" -o -z "$GIT_AUTHOR_NAME" ] && echo "$astr" | grep -q '^[^< ]'; then
+		export GIT_AUTHOR_NAME="$(echo "$astr" | sed 's/ *<.*//')"
+	fi
+	if [ "$force" -o -z "$GIT_AUTHOR_EMAIL" ] && echo "$astr" | grep -q '<.*>'; then
+		export GIT_AUTHOR_EMAIL="$(echo "$astr" | sed 's/.*<\(.*\)>.*/\1/')"
+	fi
+	if [ "$force" -o -z "$GIT_AUTHOR_DATE" ] && echo "$astr" | grep -q '[^> ]$'; then
+		export GIT_AUTHOR_DATE="$(echo "$astr" | sed 's/.*> *//')"
+	fi
+}
+
 if [ -s "$_git/author" ]; then
-	if [ -z "$GIT_AUTHOR_NAME" ] && grep -q '^[^<]' "$_git/author"; then
-		export GIT_AUTHOR_NAME="$(sed 's/ *<.*//' "$_git/author")"
-	fi
-	if [ -z "$GIT_AUTHOR_EMAIL" ] && grep -q '<.*>' "$_git/author"; then
-		export GIT_AUTHOR_EMAIL="$(sed 's/.*<\(.*\)>.*/\1/' "$_git/author")"
-	fi
+	load_author "$(cat "$_git/author")"
 fi
 if [ -z "$GIT_AUTHOR_NAME" -o -z "$GIT_AUTHOR_EMAIL" ]; then
 	# Always pre-fill those so that the user can modify them in the
@@ -188,7 +211,9 @@ msgs=()
 msgfile=
 quiet=
 while optparse; do
-	if optparse -C; then
+	if optparse --author=; then
+		load_author "$OPTARG" force
+	elif optparse -C; then
 		ignorecache=1
 	elif optparse -N; then
 		missingok=--missing-ok
