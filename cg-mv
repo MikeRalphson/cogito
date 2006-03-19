@@ -35,7 +35,8 @@ done
 
 [ -n "${ARGS[*]}" ] || usage
 
-# Strip trailing / which is something GIT does not bear well.
+# Strip trailing / which is something GIT does not bear well, as well as
+# some relpath issues. Allegedly fixed in GIT in 90924d55c... (post-1.2.4)
 ARGS2=()
 for arg in "${ARGS[@]}"; do
 	ARGS2[${#ARGS2[@]}]="$_git_relpath${arg%/}"
