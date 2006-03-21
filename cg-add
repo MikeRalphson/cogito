@@ -49,14 +49,19 @@ done
 TMPFILE="$(mktemp -t gitadd.XXXXXX)" || exit 1
 error=
 for file in "${ARGS[@]}"; do
-	absfile="$_git_relpath$file"
-	if [ -d "$absfile" ]; then
+	file="${file%/}"
+	absfile="$(echo "$_git_relpath$file" | normpath)"
+	if [ -d "$absfile" ] || [ -z "$absfile" ]; then
 		if [ "$recursive" ]; then
 			list_untracked_files exclude nosquashdirs | tr '\0' '\n' |
-				while IFS=$'' read path; do
-					[ x"${path#$absfile}" != x"$path" ] &&
-						echo "$file${path#$absfile}" >>"$TMPFILE"
-				done
+				if [ -z "$absfile" ]; then # adding everything
+					cat >>"$TMPFILE"
+				else
+					while IFS=$'' read path; do
+						[ x"${path#$absfile/}" != x"$path" ] &&
+							echo "$file${path#$absfile}" >>"$TMPFILE"
+					done
+				fi
 		else
 			echo "$file is a directory (use cg-add -r?)" >&2
 			error=1
