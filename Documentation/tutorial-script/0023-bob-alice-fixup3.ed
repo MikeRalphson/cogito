@@ -1,4 +1,0 @@
-/^#endif/s;^#endif.*;#endif /* STACK_H */;
-w
-q
-

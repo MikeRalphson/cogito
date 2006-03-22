@@ -222,12 +222,13 @@ git merge "Integrate changes from Bob and Charlie" master bob charlie \
 
 # Automatic 3-way merge fails! Have to do it step by step
 
+cg-reset
 cg-merge bob && should_fail
 
 # Merge fails:
 
 #: ...
-#: <<<<<<< Makefile
+#: <<<<<<< master
 #:	$(CC) $(CFLAGS) $^ -lm -o $@
 #: =======
 #:	$(CC) $(CFLAGS) $^ -o $@
@@ -235,7 +236,7 @@ cg-merge bob && should_fail
 #: rpn.o: stack.h
 #: stack.o: stack.h
 #: lexer.o:	
-#: >>>>>>> .merge_file_iNhznP
+#: >>>>>>> bob
 
 ed Makefile < $TOP/0017-alice-bob-fixup.ed
 
@@ -313,18 +314,7 @@ cg-fetch
 git verify-tag rpn-0.4 && should_fail
 
 # Everything's OK, integrate the changes
-echo "Merge with 0.4" | cg-merge && should_fail
-
-# Merge conflicts in Makefile, rpn.c
-ed Makefile < $TOP/0021-bob-alice-fixup1.ed
-ed rpn.c    < $TOP/0022-bob-alice-fixup2.ed
-# Resolve conflicting addition of two versions of stack.h
-rm stack.h~master
-mv stack.h~origin stack.h
-cg-add stack.h
-
-# Now commit the whole
-cg-commit -m "Merge with 0.4"
+cg-merge
 
 # Great, we are done.
 trap - exit
