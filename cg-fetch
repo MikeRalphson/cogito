@@ -288,7 +288,7 @@ orig_head=
 
 packed_transport=
 
-if echo "$uri" | grep -q "^http://"; then
+if echo "$uri" | grep -q "^https\?://"; then
 	get=get_http
 	fetch=fetch_http
 elif echo "$uri" | grep -q "^git+ssh://"; then

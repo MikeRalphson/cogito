@@ -68,7 +68,7 @@ if echo "$uri" | grep -q '#'; then
 fi
 sprembranch=":refs/heads/$rembranch"
 
-if [ "${uri#http://}" != "$uri" ]; then
+if [ "${uri#http://}" != "$uri" -o "${uri#https://}" != "$uri" ]; then
 	# git-http-push doesn't like $sprembranch
 	git-http-push "$uri/" "$locbranch:$rembranch"
 elif [ "${uri#git+ssh://}" != "$uri" ]; then

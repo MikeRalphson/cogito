@@ -27,10 +27,12 @@
 #
 # 3. HTTP - `http://host/path`
 #
-# 4. SSH - `git+ssh://host/path` or `host:path` (the latter can change);
+# 4. HTTPS - `https://host/path`
+#
+# 5. SSH - `git+ssh://host/path` or `host:path` (the latter can change);
 #    note that the path must be absolute in the first case.
 #
-# 5. GIT-Daemon - `git://host/path` - this won't clone tags.
+# 6. GIT-Daemon - `git://host/path` - this won't clone tags.
 #
 #
 # The URL can have a fragment part, which identifies a branch inside of
