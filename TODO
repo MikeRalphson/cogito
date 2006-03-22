@@ -75,6 +75,14 @@ cg-*patch should be pre-1.0.)
 	  but I think it's good to have internal support for the
 	  basic stuff. (Get inspired in git-commit.)
 
+* cg-shelf - shelve changes temporarily
+	This saves your current uncommitted changes, removes them from the
+	tree, opens editor with the diff of those changes and lets you edit
+	it; then it applies only the diff on the tree and lets you commit
+	it or whatever. After committing, cg-unshelf or cg-shelf -u or
+	whatever will restore the state of the tree before cg-shelf was
+	called.
+
 
 Post 1.0:
 
