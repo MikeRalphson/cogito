@@ -86,6 +86,12 @@
 #	might not actually _have_ any object database. This option is
 #	normally not interesting.
 #
+# -p, --review:: Show and enable editing of changes being committed
+#	Show changes being commited as a patch appended to the commit message
+#	buffer. Changes made to the patch will be reapplied before completing
+#	the commit. This only makes sense if you are going to edit the commit
+#	message interactively.
+#
 # -q:: Be very very quiet
 #	Be quiet in case there's "nothing to commit", and silently exit
 #	returning success. In a sense, this is the opposite to '-f'.
@@ -94,12 +100,6 @@
 #	Add Signed-off-by line at the end of the commit message.
 #	Optionally, specify the exact name and email to sign off with by
 #	passing: `--signoff="Author Name <user@example.com>"`.
-#
-# --review:: Show and enable editing of changes being committed
-#	Show changes being commited as a patch appended to the commit message
-#	buffer. Changes made to the patch will be reapplied before completing
-#	the commit. This only makes sense if you are going to edit the commit
-#	message interactively.
 #
 # FILES
 # -----
@@ -227,7 +227,7 @@ while optparse; do
 		force=1
 	elif optparse -q; then
 		quiet=1
-	elif optparse --review; then
+	elif optparse -p || optparse --review; then
 		review=1
 	elif optparse -s || optparse --signoff; then
 		[ "$signoff" ] || signoff="$(git-var GIT_AUTHOR_IDENT | sed 's/> .*/>/')"
