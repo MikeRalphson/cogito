@@ -140,7 +140,7 @@ git-rev-list --topo-order HEAD $startrev | tac >../revs
 commits=$(cat ../revs | wc -l)
 
 i=0
-for commit in $(cat ../revs); do
+while read commit; do
 	i=$((i+1))
 	echo -n "$commit ($i/$commits) "
 
@@ -172,11 +172,10 @@ for commit in $(cat ../revs); do
 		eval "$filter_msg" | \
 		git-commit-tree $(git-write-tree) $parentstr | \
 		tee ../map/$commit
-done
+done <../revs
 
-
-git-update-ref refs/heads/"$dstbranch" $(cat ../map/$commit)
-cd ..
+git-update-ref refs/heads/"$dstbranch" $(cat ../map/$(tail -n 1 ../revs))
+cd ../..
 rm -rf "$tempdir"
 echo "Rewritten history saved to the $dstbranch branch"
 
