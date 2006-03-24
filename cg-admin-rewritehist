@@ -147,9 +147,10 @@ while read commit; do
 	git-read-tree -i -m $commit
 
 	export GIT_COMMIT=$commit
+	git-cat-file commit "$commit" >../commit
 
-	eval "$(git-cat-file commit "$commit" | pick_author)"
-	eval "$(git-cat-file commit "$commit" | pick_id committer COMMITTER)"
+	eval "$(pick_author <../commit)"
+	eval "$(pick_id committer COMMITTER <../commit)"
 	eval "$filter_env"
 
 	if [ "$filter_tree" ]; then
@@ -168,7 +169,7 @@ while read commit; do
 		parentstr="$parentstr -p $(cat ../map/$parent)"
 	done
 
-	git-cat-file commit "$commit" | sed -e '1,/^$/d' | \
+	sed -e '1,/^$/d' <../commit | \
 		eval "$filter_msg" | \
 		git-commit-tree $(git-write-tree) $parentstr | \
 		tee ../map/$commit
