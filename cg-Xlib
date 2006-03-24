@@ -277,32 +277,38 @@ list_untracked_files()
 	git-ls-files -z --others $listdirs "${EXCLUDE[@]}"
 }
 
-pick_author()
+pick_id()
 {
-	local pick_author_script='
-		/^author /{
+	local lid="$1" uid="$2"
+	local pick_id_script='
+		/^'$lid' /{
 			s/'\''/'\''\\'\'\''/g
 			h
-			s/^author \([^<]*\) <[^>]*> .*$/\1/
+			s/^'$lid' \([^<]*\) <[^>]*> .*$/\1/
 			s/'\''/'\''\'\'\''/g
-			s/.*/export GIT_AUTHOR_NAME='\''&'\''/p
+			s/.*/export GIT_'$uid'_NAME='\''&'\''/p
 
 			g
-			s/^author [^<]* <\([^>]*\)> .*$/\1/
+			s/^'$lid' [^<]* <\([^>]*\)> .*$/\1/
 			s/'\''/'\''\'\'\''/g
-			s/.*/export GIT_AUTHOR_EMAIL='\''&'\''/p
+			s/.*/export GIT_'$uid'_EMAIL='\''&'\''/p
 
 			g
-			s/^author [^<]* <[^>]*> \(.*\)$/\1/
+			s/^'$lid' [^<]* <[^>]*> \(.*\)$/\1/
 			s/'\''/'\''\'\'\''/g
-			s/.*/export GIT_AUTHOR_DATE='\''&'\''/p
+			s/.*/export GIT_'$uid'_DATE='\''&'\''/p
 
 			q
 		}
 	'
-	LANG=C LC_ALL=C sed -ne "$pick_author_script"
-	# Ensure non-empty author name.
-	echo "[ -z \"\$GIT_AUTHOR_NAME\" ] && export GIT_AUTHOR_NAME=\"\${GIT_AUTHOR_EMAIL%%@*}\""
+	LANG=C LC_ALL=C sed -ne "$pick_id_script"
+	# Ensure non-empty id name.
+	echo "[ -z \"\$GIT_${uid}_NAME\" ] && export GIT_${uid}_NAME=\"\${GIT_${uid}_EMAIL%%@*}\""
+}
+
+pick_author()
+{
+	pick_id author AUTHOR
 }
 
 # Usage: showdate SECONDS TIMEZONE [FORMAT]
