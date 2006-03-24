@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 #
 # Rewrite GIT revision history.
-# Copyright (c) Petr Baudis, 2005
+# Copyright (c) Petr Baudis, 2006
 #
 # Lets you rewrite GIT revision history by creating a new branch from
 # your current branch by applying custom filters on each revision.
