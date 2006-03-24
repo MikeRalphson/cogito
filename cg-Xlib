@@ -138,6 +138,18 @@ readlink()
 	return 0
 }
 
+# tac is not POSIX :-(
+# tac() { sed -n '1!G;$p;h'; } - too cryptic
+tac()
+{
+	if [ "$has_tac" ]; then
+		"$has_tac" "$@"
+		return
+	fi
+
+	perl -e 'print reverse <>'
+}
+
 # echo PATH | normpath
 # Normalize the path, handling and removing any superfluous .. and .
 # elements. Typically
@@ -587,6 +599,7 @@ if ! [ "$__cogito_subsequent" ]; then
 	check_tool stat '"$cmd" -c %s / >/dev/null' stat gnustat gstat
 	check_tool readlink '"$cmd" -f / >/dev/null' readlink
 	check_tool gnudate '"$cmd" -Rud "1970-01-01 UTC" >/dev/null' date gnudate gdate
+	check_tool tac 'tac </dev/null >/dev/null' tac
 fi
 
 
