@@ -81,11 +81,11 @@
 # Suppose you want to remove a file (containing confidental information
 # or copyright violation) from all commits:
 #
-#	cg-admin-rewritehist --tree-filter 'cg-rm -f filename' newbranch
+#	cg-admin-rewritehist --tree-filter 'rm filename' newbranch
 #
 # A significantly faster version:
 #
-#	cg-admin-rewritehist --index-filter 'git-update-index --force-remove filename' newbranch
+#	cg-admin-rewritehist --index-filter 'git-update-index --remove filename' newbranch
 #
 # Now, you will get the rewritten history saved in the branch 'newbranch'
 # (your current branch is left untouched).
