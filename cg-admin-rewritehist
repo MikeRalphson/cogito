@@ -105,7 +105,7 @@ while optparse; do
 	if optparse -d=; then
 		tempdir="$OPTARG"
 	elif optparse -r=; then
-		startrev="^$OPTARG $OPTARG"
+		startrev="^$OPTARG $OPTARG $startrev"
 	elif optparse --env-filter=; then
 		filter_env="$OPTARG"
 	elif optparse --tree-filter=; then
