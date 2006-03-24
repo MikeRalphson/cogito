@@ -48,7 +48,7 @@ DESCRIPTION=
 OPTIONS=
 MISC=
 
-section=$(echo "$BODY" | sed -n '1,/^-[-]*-$/p')
+section=$(echo "$BODY" | sed -n '1,/^[-~][-~]*[-~]$/p')
 section_lines=$(echo "$section" | wc -l)
 lines=$(echo "$BODY" | wc -l)
 
@@ -62,7 +62,7 @@ else
 
 	if [ "$(echo "$BODY" | head -n 1)" = "OPTIONS" ]; then
 		BODY=$(echo "$BODY" | sed -n '3,$p')
-		section=$(echo "$BODY" | sed -n "1,/^-[-]*-\$/p")
+		section=$(echo "$BODY" | sed -n "1,/^[-~][-~]*[-~]\$/p")
 		section_lines=$(echo "$section" | wc -l)
 		lines=$(echo "$BODY" | wc -l)
 
