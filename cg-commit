@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 #
 # Commit into a GIT repository.
-# Copyright (c) Petr Baudis, 2005
+# Copyright (c) Petr Baudis, 2006
 #
 # Commits your changes to the GIT repository. Accepts the commit message
 # from `stdin`. If the commit message is not modified the commit will be
