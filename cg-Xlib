@@ -494,7 +494,7 @@ ARGS=("$@")
 ARGPOS=0
 set '' # clear positional parameters - use $ARGS[] instead
 
-if [ -t 1 -a -e "$HOME/.cgrc" ]; then
+if [ -z "$CG_NORC" -a -t 1 -a -e "$HOME/.cgrc" ]; then
 	_cg_name="${_cg_cmd#cg-}"
 	# We hope that there are no weird (regex-sensitive) characters
 	# in Cogito command names.
