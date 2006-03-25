@@ -363,12 +363,9 @@ tree_timewarp()
 
 	# Kill gone files
 	git-diff-tree -r "$base" "$branch" |
-		while IFS=$'\t' read header file; do
-			# match ":100755 000000 14d43b1abf... 000000000... D"
-			if echo "$header" | egrep "^:([^ ][^ ]* ){4}D" >/dev/null; then
-				rm -- "$file"
-			fi
-		done
+		# match ":100755 000000 14d43b1abf... 000000000... D"
+		sed -ne 's/^:[^\t]* D\t//p' |
+		xargs rm -f --
 	git-checkout-index -u -f -a
 
 	# FIXME: Can produce bogus "contains only garbage" messages.
