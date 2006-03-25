@@ -155,6 +155,9 @@ FILES
 		log -c
 		diff -c
 
+	You can prevent Cogito from reading ~/.cgrc by setting the
+	CG_NORC environment variable.
+
 COPYRIGHT
 ---------
 Copyright (C) Petr Baudis, 2005.
