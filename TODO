@@ -106,7 +106,6 @@ Post 1.0:
 	backend.
 
 	* Somehow switch between summary and full output
-	* Pickaxe
 	* Possibility to quickly show patches for commits
 
 * Graphical commit/merge tool

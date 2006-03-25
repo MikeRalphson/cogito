@@ -61,7 +61,16 @@
 #	by their author. This is also known as a "shortlog", suitable
 #	e.g. for contribution summaries of announcements.
 #
-# -uUSERNAME:: Limit to commit where author/committer matches USERNAME
+# -S STRING:: Limit to changes touching STRING ("pick-axe")
+#	List only commits with changes concerning STRING (also known as
+#	pick-axe). In other words, only commits where the parent contains
+#	STRING and the child does not contain it at the same place in
+#	a file or vice versa are shown. The STRING may contain any
+#	special characters or even newlines (but you might need to quote
+#	it properly when calling `cg-log` from a shell). It is matched
+#	verbatim.
+#
+# -u USERNAME:: Limit to commit where author/committer matches USERNAME
 #	List only commits where author or committer contains 'USERNAME'.
 #	The search for 'USERNAME' is case-insensitive.
 #
@@ -91,6 +100,14 @@
 #	$ cg-log -r B..A
 #
 # (meaning "all the commits which newly appear along the way from B to A").
+#
+# If you see a dubious "if (current->uid = 0)" test in a file and wonder
+# about its genesis, you can run
+#
+#	$ cg-log -S "if (current->uid = 0)" filename
+#
+# (you can obviously refrain from limiting the pick-axe to a particular
+# file, but it will make it significantly slower).
 #
 # NOTES
 # -----
@@ -142,9 +159,9 @@ process_commit_line()
 		return
 	fi
 	case "$key" in
-	"commit")
+	"commit"|"diff-tree")
 		[ "$summary" ] || [ "$skip_commit" ] || { [ "$commit" ] && echo; }
-		commit="$rest"
+		commit="${rest:0:40}"
 		parents=()
 		skip_commit=
 		;;
@@ -160,10 +177,15 @@ process_commit_line()
 	"author")
 		author="$rest"
 		;;
+	:)
+		commit=
+		sshht=1
+		;;
 	"")
 		if [ ! "$commit" ]; then
 			# Next commit is coming
-			[ "$summary" ] || echo
+			[ "$summary" ] || [ "$sshht" ] || echo
+			sshht=
 			return
 		fi
 
@@ -229,8 +251,10 @@ print_commit_log()
 	author=
 	committer=
 	tree=
+	sshht=
 
 	sed -e '
+		s/^:/: /
 		s/^    \(.*\)/% \1/
 		/^% *[Ss]igned-[Oo]ff-[Bb]y:.*/ s/^% \(.*\)/% '$colsignoff'\1'$coldefault'/
 		/^% *[Aa][Cc][Kk]ed-[Bb]y:.*/ s/^% \(.*\)/% '$colsignoff'\1'$coldefault'/
@@ -252,6 +276,7 @@ colcommit=
 coldate=
 coltrim=
 coldefault=
+difffilter=
 
 list_files=
 log_start=
@@ -263,6 +288,7 @@ mergebase=
 date_from=
 date_to=
 no_merges=
+pickaxe=()
 
 while optparse; do
 	if optparse -c; then
@@ -310,6 +336,9 @@ while optparse; do
 		no_merges="--no-merges"
 	elif optparse -s; then
 		summary=1
+	elif optparse -S=; then
+		pickaxe=(-S"$OPTARG")
+		difffilter=pickaxe
 	elif optparse --summary; then
 		shortlog=1
 	else
@@ -330,12 +359,12 @@ if [ "$mergebase" ]; then
 fi
 
 if [ "$shortlog" ]; then
-	revls="git-rev-list --pretty=short"
+	fmt="--pretty=short"
 else
-	revls="git-rev-list --pretty=raw"
+	fmt="--pretty=raw"
 fi
 # Word splitting is ok here and we want to auto-drop empty dates.
-revls="$revls $no_merges $date_from $date_to"
+revls="$no_merges $date_from $date_to"
 
 id1="$(cg-object-id -c "$log_start")" || exit 1
 if [ "$log_end" ]; then
@@ -358,16 +387,28 @@ if [ "$_git_relpath" ]; then
 	done
 fi
 
+# A curious pipeline:
+rev_extract()
+{
+	if [ "$difffilter" ]; then
+		git-rev-list $revls $sep "${ARGS[@]}" | \
+			git-diff-tree --stdin $fmt "${pickaxe[@]}"
+	else
+		git-rev-list $revls $fmt $sep "${ARGS[@]}"
+	fi
+}
 
-if [ "$shortlog" ]; then
-	# Special care here.
-	$revls $sep "${ARGS[@]}" | git-shortlog | pager
-	exit
-fi
+rev_show()
+{
+	if [ "$shortlog" ]; then
+		git-shortlog | pager
+	else
+		# LESS="S" will prevent less to wrap too long titles
+		# to multiple lines; you can scroll horizontally.
+		print_commit_log | _local_CG_LESS="S" pager
+	fi
+}
 
-
-# LESS="S" will prevent less to wrap too long titles to multiple lines;
-# you can scroll horizontally.
-$revls $sep "${ARGS[@]}" | print_commit_log | _local_CG_LESS="S" pager
+rev_extract | rev_show
 
 exit 0
