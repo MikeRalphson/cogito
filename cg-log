@@ -286,7 +286,7 @@ print_commit_log()
 	' | { while read -r key rest; do
 		trap exit SIGPIPE
 		process_commit_line
-	done; [ "$commit" ] && print_commit_contents # the last commit
+	done; [ "$state" = "showcommit" ] && print_commit_contents # the last commit
 	}
 }
 
