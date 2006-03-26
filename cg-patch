@@ -6,10 +6,6 @@
 # This is basically just a smart patch wrapper. It handles stuff like
 # mode changes, removal of files vs. zero-size files etc.
 #
-# For now the script can process the old-style cg-diff patches (those
-# having the "(mode: 0123)" stuff on the +++ and --- lines) as well
-# as the new-style git-diff patches (those with the "diff --git" lines).
-#
 # OPTIONS
 # -------
 # -c:: Automatically commit the patch
