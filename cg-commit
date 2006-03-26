@@ -96,7 +96,7 @@
 #	Be quiet in case there's "nothing to commit", and silently exit
 #	returning success. In a sense, this is the opposite to '-f'.
 #
-# -s, --signoff:: Automatically append a sign off line
+# -s, --signoff[=STRING]:: Automatically append a sign off line
 #	Add Signed-off-by line at the end of the commit message.
 #	Optionally, specify the exact name and email to sign off with by
 #	passing: `--signoff="Author Name <user@example.com>"`.
