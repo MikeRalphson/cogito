@@ -262,8 +262,6 @@ process_commit_line()
 		showdate ${date[*]}; pdate="$_showdate"
 		[ "$pdate" ] && committer="${committer%> *}> $pdate"
 		echo "${colcommitter}committer $committer $coldefault"
-		git-ls-tree $commit >/dev/null
-		git-ls-tree ${parents[0]} >/dev/null
 
 		echo
 		if [ "$difffilter" ]; then
