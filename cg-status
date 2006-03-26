@@ -45,6 +45,11 @@
 #	Show only files with the given status flag, e.g. '-s D'. You can list
 #	multiple flags ('-s MmA') to filter for all of them.
 #
+# -S:: Do not squash directories
+#	By default, cg-status will not list full contents of untracked
+#	directories but only their name. This option will make it show the
+#	all untracked files inside as well.
+#
 # -w:: Show working files
 #	Show the working tree file list.
 #
@@ -98,6 +103,7 @@ workstatus=
 exclude=yes
 flagfilter=
 noflags=
+squashdirs=squashdirs
 while optparse; do
 	if optparse -g; then
 		gitstatus=1
@@ -107,6 +113,8 @@ while optparse; do
 		flagfilter="$OPTARG"
 		echo "$flagfilter" | grep -qx '[a-zA-Z?!]*' \
 			|| die "invalid -s status flag"
+	elif optparse -S; then
+		squashdirs=nosquashdirs
 	elif optparse -w; then
 		workstatus=1
 	elif optparse -x; then
@@ -191,7 +199,7 @@ if [ "$workstatus" ]; then
 	[ "${ARGS[0]}" ] && basepath="$(echo "$_git_relpath${ARGS[0]}" | normpath)"
 
 	should_show_flag '?' &&
-		list_untracked_files $exclude squashdirs | tr '\0' '\n' |
+		list_untracked_files $exclude $squashdirs | tr '\0' '\n' |
 		if [ "$basepath" ]; then
 			while IFS=$'' read path; do
 				[ x"${path#$basepath}" != x"$path" ] &&
