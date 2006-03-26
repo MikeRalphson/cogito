@@ -66,10 +66,18 @@
 #	HAVE NO EFFECT!).
 #
 # --index-filter COMMAND:: The filter for rewriting index
-#	This if the filter for rewriting the Git's directory index.
+#	This is the filter for rewriting the Git's directory index.
 #	It is similar to the tree filter but does not check out the
 #	tree, which makes it much faster. However, you must use the
 #	lowlevel Git index manipulation commands to do your work.
+#
+# --parent-filter COMMAND:: The filter for rewriting parents
+#	This is the filter for rewriting the commit's parent list.
+#	It will receive the parent string on stdin and shall output
+#	the new parent string on stdout. The parent string is in
+#	format accepted by `git-commit-tree`: empty for initial
+#	commit, "-p parent" for a normal commit and "-p parent1
+#	-p parent2 -p parent3 ..." for a merge commit.
 #
 # --msg-filter COMMAND:: The filter for rewriting commit message
 #	This is the filter for rewriting the commit messages.
@@ -89,6 +97,18 @@
 #
 # Now, you will get the rewritten history saved in the branch 'newbranch'
 # (your current branch is left untouched).
+#
+# To "etch-graft" a commit to the revision history (set a commit to be
+# the parent of the current initial commit and propagate that):
+#
+#	cg-admin-rewritehist --parent-filter sed\ 's/^$/-p graftcommitid/' newbranch
+#
+# (if the parent string is empty - therefore we are dealing with the
+# initial commit - add graftcommit as a parent). Note that this assumes
+# history with a single root (that is, no cg-merge -j happenned). If this
+# is not the case, use:
+#
+#	cg-admin-rewritehist --parent-filter 'cat; [ "$GIT_COMMIT" = "COMMIT" ] && echo "-p GRAFTCOMMIT"' newbranch
 
 USAGE="cg-admin-rewritehist [-d TEMPDIR] [-r STARTREV]... [FILTERS] DESTBRANCH"
 _git_requires_root=1
@@ -100,6 +120,7 @@ startrev=
 filter_env=
 filter_tree=
 filter_index=
+filter_parent=
 filter_msg=cat
 while optparse; do
 	if optparse -d=; then
@@ -112,6 +133,8 @@ while optparse; do
 		filter_tree="$OPTARG"
 	elif optparse --index-filter=; then
 		filter_index="$OPTARG"
+	elif optparse --parent-filter=; then
+		filter_parent="$OPTARG"
 	elif optparse --msg-filter=; then
 		filter_msg="$OPTARG"
 	else
@@ -168,6 +191,9 @@ while read commit; do
 	for parent in $(cg-object-id -p $commit); do
 		parentstr="$parentstr -p $(cat ../map/$parent)"
 	done
+	if [ "$filter_parent" ]; then
+		parentstr="$(echo "$parentstr" | eval "$filter_parent")"
+	fi
 
 	sed -e '1,/^$/d' <../commit | \
 		eval "$filter_msg" | \
