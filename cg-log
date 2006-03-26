@@ -175,7 +175,7 @@ process_commit_line()
 {
 	if [ "$key" = "%" ] || [ "$key" = "%$colsignoff" ]; then
 		# The fast common case
-		[ "$state" = silent ] || msg="$msg    $rest
+		[ "$state" = silent ] || msg="$msg    ${rest#|}
 "
 		return
 	fi
@@ -278,7 +278,7 @@ print_commit_log()
 	reset_commit_info
 	sed -e '
 		s/^:/: /
-		s/^    \(.*\)/% \1/
+		s/^    \(.*\)/% |\1/
 		/^% *[Ss]igned-[Oo]ff-[Bb]y:.*/ s/^% \(.*\)/% '$colsignoff'\1'$coldefault'/
 		/^% *[Aa][Cc][Kk]ed-[Bb]y:.*/ s/^% \(.*\)/% '$colsignoff'\1'$coldefault'/
 	' | { while read -r key rest; do
