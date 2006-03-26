@@ -84,6 +84,17 @@
 #	The COMMAND argument is evaluated in shell with the original
 #	commit message on standard input; its standard output is
 #
+# --commit-filter COMMAND:: The filter for performing the commit
+#	If this filter is passed, it will be called instead of the
+#	`git-commit-tree` command, with those arguments:
+#
+#		TREE_ID [-p PARENT_COMMIT_ID]...
+#
+#	and the log message on stdin. The commit id is expected on
+#	stdout. As a special extension, the commit filter may emit
+#	multiple commit ids; in that case, all of them will be used
+#	as parents instead of the original commit in further commits.
+#
 # EXAMPLE USAGE
 # -------------
 # Suppose you want to remove a file (containing confidental information
@@ -109,6 +120,16 @@
 # is not the case, use:
 #
 #	cg-admin-rewritehist --parent-filter 'cat; [ "$GIT_COMMIT" = "COMMIT" ] && echo "-p GRAFTCOMMIT"' newbranch
+#
+# To remove commits authored by "Darl McBribe" from the history:
+#
+#	cg-admin-rewritehist --commit-filter 'if [ "$GIT_AUTHOR_NAME" = "Darl McBribe" ]; then shift; while [ -n "$1" ]; do shift; echo "$1"; shift; done; else git-commit-tree "$@"; fi' newbranch
+#
+# (the shift magic first throws away the tree id and then the -p
+# parameters). Note that this handles merges properly! In case Darl
+# committed a merge between P1 and P2, it will be propagated properly
+# and all children of the merge will become merge commits with P1,P2
+# as their parents instead of the merge commit.
 
 USAGE="cg-admin-rewritehist [-d TEMPDIR] [-r STARTREV]... [FILTERS] DESTBRANCH"
 _git_requires_root=1
@@ -122,6 +143,7 @@ filter_tree=
 filter_index=
 filter_parent=
 filter_msg=cat
+filter_commit=git-commit-tree
 while optparse; do
 	if optparse -d=; then
 		tempdir="$OPTARG"
@@ -135,8 +157,8 @@ while optparse; do
 		filter_index="$OPTARG"
 	elif optparse --parent-filter=; then
 		filter_parent="$OPTARG"
-	elif optparse --msg-filter=; then
-		filter_msg="$OPTARG"
+	elif optparse --commit-filter=; then
+		filter_commit="$OPTARG"
 	else
 		optfail
 	fi
@@ -155,6 +177,8 @@ cd "$tempdir/t"
 [[ "$GIT_DIR" == /* ]] || export GIT_DIR="$(pwd)/../../$GIT_DIR"
 export GIT_INDEX_FILE="$(pwd)/../index"
 git-read-tree # seed the index file
+
+ret=0
 
 
 mkdir ../map # map old->new commit ids for rewriting parents
@@ -189,7 +213,9 @@ while read commit; do
 
 	parentstr=
 	for parent in $(cg-object-id -p $commit); do
-		parentstr="$parentstr -p $(cat ../map/$parent)"
+		for reparent in $(cat ../map/$parent); do
+			parentstr="$parentstr -p $reparent"
+		done
 	done
 	if [ "$filter_parent" ]; then
 		parentstr="$(echo "$parentstr" | eval "$filter_parent")"
@@ -197,13 +223,19 @@ while read commit; do
 
 	sed -e '1,/^$/d' <../commit | \
 		eval "$filter_msg" | \
-		git-commit-tree $(git-write-tree) $parentstr | \
+		sh -c "$filter_commit" git-commit-tree $(git-write-tree) $parentstr | \
 		tee ../map/$commit
 done <../revs
 
-git-update-ref refs/heads/"$dstbranch" $(cat ../map/$(tail -n 1 ../revs))
+git-update-ref refs/heads/"$dstbranch" $(head -n 1 ../map/$(tail -n 1 ../revs))
+if [ "$(cat ../map/$(tail -n 1 ../revs) | wc -l)" -gt 1 ]; then
+	echo "WARNING: Your commit filter caused the head commit to expand to several rewritten commits. Only the first such commit was recorded as the current $dstbranch head but you will need to resolve the situation now (probably by manually merging the other commits). These are all the commits:" >&2
+	sed 's/^/	/' ../map/$(tail -n 1 ../revs) >&2
+	ret=1
+fi
+
 cd ../..
 rm -rf "$tempdir"
 echo "Rewritten history saved to the $dstbranch branch"
 
-exit 0
+exit $ret
