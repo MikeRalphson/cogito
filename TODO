@@ -63,7 +63,7 @@ cg-*patch should be pre-1.0.)
 
 * cg-patch improvements
 	* Again, an email interface - frontend to applymbox and stuff...
-	* Dealing with renames and stuff
+	* Dealing with copies - will require a complete rewrite or something
 
 * cg-tag enhancements
 	* Provide the same -m and editor and stdin interface as cg-commit;

@@ -4,7 +4,7 @@
 # Copyright (c) Petr Baudis, 2005
 #
 # This is basically just a smart patch wrapper. It handles stuff like
-# mode changes, removal of files vs. zero-size files etc.
+# mode changes, removal of files vs. zero-size files, file renames etc.
 #
 # For now the script can process the old-style cg-diff patches (those
 # having the "(mode: 0123)" stuff on the +++ and --- lines) as well
@@ -114,23 +114,42 @@ redzone_border()
 		warn "$file2 was not located in your current subdirectory before stripping"
 	fi
 
-	if [ "$op" = "delete" ]; then
+	if [ "$op" = "rename" ]; then
+		if ! [ "$reverse" ]; then
+			mvfrom="$(echo "$file1" | strip_path)"
+			mvto="$(echo "$file2" | strip_path)"
+		else
+			mvfrom="$(echo "$file2" | strip_path)"
+			mvto="$(echo "$file1" | strip_path)"
+		fi
+		if [ -e "$mvto" ]; then
+			echo "$file1: rename destination $file2 already exists, NOT RENAMING" >&2
+			return
+		fi
+		mv "$mvfrom" "$mvto"
+	fi
+	if [ "$op" = "delete" -o "$op" = "rename" ]; then
 		torm="$(echo "$file1" | strip_path)"
 		if ! [ "$reverse" ]; then
 			(git-ls-files | fgrep -qx "$torm") && echo -ne "rm\0$torm\0"
-			redzone_reset
-			return
+			if [ "$op" != "rename" ]; then
+				redzone_reset
+				return
+			fi
 		else
 			(git-ls-files | fgrep -qx "$torm") || echo -ne "add\0$torm\0"
 		fi
-	elif [ "$op" = "add" ]; then
+	fi
+	if [ "$op" = "add" -o "$op" = "rename" ]; then
 		toadd="$(echo "$file2" | strip_path)"
 		if ! [ "$reverse" ]; then
 			(git-ls-files | fgrep -qx "$toadd") || echo -ne "add\0$toadd\0"
 		else
 			(git-ls-files | fgrep -qx "$toadd") && echo -ne "rm\0$toadd\0"
-			redzone_reset
-			return
+			if [ "$op" != "rename" ]; then
+				redzone_reset
+				return
+			fi
 		fi
 	fi
 
@@ -340,24 +359,38 @@ tee "$patchfifo" | {
 			continue
 		fi
 
-		if [ "$redzone" ] && [ "${line#[nod]}" != "$line" ]; then
-			mode="$(echo "$line" | awk '
+		if [ "$redzone" ] && [ "${line#[nodcr]}" != "$line" ]; then
+			# Copy support is impossible without complete rewrite
+			# since we need to copy _first_ then apply the patch
+			# to the copy.
+			meta="$(echo "$line" | awk '
 				/^deleted file mode [0-9]+/ {print "D-"$4}
 				/^old mode [0-9]+/ {print "-"$3}
 				/^new file mode [0-9]+/ {print "A+"$4}
 				/^new mode [0-9]+/ {print "+"$3}
+				/^rename from / {sub(/^rename from /,""); print "RD"$0}
+				/^rename to / {sub(/^rename to /,""); print "RA"$0}
 			')"
-			if [ "${mode:0:1}" = "D" ]; then
+			if [ "${meta:0:1}" = "D" ]; then
 				op=delete
-				mode="${mode:1}"
-			elif [ "${mode:0:1}" = "A" ]; then
+				meta="${meta:1}"
+			elif [ "${meta:0:1}" = "A" ]; then
 				op=add
-				mode="${mode:1}"
+				meta="${meta:1}"
 			fi
-			if [ "${mode:0:1}" = "-" ]; then
-				origmode="${mode:1}"
-			elif [ "${mode:0:1}" = "+" ]; then
-				newmode="${mode:1}"
+			if [ "${meta:0:1}" = "-" ]; then
+				origmode="${meta:1}"
+			elif [ "${meta:0:1}" = "+" ]; then
+				newmode="${meta:1}"
+			fi
+			# We will reset file1 and file2 since we have them
+			# in whitespace-safe form here.
+			if [ "${meta:0:2}" = "RD" ]; then
+				op=rename
+				file1="a/${meta:2}"
+			elif [ "${meta:0:2}" = "RA" ]; then
+				op=rename
+				file2="b/${meta:2}"
 			fi
 			continue
 		fi
