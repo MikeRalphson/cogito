@@ -16,6 +16,11 @@ documentation should be of good quality (see the 'Getting help' section
 at the bottom of this file).
 
 
+Cogito is quite easy and intuitive to use. If you want to dive right in,
+see gitlink:cg-ref[7] for a quick commands/concepts reference and
+gitlink:cg-help[1] or gitlink:cogito[7] for a reference manual.
+
+
 
 Installing
 ----------
@@ -481,13 +486,14 @@ exception is that you should stick with a single toolkit during a merge.
 Getting Help
 ------------
 
-Cogito commands come with their own helpful documentation. To get help on
+Cogito commands come with their own documentation. To get quick usage help on
 cg-fetch, for example, give this command:
 
 	$ cg-fetch --help
 
-or, for the same information, try this:
+or, for a full command's reference manual, you can use either of those:
 
+	$ cg-fetch --long-help
 	$ cg-help cg-fetch
 
 Alternatively, the man pages for the individual commands can be used as a

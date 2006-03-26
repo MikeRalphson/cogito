@@ -85,6 +85,9 @@ or
 
 	cg-log --long-help
 
+You can find the quick overview of the most useful commands and concepts in
+$(man 7 cg-ref).
+
 Regular commands
 ~~~~~~~~~~~~~~~~
 
@@ -164,5 +167,6 @@ Copyright (C) Petr Baudis, 2005.
 
 SEE ALSO
 --------
-Cogito is based on gitlink:git[7].
+Cogito is based on gitlink:git[7]. A quick Cogito reference sheet is in
+gitlink:cg-ref[7].
 __END__

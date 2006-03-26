@@ -13,4 +13,13 @@ _git_repo_unneeded=1
 
 . "${COGITO_LIB}"cg-Xlib || exit 1
 
-echo "@@VERSION@@ @@GIT_HEAD_ID@@"
+version="@@VERSION@@"
+head="@@GIT_HEAD_ID@@"
+if [ -z "$head" ]; then
+	echo "$version"
+	exit
+elif [ "$version" = "$head" ]; then
+	echo "$version (real)"
+else
+	echo "$version ($head)"
+fi

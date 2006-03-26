@@ -40,7 +40,7 @@ cogito: $(GEN_SCRIPT)
 
 ifneq (,$(wildcard .git))
 GIT_HEAD=.git/$(shell git-symbolic-ref HEAD)
-GIT_HEAD_ID=($(shell cat $(GIT_HEAD)))
+GIT_HEAD_ID=$(shell cg-object-id -d)
 endif
 cg-version: cg-version.in $(VERSION) $(GIT_HEAD)
 	@echo Generating cg-version...

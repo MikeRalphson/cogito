@@ -22,11 +22,12 @@ USAGE="cg-branch-ls"
 
 mkdir -p "$_git/branches"
 [ "$(find "$_git/branches" -follow -type f)" ] \
-	|| die "List of branches is empty. See cg-branch-add."
+	|| die "list of branches is empty (see cg-branch-add(1))"
 
 cd "$_git/branches"
-for branch in *; do
-	echo -n "$branch"
+find . -type f -print | sort |
+while read -r branch; do
+	echo -n "${branch#./}"
 	echo -ne "\t"
 	cat "$branch"
 done

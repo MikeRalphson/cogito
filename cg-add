@@ -53,7 +53,7 @@ for file in "${ARGS[@]}"; do
 	absfile="$(echo "$_git_relpath$file" | normpath)"
 	if [ -d "$absfile" ] || [ -z "$absfile" ]; then
 		if [ "$recursive" ]; then
-			list_untracked_files exclude nosquashdirs | tr '\0' '\n' |
+			cg-status -wnSs D\? |
 				if [ -z "$absfile" ]; then # adding everything
 					cat >>"$TMPFILE"
 				else
