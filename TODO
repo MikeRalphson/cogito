@@ -171,15 +171,12 @@ Short term:
 Long term:
 
 * Proper renaming recording
-	Seriously, guys. This needs to be done and I'm only not bringing
-	it up on the mailing list since we have enough other trouble for
-	now.
+	We need to do something about it. For now, at least properly follow
+	renames everywhere and have tree renames detection.
 
-	My current preferred solution of this is an "edge" object which
-	would describe the edge between two commits; containing only
-	"rename" lines for now. Parent line format would change to
-
-		parent COMMITID [edge:EDGEID]
+	In the long term, either some Linus-envisioned smart moves detection
+	needs to be done (I'm still sceptical) or persistent file ids. One
+	trouble is keeping merge from traversing all the history.
 
 * Better than three-way merging
 	Perhaps pcdv merge, let's see how will that turn out.
