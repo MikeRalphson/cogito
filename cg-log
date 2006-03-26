@@ -175,7 +175,7 @@ process_commit_line()
 {
 	if [ "$key" = "%" ] || [ "$key" = "%$colsignoff" ]; then
 		# The fast common case
-		[ "$state" = silent ] || msg="$msg    ${rest#|}
+		[ "$state" = silent ] || msg="$msg    ${rest:1}
 "
 		return
 	fi
@@ -262,6 +262,8 @@ process_commit_line()
 		showdate ${date[*]}; pdate="$_showdate"
 		[ "$pdate" ] && committer="${committer%> *}> $pdate"
 		echo "${colcommitter}committer $committer $coldefault"
+		git-ls-tree $commit >/dev/null
+		git-ls-tree ${parents[0]} >/dev/null
 
 		echo
 		if [ "$difffilter" ]; then
@@ -278,9 +280,9 @@ print_commit_log()
 	reset_commit_info
 	sed -e '
 		s/^:/: /
-		s/^    \(.*\)/% |\1/
-		/^% *[Ss]igned-[Oo]ff-[Bb]y:.*/ s/^% \(.*\)/% '$colsignoff'\1'$coldefault'/
-		/^% *[Aa][Cc][Kk]ed-[Bb]y:.*/ s/^% \(.*\)/% '$colsignoff'\1'$coldefault'/
+		s/^    \(.*\)/% @\1/
+		/^% *@[Ss]igned-[Oo]ff-[Bb]y:.*/ s/^% @\(.*\)/% @'$colsignoff'\1'$coldefault'/
+		/^% *@[Aa][Cc][Kk]ed-[Bb]y:.*/ s/^% @\(.*\)/% @'$colsignoff'\1'$coldefault'/
 	' | { while read -r key rest; do
 		trap exit SIGPIPE
 		process_commit_line
