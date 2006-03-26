@@ -125,13 +125,16 @@ trap exit SIGPIPE
 
 list_commit_files()
 {
+	if [ ${#files[@]} -eq 0 ]; then
+		echo "    * no changes:"
+		echo
+		return
+	fi
 	tree1="$1"
 	tree2="$2"
 	line=
 	sep="    * $colfiles"
-	echo
-	git-diff-tree --root -r $tree1 $tree2 | cut -f 2- |
-	while read -r file; do
+	for file in "${files[@]}"; do
 		echo -n "$sep"
 		sep=", "
 		line="$line$sep$file"
@@ -144,21 +147,42 @@ list_commit_files()
 		fi
 	done
 	echo "$coldefault:"
+	echo
+}
+
+print_commit_contents()
+{
+	[ "$list_files" ] && list_commit_files
+	echo "$msg"
+}
+
+reset_commit_info()
+{
+	commit=
+	tree=
+	parents=()
+	author=
+	committer=
+	msg=
+	files=()
+
+	# The $state variable mostly describes what should happen on the next
+	# empty line.
+	state=printhdr
 }
 
 process_commit_line()
 {
 	if [ "$key" = "%" ] || [ "$key" = "%$colsignoff" ]; then
 		# The fast common case
-		[ "$summary" ] || [ "$skip_commit" ] || echo "    $rest"
+		[ "$state" = silent ] || msg="$msg    $rest
+"
 		return
 	fi
 	case "$key" in
 	"commit"|"diff-tree")
-		[ "$summary" ] || [ "$skip_commit" ] || { [ "$commit" ] && echo; }
+		reset_commit_info
 		commit="${rest:0:40}"
-		parents=()
-		skip_commit=
 		;;
 	"tree")
 		tree="$rest"
@@ -173,20 +197,28 @@ process_commit_line()
 		author="$rest"
 		;;
 	:)
-		commit=
-		sshht=1
+		files[${#files[@]}]="${rest#*	}"
 		;;
 	"")
-		if [ ! "$commit" ]; then
-			# Next commit is coming
-			[ "$summary" ] || [ "$sshht" ] || echo
-			sshht=
+		if [ "$state" = silent ]; then
 			return
+		fi
+		if [ "$state" = waitdiff ]; then
+			# We cannot hook this to ^: since the diff may be empty
+			state=showcommit
+			return
+		fi
+		if [ "$state" = showcommit ]; then
+			print_commit_contents
+			return
+		fi
+		if [ "$state" != printhdr ]; then
+			die "internal error - state '$state'"
 		fi
 
 		if [ "$user" ]; then
 			if ! [[ "$author" == *"$user"* || "$committer" == *"$user"* ]]; then
-				skip_commit=1
+				state=silent
 				return
 			fi
 		fi
@@ -208,7 +240,7 @@ process_commit_line()
 
 			printf "$colcommit%s $colauthor%-15s $coldate%s $coldefault%s\n" \
 				"${commit%:*}" "$author" "$date" "${title:2}"
-			commit=
+			state=silent
 			return
 		fi
 
@@ -231,32 +263,29 @@ process_commit_line()
 		[ "$pdate" ] && committer="${committer%> *}> $pdate"
 		echo "${colcommitter}committer $committer $coldefault"
 
-		if [ -n "$list_files" ]; then
-			list_commit_files "$commit" "${parents[0]}"
-		fi
 		echo
-		commit=
+		if [ "$difffilter" ]; then
+			state=waitdiff
+		else
+			state=showcommit
+		fi
 		;;
 	esac
 }
 
 print_commit_log()
 {
-	commit=
-	author=
-	committer=
-	tree=
-	sshht=
-
+	reset_commit_info
 	sed -e '
 		s/^:/: /
 		s/^    \(.*\)/% \1/
 		/^% *[Ss]igned-[Oo]ff-[Bb]y:.*/ s/^% \(.*\)/% '$colsignoff'\1'$coldefault'/
 		/^% *[Aa][Cc][Kk]ed-[Bb]y:.*/ s/^% \(.*\)/% '$colsignoff'\1'$coldefault'/
-	' | while read -r key rest; do
+	' | { while read -r key rest; do
 		trap exit SIGPIPE
 		process_commit_line
-	done
+	done; print_commit_contents # the last commit
+	}
 }
 
 
@@ -283,6 +312,7 @@ mergebase=
 date_from=
 date_to=
 no_merges=
+always=--always
 pickaxe=()
 
 while optparse; do
@@ -301,6 +331,7 @@ while optparse; do
 		coldefault="$(tput op)"        # Restore default
 	elif optparse -f; then
 		list_files=1
+		difffilter=listfiles
 	elif optparse -u=; then
 		user="$OPTARG"
 	elif optparse -r=; then
@@ -332,6 +363,7 @@ while optparse; do
 	elif optparse -s; then
 		summary=1
 	elif optparse -S=; then
+		always=
 		pickaxe=(-S"$OPTARG")
 		difffilter=pickaxe
 	elif optparse --summary; then
@@ -370,7 +402,7 @@ else
 fi
 
 # Later, we will want to use git-diff-tree --stdin for the filtering
-# instead of git-rev-list, so that we can do custom renames detection.
+# instead of git-rev-list so that we can do custom renames detection.
 # See also <Pine.LNX.4.64.0510212025260.10477@g5.osdl.org>.
 sep=
 [ "${ARGS[*]}" ] && sep=--
@@ -387,7 +419,7 @@ rev_extract()
 {
 	if [ "$difffilter" ]; then
 		git-rev-list $revls $sep "${ARGS[@]}" | \
-			git-diff-tree --stdin $fmt "${pickaxe[@]}"
+		git-diff-tree -r --stdin --root --pickaxe-all $always $fmt "${pickaxe[@]}"
 	else
 		git-rev-list $revls $fmt $sep "${ARGS[@]}"
 	fi
