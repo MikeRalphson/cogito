@@ -239,7 +239,7 @@ process_commit_line()
 			fi
 
 			printf "$colcommit%s $colauthor%-15s $coldate%s $coldefault%s\n" \
-				"${commit%:*}" "$author" "$date" "${title:2}"
+				"${commit%:*}" "$author" "$date" "${title:3}"
 			state=silent
 			return
 		fi
