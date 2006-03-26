@@ -267,8 +267,9 @@ fi
 
 # Some other process with the same pid might appear, that's why
 # we won't die but rather let the user check quickly.
-if [ -s "$_git/info/cg-fetch-$name-dirty" ]; then
-	kill -0 $(cat "$_git/info/cg-fetch-$name-dirty") 2>/dev/null && \
+dirtyfile="$_git/info/cg-fetch-$(echo "$name" | sed -e 's/\//-.-/g')-dirty"
+if [ -s "$dirtyfile" ]; then
+	kill -0 $(cat "$dirtyfile") 2>/dev/null && \
 		warn "aren't you fetching $name twice at once? (waiting 10s)" && \
 		sleep 10
 	if [ -s "$_git/info/cg-fetch-initial" ]; then
@@ -279,7 +280,7 @@ if [ -s "$_git/info/cg-fetch-$name-dirty" ]; then
 	recovery=--recover
 fi
 mkdir -p "$_git/info"
-echo $$ > "$_git/info/cg-fetch-$name-dirty"
+echo $$ > "$dirtyfile"
 
 
 orig_head=
@@ -340,6 +341,7 @@ if [ "$packed_transport" ]; then
 		while read sha1 remote_name; do
 			[ "$sha1" = "failed" ] && die "$2"
 			ref="$1"; [ "$ref" ] || ref="$remote_name"
+			mkdir -p "$_git/$(dirname "$ref")"
 			echo "$sha1" >"$_git/$ref"
 		done
 	}
@@ -365,7 +367,7 @@ if [ "$packed_transport" ]; then
 	fi
 	rm "$_cg_taglist"
 
-	rm "$_git/info/cg-fetch-$name-dirty"
+	rm "$dirtyfile"
 	show_changes_summary "$orig_head" "$(cg-object-id "$name")"
 	[ -s "$_git/info/cg-fetch-initial" ] && initial_done
 	exit 0
@@ -376,21 +378,22 @@ fi
 
 ## Grab the head
 echo "Fetching head..."
-mkdir -p "$_git/refs/heads"
+mkdir -p "$_git/refs/heads/$(dirname "$name")"
+tmpname="$(dirname "$name")/.$(basename "$name")-fetching"
 if [ "$rembranch" ]; then
-	$get -i "$uri/refs/heads/$rembranch" "$_git/refs/heads/.$name-fetching" ||
+	$get -i "$uri/refs/heads/$rembranch" "$_git/refs/heads/$tmpname" ||
 		die "unable to get the head pointer of branch $rembranch"
 else
-	$get -b "$uri/HEAD" "$_git/refs/heads/.$name-fetching" ||
+	$get -b "$uri/HEAD" "$_git/refs/heads/$tmpname" ||
 		die "unable to get the HEAD branch"
 fi
 
-new_head="$(cat "$_git/refs/heads/.$name-fetching")"
+new_head="$(cat "$_git/refs/heads/$tmpname")"
 if [ "${new_head#ref:}" != "$new_head" ]; then
 	new_head="$(echo "$new_head" | sed 's/^ref: *//')"
-	$get -i "$uri/$new_head" "$_git/refs/heads/.$name-fetching" ||
+	$get -i "$uri/$new_head" "$_git/refs/heads/$tmpname" ||
 		die "unable to get the head pointer of branch $new_head (referenced by HEAD)"
-	new_head="$(cat "$_git/refs/heads/.$name-fetching")"
+	new_head="$(cat "$_git/refs/heads/$tmpname")"
 fi
 
 rm -f "$_git/info/cg-fetch-earlydie"
@@ -400,12 +403,12 @@ echo "Fetching objects..."
 if ! [ "$symlinked" ]; then
 	if [ "$recovery" -o "$orig_head" != "$new_head" ]; then
 		[ -d "$_git_objects" ] || mkdir -p "$_git_objects"
-		$fetch "$(cat "$_git/refs/heads/.$name-fetching")" "$uri" "heads/$name" || die "objects fetch failed"
+		$fetch "$(cat "$_git/refs/heads/$tmpname")" "$uri" "heads/$name" || die "objects fetch failed"
 	fi
 else
-	cat "$_git/refs/heads/.$name-fetching" > "$_git/refs/heads/$name"
+	cat "$_git/refs/heads/$tmpname" > "$_git/refs/heads/$name"
 fi
-rm "$_git/refs/heads/.$name-fetching"
+rm "$_git/refs/heads/$tmpname"
 
 ## Fetch the tags
 ret=0
@@ -413,7 +416,7 @@ if ! fetch_tags; then
 	ret=$?
 fi
 
-rm "$_git/info/cg-fetch-$name-dirty"
+rm "$dirtyfile"
 show_changes_summary "$orig_head" "$new_head"
 [ -s "$_git/info/cg-fetch-initial" ] && initial_done
 exit $ret
