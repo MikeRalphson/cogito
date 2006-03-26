@@ -50,7 +50,7 @@ fi
 if ! [ -s "$_git/HEAD" ]; then
 	rm -f "$_git/HEAD"
 	# XXX: git-symbolic-ref is a weenie and won't do the job at this point.
-	ln -s "refs/heads/$_git_head" "$_git/HEAD"
+	echo "ref: refs/heads/$_git_head" >"$_git/HEAD"
 fi
 
 # Undo seek?
