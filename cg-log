@@ -61,7 +61,7 @@
 #	by their author. This is also known as a "shortlog", suitable
 #	e.g. for contribution summaries of announcements.
 #
-# -S STRING:: Limit to changes touching STRING ("pick-axe")
+# -S, --pickaxe STRING:: Limit to changes touching STRING ("pick-axe")
 #	List only commits with changes concerning STRING (also known as
 #	pick-axe). In other words, only commits where the parent contains
 #	STRING and the child does not contain it at the same place in
@@ -366,7 +366,7 @@ while optparse; do
 		diffmerges=
 	elif optparse -s; then
 		summary=1
-	elif optparse -S=; then
+	elif optparse -S= || optparse --pickaxe=; then
 		always=
 		pickaxe=(-S"$OPTARG")
 		difffilter=pickaxe
