@@ -231,7 +231,7 @@ sub init_head($@) {
 # Process the heads
 {
 	while (@heads) {
-		my $head = splice(@heads, 0, 1);
+		my $head = unshift(@heads);
 
 		print $head->{'str'};
 
