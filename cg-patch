@@ -175,7 +175,7 @@ lookover_patch()
 commit_patch()
 {
 	local file="$1"
-	sed '/^\(---\|-- \)$/,$d' < "$file" | cg-commit
+	sed '/^\(---\|-- \|diff --git .*\)$/,$d' < "$file" | cg-commit
 }
 
 resume_filter()
