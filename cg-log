@@ -50,6 +50,12 @@
 # -M, --no-merges:: Ignore merge commits
 #	Don't display merge commits in the log.
 #
+# -R, --no-renames:: Do not follow renames
+#	By default, `cg-log FILE` will automatically follow file history
+#	across renames. That can add slight extra performance penalty and
+#	sometimes you just do not want `cg-log` to adjust its list of
+#	watched filenames. In that case, use this switch.
+#
 # -s::	Summarize the log entries
 #	Show a one line summary for each log entry. The summary contains
 #	information about the commit date, the author, the first line
@@ -197,7 +203,15 @@ process_commit_line()
 		author="$rest"
 		;;
 	:)
-		files[${#files[@]}]="${rest#*	}"
+		orest="$rest";
+		rest="${rest#*	}"
+		while [ x"$rest" != x"$orest" ]; do
+			files[${#files[@]}]="${rest%%	*}"
+			# Multiple tab-separated filenames are present in case
+			# of rename entries.
+			orest="$rest"
+			rest="${rest#*	}"
+		done
 		;;
 	"")
 		if [ "$state" = silent ]; then
@@ -301,6 +315,8 @@ coldate=
 coltrim=
 coldefault=
 difffilter=
+followrenames=
+neverfollowrenames=
 
 list_files=
 log_start=
@@ -362,6 +378,8 @@ while optparse; do
 	elif optparse -M || optparse --no-merges; then
 		no_merges="--no-merges"
 		diffmerges=
+	elif optparse -R || optparse --no-renames; then
+		neverfollowrenames=1
 	elif optparse -s; then
 		summary=1
 	elif optparse -S= || optparse --pickaxe=; then
@@ -398,16 +416,17 @@ revls="$no_merges $date_from $date_to"
 id1="$(cg-object-id -c "$log_start")" || exit 1
 if [ "$log_end" ]; then
 	id2="$(cg-object-id -c "$log_end")" || exit 1
-	revls="$revls $id2 ^$id1"
+	revls="$revls ^$id1"
+	revlsstart="$id2"
 else
-	revls="$revls $id1"
+	revlsstart="$id1"
 fi
 
-# Later, we will want to use git-diff-tree --stdin for the filtering
-# instead of git-rev-list so that we can do custom renames detection.
-# See also <Pine.LNX.4.64.0510212025260.10477@g5.osdl.org>.
 sep=
-[ "${ARGS[*]}" ] && sep=--
+if [ "${ARGS[*]}" ]; then
+	[ "$neverfollowrenames" ] || followrenames=1
+	sep=--
+fi
 
 # Translate arguments to relpath:
 if [ "$_git_relpath" ]; then
@@ -419,11 +438,18 @@ fi
 # A curious pipeline:
 rev_extract()
 {
-	if [ "$difffilter" ]; then
-		git-rev-list $revls $sep "${ARGS[@]}" | \
+	if [ "$followrenames" ]; then
+		[ "${ARGS[*]}" ] || die "internal error: no files to follow renames on"
+		# We ignore $fmt but that's no biggie, shortlog
+		# will actually work anyway.
+		"${COGITO_LIB}"cg-Xfollowrenames $revls -- \
+			--root --pickaxe-all $diffmerges $always "${pickaxe[@]}" -- \
+			$revlsstart -- "${ARGS[@]}"
+	elif [ "$difffilter" ]; then
+		git-rev-list $revls $revlsstart $sep "${ARGS[@]}" | \
 		git-diff-tree -r --stdin --root --pickaxe-all $diffmerges $always $fmt "${pickaxe[@]}"
 	else
-		git-rev-list $revls $fmt $sep "${ARGS[@]}"
+		git-rev-list $revls $revlsstart $fmt $sep "${ARGS[@]}"
 	fi
 }
 
