@@ -435,6 +435,8 @@ if [ "$_git_relpath" ]; then
 	done
 fi
 
+[ "$followrenames" ] && difffilter=implied
+
 # A curious pipeline:
 rev_extract()
 {
