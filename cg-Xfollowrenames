@@ -175,6 +175,7 @@ message_loaded:
 			@{$head->{'files'}} = grep { $newfile ne $_ } @{$head->{'files'}};
 		}
 	}
+	$head->{'str'} .= "\n";
 delta_loaded:
 
 	if ($rename) {
@@ -194,9 +195,11 @@ sub load_commit($) {
 	# In case there was a merge, the commit will be multiple times
 	# here, each time with a different delta section. Read them all.
 	for (1 .. $#{$head->{'parents'}}) { # stupid vim syntax highlighting
-		$head->{'str'} .= "\n";
 		read_commit($head, 1) or return undef;
 	}
+
+	# Cut the last \n. We don't want it for the last commit.
+	substr($head->{'str'}, -1, 1, '');
 
 	return 1;
 }
@@ -234,7 +237,7 @@ sub init_head($@) {
 	while (@heads) {
 		my $head = shift(@heads);
 
-		print "\n" unless $first++;
+		print "\n" unless $first; $first = 0;
 		print $head->{'str'};
 
 		foreach my $parent (keys %{$head->{'recurse'}}) {
