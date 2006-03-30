@@ -79,5 +79,5 @@ cat "$TMPFILE" | sed "s|^|$_git_relpath|" | path_xargs git-update-index --add ${
 
 rm "$TMPFILE"
 
-[ "$error" ] && die "warning: not all files could have been added"
+[ "$error" ] && die "warning: not all items could have been added"
 exit 0
