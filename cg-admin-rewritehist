@@ -143,7 +143,7 @@ filter_tree=
 filter_index=
 filter_parent=
 filter_msg=cat
-filter_commit=git-commit-tree
+filter_commit='git-commit-tree "$@"'
 while optparse; do
 	if optparse -d=; then
 		tempdir="$OPTARG"
