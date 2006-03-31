@@ -71,6 +71,7 @@ Pre-1.0 stuff:
 	  whitespace errors and stuff; hooks are good for this too,
 	  but I think it's good to have internal support for the
 	  basic stuff. (Get inspired in git-commit.)
+	* git-commit --amend - cg-admin-uncommit + cg-commit -c -e
 
 * cg-shelf - shelve changes temporarily
 	This saves your current uncommitted changes, removes them from the
