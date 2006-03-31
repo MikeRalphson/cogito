@@ -181,7 +181,7 @@ process_commit_line()
 {
 	if [ "$key" = "%" ] || [ "$key" = "%$colsignoff" ]; then
 		# The fast common case
-		[ "$state" = silent ] || msg="$msg    ${rest:1}
+		[ "$state" = silent ] || msg="$msg    ${rest#?}
 "
 		return
 	fi
