@@ -19,13 +19,18 @@
 # -r:: Remove files recursively
 #	If you pass cg-rm this flag and any directory names, it will try
 #	to remove files in those directories recursively.
+#
+# -a:: Remove all files which are gone from the working copy
+#	Record removal of all files which have been deleted from
+#	the working copy.
 
-USAGE="cg-rm [-f] [-n] [-r] FILE..."
+USAGE="cg-rm [-f] [-n] [-r] [-a] FILE..."
 
 . "${COGITO_LIB}"cg-Xlib || exit 1
 
 delete=
 recursive=
+rmgone=
 while optparse; do
 	if optparse -f; then
 		delete=1
@@ -33,12 +38,14 @@ while optparse; do
 		delete=
 	elif optparse -r; then
 		recursive=1
+	elif optparse -a; then
+		rmgone=1
 	else
 		optfail
 	fi
 done
 
-[ -n "${ARGS[*]}" ] || usage
+[ -n "${ARGS[*]}" -o "$rmgone" ] || usage
 
 TMPFILE="$(mktemp -t gitrm.XXXXXX)" || exit 1
 TMPDIRFILE="$(mktemp -t gitrm.XXXXXX)" || exit 1
@@ -57,6 +64,14 @@ for file in "${ARGS[@]}"; do
 		echo "$file" >>"$TMPFILE"
 	fi
 done
+
+if [ "$rmgone" ]; then
+	cg-status -s \! -n -w >>"$TMPFILE"
+	if [ ! -s "$TMPFILE" ]; then
+		rm "$TMPFILE" "$TMPDIRFILE"
+		die "no files to remove"
+	fi
+fi
 
 cat "$TMPFILE" | sed 's/^/Removing file /'
 if [ "$delete" ]; then (
