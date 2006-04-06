@@ -26,6 +26,17 @@
 #	branch out - please refer to the documentation of a close
 #	relative, `cg-admin-uncommit`.
 #
+# -l:: Preserve local changes in the branch
+#	If your working tree has uncommitted local changes, the default
+#	behaviour is that the changes will be reapplied to the new
+#	branch after switching. With this option, however, the local
+#	changes will be "kept" with your previous branch, you will
+#	get a pristine tree of the new branch and when you switch back
+#	to the original branch you will also get back the local changes.
+#	(You do not need to pass any special switches when switching
+#	back, '-l' has effect only on the branch you are switching _away_
+#	from.)
+#
 # -n:: No switch; only create and update the branch
 #	Do not switch your current branch to the given branch. This
 #	will make cg-switch to only create or update the branch, but
@@ -61,7 +72,7 @@
 #
 # 	$ cg-switch -f -r testing v1.x
 
-USAGE="cg-switch [-f] [-n] [-r COMMIT_ID] BRANCH"
+USAGE="cg-switch [-f] [-l] [-n] [-r COMMIT_ID] BRANCH"
 _git_requires_root=1
 
 . "${COGITO_LIB}"cg-Xlib || exit 1
@@ -77,11 +88,14 @@ repoint_head() {
 
 
 force=
+savelocal=
 seek=1
 dstcommit=
 while optparse; do
 	if optparse -f; then
 		force=1
+	elif optparse -l; then
+		savelocal=1
 	elif optparse -n; then
 		seek=
 	elif optparse -r=; then
@@ -129,10 +143,58 @@ fi
 
 if [ "$seek" ]; then
 	[ -n "$dstcommit" ] || dstcommit="$(cg-object-id -c "$dsthead")"
-	echo "Switching to branch $dsthead..."
 	if [ "x$curcommit" != "x$dstcommit" ]; then
+		# Shelve local changes
+		if [ "$savelocal" ]; then
+			# TODO: Later, move this to cg-shelve or something and make it available for general use.
+			echo "Saving local changes..."
+			if [ -s "$_git/refs/heads/.cg-shelve-$_git_head" ]; then
+				echo "Warning: Your current branch already has some local changes saved. Refusing to overwrite them." >&2
+				echo "This could happen if you switched away using 'cg-switch -l' but did not switch back using cg-switch." >&2
+				dirty="$_git_head-dirty"
+				if [ -s "$_git/refs/heads/$dirty" ]; then
+					i=1; while [ -s "$_git/refs/heads/$dirty$i" ]; do i=$((i+1)); done
+					dirty="$dirty$i"
+				fi
+				mv "$_git/refs/heads/.cg-shelve-$_git_head" "$_git/refs/heads/$dirty"
+				echo "I have created branch $dirty and made the old local changes available as its last commit." >&2
+			fi
+			cp "$_git/refs/heads/$_git_head" "$_git/refs/heads/.cg-shelve-$_git_head"
+			git-symbolic-ref HEAD "refs/heads/.cg-shelve-$_git_head"
+			cg-commit -m"[@internal@] cg-switch local changes shelve" -m"This commit for internal Cogito use stores uncommitted local changes at the time of cg-switch -l away from $_git_head." >/dev/null
+			# Restoring HEAD now is useful in case anything bad happens later
+			git-symbolic-ref HEAD "refs/heads/$_git_head"
+			curcommit="$(cg-object-id -c "refs/heads/.cg-shelve-$_git_head")"
+		fi
+
+		echo "Switching to branch $dsthead..."
 		# tree_timewarp returns false on local modifications
 		tree_timewarp --no-head-update "along" "please rollback" "$curcommit" "$dstcommit" || :
+
+		# Unshelve local changes
+		if [ -s "$_git/refs/heads/.cg-shelve-$dsthead" ]; then
+			# TODO: Later, move this to cg-unshelve or something and make it available for general use.
+			# XXX: We will not properly restore merges, but that
+			# doesn't matter now since we won't let you cg-switch
+			# away from them in the first place. There are two
+			# tricky issues:
+			# * preserving the parents - not too tricky if you
+			#   error out when the base branch changed in the
+			#   meantime
+			# * preserving the set of files with local changes
+			#   ignored by the merge. We will need to do some
+			#   extra bookkeeping here, possibly in the cmomit
+			#   message
+			# * when we get proper conflicts handling, we need
+			#   to remember to override it when shelving and
+			#   restore the list of commits after unshelving.
+			echo "Restoring local changes..."
+			shelvecommit="$(cg-object-id -c "refs/heads/.cg-shelve-$dsthead")"
+			tree_timewarp --no-head-update "along" "please roll" "$dstcommit" "$shelvecommit" || :
+			rm "$_git/refs/heads/.cg-shelve-$dsthead"
+		fi
+	else
+		echo "Switching to branch $dsthead..."
 	fi
 	git-symbolic-ref HEAD "refs/heads/$dsthead"
 fi
