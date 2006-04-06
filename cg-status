@@ -5,7 +5,9 @@
 # Copyright (c) Pavel Roskin 2005
 #
 # The output includes the list of branches and merge status.
-# Current branch is marked by ">", remote branches are marked by "R".
+# Current branch is marked with ">", remote branches are marked with "R".
+# Branches with shelved local changes (currently produced only by
+# `cg-switch -l`) are marked with "s".
 #
 # Then, the files in the working tree are printed out. The output has
 # the following format:
@@ -146,18 +148,20 @@ if [ "$gitstatus" ]; then
 	fi
 
 	echo "Heads:"
-	maxlen="$(find "$_git/refs/heads" ! -type d |
+	# -name * will prevent listing hidden heads
+	maxlen="$(find "$_git/refs/heads" -name '*' -a ! -type d |
 	          while read l; do l=${l#$_git/refs/heads}; echo ${#l}; done |
 	          sort -nr | head -n 1)"
 	[ "$maxlen" -gt 35 ] && maxlen=35
-	find "$_git/refs/heads" ! -type d | sort | while read head; do 
+	find "$_git/refs/heads" -name '*' -a ! -type d | sort | while read head; do 
 		headsha1="$(cat "$head")"
 		headname="${head#$_git/refs/heads/}"
 		[ "$headname" = "cg-seek-point" ] && continue
-		cf=" "; rf=" "
+		cf=" "; rf=" "; sf=" ";
 		[ "$headname" = "$_git_head" ] && cf=">"
 		[ -s "$_git/branches/$headname" ] && rf="R"
-		printf "  %s%s%-${maxlen}s\t%s\n" "$rf" "$cf" "$headname" "$headsha1"
+		[ -s "$_git/refs/heads/.cg-shelve-$headname" ] && sf="s"
+		printf "  %s%s%s%-${maxlen}s\t%s\n" "$sf" "$rf" "$cf" "$headname" "$headsha1"
 	done
 
 	if [ -s "$_git/merging" ]; then
