@@ -19,7 +19,8 @@
 #	Open editor for the tag description message.
 #
 # -m MESSAGE:: Specify tag description message
-#	Message associated with the tag, describing it.
+#	Message associated with the tag, describing it. Multiple -m
+#	parameters will cause several description paragraphs to appear.
 #
 # -k KEYNAME:: Use the given KEYNAME to sign the tag
 #	Use the given key to sign the tag, instead of the default one.
@@ -33,13 +34,13 @@
 #	This is most usually the ID of the commit to tag. Tagging
 #	other objects than commits is possible, but rather "unusual".
 
-USAGE="cg-tag [-e] [-m MESSAGE] [-s [-k KEYNAME]] TAG_NAME [OBJECT_ID]"
+USAGE="cg-tag [-e] [-m MESSAGE]... [-s [-k KEYNAME]] TAG_NAME [OBJECT_ID]"
 
 . "${COGITO_LIB}"cg-Xlib || exit 1
 
 sign=
 keyname=
-msg=
+msgs=()
 editor=
 while optparse; do
 	if optparse -s; then
@@ -47,11 +48,11 @@ while optparse; do
 	elif optparse -k=; then
 		keyname="$OPTARG"
 	elif optparse -m=; then
-		msg="$OPTARG"
+		msgs[${#msgs[@]}]="$OPTARG"
 	elif optparse -d=; then
 		# 20060407 cogito-0.17.1-g382c125
 		warn -b "cg-tag -d is obsolete, please use cg-tag -m instead"
-		msg="$OPTARG"
+		msgs[${#msgs[@]}]="$OPTARG"
 	elif optparse -e; then
 		editor=1
 	else
@@ -84,10 +85,11 @@ LOGMSG2="$tagdir/log2"
 
 written=
 
-if [ -n "$msg" ]; then
+for msg in "${msgs[@]}"; do
+	[ "$written" ] && echo >>"$LOGMSG"
 	echo "$msg" | fmt -s >>"$LOGMSG"
 	written=1
-fi
+done
 
 # Always have at least one blank line, to ease the editing for
 # the poor people whose text editor has no 'O' command.
