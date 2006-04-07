@@ -13,8 +13,8 @@
 #
 # OPTIONS
 # -------
-# -d DESCRIPTION:: Specify tag description
-#	Description of the tag.
+# -m MESSAGE:: Specify tag message
+#	Message associated with the tag, describing it.
 #
 # -k KEYNAME:: Use the given KEYNAME to sign the tag
 #	Use the given key to sign the tag, instead of the default one.
@@ -28,20 +28,24 @@
 #	This is most usually the ID of the commit to tag. Tagging
 #	other objects than commits is possible, but rather "unusual".
 
-USAGE="cg-tag [-d DESCRIPTION] [-s [-k KEYNAME]] TAG_NAME [OBJECT_ID]"
+USAGE="cg-tag [-m MESSAGE] [-s [-k KEYNAME]] TAG_NAME [OBJECT_ID]"
 
 . "${COGITO_LIB}"cg-Xlib || exit 1
 
 sign=
 keyname=
-description=
+msg=
 while optparse; do
 	if optparse -s; then
 		sign=1
 	elif optparse -k=; then
 		keyname="$OPTARG"
+	elif optparse -m=; then
+		msg="$OPTARG"
 	elif optparse -d=; then
-		description="$OPTARG"
+		# 20060407 cogito-0.17.1-g382c125
+		warn -b "cg-tag -d is obsolete, please use cg-tag -m instead"
+		msg="$OPTARG"
 	else
 		optfail
 	fi
@@ -73,9 +77,9 @@ type $type
 tag $name
 tagger $(git-var GIT_COMMITTER_IDENT)
 SIGEND
-if [ "$description" ]; then
+if [ "$msg" ]; then
 	echo >>"$tagdir/tag"
-	echo "$description" >>"$tagdir/tag"
+	echo "$msg" >>"$tagdir/tag"
 fi
 if [ "$sign" ]; then
 	echo >>"$tagdir/tag"
