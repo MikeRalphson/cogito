@@ -26,7 +26,7 @@ warn()
 	fi
 
 	echo "Warning: $@" >&2
-	[ "$beep" ] && echo -e "\a" >&2
+	[ "$beep" ] && echo -ne "\a" >&2
 }
 
 die()
