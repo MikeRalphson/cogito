@@ -10,10 +10,15 @@
 # You can override the default key choice by passing it the -k argument.
 #
 # Takes the tag name and optionally the associated ID as arguments.
+# When the standard input is not a terminal, it will accept the tag
+# description on stdin.
 #
 # OPTIONS
 # -------
-# -m MESSAGE:: Specify tag message
+# -e:: Run tag description message editor
+#	Open editor for the tag description message.
+#
+# -m MESSAGE:: Specify tag description message
 #	Message associated with the tag, describing it.
 #
 # -k KEYNAME:: Use the given KEYNAME to sign the tag
@@ -28,13 +33,14 @@
 #	This is most usually the ID of the commit to tag. Tagging
 #	other objects than commits is possible, but rather "unusual".
 
-USAGE="cg-tag [-m MESSAGE] [-s [-k KEYNAME]] TAG_NAME [OBJECT_ID]"
+USAGE="cg-tag [-e] [-m MESSAGE] [-s [-k KEYNAME]] TAG_NAME [OBJECT_ID]"
 
 . "${COGITO_LIB}"cg-Xlib || exit 1
 
 sign=
 keyname=
 msg=
+editor=
 while optparse; do
 	if optparse -s; then
 		sign=1
@@ -46,6 +52,8 @@ while optparse; do
 		# 20060407 cogito-0.17.1-g382c125
 		warn -b "cg-tag -d is obsolete, please use cg-tag -m instead"
 		msg="$OPTARG"
+	elif optparse -e; then
+		editor=1
 	else
 		optfail
 	fi
@@ -71,15 +79,50 @@ mkdir -p "$_git/refs/tags"
 
 tagdir="$(mktemp -d -t gittag.XXXXXX)"
 
+LOGMSG="$tagdir/log"
+LOGMSG2="$tagdir/log2"
+
+written=
+
+if [ -n "$msg" ]; then
+	echo "$msg" | fmt -s >>"$LOGMSG"
+	written=1
+fi
+
+# Always have at least one blank line, to ease the editing for
+# the poor people whose text editor has no 'O' command.
+[ "$written" ] || { tty -s && echo >>"$LOGMSG"; }
+
+editor_comment_start tag
+# TODO: Signing stuff
+editor_comment_end tag
+editor_msg_end
+
+cp "$LOGMSG" "$LOGMSG2"
+if tty -s; then
+	if [ "$editor" ] && ! editor $commitalways tag t; then
+		rm -rf "$tagdir"
+		echo "Tag message not modified, tagging aborted" >&2
+		exit 1
+	fi
+	# TODO: Signing stuff
+else
+	cat >>"$LOGMSG2"
+fi
+
+editor_parse_clean
+rm "$LOGMSG2"
+
+
 cat <<SIGEND >"$tagdir/tag"
 object $id
 type $type
 tag $name
 tagger $(git-var GIT_COMMITTER_IDENT)
 SIGEND
-if [ "$msg" ]; then
+if [ -s "$LOGMSG" ]; then
 	echo >>"$tagdir/tag"
-	echo "$msg" >>"$tagdir/tag"
+	cat "$LOGMSG" >>"$tagdir/tag"
 fi
 if [ "$sign" ]; then
 	echo >>"$tagdir/tag"
@@ -93,5 +136,6 @@ if ! git-mktag <"$tagdir/tag" >"$_git/refs/tags/$name"; then
 	rm -rf "$tagdir"
 	die "error creating tag"
 fi
+echo "Tagged $id as $name"
 
 rm -rf "$tagdir"
