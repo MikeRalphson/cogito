@@ -62,10 +62,6 @@ Pre-1.0 stuff:
 	* Again, an email interface - frontend to applymbox and stuff...
 	* Dealing with copies - will require a complete rewrite or something
 
-* cg-tag enhancements
-	* Provide the same -m and editor and stdin interface as cg-commit;
-	  the shared stuff should be libraryized.
-
 * cg-commit enhancements
 	* Possibly verify the patch being committed against
 	  whitespace errors and stuff; hooks are good for this too,
