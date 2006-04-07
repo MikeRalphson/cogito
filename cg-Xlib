@@ -10,6 +10,12 @@ _cg_cmd=${0##*/}
 _cleanup_code=
 
 
+
+#######################################################################
+#
+# Program lifetime and error reporting                             {{{1
+#
+
 warn()
 {
 	local beep=
@@ -43,22 +49,12 @@ cleanup_trap()
 	trap "echo; die \"interrupted\"" SIGINT SIGTERM
 }
 
-pager()
-{
-	local cgless
-	# A little trick to tell the difference between unset and set-to-empty
-	# variable:
-	if [ "${CG_LESS+set}" = "set" ]; then
-		cgless="$CG_LESS"
-	else
-		cgless="R$_local_CG_LESS$LESS"
-	fi
-	local line
-	# Invoke pager only if there's any actual output
-	if IFS=$'\n' read -r line; then
-		( echo "$line"; cat; ) | LESS="$cgless" ${PAGER:-less} $PAGER_FLAGS
-	fi
-}
+
+
+#######################################################################
+#
+# Stubs for tools we need but aren't everywhere                    {{{1
+#
 
 mktemp()
 {
@@ -150,6 +146,95 @@ tac()
 	perl -e 'print reverse <>'
 }
 
+
+
+#######################################################################
+#
+# Non-stubbish but straightforward tool wrappers                   {{{1
+#
+
+pager()
+{
+	local cgless
+	# A little trick to tell the difference between unset and set-to-empty
+	# variable:
+	if [ "${CG_LESS+set}" = "set" ]; then
+		cgless="$CG_LESS"
+	else
+		cgless="R$_local_CG_LESS$LESS"
+	fi
+	local line
+	# Invoke pager only if there's any actual output
+	if IFS=$'\n' read -r line; then
+		( echo "$line"; cat; ) | LESS="$cgless" ${PAGER:-less} $PAGER_FLAGS
+	fi
+}
+
+# Usage: showdate SECONDS TIMEZONE [FORMAT]
+# Display date nicely based on how GIT stores it.
+# Save the date to $_showdate
+showdate()
+{
+	local secs=$1 tzhours=${2:0:3} tzmins=${2:0:1}${2:3} format="$3"
+	# bash doesn't like leading zeros
+	[ "${tzhours:1:1}" = 0 ] && tzhours=${2:0:1}${2:2:1}
+	secs=$(($secs + $tzhours * 3600 + $tzmins * 60))
+	[ "$format" ] || format="+%a, %d %b %Y %H:%M:%S $2"
+	if [ "$has_gnudate" ]; then
+		_showdate="$(LANG=C "$has_gnudate" -ud "1970-01-01 UTC + $secs sec" "$format")"
+	else
+		_showdate="$(LANG=C date -u -r $secs "$format")"
+	fi
+}
+
+
+
+#######################################################################
+#
+# Ident-related tools                                              {{{1
+#
+
+pick_id()
+{
+	local lid="$1" uid="$2"
+	local pick_id_script='
+		/^'$lid' /{
+			s/'\''/'\''\\'\'\''/g
+			h
+			s/^'$lid' \([^<]*\) <[^>]*> .*$/\1/
+			s/'\''/'\''\'\'\''/g
+			s/.*/export GIT_'$uid'_NAME='\''&'\''/p
+
+			g
+			s/^'$lid' [^<]* <\([^>]*\)> .*$/\1/
+			s/'\''/'\''\'\'\''/g
+			s/.*/export GIT_'$uid'_EMAIL='\''&'\''/p
+
+			g
+			s/^'$lid' [^<]* <[^>]*> \(.*\)$/\1/
+			s/'\''/'\''\'\'\''/g
+			s/.*/export GIT_'$uid'_DATE='\''&'\''/p
+
+			q
+		}
+	'
+	LANG=C LC_ALL=C sed -ne "$pick_id_script"
+	# Ensure non-empty id name.
+	echo "[ -z \"\$GIT_${uid}_NAME\" ] && export GIT_${uid}_NAME=\"\${GIT_${uid}_EMAIL%%@*}\""
+}
+
+pick_author()
+{
+	pick_id author AUTHOR
+}
+
+
+
+#######################################################################
+#
+# Path toolkit for handling path-per-line lists                    {{{1
+#
+
 # echo PATH | normpath
 # Normalize the path, handling and removing any superfluous .. and .
 # elements. Typically
@@ -202,23 +287,6 @@ maynormpath()
 path_xargs()
 {
 	normpath | tr '\n' '\0' | xargs -0 "$@"
-}
-
-# Setup COGITO_REAL_SHARE to COGITO_SHARE if make install'd, or to
-# the most probable location if not.
-find_cogito_share()
-{
-	if [ -n "${COGITO_SHARE}" ]; then
-		COGITO_REAL_SHARE="${COGITO_SHARE}"
-		return
-	fi
-	if [ "${0%/*}" != "$0" ]; then
-		COGITO_REAL_SHARE="${0%/*}/"
-		return
-	fi
-	# I'm not sure if the following normally ever gets triggered.
-	# I can only do it by `sh cg-status`. --pasky
-	COGITO_REAL_SHARE="./$_git_relpath/"
 }
 
 # Equivalent to cg-status -w -n -s '?', but the filenames are delimited
@@ -277,56 +345,12 @@ list_untracked_files()
 	git-ls-files -z --others $listdirs "${EXCLUDE[@]}"
 }
 
-pick_id()
-{
-	local lid="$1" uid="$2"
-	local pick_id_script='
-		/^'$lid' /{
-			s/'\''/'\''\\'\'\''/g
-			h
-			s/^'$lid' \([^<]*\) <[^>]*> .*$/\1/
-			s/'\''/'\''\'\'\''/g
-			s/.*/export GIT_'$uid'_NAME='\''&'\''/p
 
-			g
-			s/^'$lid' [^<]* <\([^>]*\)> .*$/\1/
-			s/'\''/'\''\'\'\''/g
-			s/.*/export GIT_'$uid'_EMAIL='\''&'\''/p
 
-			g
-			s/^'$lid' [^<]* <[^>]*> \(.*\)$/\1/
-			s/'\''/'\''\'\'\''/g
-			s/.*/export GIT_'$uid'_DATE='\''&'\''/p
-
-			q
-		}
-	'
-	LANG=C LC_ALL=C sed -ne "$pick_id_script"
-	# Ensure non-empty id name.
-	echo "[ -z \"\$GIT_${uid}_NAME\" ] && export GIT_${uid}_NAME=\"\${GIT_${uid}_EMAIL%%@*}\""
-}
-
-pick_author()
-{
-	pick_id author AUTHOR
-}
-
-# Usage: showdate SECONDS TIMEZONE [FORMAT]
-# Display date nicely based on how GIT stores it.
-# Save the date to $_showdate
-showdate()
-{
-	local secs=$1 tzhours=${2:0:3} tzmins=${2:0:1}${2:3} format="$3"
-	# bash doesn't like leading zeros
-	[ "${tzhours:1:1}" = 0 ] && tzhours=${2:0:1}${2:2:1}
-	secs=$(($secs + $tzhours * 3600 + $tzmins * 60))
-	[ "$format" ] || format="+%a, %d %b %Y %H:%M:%S $2"
-	if [ "$has_gnudate" ]; then
-		_showdate="$(LANG=C "$has_gnudate" -ud "1970-01-01 UTC + $secs sec" "$format")"
-	else
-		_showdate="$(LANG=C date -u -r $secs "$format")"
-	fi
-}
+#######################################################################
+#
+# Misc. common Git operations wrappers                             {{{1
+#
 
 # Usage: tree_timewarp [--no-head-update] DIRECTION_STR ROLLBACK_BOOL BASE BRANCH
 # Reset the current tree from version BASE to version BRANCH, properly updating
@@ -432,6 +456,29 @@ is_same_repo()
 }
 
 
+
+#######################################################################
+#
+# Meta-tools for keeping things sticking together                  {{{1
+#
+
+# Setup COGITO_REAL_SHARE to COGITO_SHARE if make install'd, or to
+# the most probable location if not.
+find_cogito_share()
+{
+	if [ -n "${COGITO_SHARE}" ]; then
+		COGITO_REAL_SHARE="${COGITO_SHARE}"
+		return
+	fi
+	if [ "${0%/*}" != "$0" ]; then
+		COGITO_REAL_SHARE="${0%/*}/"
+		return
+	fi
+	# I'm not sure if the following normally ever gets triggered.
+	# I can only do it by `sh cg-status`. --pasky
+	COGITO_REAL_SHARE="./$_git_relpath/"
+}
+
 # Checks if we weren't called through a deprecated alias
 deprecated_alias()
 {
@@ -443,6 +490,12 @@ deprecated_alias()
 	done
 }
 
+
+
+#######################################################################
+#
+# Help and options parsing                                         {{{1
+#
 
 print_help()
 {
@@ -563,6 +616,12 @@ optparse()
 	fi
 }
 
+
+
+#######################################################################
+#
+# Common Cogito tools initialization                               {{{1
+#
 
 
 # Optional tools detection/stubbing
