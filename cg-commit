@@ -222,7 +222,7 @@ while optparse; do
 		forceeditor=1
 	elif optparse -E; then
 		forceeditor=1
-		commitalways=1
+		commitalways=-f
 	elif optparse -f; then
 		force=1
 	elif optparse -q; then
@@ -362,14 +362,9 @@ if [ "$signoff" ] && ! grep -q -i "signed-off-by: $signoff" $LOGMSG; then
 	echo "Signed-off-by: $signoff"
 fi >> $LOGMSG
 
-if [ -e "$_git/commit-template" ]; then
-	cat "$_git/commit-template" >>"$LOGMSG"
-else
-	cat >>"$LOGMSG" <<EOT
-CG: -----------------------------------------------------------------------
-CG: Lines beginning with the CG: prefix are removed automatically.
-EOT
-fi
+# CG: -----------------------------------------------------------------------
+editor_comment_start commit
+
 if [ "$GIT_AUTHOR_NAME" -o "$GIT_AUTHOR_EMAIL" -o "$GIT_AUTHOR_DATE" ]; then
 	echo "CG:" >>"$LOGMSG"
 	[ "$GIT_AUTHOR_NAME" ] && echo "CG: Author: $GIT_AUTHOR_NAME" >>"$LOGMSG"
@@ -407,9 +402,11 @@ if [ "$review" ]; then
 	git-apply --stat --summary < "$PATCH" | sed 's/^/CG: /'
 	echo "CG:"
 fi >>"$LOGMSG"
-[ "$commitalways" ] || echo "CG: Do not save this file and just quit if you want to abort the commit." >>"$LOGMSG"
-echo "CG: -----------------------------------------------------------------------" >>"$LOGMSG"
 
+# CG: -----------------------------------------------------------------------
+editor_comment_end $commitalways commit
+
+ftdiff=
 if [ "$review" ]; then
 	{
 		echo "CG:"
@@ -420,37 +417,25 @@ if [ "$review" ]; then
 		cat "$PATCH"
 	} >>"$LOGMSG"
 
-	ftdiff="filetype=diff"
+	ftdiff=" filetype=diff"
 fi
-
-echo "CG: vim: textwidth=75 $ftdiff" >>"$LOGMSG"
+editor_msg_end $ftdiff
 
 cp "$LOGMSG" "$LOGMSG2"
 if tty -s; then
-	if [ "$editor" ]; then
-		${EDITOR:-vi} "$LOGMSG2"
-		if ! [ "$commitalways" ] && ! [ "$LOGMSG2" -nt "$LOGMSG" ]; then
-			echo "Log message unchanged or not specified" >&2
-			while true; do
-				read -p 'Abort or commit? [ac] ' choice
-				if [ "$choice" = "a" ] || [ "$choice" = "q" ]; then
-					rm "$LOGMSG" "$LOGMSG2"
-					[ "$review" ] && rm "$PATCH" "$PATCH2"
-					echo "Commit message not modified, commit aborted" >&2
-					if [ "$merging" ]; then
-						cat >&2 <<__END__
+	if [ "$editor" ] && ! editor $commitalways commit c; then
+		rm "$LOGMSG" "$LOGMSG2"
+		[ "$review" ] && rm "$PATCH" "$PATCH2"
+		echo "Commit message not modified, commit aborted" >&2
+		if [ "$merging" ]; then
+			cat >&2 <<__END__
 Note that the merge is NOT aborted - you can cg-commit again, cg-reset will abort it.
 __END__
-						[ -s "$_git/commit-ignore" ] && cat >&2 <<__END__
+			[ -s "$_git/commit-ignore" ] && cat >&2 <<__END__
 (But note that cg-reset will remove your pending local changes as well!)
 __END__
-					fi
-					exit 1
-				elif [ "$choice" = "c" ]; then
-					break
-				fi
-			done
 		fi
+		exit 1
 	fi
 	if [ ! "$ignorecache" ] && [ ! "$merging" ] && [ ! "$review" ]; then
 		eval "newcommitfiles=($(grep ^CG:F "$LOGMSG2" | sed 's/^CG:F *\(.*\)$/"\1"/'))"
@@ -463,25 +448,18 @@ __END__
 			customfiles=1
 		fi
 	fi
-	setif () {
-		if ! grep -q "^CG: $2:" "$LOGMSG2"; then
-			unset $1
-		else
-			export $1="$(grep "^CG: $2:" "$LOGMSG2" | cut -d ' ' -f 3-)"
-		fi
-	}
-	setif GIT_AUTHOR_NAME Author
-	setif GIT_AUTHOR_EMAIL Email
-	setif GIT_AUTHOR_DATE Date
+	editor_parse_setif GIT_AUTHOR_NAME Author
+	editor_parse_setif GIT_AUTHOR_EMAIL Email
+	editor_parse_setif GIT_AUTHOR_DATE Date
 else
 	cat >>"$LOGMSG2"
 fi
 
-# Remove heading and trailing blank lines.
 if [ ! "$review" ]; then
-	grep -v ^CG: "$LOGMSG2" | git-stripspace >"$LOGMSG"
+	editor_parse_clean
 else
-	sed '/^CG: Changes summary:/,$d' < "$LOGMSG2" | grep -v ^CG: | git-stripspace >"$LOGMSG"
+	sed '/^CG: Changes summary:/,$d' < "$LOGMSG2" > "$LOGMSG"
+	mv "$LOGMSG" "$LOGMSG2"; editor_parse_clean
 	sed -n '/^CG: Changes summary:/,$p' < "$LOGMSG2" | grep -v ^CG: > "$PATCH2"
 fi
 rm "$LOGMSG2"

@@ -349,6 +349,84 @@ list_untracked_files()
 
 #######################################################################
 #
+# Common message editor tools                                      {{{1
+#
+
+editor_comment_start()
+{
+	if [ -e "$_git/$1-template" ]; then
+		cat "$_git/$1-template" >>"$LOGMSG"
+	else
+		cat >>"$LOGMSG" <<EOT
+CG: -----------------------------------------------------------------------
+CG: Lines beginning with the CG: prefix are removed automatically.
+EOT
+	fi
+}
+
+# editor_comment_end [-f] ACTIONNAME
+editor_comment_end()
+{
+	local force= actionname=
+	if [ "$1" = "-f" ]; then
+		force=1; shift
+	fi
+	actionname="$1"; shift
+	[ "$force" ] || echo "CG: Do not save this file and just quit if you want to abort the $actionname." >>"$LOGMSG"
+	echo "CG: -----------------------------------------------------------------------" >>"$LOGMSG"
+}
+
+editor_msg_end()
+{
+	echo "CG: vim: textwidth=75$*" >>"$LOGMSG"
+}
+
+editor_parse_setif()
+{
+	if ! grep -q "^CG: $2:" "$LOGMSG2"; then
+		unset $1
+	else
+		export $1="$(grep "^CG: $2:" "$LOGMSG2" | cut -d ' ' -f 3-)"
+	fi
+}
+
+editor_parse_clean()
+{
+	grep -v ^CG: "$LOGMSG2" | git-stripspace >"$LOGMSG"
+}
+
+# editor [-f] ACTIONNAME ACTIONKEY
+# W/o -f asks what-to-do if user didn't modify the log message.
+# Returns $?:
+# 0	all went fine, new log message saved in $LOGMSG2
+# 1	aborted by user
+editor()
+{
+	local force= actionname= actionkey=
+	if [ "$1" = "-f" ]; then
+		force=1; shift
+	fi
+	actionname="$1"; shift
+	actionkey="$1"; shift
+
+	${EDITOR:-vi} "$LOGMSG2"
+	[ "$force" ] && return 0
+	[ "$LOGMSG2" -nt "$LOGMSG" ] && return 0
+
+	echo "Log message unchanged or not specified" >&2
+	while true; do
+		read -p "Abort or $actionname? [a$actionkey] " choice
+		if [ "$choice" = "a" ] || [ "$choice" = "q" ]; then
+			return 1
+		elif [ "$choice" = "$actionkey" ]; then
+			return 0
+		fi
+	done
+}
+
+
+#######################################################################
+#
 # Misc. common Git operations wrappers                             {{{1
 #
 
