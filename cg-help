@@ -15,7 +15,27 @@
 # OPTIONS
 # -------
 # -c::	Colorize
-#	Colorize the output.
+#	Colorize the output. You can customize the colors using the
+#	$CG_COLORS environment variable (see below).
+#
+# ENVIRONMENT VARIABLES
+# ---------------------
+# PAGER::
+#	The pager to display log information in, defaults to `less`.
+#
+# PAGER_FLAGS::
+#	Flags to pass to the pager.
+#
+# CG_COLORS::
+#	Colon-separated list of 'name=color' pairs, where name is
+#	one of helpcopy, helpusage, helpsection, helplitem, helpcgcmd,
+#	helpcode, helpempth, default, and value is an ECMA-48 SGR
+#	sequence (see e.g. console_codes(4)).
+#
+# CG_LESS::
+#	This is what the $LESS environment variable value will be set
+#	to before invoking $PAGER. It defaults to $LESS concatenated
+#	with the `R` flag to allow displaying of colorized output.
 
 USAGE="cg-help [-c] [cg-COMMAND | COMMAND]"
 _git_repo_unneeded=1
@@ -24,26 +44,24 @@ _git_repo_unneeded=1
 
 setup_colors()
 {
-	local color_none="$(tput op)"
-	local emphasize="$(tput setaf 1)"
-	local desclist="$(tput setaf 3)"
-	local cgcmd="$(tput setaf 2)"
-	local codesnippet="$(tput setaf 6)"
-	local usage="$(tput setaf 3)"
-	local section="$(tput setaf 5)"
-	local copyright="$(tput setaf 4)"
+	local C="helpcopy=34:helpusage=33"
+	C="$C:helpsection=35:helplitem=33"
+	C="$C:helpcgcmd=32:helpcode=36"
+	C="$C:helpempth=31"
+	C="$C:default=0"
+	colorify_setup "$C"
 
 	apply_colors="
-	s/^\(-.*\)::.*/$desclist\1$color_none:/
-	s/^\(.*\)::/$desclist\1$color_none:/
-	s/\`\(cg-[a-z-]*\)\`/$cgcmd\1$color_none/g
-	s/\`\([^\`]*\)\`/$codesnippet&$color_none/g
-	s/[^A-Z0-9a-z_-]\$ .*/$codesnippet&$color_none/g
-	s/'\([^ ]*\)'/$emphasize&$color_none/g
-	s/'\(-[A-Z0-9a-z_-]* [^']*\)'/$emphasize&$color_none/g
-	s/^Usage: .*/$usage&$color_none/
-	/^[A-Z -_]*/,/^---*$/s/^[A-Z -_]*\$/$section&$color_none/
-	s/^Copyright .*/$copyright&$color_none/
+	s/^\(-.*\)::.*/$colhelplitem\1$coldefault:/
+	s/^\(.*\)::/$colhelplitem\1$coldefault:/
+	s/\`\(cg-[a-z-]*\)\`/$colhelpcgcmd\1$coldefault/g
+	s/\`\([^\`]*\)\`/$colhelpcode&$coldefault/g
+	s/[^A-Z0-9a-z_-]\$ .*/$colhelpcode&$coldefault/g
+	s/'\([^ ]*\)'/$colhelpemph&$coldefault/g
+	s/'\(-[A-Z0-9a-z_-]* [^']*\)'/$colhelpemph&$coldefault/g
+	s/^Usage: .*/$colhelpusage&$coldefault/
+	/^[A-Z -_]*/,/^---*$/s/^[A-Z -_]*\$/$colhelpsection&$coldefault/
+	s/^Copyright .*/$colhelpcopy&$coldefault/
 	"
 }
 
