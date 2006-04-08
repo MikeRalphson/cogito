@@ -806,11 +806,11 @@ _git_objects="${GIT_OBJECT_DIRECTORY:-$_git/objects}"
 # Check if we have something to work on, unless the script can do w/o it.
 if [ ! "$_git_repo_unneeded" ]; then
 	if [ ! -d "$_git" ]; then
-	       echo "There is no GIT repository here ($_git not found)" >&2
-	       exit 1
+		echo "There is no GIT repository here ($_git not found)" >&2
+		exit 1
 	elif [ ! -x "$_git" ]; then
-	       echo "You do not have permission to access this GIT repository" >&2
-	       exit 1
+		echo "You do not have permission to access this GIT repository" >&2
+		exit 1
 	fi
 	_git_head=master
 	[ -s "$_git/HEAD" ] && { _git_head="$(git-symbolic-ref HEAD)"; _git_head="${_git_head#refs/heads/}"; }
