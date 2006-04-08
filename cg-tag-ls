@@ -38,8 +38,8 @@ find "$_git/refs/tags" -name '*' -a ! -type d | sort | while read tag; do
 
 	type="$(git-cat-file -t "$sha1" 2>/dev/null)" || flag="!"
 	if [ "$type" = "tag" ]; then
-		title="$(git-cat-file tag "$sha1" | sed -ne '/^$/{n;s/-----BEGIN PGP SIGNATURE-----//;p;q;}')"
-		git-cat-file tag "$sha1" | grep -q '^-----BEGIN PGP SIGNATURE-----$' && flag="S"
+		title="$(git-cat-file tag "$sha1" | sed -ne '/^$/{n;s/^-----BEGIN PGP SIGNATURE-----//;p;q;}')"
+		git-cat-file tag "$sha1" | grep -q '^-----BEGIN PGP SIGNATURE-----' && flag="S"
 	elif [ "$type" ]; then
 		flag="%"
 	fi
