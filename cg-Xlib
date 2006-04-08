@@ -197,7 +197,7 @@ showdate()
 colorify_setup()
 {
 	local C="$1"
-	[ -n "$COGITO_COLORS" ] && C="$C:$COGITO_COLORS"
+	[ -n "$CG_COLORS" ] && C="$C:$CG_COLORS"
 
 	C=${C//=/=\'$'\e'[}
 	C=col${C//:/m\'; col}m\'
