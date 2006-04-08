@@ -47,7 +47,6 @@
 #      diffmod, diffrem, diffhunk, diffctx, default, and value is
 #      an ECMA-48 SGR sequence (see e.g. console_codes(4)).
 #
-#
 # CG_LESS::
 #	This is what the $LESS environment variable value will be set
 #	to before invoking $PAGER. It defaults to $LESS concatenated
