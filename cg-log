@@ -247,13 +247,13 @@ process_commit_line()
 			showdate ${date[*]} '+%F %H:%M'; date="$_showdate"
 			read -r title
 			if [ "${#author}" -gt 15 ]; then
-				author="${author:0:14}$coltrim~"
+				author="${author:0:14}$colsumtrim~"
 			fi
 			if [ "${COLUMNS:-0}" -le 90 ]; then
-				commit="${commit:0:12}$coltrim~"
+				commit="${commit:0:12}$colsumtrim~"
 			fi
 
-			printf "$colcommit%s $colauthor%-15s $coldate%s $coldefault%s\n" \
+			printf "$colsumcommit%s $colsumauthor%-15s $colsumdate%s $coldefault%s\n" \
 				"${commit%:*}" "$author" "$date" "${title:3}"
 			state=silent
 			return
@@ -311,9 +311,10 @@ colauthor=
 colcommitter=
 colfiles=
 colsignoff=
-colcommit=
-coldate=
-coltrim=
+colsumauthor=
+colsumcommit=
+colsumdate=
+colsumtrim=
 coldefault=
 difffilter=
 followrenames=
@@ -342,9 +343,10 @@ while optparse; do
 		colfiles="$(tput setaf 4)"     # Blue
 		colsignoff="$(tput setaf 3)"   # Yellow
 
-		colcommit="$(tput setaf 4)"
-		coldate="$(tput setaf 2)"
-		coltrim="$(tput setaf 5)"
+		colsumauthor="$(tput setaf 6)"
+		colsumcommit="$(tput setaf 4)"
+		colsumdate="$(tput setaf 2)"
+		colsumtrim="$(tput setaf 5)"
 
 		coldefault="$(tput op)"        # Restore default
 	elif optparse -f; then
