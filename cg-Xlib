@@ -191,6 +191,52 @@ showdate()
 
 #######################################################################
 #
+# Multi-column listing with variable column widths                 {{{1
+#
+
+# Usage: width="$(...single column... | column_width MINUSPREFIX MAXWIDTH)"
+column_width()
+{
+	local line= minusprefix="$1" maxwidth="$2"
+	[ "$maxwidth" ] || maxwidth=35
+
+	while read line; do
+		line=${line#$1};
+		echo ${#line}
+	done | sort -nr | head -n 1 |
+	(
+		read maxlen;
+		[ $maxlen -gt $maxwidth ] && maxlen=$maxwidth;
+		echo $maxlen
+	)
+}
+
+# Usage: columns_print COL1 WIDTH COL2 - COL3 tWIDTH COL4 - ...
+columns_print()
+{
+	local fmt= cols=
+	cols=()
+	while [ $# -gt 0 ]; do
+		cols[${#cols[@]}]="$1"; shift
+		local width="$1"; shift
+		local tab=
+		if [ x"${width:0:1}" = x"t" ]; then
+			tab=1; width="${width:1}"
+		fi
+		if [ x"$width" = x"-" ]; then
+			fmt="$fmt%s"
+		else
+			fmt="$fmt%-${width}s"
+		fi
+		[ "$tab" ] && fmt="$fmt\t";
+	done
+	printf "$fmt\n" "${cols[@]}"
+}
+
+
+
+#######################################################################
+#
 # Ident-related tools                                              {{{1
 #
 

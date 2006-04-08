@@ -150,9 +150,7 @@ if [ "$gitstatus" ]; then
 	echo "Heads:"
 	# -name * will prevent listing hidden heads
 	maxlen="$(find "$_git/refs/heads" -name '*' -a ! -type d |
-	          while read l; do l=${l#$_git/refs/heads}; echo ${#l}; done |
-	          sort -nr | head -n 1)"
-	[ "$maxlen" -gt 35 ] && maxlen=35
+	          column_width "$_git/refs/heads")"
 	find "$_git/refs/heads" -name '*' -a ! -type d | sort | while read head; do 
 		headsha1="$(cat "$head")"
 		headname="${head#$_git/refs/heads/}"
@@ -161,7 +159,7 @@ if [ "$gitstatus" ]; then
 		[ "$headname" = "$_git_head" ] && cf=">"
 		[ -s "$_git/branches/$headname" ] && rf="R"
 		[ -s "$_git/refs/heads/.cg-shelve-$headname" ] && sf="s"
-		printf "  %s%s%s%-${maxlen}s\t%s\n" "$sf" "$rf" "$cf" "$headname" "$headsha1"
+		columns_print "  $sf$rf$cf" - "$headname" t$maxlen "$headsha1" -
 	done
 
 	if [ -s "$_git/merging" ]; then
