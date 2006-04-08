@@ -67,12 +67,7 @@ setup_colors()
 	C="$C:diffhdrrem=1;31:diffrem=31"
 	C="$C:diffhunk=36:diffctx=34"
 	C="$C:default=0"
-	[ -n "$COGITO_COLORS" ] && C="$C:$COGITO_COLORS"
-
-	C=${C//=/=\'$'\e'[}
-	C=col${C//:/m\'; col}m\'
-	#coldefault=$(tput op)
-	eval "$C"
+	colorify_setup "$C"
 }
 
 colorize()
