@@ -37,6 +37,7 @@
 #	100644  blob    c7dacd0ea28994e3c754ca4eadb2e08c011ee3d3        README
 
 USAGE="cg-admin-ls [-t TREE_ID] [PATH]"
+_git_wc_unneeded=1
 
 . "${COGITO_LIB}"cg-Xlib || exit 1
 

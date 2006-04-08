@@ -132,6 +132,7 @@
 # as their parents instead of the merge commit.
 
 USAGE="cg-admin-rewritehist [-d TEMPDIR] [-r STARTREV]... [FILTERS] DESTBRANCH"
+_git_wc_unneeded=1
 _git_requires_root=1
 
 . "${COGITO_LIB}"cg-Xlib || exit 1

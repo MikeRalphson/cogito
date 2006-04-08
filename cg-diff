@@ -53,6 +53,7 @@
 # about revision specification.
 
 USAGE="cg-diff [-c] [-m] [-s] [-p] [-r FROM_ID[..TO_ID]] [FILE]..."
+_git_wc_unneeded=1
 
 . "${COGITO_LIB}"cg-Xlib || exit 1
 
@@ -171,6 +172,8 @@ for file in "${ARGS[@]}"; do
 done
 
 if [ "$id2" = " " ]; then
+	[ "$_git_no_wc" ] && die "only cg-diff between two revisions allowed outside a working copy"
+
 	if [ "$id1" != " " ]; then
 		tree="$(cg-object-id -t "$id1")" || exit 1
 	else

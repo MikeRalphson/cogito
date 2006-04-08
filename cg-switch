@@ -74,6 +74,7 @@
 
 USAGE="cg-switch [-f] [-l] [-n] [-r COMMIT_ID] BRANCH"
 _git_requires_root=1
+_git_wc_unneeded=1
 
 . "${COGITO_LIB}"cg-Xlib || exit 1
 
@@ -106,6 +107,9 @@ while optparse; do
 done
 
 [ "${#ARGS[@]}" -eq "1" ] || usage
+
+[ "$_git_no_wc" ] && [ "$seek" ] &&
+	die "only cg-switch -n allowed outside a working copy"
 
 dsthead="${ARGS[0]}"
 [ -s "$_git/branches/$dsthead" ] &&

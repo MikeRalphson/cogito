@@ -91,6 +91,7 @@
 # and `cg-diff` will show a diff.
 
 USAGE="cg-status [-g] [[-n] -s STATUS] [-w] [-x] [DIRPATH]"
+_git_wc_unneeded=1
 
 . "${COGITO_LIB}"cg-Xlib || exit 1
 
@@ -128,6 +129,9 @@ done
 if [ ! "$gitstatus" ] && [ ! "$workstatus" ]; then
 	gitstatus=1
 	workstatus=1
+fi
+if [ "$_git_no_wc" ]; then
+	workstatus=
 fi
 
 
@@ -183,6 +187,11 @@ if [ "$gitstatus" ]; then
 	if [ ! -s "$_git/$(git-symbolic-ref HEAD)" ]; then
 		echo
 		echo "Before initial commit."
+	fi
+
+	if [ "$_git_no_wc" ]; then
+		echo
+		echo "Repository without attached working copy."
 	fi
 fi
 

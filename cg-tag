@@ -43,6 +43,7 @@
 #	other objects than commits is possible, but rather "unusual".
 
 USAGE="cg-tag [-m MESSAGE]... [-e] [-s] [OTHER_OPTIONS] TAG_NAME [OBJECT_ID]"
+_git_wc_unneeded=1
 
 . "${COGITO_LIB}"cg-Xlib || exit 1
 

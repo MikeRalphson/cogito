@@ -45,6 +45,7 @@
 
 
 USAGE="cg-fetch [-f] [-v] [BRANCH_NAME]"
+_git_wc_unneeded=1
 
 . "${COGITO_LIB}"cg-Xlib || exit 1
 deprecated_alias cg-fetch cg-pull
@@ -264,6 +265,9 @@ if echo "$uri" | grep -q '#'; then
 	rembranch=$(echo "$uri" | cut -d '#' -f 2)
 	uri=$(echo "$uri" | cut -d '#' -f 1)
 fi
+
+[ -s "$_git/info/cg-fetch-initial" ] && [ "$_git_no_wc" ] &&
+	die "you must run the initial cg-fetch from the working copy root directory"
 
 # Some other process with the same pid might appear, that's why
 # we won't die but rather let the user check quickly.

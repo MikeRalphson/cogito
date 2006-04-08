@@ -122,6 +122,7 @@
 # about revision specification.
 
 USAGE="cg-log [-D DATE] [-r FROM_ID[..TO_ID]] [-s] [--summary] [OTHER_OPTIONS] FILE..."
+_git_wc_unneeded=1
 
 . "${COGITO_LIB}"cg-Xlib || exit 1
 # Try to fix the annoying "Broken pipe" output. May not help, but apparently

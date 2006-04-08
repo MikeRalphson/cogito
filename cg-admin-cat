@@ -22,6 +22,7 @@
 # Polish and test by:				    ellson@research.att.com
 
 USAGE="cg-admin-cat [-r TREE_ID] FILE..."
+_git_wc_unneeded=1
 
 . "${COGITO_LIB}"cg-Xlib || exit 1
 

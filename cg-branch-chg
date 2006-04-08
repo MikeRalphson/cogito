@@ -9,6 +9,7 @@
 # ones (those managed by `cg-switch`).
 
 USAGE="cg-branch-chg BRANCH_NAME NEW_LOCATION"
+_git_wc_unneeded=1
 
 . "${COGITO_LIB}"cg-Xlib || exit 1
 
