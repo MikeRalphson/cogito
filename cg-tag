@@ -18,6 +18,10 @@
 # -e:: Run tag description message editor
 #	Open editor for the tag description message.
 #
+# -f:: Overwrite existing tag if exists
+#	This will make cg-tag silently overwrite the tag if it already
+#	exists.
+#
 # -m MESSAGE:: Specify tag description message
 #	Message associated with the tag, describing it. Multiple -m
 #	parameters will cause several description paragraphs to appear.
@@ -47,6 +51,7 @@ keyname=
 msgs=()
 msgfile=
 editor=
+force=
 while optparse; do
 	if optparse -s; then
 		sign=1
@@ -62,6 +67,8 @@ while optparse; do
 		msgfile="$OPTARG"
 	elif optparse -e; then
 		editor=1
+	elif optparse -f; then
+		force=1
 	else
 		optfail
 	fi
@@ -80,8 +87,9 @@ git-check-ref-format "refs/tags/$name" || \
 	die "name contains invalid characters"
 
 mkdir -p "$_git/refs/tags"
+[ "$force" ] || [ ! -s "$_git/refs/tags/$name" ] || \
+	die "tag already exists ($name)"
 
-[ -s "$_git/refs/tags/$name" ] && die "tag already exists ($name)"
 [ "$id" ] || id="$(cat "$_git/$(git-symbolic-ref HEAD)")"
 
 
