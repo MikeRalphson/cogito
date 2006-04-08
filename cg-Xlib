@@ -704,17 +704,17 @@ optshift()
 	unset ARGS[$ARGPOS]
 	ARGS=("${ARGS[@]}")
 	[ -z "$1" -o -n "${ARGS[$ARGPOS]}" ] ||
-		die "option \`$1' requires an argument"
+		die "option $1 requires an argument"
 }
 
 optfail()
 {
-	die "unrecognized option \`${ARGS[$ARGPOS]}'"
+	die "unrecognized option ${ARGS[$ARGPOS]}"
 }
 
 optconflict()
 {
-	die "conflicting option \`$CUROPT'"
+	die "conflicting option $CUROPT"
 }
 
 optparse()
