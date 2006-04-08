@@ -81,25 +81,14 @@ colorize()
 	if [ "$opt_summary" ]; then
 		git-apply --summary --stat
 	elif [ "$opt_color" ]; then
-		gawk '
-		{ if (/^(diff --git) /)
-		    print "'$coldiffhdr'" $0 "'$coldefault'"
-		  else if (/^\+\+\+/)
-		    print "'$coldiffhdradd'" $0 "'$coldefault'"
-		  else if (/^---/)
-		    print "'$coldiffhdrrem'" $0 "'$coldefault'"
-		  else if (/^(\+|new( file)? mode )/)
-		    print "'$coldiffadd'" $0 "'$coldefault'"
-		  else if (/^(-|(deleted file|old) mode )/)
-		    print "'$coldiffrem'" $0 "'$coldefault'"
-		  else if (/^@@ \-[0-9]+(,[0-9]+)? \+[0-9]+(,[0-9]+)? @@/)
-		    print gensub(/^(@@[^@]*@@)([ \t]*)(.*)/,
-		         "'$coldiffhunk'" "\\1" "'$coldefault'" \
-			 "\\2" \
-			 "'$coldiffctx'" "\\3" "'$coldefault'", "")
-		  else
-		    print
-		}'
+		sed -e '
+			s/^diff --git.*/'$coldiffhdr'&'$coldefault'/
+			s/^+++.*/'$coldiffhdradd'&'$coldefault'/
+			s/^---.*/'$coldiffhdrrem'&'$coldefault'/
+			s/^\([+]\|new\( file\)\{0,1\} mode \).*/'$coldiffadd'&'$coldefault'/
+			s/^\([-]\|\(deleted file\|old\) mode \).*/'$coldiffrem'&'$coldefault'/
+			s/^\(@@ -.* +.* @@\)\(.*\)/'$coldiffhunk'\1'$coldiffctx'\2'$coldefault'/
+		'
 	else
 		cat
 	fi

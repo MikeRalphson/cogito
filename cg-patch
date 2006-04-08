@@ -359,13 +359,13 @@ tee "$patchfifo" | {
 			# Copy support is impossible without complete rewrite
 			# since we need to copy _first_ then apply the patch
 			# to the copy.
-			meta="$(echo "$line" | awk '
-				/^deleted file mode [0-9]+/ {print "D-"$4}
-				/^old mode [0-9]+/ {print "-"$3}
-				/^new file mode [0-9]+/ {print "A+"$4}
-				/^new mode [0-9]+/ {print "+"$3}
-				/^rename from / {sub(/^rename from /,""); print "RD"$0}
-				/^rename to / {sub(/^rename to /,""); print "RA"$0}
+			meta="$(echo "$line" | sed -ne '
+				s/^deleted file mode \([0-9]*\).*$/D-\1/p
+				s/^old mode \([0-9]*\).*$/-\1/p
+				s/^new file mode \([0-9]*\).*$/A+\1/p
+				s/^new mode \([0-9]*\).*$/+\1/p
+				s/^rename from /RD/p
+				s/^rename to /RA/p
 			')"
 			if [ "${meta:0:1}" = "D" ]; then
 				op=delete
