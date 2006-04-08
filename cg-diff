@@ -11,7 +11,8 @@
 # OPTIONS
 # -------
 # -c:: Colorize
-#	Colorize the diff output
+#	Colorize the output. You can customize the colors using the
+#	$CG_COLORS environment variable (see below).
 #
 # -p:: Use ID parent
 #	Show diff to the parent of the current commit (or the commit
@@ -42,10 +43,10 @@
 #	Flags to pass to the pager.
 #
 # CG_COLORS::
-#      Colon-separated list of 'name=color' pairs, where name is
-#      one of diffhdr, diffhdradd, diffhdrmod, diffhdrrem, diffadd,
-#      diffmod, diffrem, diffhunk, diffctx, default, and value is
-#      an ECMA-48 SGR sequence (see e.g. console_codes(4)).
+#	Colon-separated list of 'name=color' pairs, where name is
+#	one of diffhdr, diffhdradd, diffhdrmod, diffhdrrem, diffadd,
+#	diffmod, diffrem, diffhunk, diffctx, default, and value is
+#	an ECMA-48 SGR sequence (see e.g. console_codes(4)).
 #
 # CG_LESS::
 #	This is what the $LESS environment variable value will be set
