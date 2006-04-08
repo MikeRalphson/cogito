@@ -139,22 +139,25 @@ if [ "$parent" ]; then
 	[ "$id2" = " " ] || die "too many revisions"
 	id2="$id1"
 
-	ids="$(cg-object-id -p "$id2")"
+	ids="$(cg-object-id -p "$id2")" || exit 1
 	[ "$(echo "$ids" | wc -l)" -gt 1 ] && \
 		warn "choosing the first parent of a merge commit. This may not be what you want."
 	id1="$(echo "$ids" | head -n 1)" || exit 1
 
-	[ "$id1" ] || exit 1
-fi
+elif [ "$mergebase" ]; then
+	[ "$id2" = " " ] && id2="origin"
 
-if [ "$mergebase" ]; then
-	[ "$id2" != " " ] || id2="origin"
 	id1="$(cg-object-id -c "$id1")" || exit 1
 	id2="$(cg-object-id -c "$id2")" || exit 1
+
 	conservative_merge_base "$id1" "$id2" || exit 1
 	[ "$_cg_base_conservative" ] &&
 		warn -b "multiple merge bases, picking the most conservative one"
 	id1="$_cg_baselist"
+
+else
+	id1="$(cg-object-id -t "$id1")" || exit 1
+	[ "$id2" = " " ] || id2="$(cg-object-id -t "$id2")" || exit 1
 fi
 
 
@@ -167,9 +170,7 @@ done
 if [ "$id2" = " " ]; then
 	[ "$_git_no_wc" ] && die "only cg-diff between two revisions allowed outside a working copy"
 
-	tree="$(cg-object-id -t "$id1")" || exit 1
-
-	# Ensure to only diff modified files
+	# Make sure we only diff modified files
 	git-update-index --refresh >/dev/null
 
 	# FIXME: Update ret based on what did we match. And take "$@"
@@ -177,9 +178,9 @@ if [ "$id2" = " " ]; then
 	#ret=
 	# xargs on FreeBSD is hardcoded to --no-run-if-empty :/
 	if [ -s "$filter" ]; then
-		cat "$filter" | path_xargs git-diff-index -m -r -p "$tree" | colorize | pager
+		cat "$filter" | path_xargs git-diff-index -m -r -p "$id1" | colorize | pager
 	else
-		git-diff-index -m -r -p "$tree" | colorize | pager
+		git-diff-index -m -r -p "$id1" | colorize | pager
 	fi
 
 	rm "$filter"
@@ -189,9 +190,6 @@ if [ "$id2" = " " ]; then
 	exit 0
 fi
 
-
-id1="$(cg-object-id -t "$id1")" || exit 1
-id2="$(cg-object-id -t "$id2")" || exit 1
 
 [ "$id1" = "$id2" ] && exit 0
 
