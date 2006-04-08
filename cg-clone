@@ -27,6 +27,15 @@
 #	Note that you MUST NOT prune repository containing a symlink
 #	or being symlinked to.
 #
+# -R::	Clone only the repository, do not check out working copy
+#	Create only the repository, without a working copy attached;
+#	this is useful e.g. for public repository mirrors. `cg-clone`
+#	is to `cg-init` as `cg-clone -R` is to `cg-admin-setuprepo`.
+#	(Still, if you are setting up a public or a central repository
+#	other people will push into, it might be more practical to just
+#	`cg-admin-setuprepo` it and then populate it with `cg-push`
+#	from the other side.)
+#
 # -s::	Clone into the current directory
 #	Clone in the current directory instead of creating a new one.
 #	Specifying both -s and a destination directory makes no sense.
@@ -51,16 +60,19 @@
 #
 #	$ cg-clone git://git.kernel.org/pub/scm/git/git.git#next
 
-USAGE="cg-clone [-l] [-s] LOCATION [DESTDIR]"
+USAGE="cg-clone [-l] [-R] [-s] LOCATION [DESTDIR]"
 _git_repo_unneeded=1
 
 . "${COGITO_LIB}"cg-Xlib || exit 1
 
 same_dir=
+repoonly=
 symlink=
 while optparse; do
 	if optparse -l; then
 		symlink=1
+	elif optparse -R; then
+		repoonly=1
 	elif optparse -s; then
 		same_dir=1
 	else
@@ -79,6 +91,7 @@ if [ "$destdir" ]; then
 	dir="$destdir"
 else
 	dir="${location%#*}"; dir="${dir%/.git}"; dir="${dir##*/}"; dir="${dir%.git}"
+	[ "$repoonly" ] && dir="$dir.git"
 fi
 
 if ! echo "$location" | grep -q ":" ; then
@@ -90,10 +103,20 @@ fi
 
 if [ ! "$same_dir" ]; then
 	[ -e "$dir" ] && die "$dir/ already exists"
-	mkdir -p "$dir" || exit $?
+	if [ "$repoonly" ]; then
+		cg-admin-setuprepo "$dir" || exit $?
+	else
+		mkdir -p "$dir" || exit $?
+	fi
 	cd "$dir" || exit $?
 else
 	dir=.
+fi
+
+if [ "$repoonly" ]; then
+	_git=.
+	export GIT_DIR=.
+	_git_no_wc=1
 fi
 
 
@@ -108,7 +131,10 @@ cleanup ()
 cleanup_trap "cleanup"
 
 
-cg-init -I || die "init failed"
+if [ ! "$repoonly" ]; then
+	cg-init -I || die "init failed"
+fi
+echo $$ >"$_git/info/cg-fetch-earlydie"
 if [ "$symlink" ]; then
 	rmdir "$_git/objects/"*
 	rmdir "$_git/objects"
@@ -118,8 +144,8 @@ if [ "$symlink" ]; then
 fi
 cg-branch-add origin "$location"
 
+[ "$repoonly" ] && echo $$ >"$_git/info/cg-fetch-initial-wcless"
 echo $$ >"$_git/info/cg-fetch-initial"
-echo $$ >"$_git/info/cg-fetch-earlydie"
 cat >___ <<__EOT__
 This is a clone-in-progress GIT working tree containing a GIT repository
 in the .git subdirectory. If you see this file and noone is fetching or

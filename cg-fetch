@@ -79,11 +79,16 @@ show_changes_summary()
 initial_done()
 {
 	rm -f ___
-	cp "$_git/refs/heads/origin" "$_git/refs/heads/master" &&
+	cp "$_git/refs/heads/origin" "$_git/refs/heads/master" ||
+		die "initial checkout failed"
+	if [ -s "$_git/info/cg-fetch-initial-wcless" ]; then
+		rm "$_git/info/cg-fetch-initial-wcless"
+	else
 		git-read-tree HEAD &&
 		git-checkout-index -a &&
 		git-update-index --refresh ||
 		die "initial checkout failed"
+	fi
 	rm "$_git/info/cg-fetch-initial"
 }
 
@@ -266,8 +271,10 @@ if echo "$uri" | grep -q '#'; then
 	uri=$(echo "$uri" | cut -d '#' -f 1)
 fi
 
-[ -s "$_git/info/cg-fetch-initial" ] && [ "$_git_no_wc" ] &&
-	die "you must run the initial cg-fetch from the working copy root directory"
+if [ "$_git_no_wc" ]; then
+	[ -s "$_git/info/cg-fetch-initial" ] && [ ! -s "$_git/info/cg-fetch-initial-wcless" ] &&
+		die "you must run the initial cg-fetch from the working copy root directory"
+fi
 
 # Some other process with the same pid might appear, that's why
 # we won't die but rather let the user check quickly.
