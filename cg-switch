@@ -42,6 +42,12 @@
 #	will make cg-switch to only create or update the branch, but
 #	leave your working copy alone.
 #
+# -p:: Do not touch the working copy
+#	Do not touch the working copy when switching. This _will_ switch
+#	your current branch, but the checked out working copy will have
+#	the original contents kept (so further `cg-diff` will list a lot
+#	of changes, relative to the new branch).
+#
 # -r COMMIT_ID:: Branch off the given COMMIT_ID, create branch if non-existing
 #	Point the branch at the given commit. Required when creating
 #	a new branch (use "HEAD" if you want to just base the new
@@ -72,7 +78,7 @@
 #
 # 	$ cg-switch -f -r testing v1.x
 
-USAGE="cg-switch [-f] [-l] [-n] [-r COMMIT_ID] BRANCH"
+USAGE="cg-switch [-f] [-l | -n | -p] [-r COMMIT_ID] BRANCH"
 _git_requires_root=1
 _git_wc_unneeded=1
 
@@ -92,6 +98,7 @@ force=
 savelocal=
 seek=1
 dstcommit=
+roll=1
 while optparse; do
 	if optparse -f; then
 		force=1
@@ -99,6 +106,8 @@ while optparse; do
 		savelocal=1
 	elif optparse -n; then
 		seek=
+	elif optparse -p; then
+		roll=
 	elif optparse -r=; then
 		dstcommit="$(cg-object-id -c "$OPTARG")" || exit 1
 	else
@@ -107,6 +116,8 @@ while optparse; do
 done
 
 [ "${#ARGS[@]}" -eq "1" ] || usage
+[ "$seek$roll" = "" ] && usage
+[ "$savelocal" = "1" -a "$seek$roll" != "11" ] && usage
 
 [ "$_git_no_wc" ] && [ "$seek" ] &&
 	die "only cg-switch -n allowed outside a working copy"
@@ -147,7 +158,7 @@ fi
 
 if [ "$seek" ]; then
 	[ -n "$dstcommit" ] || dstcommit="$(cg-object-id -c "$dsthead")"
-	if [ "x$curcommit" != "x$dstcommit" ]; then
+	if [ "$roll" ] && [ "x$curcommit" != "x$dstcommit" ]; then
 		# Shelve local changes
 		if [ "$savelocal" ]; then
 			# TODO: Later, move this to cg-shelve or something and make it available for general use.
