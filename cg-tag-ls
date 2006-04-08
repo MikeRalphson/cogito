@@ -33,11 +33,13 @@ USAGE="cg-tag-ls"
 
 mkdir -p "$_git/refs/tags"
 [ "$(find "$_git/refs/tags" -follow -type f)" ] \
-       || die "List of tags is empty. See cg-tag."
+       || die "list of tags is empty, please see cg-tag(1)"
 
-cd "$_git/refs/tags"
-for tag in *; do
-       echo -n "$tag"
-       echo -ne "\t"
-       cat "$tag"
+maxlen="$(find "$_git/refs/tags" -name '*' -a ! -type d |
+	  column_width "$_git/refs/tags/")"
+
+find "$_git/refs/tags" -name '*' -a ! -type d | sort | while read tag; do 
+	tagsha1="$(cat "$tag")"
+	tagname="${tag#$_git/refs/tags/}"
+	columns_print "$tagname" t$maxlen "$tagsha1" -
 done
