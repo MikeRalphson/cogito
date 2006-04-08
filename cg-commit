@@ -460,8 +460,8 @@ if [ ! "$review" ]; then
 	editor_parse_clean
 else
 	sed '/^CG: Changes summary:/,$d' < "$LOGMSG2" > "$LOGMSG"
-	mv "$LOGMSG" "$LOGMSG2"; editor_parse_clean
 	sed -n '/^CG: Changes summary:/,$p' < "$LOGMSG2" | grep -v ^CG: > "$PATCH2"
+	mv "$LOGMSG" "$LOGMSG2"; editor_parse_clean
 fi
 rm "$LOGMSG2"
 
