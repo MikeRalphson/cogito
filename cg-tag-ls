@@ -2,30 +2,22 @@
 #
 # List stored GIT tags.
 # Copyright (c) Steve Hoelzer 2005
+# Copyright (c) Petr Baudis 2006
 #
 # This command takes no arguments, and lists all tags in a given repository
 # in alphabetical order, along with their corresponding SHA1 hash IDs.
 #
-# EXAMPLE USAGE
+# OUTPUT FORMAT
 # -------------
-# Doing this on the current Cogito repository, produces the following output:
+# The first column contains flag letters. The 'S' flag means that the tag is
+# GPG-signed, the '%' flag means that this is a "direct tag" (does not point
+# to a tag object; this is now considered deprecated and you might have trouble
+# distributing the tag to others). The '!' flag means that the tag is broken
+# and points to a non-existing object.
 #
-#	$ cg-tag-ls
-#	cogito-0.10     4ed293bc0a5ffca9683e139cad499b69a4c4d569
-#	cogito-0.8      f9f0459b5b39cf83143c91ae39b4eaf187cf678a
-#	cogito-0.9      cc5517b4ea4134c296d4ce2b1d82700c44200c1e
-#	git-pasky-0.1   463d05c7c4fe7f24da29749f4c7f25893fc20b8c
-#	git-pasky-0.2   2c70421be7d88fbee49986d7a5584d1f010a25de
-#	git-pasky-0.3   d14925c87cdb6ca6345bcb3c8e34a2d659c79451
-#	git-pasky-0.4   b0bb73f33fc06cc5ff6fca0d2dfce484c5f191b7
-#	git-pasky-0.5   0ec59a771ff9d618a1b86e0cc1b93e3d9dad17a9
-#	git-pasky-0.6   b498dafca4dcc136294853d1de09fb64b0b0deea
-#	git-pasky-0.6.1 1690697813ffcfc35075859534a627699d07c613
-#	git-pasky-0.6.2 b21cee2236b494787204754960d6a5d2916dfeb4
-#	git-pasky-0.6.3 acc71aab89b4ae8d5f4a03c758cc4c2bc04a3229
-#	git-pasky-0.7   bc61d9a04dc39598014f38b0ad7422f0ceaf2cc9
-#	fetch_from_pasky 11ed64c1b141c9ba397a1ca76aef2cd250976007
-#	$
+# The second column shows the tag name, the third column its (abbreviated)
+# object id and the fourth column the first line of tag description,
+# if applicable.
 
 USAGE="cg-tag-ls"
 
@@ -39,7 +31,18 @@ maxlen="$(find "$_git/refs/tags" -name '*' -a ! -type d |
 	  column_width "$_git/refs/tags/")"
 
 find "$_git/refs/tags" -name '*' -a ! -type d | sort | while read tag; do 
-	tagsha1="$(cat "$tag")"
-	tagname="${tag#$_git/refs/tags/}"
-	columns_print "$tagname" t$maxlen "$tagsha1" -
+	flag=" "
+	name="${tag#$_git/refs/tags/}"
+	sha1="$(cat "$tag")"
+	title=
+
+	type="$(git-cat-file -t "$sha1" 2>/dev/null)" || flag="!"
+	if [ "$type" = "tag" ]; then
+		title="$(git-cat-file tag "$sha1" | sed -ne '/^$/{n;s/-----BEGIN PGP SIGNATURE-----//;p;q;}')"
+		git-cat-file tag "$sha1" | grep -q '^-----BEGIN PGP SIGNATURE-----$' && flag="S"
+	elif [ "$type" ]; then
+		flag="%"
+	fi
+
+	columns_print "$flag " - "$name" $maxlen "  ${sha1:0:12} " - " $title" -
 done
