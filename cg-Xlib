@@ -386,7 +386,7 @@ editor_parse_setif()
 	if ! grep -q "^CG: $2:" "$LOGMSG2"; then
 		unset $1
 	else
-		export $1="$(grep "^CG: $2:" "$LOGMSG2" | cut -d ' ' -f 3-)"
+		export $1="$(sed -ne "s/^CG: $2: //p" "$LOGMSG2")"
 	fi
 }
 
