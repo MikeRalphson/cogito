@@ -206,8 +206,8 @@ column_width()
 	done | sort -nr | head -n 1 |
 	(
 		read maxlen;
-		[ $maxlen -gt $maxwidth ] && maxlen=$maxwidth;
-		echo $maxlen
+		[ ${maxlen:-0} -gt $maxwidth ] && maxlen=$maxwidth;
+		echo ${maxlen:-0}
 	)
 }
 
@@ -638,6 +638,8 @@ print_help()
 	sed -n '3s/^# *//p' < "$_cg_cmd"
 	echo
 	echo "Options:"
+	maxlen="$(sed -n 's/^# \(-.*\)::[^A-Za-z0-9].*/\1/p' < "$_cg_cmd" | column_width)"
+	[ $maxlen -lt 11 ] && maxlen=11 # --long-help
 	_cg_fmt="  %-20s %s\n"
 	sed -n 's/# \(-.*\)::[^A-Za-z0-9]\(.*\)/\1\n\2/p' < "$_cg_cmd" | while read line; do
 		case "$line" in
@@ -645,12 +647,12 @@ print_help()
 			_cg_option="$line"
 			;;
 		*)
-			printf "$_cg_fmt" "$_cg_option" "$line"
+			columns_print "  " - "$_cg_option" "$maxlen" "  $line" -
 			;;
 		esac
 	done
-	printf "$_cg_fmt" "-h, --help" "Print usage summary"
-	printf "$_cg_fmt" "--long-help" "Print user manual"
+	columns_print "  " - "-h, --help" "$maxlen" "  Print usage summary" -
+	columns_print "  " - "--long-help" "$maxlen" "  Print user manual" -
 	exit
 }
 
