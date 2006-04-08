@@ -14,17 +14,8 @@
 # cg-log then displays only changes in those files.
 #
 # -c::	Colorize
-#	Colorize the output. The used colors are listed below together
-#	with information about which log output (summary, full or both)
-#	they apply to:
-#		- `author`:	'cyan'		(both)
-#		- `committer`:	'magenta'	(full)
-#		- `header`:	'green'		(full)
-#		- `files`:	'blue'		(full)
-#		- `signoff`:	'yellow'	(full)
-#		- `commit_id`:	'blue'		(summary)
-#		- `date`:	'green'		(summary)
-#		- `trim_mark`:	'magenta'	(summary)
+#	Colorize the output. You can customize the colors using the
+#	$CG_COLORS environment variable (see below).
 #
 # -f::	List affected files
 #	List affected files. (No effect when passed along `-s`.)
@@ -88,6 +79,12 @@
 # PAGER_FLAGS::
 #	Flags to pass to the pager.
 #
+# CG_COLORS::
+#	Colon-separated list of 'name=color' pairs, where name is
+#	one of header, author, committer, files, signoff, sumauthor,
+#	sumtrim, sumcommit, sumdate, default, and value is an ECMA-48
+#	SGR sequence (see e.g. console_codes(4)).
+#
 # CG_LESS::
 #	This is what the $LESS environment variable value will be set
 #	to before invoking $PAGER. It defaults to $LESS concatenated
@@ -129,6 +126,18 @@ _git_wc_unneeded=1
 # at least somewhere it does. Bash is broken.
 trap exit SIGPIPE
 
+	
+
+setup_colors()
+{
+	local C="header=32"
+	C="$C:author=36:committer=35"
+	C="$C:files=34:signoff=33"
+	C="$C:sumauthor=36:sumtrim=35"
+	C="$C:sumcommit=34:sumdate=32"
+	C="$C:default=0"
+	colorify_setup "$C"
+}
 
 list_commit_files()
 {
@@ -336,19 +345,7 @@ pickaxe=()
 
 while optparse; do
 	if optparse -c; then
-		# See terminfo(5), "Color Handling"
-		colheader="$(tput setaf 2)"    # Green
-		colauthor="$(tput setaf 6)"    # Cyan
-		colcommitter="$(tput setaf 5)" # Magenta
-		colfiles="$(tput setaf 4)"     # Blue
-		colsignoff="$(tput setaf 3)"   # Yellow
-
-		colsumauthor="$(tput setaf 6)"
-		colsumcommit="$(tput setaf 4)"
-		colsumdate="$(tput setaf 2)"
-		colsumtrim="$(tput setaf 5)"
-
-		coldefault="$(tput op)"        # Restore default
+		setup_colors
 	elif optparse -f; then
 		list_files=1
 		difffilter=listfiles
