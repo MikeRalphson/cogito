@@ -420,7 +420,7 @@ if [ "$review" ]; then
 
 	ftdiff=" filetype=diff"
 fi
-editor_msg_end $ftdiff
+editor_msg_end "$ftdiff"
 
 cp "$LOGMSG" "$LOGMSG2"
 if tty -s; then
