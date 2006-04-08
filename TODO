@@ -223,4 +223,7 @@ Long term:
 	where each file contains some 1024 revisions or so, with the new
 	ones at the end.
 
-	Needs more thought.
+	Needs more thought. See also
+
+		Jun 16 Jon Seymour [PATCH 1/1] [PROPOSAL] Add a module (repo-log.c) to log repository events.
+
