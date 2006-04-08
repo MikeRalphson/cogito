@@ -150,7 +150,7 @@ if [ "$gitstatus" ]; then
 	echo "Heads:"
 	# -name * will prevent listing hidden heads
 	maxlen="$(find "$_git/refs/heads" -name '*' -a ! -type d |
-	          column_width "$_git/refs/heads")"
+	          column_width "$_git/refs/heads/")"
 	find "$_git/refs/heads" -name '*' -a ! -type d | sort | while read head; do 
 		headsha1="$(cat "$head")"
 		headname="${head#$_git/refs/heads/}"
