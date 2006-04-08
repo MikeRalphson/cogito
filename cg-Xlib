@@ -345,6 +345,7 @@ path_xargs()
 # EXTRAEXCLUDE: extra exclude pattern
 list_untracked_files()
 {
+	[ "$_git_no_wc" ] && die "INTERNAL ERROR: list_untracked_files() outside a working copy"
 	excludeflag="$1"; shift
 	squashflag="$1"; shift
 	EXCLUDE=()
@@ -482,6 +483,7 @@ editor()
 # Returns false in case of local modifications.
 tree_timewarp()
 {
+	[ "$_git_no_wc" ] && die "INTERNAL ERROR: tree_timewarp() outside a working copy"
 	local no_head_update=
 	if [ "$1" = "--no-head-update" ]; then
 		no_head_update=1
@@ -550,6 +552,7 @@ conservative_merge_base()
 # it safe to use it.
 update_index()
 {
+	[ "$_git_no_wc" ] && die "INTERNAL ERROR: update_index() outside a working copy"
 	git-update-index --refresh | sed 's/needs update$/locally modified/'
 }
 
