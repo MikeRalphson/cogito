@@ -117,7 +117,13 @@ fi
 [ "$written" ] || { tty -s && echo >>"$LOGMSG"; }
 
 editor_comment_start tag
-# TODO: Signing stuff
+echo "CG: You can edit the following fields to adjust cg-tag's behaviour." >>"$LOGMSG"
+echo "CG:" >>"$LOGMSG"
+signyn=No; [ "$sign" ] && signyn=Yes
+echo "CG: Sign the tag: $signyn" >>"$LOGMSG"
+[ -n "$keyname" ] || keyname="(default)"
+echo "CG: GPG key name: $keyname" >>"$LOGMSG"
+echo "CG:" >>"$LOGMSG"
 editor_comment_end tag
 editor_msg_end
 
@@ -128,7 +134,13 @@ if tty -s; then
 		echo "Tag message not modified, tagging aborted" >&2
 		exit 1
 	fi
-	# TODO: Signing stuff
+	editor_parse_setif signyn "Sign the tag"
+	case "$signyn" in
+		y|Y|Yes|yes|1|true) sign=1;;
+		*) sign=;;
+	esac
+	editor_parse_setif keyname "GPG key name"
+	[ x"$keyname" = x"(default)" ] && keyname=
 else
 	cat >>"$LOGMSG2"
 fi
