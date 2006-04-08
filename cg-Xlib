@@ -480,7 +480,7 @@ editor()
 # Usage: tree_timewarp [--no-head-update] DIRECTION_STR ROLLBACK_BOOL BASE BRANCH
 # Reset the current tree from version BASE to version BRANCH, properly updating
 # the working copy (if ROLLBACK_BOOL) and trying to keep local changes.
-# Returns false in case of local modifications.
+# Returns false in case of local modifications (but only if ROLLBACK_ROLL).
 tree_timewarp()
 {
 	[ "$_git_no_wc" ] && die "INTERNAL ERROR: tree_timewarp() outside a working copy"
@@ -493,36 +493,33 @@ tree_timewarp()
 	local rollback="$1"; shift
 	local base="$1"; shift
 	local branch="$1"; shift
+	local localmods=0
 
 	[ -s "$_git/merging" ] && die "merge in progress - cancel it by cg-reset first"
 
-	local patchfile="$(mktemp -t gituncommit.XXXXXX)"
 	if [ -n "$rollback" ]; then
+		local patchfile="$(mktemp -t gituncommit.XXXXXX)"
 		cg-diff -r "$base" >"$patchfile"
 		[ -s "$patchfile" ] &&
 			warn "uncommitted local changes, trying to bring them $dirstr"
+		[ -s "$patchfile" ] && localmods=1
+
+		git-read-tree -m "$branch" || die "$branch: bad commit"
+		[ "$no_head_update" ] || git-update-ref HEAD "$branch" || :
+
+		# Kill gone files
+		git-diff-tree -r "$base" "$branch" |
+			# match ":100755 000000 14d43b1abf... 000000000... D"
+			sed -ne 's/^:[^\t]* D\t//p' |
+			xargs rm -f --
+		git-checkout-index -u -f -a
+
+		# FIXME: Can produce bogus "contains only garbage" messages.
+		cat "$patchfile" | cg-patch
+		rm "$patchfile"
 	else
-		# XXX: This may be suboptimal, but it is also non-trivial to keep
-		# the adds/removes properly.  So this is just a quick hack to get it
-		# working without much fuss.
-		cg-diff -r "$branch" >"$patchfile"
+		[ "$no_head_update" ] || git-update-ref HEAD "$branch" || :
 	fi
-
-	git-read-tree -m "$branch" || die "$branch: bad commit"
-	[ "$no_head_update" ] || git-update-ref HEAD "$branch" || :
-
-	# Kill gone files
-	git-diff-tree -r "$base" "$branch" |
-		# match ":100755 000000 14d43b1abf... 000000000... D"
-		sed -ne 's/^:[^\t]* D\t//p' |
-		xargs rm -f --
-	git-checkout-index -u -f -a
-
-	# FIXME: Can produce bogus "contains only garbage" messages.
-	cat "$patchfile" | cg-patch
-	localmods=0
-	[ -s "$patchfile" ] && localmods=1
-	rm "$patchfile"
 	return $localmods
 }
 
