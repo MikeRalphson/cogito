@@ -24,10 +24,11 @@ mkdir -p "$_git/branches"
 [ "$(find "$_git/branches" -follow -type f)" ] \
 	|| die "list of branches is empty (see cg-branch-add(1))"
 
-cd "$_git/branches"
-find . -type f -print | sort |
-while read -r branch; do
-	echo -n "${branch#./}"
-	echo -ne "\t"
-	cat "$branch"
+maxlen="$(find "$_git/branches" -name '*' -a ! -type d |
+	  column_width "$_git/branches/")"
+
+find "$_git/branches" -name '*' -a ! -type d | sort | while read branch; do
+	name="${branch#$_git/branches/}"
+	url="$(cat "$branch")"
+	columns_print "$name" t$maxlen "$url" -
 done
