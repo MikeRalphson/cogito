@@ -83,5 +83,5 @@ cat "$TMPFILE" | sed "s|^|$_git_relpath|" | path_xargs git-update-index --force-
 
 rm "$TMPFILE" "$TMPDIRFILE"
 
-[ "$error" ] && die "warning: not all files could have been removed"
+[ "$error" ] && die "warning: not all items could have been removed"
 exit 0
