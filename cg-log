@@ -81,9 +81,9 @@
 #
 # CG_COLORS::
 #	Colon-separated list of 'name=color' pairs, where name is
-#	one of header, author, committer, files, signoff, sumauthor,
-#	sumtrim, sumcommit, sumdate, default, and value is an ECMA-48
-#	SGR sequence (see e.g. console_codes(4)).
+#	one of logheader, logauthor, logcommitter, logfiles, logsignoff,
+#	logsumauthor, logsumtrim, logsumcommit, logsumdate, default, and
+#	value is an ECMA-48 SGR sequence (see e.g. console_codes(4)).
 #
 # CG_LESS::
 #	This is what the $LESS environment variable value will be set
@@ -130,11 +130,11 @@ trap exit SIGPIPE
 
 setup_colors()
 {
-	local C="header=32"
-	C="$C:author=36:committer=35"
-	C="$C:files=34:signoff=33"
-	C="$C:sumauthor=36:sumtrim=35"
-	C="$C:sumcommit=34:sumdate=32"
+	local C="logheader=32"
+	C="$C:logauthor=36:logcommitter=35"
+	C="$C:logfiles=34:logsignoff=33"
+	C="$C:logsumauthor=36:logsumtrim=35"
+	C="$C:logsumcommit=34:logsumdate=32"
 	C="$C:default=0"
 	colorify_setup "$C"
 }
@@ -149,7 +149,7 @@ list_commit_files()
 	tree1="$1"
 	tree2="$2"
 	line=
-	sep="    * $colfiles"
+	sep="    * $collogfiles"
 	for file in "${files[@]}"; do
 		echo -n "$sep"
 		sep=", "
@@ -159,7 +159,7 @@ list_commit_files()
 		else
 			line="      $file"
 			echo "$coldefault"
-			echo -n "      $colfiles$file"
+			echo -n "      $collogfiles$file"
 		fi
 	done
 	echo "$coldefault:"
@@ -189,7 +189,7 @@ reset_commit_info()
 
 process_commit_line()
 {
-	if [ "$key" = "%" ] || [ "$key" = "%$colsignoff" ]; then
+	if [ "$key" = "%" ] || [ "$key" = "%$collogsignoff" ]; then
 		# The fast common case
 		[ "$state" = silent ] || msg="$msg    ${rest#?}
 "
@@ -256,23 +256,23 @@ process_commit_line()
 			showdate ${date[*]} '+%F %H:%M'; date="$_showdate"
 			read -r title
 			if [ "${#author}" -gt 15 ]; then
-				author="${author:0:14}$colsumtrim~"
+				author="${author:0:14}$collogsumtrim~"
 			fi
 			if [ "${COLUMNS:-0}" -le 90 ]; then
-				commit="${commit:0:12}$colsumtrim~"
+				commit="${commit:0:12}$collogsumtrim~"
 			fi
 
-			printf "$colsumcommit%s $colsumauthor%-15s $colsumdate%s $coldefault%s\n" \
+			printf "$collogsumcommit%s $collogsumauthor%-15s $collogsumdate%s $coldefault%s\n" \
 				"${commit%:*}" "$author" "$date" "${title:3}"
 			state=silent
 			return
 		fi
 
-		echo "${colheader}commit ${commit%:*} $coldefault"
-		echo "${colheader}tree $tree $coldefault"
+		echo "${collogheader}commit ${commit%:*} $coldefault"
+		echo "${collogheader}tree $tree $coldefault"
 
 		for parent in "${parents[@]}"; do
-			echo "${colheader}parent $parent $coldefault"
+			echo "${collogheader}parent $parent $coldefault"
 		done
 
 		# We want wordsplitting in the $date here, to get
@@ -280,12 +280,12 @@ process_commit_line()
 		date=(${author#*> })
 		showdate ${date[*]}; pdate="$_showdate"
 		[ "$pdate" ] && author="${author%> *}> $pdate"
-		echo "${colauthor}author $author $coldefault"
+		echo "${collogauthor}author $author $coldefault"
 
 		date=(${committer#*> })
 		showdate ${date[*]}; pdate="$_showdate"
 		[ "$pdate" ] && committer="${committer%> *}> $pdate"
-		echo "${colcommitter}committer $committer $coldefault"
+		echo "${collogcommitter}committer $committer $coldefault"
 
 		echo
 		if [ "$difffilter" ]; then
@@ -303,8 +303,8 @@ print_commit_log()
 	sed -e '
 		s/^:/: /
 		s/^    \(.*\)/% @\1/
-		/^% *@[Ss]igned-[Oo]ff-[Bb]y:.*/ s/^% @\(.*\)/% @'$colsignoff'\1'$coldefault'/
-		/^% *@[Aa][Cc][Kk]ed-[Bb]y:.*/ s/^% @\(.*\)/% @'$colsignoff'\1'$coldefault'/
+		/^% *@[Ss]igned-[Oo]ff-[Bb]y:.*/ s/^% @\(.*\)/% @'$collogsignoff'\1'$coldefault'/
+		/^% *@[Aa][Cc][Kk]ed-[Bb]y:.*/ s/^% @\(.*\)/% @'$collogsignoff'\1'$coldefault'/
 	' | { while read -r key rest; do
 		trap exit SIGPIPE
 		process_commit_line
@@ -315,15 +315,15 @@ print_commit_log()
 
 [ "$COLUMNS" ] || COLUMNS="$(tput cols)"
 
-colheader=
-colauthor=
-colcommitter=
-colfiles=
-colsignoff=
-colsumauthor=
-colsumcommit=
-colsumdate=
-colsumtrim=
+collogheader=
+collogauthor=
+collogcommitter=
+collogfiles=
+collogsignoff=
+collogsumauthor=
+collogsumcommit=
+collogsumdate=
+collogsumtrim=
 coldefault=
 difffilter=
 followrenames=
