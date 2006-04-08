@@ -95,8 +95,8 @@ colorize()
 }
 
 
-id1=" "
-id2=" "
+id1=" " # means HEAD
+id2=" " # means working copy
 parent=
 opt_color=
 mergebase=
@@ -135,12 +135,13 @@ while optparse; do
 	fi
 done
 
+[ "$id1" = " " ] && id1=HEAD
+
 if [ "$parent" ]; then
 	[ "$id2" = " " ] || die "too many revisions"
 	id2="$id1"
-	id="$id2"; [ "$id" = " " ] && id=""
 
-	ids="$(cg-object-id -p "$id")"
+	ids="$(cg-object-id -p "$id2")"
 	[ "$(echo "$ids" | wc -l)" -gt 1 ] && \
 		warn "choosing the first parent of a merge commit. This may not be what you want."
 	id1="$(echo "$ids" | head -n 1)" || exit 1
@@ -149,7 +150,6 @@ if [ "$parent" ]; then
 fi
 
 if [ "$mergebase" ]; then
-	[ "$id1" != " " ] || id1="HEAD"
 	[ "$id2" != " " ] || id2="origin"
 	id1="$(cg-object-id -c "$id1")" || exit 1
 	id2="$(cg-object-id -c "$id2")" || exit 1
@@ -169,11 +169,7 @@ done
 if [ "$id2" = " " ]; then
 	[ "$_git_no_wc" ] && die "only cg-diff between two revisions allowed outside a working copy"
 
-	if [ "$id1" != " " ]; then
-		tree="$(cg-object-id -t "$id1")" || exit 1
-	else
-		tree="$(cg-object-id -t)" || exit 1
-	fi
+	tree="$(cg-object-id -t "$id1")" || exit 1
 
 	# Ensure to only diff modified files
 	git-update-index --refresh >/dev/null
