@@ -805,11 +805,22 @@ _git_objects="${GIT_OBJECT_DIRECTORY:-$_git/objects}"
 
 # Check if we have something to work on, unless the script can do w/o it.
 if [ ! "$_git_repo_unneeded" ]; then
+	# Check if we aren't _in_ the repository (perhaps it's without
+	# a working copy).
+	if [ ! -d "$_git" -a -d objects/ -a -d refs/ -a -s HEAD ] &&
+	   GIT_DIR=. git-symbolic-ref HEAD >/dev/null 2>&1; then
+		_git=.
+		export GIT_DIR=.
+	fi
+	[ "$GIT_DIR" = . ] && _git_no_wc=1
 	if [ ! -d "$_git" ]; then
 		echo "There is no GIT repository here ($_git not found)" >&2
 		exit 1
 	elif [ ! -x "$_git" ]; then
 		echo "You do not have permission to access this GIT repository" >&2
+		exit 1
+	elif [ "$_git_no_wc" -a ! "$_git_wc_unneeded" ]; then
+		echo "This command requires working copy and cannot be run inside a GIT repository" >&2
 		exit 1
 	fi
 	_git_head=master
