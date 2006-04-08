@@ -261,6 +261,7 @@ editor=
 if [ "$review" ]; then
 	PATCH="$(mktemp -t gitci.XXXXXX)"
 	PATCH2="$(mktemp -t gitci.XXXXXX)"
+	editor=1
 fi
 
 if [ "$ARGS" -o "$_git_relpath" ]; then
