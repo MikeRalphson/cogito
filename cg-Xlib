@@ -830,7 +830,7 @@ fi
 
 # Check if the script requires to be called from the workdir root.
 if [ "$_git_requires_root" ] && [ "$_git_relpath" ]; then
-	echo "This command can be ran only from the project root" >&2
+	echo "This command can be run only from the project root" >&2
 	exit 1
 fi
 
