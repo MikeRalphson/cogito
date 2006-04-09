@@ -4,8 +4,12 @@
 # Copyright (c) Petr Baudis, 2005.
 # Copyright (c) David Woodhouse, 2005.
 #
-# Display log information for files or a range of commits. The output
-# will automatically be displayed in a pager unless it is piped to
+# Display log of changes on a given branch, within a given range of commits,
+# and/or concerning given set of files. The log can be further filtered to
+# e.g. only changes touching a given string or done by a given user. Several
+# output formats are available.
+#
+# The output will automatically be displayed in a pager unless it is piped to
 # a program.
 #
 # OPTIONS
@@ -132,7 +136,7 @@
 # things more comfortable to SVN users). See cogito(7) for more details
 # about revision specification.
 
-USAGE="cg-log [-D DATE] [-r FROM_ID[..TO_ID]] [-s] [--summary] [OTHER_OPTIONS] FILE..."
+USAGE="cg-log [-D DATE] [-r FROM_ID[..TO_ID]] [-d] [-s | --summary] [OTHER_OPTIONS] [FILE]..."
 _git_wc_unneeded=1
 
 . "${COGITO_LIB}"cg-Xlib || exit 1
