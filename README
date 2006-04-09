@@ -17,8 +17,8 @@ at the bottom of this file).
 
 
 Cogito is quite easy and intuitive to use. If you want to dive right in,
-see gitlink:cg-ref[7] for a quick commands/concepts reference and
-gitlink:cg-help[1] or gitlink:cogito[7] for a reference manual.
+see cg-ref(7) for a quick commands/concepts reference and cg-help(1)
+or cogito(7) for a reference manual.
 
 
 
@@ -497,7 +497,7 @@ or, for a full command's reference manual, you can use either of those:
 
 Alternatively, the man pages for the individual commands can be used as a
 reference (their content is equivalent to the cg-help output).
-gitlink:cogito[7] is a good starting point.
+cogito(7) is a good starting point.
 
 You can ask thoughtful questions and make suggestions on the GIT mailing list:
 

@@ -66,13 +66,7 @@ clean:
 	make -C tutorial-script clean
 	rm -f *.xml *.html *.pdf *.1 *.7 cg*.[17].txt $(PACKAGE).7.txt
 
-.PRECIOUS: cg%.txt
-
-introduction.html: ../README
-	asciidoc -b xhtml11 -d article -f asciidoc.conf -o $@ $<
-
-introduction.xml: ../README
-	asciidoc -b docbook -d article -f asciidoc.conf -o $@ $<
+.PRECIOUS: cg%.txt introduction.txt
 
 %.1.html : %.1.txt
 	asciidoc -b xhtml11 -d manpage -f asciidoc.conf $<
@@ -113,3 +107,6 @@ cg.1.txt : ../cg make-cg-asciidoc
 
 cg-%.1.txt : ../cg-% make-cg-asciidoc
 	CGPACKAGE=$(PACKAGE) ./make-cg-asciidoc $< > $@
+
+introduction.txt: ../README
+	sed -e 's/\([a-zA-Z0-9_-]*\)(\([0-9]\))/gitlink:\1[\2]/g' $< >$@
