@@ -12,12 +12,6 @@ Pre-1.0 stuff:
 	Reference documentation + Jonas' asciidoc'd README + tutorial
 		= http://git.or.cz/cogito/
 
-* Merge Dan Holmsand's cg-diff and cg-log work
-	It's big rewritish diffs, not all changes are good, but most
-	of it is cool stuff and it's a pity it stood unmerged so far.
-
-	Includes merge-order cg-log and cg-diff checking for renames.
-
 * Show only first 12 (or so) nibbles of the hashes everywhere
 	Even this might be too much, but more than this is really useless
 	for anyone remotely human. And it's less scary, too.
