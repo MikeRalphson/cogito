@@ -27,7 +27,7 @@
 #	detection can add slight extra performance penalty. This switch
 #	will turn the rename detection off.
 #
-# -p:: Use ID parent
+# -p:: Diff against commit parent
 #	Show diff to the parent of the current commit (or the commit
 #	specified by the -r parameter).
 #
