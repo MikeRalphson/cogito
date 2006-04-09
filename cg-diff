@@ -20,6 +20,13 @@
 #	arguments; '-R', '-B', '-M' and '-C' might be of particular
 #	interest.
 #
+# --no-renames:: Do not detect renames
+#	By default, `cg-diff` will automatically detect file renames.
+#	Diff produced by the rename-aware `cg-diff` will be unappliable
+#	using patch(1) (you need to use `cg-patch`) and the renames
+#	detection can add slight extra performance penalty. This switch
+#	will turn the rename detection off.
+#
 # -p:: Use ID parent
 #	Show diff to the parent of the current commit (or the commit
 #	specified by the -r parameter).
@@ -91,8 +98,12 @@ colorize()
 			s/^diff --git.*/'$coldiffhdr'&'$coldefault'/
 			s/^+++.*/'$coldiffhdradd'&'$coldefault'/
 			s/^---.*/'$coldiffhdrrem'&'$coldefault'/
-			s/^\([+]\|new\( file\)\{0,1\} mode \).*/'$coldiffadd'&'$coldefault'/
-			s/^\([-]\|\(deleted file\|old\) mode \).*/'$coldiffrem'&'$coldefault'/
+			s/^[+].*/'$coldiffadd'&'$coldefault'/
+			s/^[-].*/'$coldiffrem'&'$coldefault'/
+			s/^new\( file\)\{0,1\} mode .*/'$coldiffadd'&'$coldefault'/
+			s/^\(deleted file\|old\) mode .*/'$coldiffrem'&'$coldefault'/
+			s/^rename to .*/'$coldiffadd'&'$coldefault'/
+			s/^rename from .*/'$coldiffrem'&'$coldefault'/
 			s/^\(@@ -.* +.* @@\)\(.*\)/'$coldiffhunk'\1'$coldiffctx'\2'$coldefault'/
 		'
 	else
@@ -108,6 +119,7 @@ parent=
 opt_color=
 mergebase=
 opt_summary=
+renames=-M
 
 while optparse; do
 	if optparse -c; then
@@ -118,6 +130,8 @@ while optparse; do
 	elif optparse -p; then
 		[ "$mergebase" ] && optconflict -m
 		parent=1
+	elif optparse -R || optparse --no-renames; then
+		renames=
 	elif optparse -s; then
 		opt_summary=1
 	elif optparse -r=; then
@@ -197,7 +211,7 @@ done
 # FIXME: Update ret based on what did we match. And take "$@"
 # to account after all.
 #ret=
-$diffprog -r -p $diffcore "${diffargs[@]}" | colorize | pager
+$diffprog -r -p $renames $diffcore "${diffargs[@]}" | colorize | pager
 #[ "$ret" ] && die "no files matched"
 #exit $ret
 exit 0
