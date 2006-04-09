@@ -263,12 +263,10 @@ process_commit_line()
 			if [ "${#author}" -gt 15 ]; then
 				author="${author:0:14}$collogsumtrim~"
 			fi
-			if [ "${COLUMNS:-0}" -le 90 ]; then
-				commit="${commit:0:12}$collogsumtrim~"
-			fi
+			commit="${commit:0:12}$collogsumtrim~"
 
 			printf "$collogsumcommit%s $collogsumauthor%-15s $collogsumdate%s $coldefault%s\n" \
-				"${commit%:*}" "$author" "$date" "${title:3}"
+				"$commit" "$author" "$date" "${title:3}"
 			state=silent
 			return
 		fi
@@ -317,8 +315,6 @@ print_commit_log()
 	}
 }
 
-
-[ "$COLUMNS" ] || COLUMNS="$(tput cols)"
 
 collogheader=
 collogauthor=
