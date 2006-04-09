@@ -21,7 +21,7 @@
 #	Ignore files matching this pattern when importing files for the
 #	initial commit. Note that if you are importing any .gitignore
 #	files, they will be considered as well. If you want to make
-#	en even more custom choice of files to be imported, use the -I
+#	an even more custom choice of files to be imported, use the -I
 #	parameter and add and perform the initial commit manually.
 #
 # -I:: No initial commit
