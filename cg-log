@@ -144,7 +144,7 @@ setup_colors()
 	colorify_setup "$C"
 }
 
-print_summary()
+print_oneline()
 {
 	commit="${commit%:*}"
 	author="${author% <*}"
@@ -279,8 +279,8 @@ process_commit_line()
 				return
 			fi
 		fi
-		if [ "$summary" ]; then
-			print_summary
+		if [ "$oneline" ]; then
+			print_oneline
 			state=silent
 			return
 		fi
@@ -347,7 +347,7 @@ neverfollowrenames=
 list_files=
 id1=
 id2=
-summary=
+oneline=
 shortlog=
 user=
 mergebase=
@@ -401,7 +401,7 @@ while optparse; do
 	elif optparse -R || optparse --no-renames; then
 		neverfollowrenames=1
 	elif optparse -s; then
-		summary=1
+		oneline=1
 	elif optparse -S= || optparse --pickaxe=; then
 		always=
 		pickaxe=(-S"$OPTARG")
