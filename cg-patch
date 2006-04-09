@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 #
-# Apply a patch from a file, input, or a commit.
+# Apply a patch from a file, standard input, or a commit
 # Copyright (c) Petr Baudis, 2005
 #
 # This is basically just a smart patch wrapper. It handles stuff like

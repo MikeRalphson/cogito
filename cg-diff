@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 #
-# Make a diff between two GIT trees.
+# Show changes in the diff format
 # Copyright (c) Petr Baudis, 2005
 #
 # Outputs a diff for converting the first tree to the second one.

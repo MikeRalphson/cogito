@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 #
-# List contents of a particular tree in a GIT repository.
+# List contents of a particular tree in the repository
 # Copyright (c) Petr Baudis, 2005
 #
 # Optionally takes a commit or tree ID as a parameter, defaulting to

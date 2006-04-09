@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 #
-# Undo a commit or a series of commits.
+# Undo a commit or a series of commits
 # Copyright (c) Matt Porter, 2005
 # Copyright (c) Petr Baudis, 2005
 #

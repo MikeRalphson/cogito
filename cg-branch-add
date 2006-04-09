@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 #
-# Add new remote branch to the GIT repository.
+# Add new remote branch
 # Copyright (c) Petr Baudis, 2005
 #
 # Takes the desired branch name and source location as parameters.

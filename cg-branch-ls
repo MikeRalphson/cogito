@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 #
-# List configured remote branches.
+# List configured remote branches
 # Copyright (c) Steven Cole 2005
 #
 # Print a listing of all known branches.

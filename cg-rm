@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 #
-# Remove files from a GIT repository.
+# Remove files from the repository
 # Copyright (c) Petr Baudis, 2005
 #
 # Takes a list of file names at the command line, and schedules them

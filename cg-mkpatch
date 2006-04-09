@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 #
-# Make a patch from one or several commits.
+# Create a patch from a commit or a series of commits
 # Copyright (c) Petr Baudis, 2005
 #
 # Generate a patch with diff statistics and meta info about each commit.

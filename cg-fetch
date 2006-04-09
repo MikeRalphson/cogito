@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 #
-# Fetch changes from a remote branch to the local GIT repository.
+# Fetch changes from a remote branch to the local repository
 # Copyright (c) Petr Baudis, 2005.
 #
 # Takes the branch name as an argument, defaulting to 'origin'.

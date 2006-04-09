@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 #
-# Change the remote branch repository URL.
+# Change an existing remote branch repository URL
 # Copyright (c) Petr Baudis, 2005
 #
 # Takes the branch name and new source location as parameters.

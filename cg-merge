@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 #
-# Merge a branch to the current tree.
+# Merge a branch to the current branch
 # Copyright (c) Petr Baudis, 2005
 #
 # Takes a parameter identifying the branch to be merged, defaulting

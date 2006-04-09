@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 #
-# List objects of the GIT repository.
+# List unpacked objects in the repository
 # Copyright (c) Randy Dunlap, 2005
 # Copyright (c) Petr Baudis, 2005
 #

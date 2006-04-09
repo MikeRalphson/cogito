@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 #
-# Show help for Cogito commands.
+# Show help for Cogito commands
 # Copyright (c) Petr Baudis, 2005
 #
 # Takes an optional argument describing the command to show the help for.

@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 #
-# Merge two revisions of a file.
+# Merge two revisions of a file
 # Copyright (c) Linus Torvalds, 2005
 #
 # This is the git per-file merge script, called with

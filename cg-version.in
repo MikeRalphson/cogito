@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 #
-# Show the version of the Cogito toolkit.
+# Show the version of the Cogito toolkit
 # Copyright (c) Petr Baudis, 2005
 #
 # Show which version of Cogito is installed.

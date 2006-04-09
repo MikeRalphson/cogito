@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 #
-# Cat a file(s) by filename from a GIT repository.
+# Cat file(s) by filename from given tree or revision
 # Copyright (c) John Ellson, 2005
 #
 # Cat a file of a given filename in a given revision (or in the current

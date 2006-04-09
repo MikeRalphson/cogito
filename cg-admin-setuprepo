@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 #
-# Setup a public GIT repository.
+# Setup a public repository
 # Copyright (c) Petr Baudis, 2005
 #
 # Setup a public GIT repository, that is, one that has no attached working

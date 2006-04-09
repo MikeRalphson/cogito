@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 #
-# Mark certain commit by a tag.
+# Mark certain commit with a tag
 # Copyright (c) Petr Baudis, 2005
 #
 # Creates a tag referencing the given commit (or 'HEAD'). You can then

@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 #
-# Show status of your working tree.
+# Show status of the repository and your working tree
 # Copyright (c) Petr Baudis, 2005
 # Copyright (c) Pavel Roskin 2005
 #

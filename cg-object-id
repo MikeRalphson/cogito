@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 #
-# Get SHA1 ID of commit or tree associated with given ID or HEAD.
+# Get the SHA1 id of an object associated with the given symbolic id
 # Copyright (c) Petr Baudis, Pavel Roskin, Philip Pokorny  2005
 #
 # If the ID is not provided, HEAD is used.  The default behavior is to

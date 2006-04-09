@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 #
-# Clean unknown files from the working tree.
+# Remove untracked files from the working tree
 # Copyright (c) Pavel Roskin, 2005
 #
 # Cleans file and directories that are not under version control.

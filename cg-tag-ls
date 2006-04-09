@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 #
-# List stored GIT tags.
+# List existing tags
 # Copyright (c) Steve Hoelzer 2005
 # Copyright (c) Petr Baudis 2006
 #

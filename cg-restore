@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 #
-# Restore files in the working tree to state at the given/last commit.
+# Restore files in the working tree to the given state
 # Copyright (c) Petr Baudis, 2005
 #
 # Restore given files to their original state.  It recovers any files

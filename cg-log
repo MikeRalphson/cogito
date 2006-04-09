@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 #
-# Make a log of changes in a GIT branch.
+# Show the list of changes
 # Copyright (c) Petr Baudis, 2005.
 # Copyright (c) David Woodhouse, 2005.
 #

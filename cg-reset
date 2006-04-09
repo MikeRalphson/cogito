@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 #
-# Reset the state of the working tree.
+# Reset the state of the working tree
 # Copyright (c) Petr Baudis, 2005
 #
 # Reverts the working tree to a consistent state before any changes to it

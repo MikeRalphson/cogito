@@ -1,6 +1,6 @@
 #!/usr/bin/env perl
 #
-# Show a cute progressbar for cg-fetch.
+# Show a cute progressbar for cg-fetch
 # Copyright (c) Petr Baudis, 2005
 #
 # This file shows a progressbar for cg-fetch based on output of rsync

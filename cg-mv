@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 #
-# Rename or move files in a GIT repository.
+# Rename or move files in the repository
 # Copyright (c) Petr Baudis, 2005
 #
 # Takes either two filenames and removes a file from the first one to

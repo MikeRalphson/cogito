@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 #
-# Clone a remote GIT repository.
+# Clone a remote repository
 # Copyright (c) Petr Baudis, 2005
 #
 # This clones a remote GIT repository and checks it out locally.

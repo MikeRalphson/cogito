@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 #
-# Switch your current local branch.
+# Switch the working tree to a different (or new) local branch
 # Copyright (c) Yann Dirson, Petr Baudis  2005
 #
 # `cg-switch` can switch your current local branch (and working copy)

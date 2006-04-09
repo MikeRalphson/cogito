@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 #
-# Common code shared by the Cogito toolkit.
+# Common code shared by the Cogito toolkit
 # Copyright (c) Petr Baudis, 2005
 #
 # This file provides a library containing common code shared with all the

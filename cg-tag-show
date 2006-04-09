@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 #
-# Show information about particular tag(s).
+# Show information about given tag(s)
 # Copyright (c) Petr Baudis 2006
 #
 # This command shows detailed information about specified tag(s).

@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 #
-# Commit into a GIT repository.
+# Commit changes in the working tree to the repository
 # Copyright (c) Petr Baudis, 2005
 #
 # Commits your changes to the GIT repository. Accepts the commit message
