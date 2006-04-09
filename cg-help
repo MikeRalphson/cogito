@@ -72,15 +72,16 @@ setup_colors()
 
 print_command_listing()
 {
+	width="$(IFS=$'\n'; echo "$*" | column_width "$bin_path/" 25)"
 	for command in "$@"; do
 		[ -f "$command" -a ! -L "$command" ] || continue
-		cmdname="$(basename "$command")"
+		cmdname="${command#$bin_path/}"
 
 		shortdesc="$(sed -n 'n;n;p;q' <"$command")"
 		# Some minimal sanity check that we didn't pick up some
 		# random binary named cg-*
 		[ "${shortdesc:0:1}" = "#" ] || continue
-		printf "	%-18s %s\n" "$cmdname" "${shortdesc:2}"
+		columns_print '' t- "$cmdname" $width "  ${shortdesc:2}"
 	done
 }
 
@@ -136,9 +137,9 @@ Available regular commands:
 $(print_command_listing $REGULAR_COMMANDS)
 
 Special command families:
-	cg-help admin       ($ADVANCED_COMMANDS)
-	cg-help branch      ($BRANCH_COMMANDS)
-	cg-help tag         ($TAG_COMMANDS)
+	cg-help admin   ($ADVANCED_COMMANDS)
+	cg-help branch  ($BRANCH_COMMANDS)
+	cg-help tag     ($TAG_COMMANDS)
 
 These expressions can be used interchangeably as "ID"s:
 	empty string, "this" or "HEAD" (current HEAD)
