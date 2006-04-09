@@ -87,6 +87,11 @@
 #	List only commits where author or committer contains 'USERNAME'.
 #	The search for 'USERNAME' is case-insensitive.
 #
+# -v::	Verbose header listing
+#	By default, only the 'commit' and 'author' headers are shown. This
+#	makes `cg-log` show even the other commit headers - 'tree', 'parent',
+#	and 'committer'.
+#
 # ENVIRONMENT VARIABLES
 # ---------------------
 # PAGER::
@@ -293,6 +298,7 @@ process_commit_line()
 		fi
 		if [ "$state" = showcommit ]; then
 			print_commit_contents
+			[ "$show_diffs" ] && echo
 			state=randomjunk
 			return
 		fi
@@ -312,12 +318,17 @@ process_commit_line()
 			return
 		fi
 
-		echo "${collogcommit}Commit: ${commit%:*} $coldefault"
-		echo "${collogheader}Tree: $tree $coldefault"
+		merge=
+		[ ! "$verbose" -a ${#parents[@]} -gt 1 ] && merge=" (merge)"
+		echo "${collogcommit}Commit: ${commit%:*}$merge $coldefault"
 
-		for parent in "${parents[@]}"; do
-			echo "${collogheader}Parent: $parent $coldefault"
-		done
+		if [ "$verbose" ]; then
+			echo "${collogheader}Tree: $tree $coldefault"
+
+			for parent in "${parents[@]}"; do
+				echo "${collogheader}Parent: $parent $coldefault"
+			done
+		fi
 
 		# We want wordsplitting in the $date here, to get
 		# TZ as separate argument.
@@ -326,10 +337,12 @@ process_commit_line()
 		[ "$pdate" ] && author="${author%> *}> $pdate"
 		echo "${collogauthor}Author: $author $coldefault"
 
-		date=(${committer#*> })
-		showdate ${date[*]}; pdate="$_showdate"
-		[ "$pdate" ] && committer="${committer%> *}> $pdate"
-		echo "${collogcommitter}Committer: $committer $coldefault"
+		if [ "$verbose" ]; then
+			date=(${committer#*> })
+			showdate ${date[*]}; pdate="$_showdate"
+			[ "$pdate" ] && committer="${committer%> *}> $pdate"
+			echo "${collogcommitter}Committer: $committer $coldefault"
+		fi
 
 		echo
 		if [ "$difffilter" ]; then
@@ -379,6 +392,7 @@ coldefault=
 difffilter=
 followrenames=
 neverfollowrenames=
+verbose=
 
 list_files=
 show_diffs=
@@ -456,6 +470,8 @@ while optparse; do
 		diffcore="$OPTARG"
 	elif optparse --summary; then
 		shortlog=1
+	elif optparse -v; then
+		verbose=1
 	else
 		optfail
 	fi
