@@ -47,13 +47,13 @@
 #	sometimes you just do not want `cg-log` to adjust its list of
 #	watched filenames. In that case, use this switch.
 #
-# -s::	Summarize the log entries
-#	Show a one line summary for each log entry. The summary contains
+# -s::	Short output format of the log entries
+#	Show the log entries one per line. The entry summary contains
 #	information about the commit date, the author, the first line
 #	of the commit log and the commit ID. Long author names and commit
 #	IDs are trimmed and marked with an ending tilde (~).
 #
-# --summary:: Group commits by title
+# --summary:: Group commits by author
 #	Generate the changes summary, listing the commit titles grouped
 #	by their author. This is also known as a "shortlog", suitable
 #	e.g. for contribution summaries of announcements.
