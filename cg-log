@@ -202,8 +202,18 @@ process_commit_line()
 	fi
 	case "$key" in
 	"commit"|"diff-tree")
+		oldcommit="$commit"
 		reset_commit_info
 		commit="${rest:0:40}"
+		# If we've just seen a commit, we are seeing multiple
+		# instances of the same commit caused by git-diff-tree --stdin
+		# hitting a merge. We show only the diff against the first
+		# parent since heuristically, this is the interesting one.
+		# In some cases, this might not be true, but this is hopefully
+		# a good general strategy (always except in the change-here-
+		# -merge-there-fastforward-here case and doing anything else
+		# results in unusably huge file lists etc).
+		[ "$commit" = "$oldcommit" ] && state=silent
 		;;
 	"tree")
 		tree="$rest"
@@ -263,10 +273,10 @@ process_commit_line()
 			if [ "${#author}" -gt 15 ]; then
 				author="${author:0:14}$collogsumtrim~"
 			fi
-			commit="${commit:0:12}$collogsumtrim~"
+			sumcommit="${commit:0:12}$collogsumtrim~"
 
 			printf "$collogsumcommit%s $collogsumauthor%-15s $collogsumdate%s $coldefault%s\n" \
-				"$commit" "$author" "$date" "${title:3}"
+				"$sumcommit" "$author" "$date" "${title:3}"
 			state=silent
 			return
 		fi
