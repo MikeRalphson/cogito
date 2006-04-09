@@ -86,11 +86,11 @@
 #
 # CG_COLORS::
 #	Colon-separated list of 'name=color' pairs, where name is
-#	one of logheader, logauthor, logcommitter, logfiles, logsignoff,
-#	logsumauthor, logsumtrim, logsumcommit, logsumdate, default, and
-#	value is an ECMA-48 SGR sequence (see e.g. console_codes(4)).
-#	You can also customize the diff colors; see `cg-diff` documentation
-#	for the appropriate color names.
+#	one of logcommit, logheader, logauthor, logcommitter, logfiles,
+#	logsignoff, logsumauthor, logsumtrim, logsumcommit, logsumdate,
+#	default, and value is an ECMA-48 SGR sequence (see e.g.
+#	console_codes(4)). You can also customize the diff colors; see
+#	`cg-diff` documentation for the appropriate color names.
 #
 # CG_COLORS_AUTO::
 #	Even if -c was passed or specified in ~/.cgrc, if this option
@@ -144,12 +144,13 @@ trap exit SIGPIPE
 
 setup_colors()
 {
-	local C="logheader=32"
+	local C="logcommit=32:logheader=32"
 	C="$C:logauthor=36:logcommitter=35"
 	C="$C:logfiles=34:logsignoff=33"
 	C="$C:logsumauthor=36:logsumtrim=35"
 	C="$C:logsumcommit=34:logsumdate=32"
 	C="$C:default=0"
+	[ "$show_diffs" ] && C="$C:logcommit=32;1"
 	# Remove bolds from diffcolors - they tended to overshadow cg-log's
 	# highlighting, making it less obvious where one commit ends and
 	# another appears.
@@ -300,7 +301,7 @@ process_commit_line()
 			return
 		fi
 
-		echo "${collogheader}commit ${commit%:*} $coldefault"
+		echo "${collogcommit}commit ${commit%:*} $coldefault"
 		echo "${collogheader}tree $tree $coldefault"
 
 		for parent in "${parents[@]}"; do
@@ -353,6 +354,7 @@ print_commit_log()
 }
 
 
+colors=
 collogheader=
 collogauthor=
 collogcommitter=
@@ -385,7 +387,7 @@ pickaxe=()
 
 while optparse; do
 	if optparse -c; then
-		colorify_detect && setup_colors
+		colors=1
 	elif optparse -d; then
 		show_diffs=1
 		difffilter=showdiffs
@@ -444,6 +446,9 @@ while optparse; do
 		optfail
 	fi
 done
+
+
+[ "$colors" ] && colorify_detect && setup_colors
 
 
 # Word splitting is ok here and we want to auto-drop empty dates.
