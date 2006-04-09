@@ -496,9 +496,12 @@ while optparse; do
 done
 
 
-[ "$colors" ] && colorify_detect && setup_colors
-
 # [ "$pickaxe_less" -a "$show_diffs" ] && _local_CG_LESS="$pickaxe_less"
+[ "$colors" ] && colorify_detect && setup_colors
+if [ "$show_diffs" -a "${ARGS[*]}" ]; then
+	warn "-d is buggy and cannot follow renames yet; implying --no-renames"
+	neverfollowrenames=1
+fi
 
 
 # Word splitting is ok here and we want to auto-drop empty dates.
