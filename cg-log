@@ -312,11 +312,11 @@ process_commit_line()
 			return
 		fi
 
-		echo "${collogcommit}commit ${commit%:*} $coldefault"
-		echo "${collogheader}tree $tree $coldefault"
+		echo "${collogcommit}Commit: ${commit%:*} $coldefault"
+		echo "${collogheader}Tree: $tree $coldefault"
 
 		for parent in "${parents[@]}"; do
-			echo "${collogheader}parent $parent $coldefault"
+			echo "${collogheader}Parent: $parent $coldefault"
 		done
 
 		# We want wordsplitting in the $date here, to get
@@ -324,12 +324,12 @@ process_commit_line()
 		date=(${author#*> })
 		showdate ${date[*]}; pdate="$_showdate"
 		[ "$pdate" ] && author="${author%> *}> $pdate"
-		echo "${collogauthor}author $author $coldefault"
+		echo "${collogauthor}Author: $author $coldefault"
 
 		date=(${committer#*> })
 		showdate ${date[*]}; pdate="$_showdate"
 		[ "$pdate" ] && committer="${committer%> *}> $pdate"
-		echo "${collogcommitter}committer $committer $coldefault"
+		echo "${collogcommitter}Committer: $committer $coldefault"
 
 		echo
 		if [ "$difffilter" ]; then
