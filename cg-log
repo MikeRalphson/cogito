@@ -17,8 +17,13 @@
 #	Colorize the output. You can customize the colors using the
 #	$CG_COLORS environment variable (see below).
 #
+# -d::	Show diffs against previous commits
+#	Accompany each commit with a diff against previous commit.
+#	Turns off '-f'.
+#
 # -f::	List affected files
-#	List affected files. (No effect when passed along `-s`.)
+#	List affected files. (No effect when passed along '-s'.)
+#	Turns off '-d'.
 #
 # -r FROM_ID[..TO_ID]:: Limit to a set of revisions
 #	Limit the log information to a set of revisions using either
@@ -84,6 +89,8 @@
 #	one of logheader, logauthor, logcommitter, logfiles, logsignoff,
 #	logsumauthor, logsumtrim, logsumcommit, logsumdate, default, and
 #	value is an ECMA-48 SGR sequence (see e.g. console_codes(4)).
+#	You can also customize the diff colors; see `cg-diff` documentation
+#	for the appropriate color names.
 #
 # CG_COLORS_AUTO::
 #	Even if -c was passed or specified in ~/.cgrc, if this option
@@ -112,10 +119,12 @@
 # If you see a dubious "if (current->uid = 0)" test in a file and wonder
 # about its genesis, you can run
 #
-#	$ cg-log -S "if (current->uid = 0)" filename
+#	$ cg-log -d -S "if (current->uid = 0)" filename
 #
-# (you can obviously refrain from limiting the pick-axe to a particular
-# file, but it will make it significantly slower).
+# to show the commits adding, removing or modifying that string, together
+# with the relevant patches (you can obviously refrain from limiting
+# the pick-axe to a particular file, but it will make it significantly
+# slower).
 #
 # NOTES
 # -----
@@ -141,7 +150,10 @@ setup_colors()
 	C="$C:logsumauthor=36:logsumtrim=35"
 	C="$C:logsumcommit=34:logsumdate=32"
 	C="$C:default=0"
-	colorify_setup "$C"
+	# Remove bolds from diffcolors - they tended to overshadow cg-log's
+	# highlighting, making it less obvious where one commit ends and
+	# another appears.
+	colorify_setup "$C:${colorify_diffcolors//1;/}"
 }
 
 print_oneline()
@@ -262,11 +274,14 @@ process_commit_line()
 		fi
 		if [ "$state" = waitdiff ]; then
 			# We cannot hook this to ^: since the diff may be empty
+			[ "$show_diffs" ] && msg="$msg
+"
 			state=showcommit
 			return
 		fi
 		if [ "$state" = showcommit ]; then
 			print_commit_contents
+			state=randomjunk
 			return
 		fi
 		if [ "$state" != printhdr ]; then
@@ -316,14 +331,22 @@ process_commit_line()
 
 print_commit_log()
 {
+	[ "$show_diffs" ] || colorify_diffsed=
 	reset_commit_info
 	sed -e '
 		s/^:/: /
 		s/^    \(.*\)/% @\1/
 		/^% *@[Ss]igned-[Oo]ff-[Bb]y:.*/ s/^% @\(.*\)/% @'$collogsignoff'\1'$coldefault'/
 		/^% *@[Aa][Cc][Kk]ed-[Bb]y:.*/ s/^% @\(.*\)/% @'$collogsignoff'\1'$coldefault'/
-	' | { while read -r key rest; do
+	' -e "$colorify_diffsed" | { while IFS=$'\n' read -r line; do
 		trap exit SIGPIPE
+		if [ "$state" = "showcommit" -a "$show_diffs" -a -n "$line" ]; then
+			[ "$state" = silent ] || msg="$msg$line
+"
+			continue
+		fi
+		key="${line%%[ 	]*}"
+		rest="${line#*[ 	]}"
 		process_commit_line
 	done; [ "$state" = "showcommit" ] && print_commit_contents # the last commit
 	}
@@ -345,6 +368,7 @@ followrenames=
 neverfollowrenames=
 
 list_files=
+show_diffs=
 id1=
 id2=
 oneline=
@@ -356,14 +380,22 @@ date_to=
 no_merges=
 always=--always
 diffmerges=-m
+diffpatches=
 pickaxe=()
 
 while optparse; do
 	if optparse -c; then
 		colorify_detect && setup_colors
+	elif optparse -d; then
+		show_diffs=1
+		difffilter=showdiffs
+		diffpatches=-p
+		list_files=
 	elif optparse -f; then
 		list_files=1
 		difffilter=listfiles
+		show_diffs=
+		diffpatches=
 	elif optparse -u=; then
 		user="$OPTARG"
 	elif optparse -r=; then
@@ -472,11 +504,11 @@ rev_extract()
 		# We ignore $fmt but that's no biggie, shortlog
 		# will actually work anyway.
 		"${COGITO_LIB}"cg-Xfollowrenames $revls -- \
-			--root --pickaxe-all $diffmerges $always "${pickaxe[@]}" -- \
+			--root --pickaxe-all $diffmerges $diffpatches $always "${pickaxe[@]}" -- \
 			$revlsstart -- "${ARGS[@]}"
 	elif [ "$difffilter" ]; then
 		git-rev-list $revls $revlsstart $sep "${ARGS[@]}" | \
-		git-diff-tree -r --stdin --root --pickaxe-all $diffmerges $always $fmt "${pickaxe[@]}"
+		git-diff-tree -r --stdin --root --pickaxe-all $diffmerges $diffpatches $always $fmt "${pickaxe[@]}"
 	else
 		git-rev-list $revls $revlsstart $fmt $sep "${ARGS[@]}"
 	fi

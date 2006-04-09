@@ -202,6 +202,14 @@ colorify_detect()
 	return 0
 }
 
+# These are shared between cg-diff and cg-log:
+colorify_diffcolors="diffhdr=1;36"
+colorify_diffcolors="$colorify_diffcolors:diffhdradd=1;32:diffadd=32"
+colorify_diffcolors="$colorify_diffcolors:diffhdrmod=1;35:diffmod=35"
+colorify_diffcolors="$colorify_diffcolors:diffhdrrem=1;31:diffrem=31"
+colorify_diffcolors="$colorify_diffcolors:diffhunk=36:diffctx=34"
+colorify_diffcolors="$colorify_diffcolors:default=0"
+
 colorify_setup()
 {
 	local C="$1"
@@ -211,6 +219,19 @@ colorify_setup()
 	C=col${C//:/m\'; col}m\'
 	#coldefault=$(tput op)
 	eval "$C"
+
+	colorify_diffsed='
+		s/^diff --git.*/'$coldiffhdr'&'$coldefault'/
+		s/^+++.*/'$coldiffhdradd'&'$coldefault'/
+		s/^---.*/'$coldiffhdrrem'&'$coldefault'/
+		s/^[+].*/'$coldiffadd'&'$coldefault'/
+		s/^[-].*/'$coldiffrem'&'$coldefault'/
+		s/^new\( file\)\{0,1\} mode .*/'$coldiffadd'&'$coldefault'/
+		s/^\(deleted file\|old\) mode .*/'$coldiffrem'&'$coldefault'/
+		s/^rename to .*/'$coldiffadd'&'$coldefault'/
+		s/^rename from .*/'$coldiffrem'&'$coldefault'/
+		s/^\(@@ -.* +.* @@\)\(.*\)/'$coldiffhunk'\1'$coldiffctx'\2'$coldefault'/
+	'
 }
 
 

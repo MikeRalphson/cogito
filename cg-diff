@@ -85,13 +85,7 @@ _git_wc_unneeded=1
 
 setup_colors()
 {
-	local C="diffhdr=1;36"
-	C="$C:diffhdradd=1;32:diffadd=32"
-	C="$C:diffhdrmod=1;35:diffmod=35"
-	C="$C:diffhdrrem=1;31:diffrem=31"
-	C="$C:diffhunk=36:diffctx=34"
-	C="$C:default=0"
-	colorify_setup "$C"
+	colorify_setup "$colorify_diffcolors"
 }
 
 colorize()
