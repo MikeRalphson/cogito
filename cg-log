@@ -478,6 +478,11 @@ while optparse; do
 	elif optparse -S= || optparse --pickaxe=; then
 		always=
 		pickaxe=(-S"$OPTARG")
+		# The trouble with this is that less behaves really strange.
+		# It withholds the output until it reads all the input, for
+		# example. So this didn't work out very well so far. :-(
+		# pickaxe_less=$'+/\013\022'"${OPTARG}"
+		# pickaxe_less="${pickaxe_less%$'\n'*}" # stupid less!
 		difffilter=pickaxe
 	elif optparse --diffcore=; then
 		diffcore="$OPTARG"
@@ -492,6 +497,8 @@ done
 
 
 [ "$colors" ] && colorify_detect && setup_colors
+
+# [ "$pickaxe_less" -a "$show_diffs" ] && _local_CG_LESS="$pickaxe_less"
 
 
 # Word splitting is ok here and we want to auto-drop empty dates.
@@ -572,7 +579,7 @@ rev_show()
 	else
 		# LESS="S" will prevent less to wrap too long titles
 		# to multiple lines; you can scroll horizontally.
-		print_commit_log | _local_CG_LESS="S" pager
+		print_commit_log | _local_CG_LESS="S $_local_CG_LESS" pager
 	fi
 }
 
