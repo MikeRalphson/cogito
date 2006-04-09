@@ -14,6 +14,12 @@
 #	Colorize the output. You can customize the colors using the
 #	$CG_COLORS environment variable (see below).
 #
+# --diffcore ARGS:: Diffcore arguments to pass the Git diff command
+#	Pass the given diffcore arguments the called Git diff command.
+#	See e.g. git-diff-tree(1) documentation for the list of possible
+#	arguments; '-R', '-B', '-M' and '-C' might be of particular
+#	interest.
+#
 # -p:: Use ID parent
 #	Show diff to the parent of the current commit (or the commit
 #	specified by the -r parameter).
@@ -97,6 +103,7 @@ colorize()
 
 id1=" " # means HEAD
 id2=" " # means working copy
+diffcore=
 parent=
 opt_color=
 mergebase=
@@ -106,6 +113,8 @@ while optparse; do
 	if optparse -c; then
 		opt_color=1
 		setup_colors
+	elif optparse --diffcore=; then
+		diffcore="$OPTARG"
 	elif optparse -p; then
 		[ "$mergebase" ] && optconflict -m
 		parent=1
@@ -188,7 +197,7 @@ done
 # FIXME: Update ret based on what did we match. And take "$@"
 # to account after all.
 #ret=
-$diffprog -r -p "${diffargs[@]}" | colorize | pager
+$diffprog -r -p $diffcore "${diffargs[@]}" | colorize | pager
 #[ "$ret" ] && die "no files matched"
 #exit $ret
 exit 0
