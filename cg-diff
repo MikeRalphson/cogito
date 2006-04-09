@@ -17,8 +17,8 @@
 # --diffcore ARGS:: Diffcore arguments to pass the Git diff command
 #	Pass the given diffcore arguments the called Git diff command.
 #	See e.g. git-diff-tree(1) documentation for the list of possible
-#	arguments; '-R', '-B', '-M' and '-C' might be of particular
-#	interest.
+#	arguments; '-R', '-B', and '-C' might be of particular interest
+#	('-M' is already passed by default).
 #
 # --no-renames:: Do not detect renames
 #	By default, `cg-diff` will automatically detect file renames.

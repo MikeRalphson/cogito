@@ -25,6 +25,13 @@
 #	Accompany each commit with a diff against previous commit.
 #	Turns off '-f'.
 #
+# --diffcore ARGS:: Diffcore arguments to pass the Git diff command
+#	Pass the given diffcore arguments the called Git diff command.
+#	See e.g. git-diff-tree(1) documentation for the list of possible
+#	arguments; '-R', '-B', and '-C' might be of particular interest
+#	('-M' is sometimes passed automatically, but not always). This
+#	is mostly only relevant in conjunction with the '-d' option.
+#
 # -f::	List affected files
 #	List affected files. (No effect when passed along '-s'.)
 #	Turns off '-d'.
@@ -375,6 +382,7 @@ neverfollowrenames=
 
 list_files=
 show_diffs=
+diffcore=
 id1=
 id2=
 oneline=
@@ -444,6 +452,8 @@ while optparse; do
 		always=
 		pickaxe=(-S"$OPTARG")
 		difffilter=pickaxe
+	elif optparse --diffcore=; then
+		diffcore="$OPTARG"
 	elif optparse --summary; then
 		shortlog=1
 	else
@@ -513,11 +523,14 @@ rev_extract()
 		# We ignore $fmt but that's no biggie, shortlog
 		# will actually work anyway.
 		"${COGITO_LIB}"cg-Xfollowrenames $revls -- \
-			--root --pickaxe-all $diffmerges $diffpatches $always "${pickaxe[@]}" -- \
+			--root --pickaxe-all $diffmerges $diffpatches \
+				$always $diffcore "${pickaxe[@]}" -- \
 			$revlsstart -- "${ARGS[@]}"
 	elif [ "$difffilter" ]; then
 		git-rev-list $revls $revlsstart $sep "${ARGS[@]}" | \
-		git-diff-tree -r --stdin --root --pickaxe-all $diffmerges $diffpatches $always $fmt "${pickaxe[@]}"
+		git-diff-tree -r --stdin --root --pickaxe-all \
+			$diffmerges $diffpatches $always $diffcore $fmt \
+			"${pickaxe[@]}"
 	else
 		git-rev-list $revls $revlsstart $fmt $sep "${ARGS[@]}"
 	fi
