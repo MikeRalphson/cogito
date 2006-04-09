@@ -3,8 +3,18 @@
 # Apply a patch from a file, standard input, or a commit
 # Copyright (c) Petr Baudis, 2005
 #
-# This is basically just a smart patch wrapper. It handles stuff like
-# mode changes, removal of files vs. zero-size files, file renames etc.
+# Apply a patch in a manner similar to the 'patch' tool, but while also
+# handling the Git extensions to the diff format: file mode changes, file
+# renames, distinguishing removal of files and empty files, etc. Newly
+# created files are automatically `cg-add`ed and removed files are
+# `cg-rm`oved.
+#
+# `cg-patch` can also automatically commit the applied patches and extract
+# patches from existing commits, therefore effectively enabling you to
+# 'cherrypick' certain changes from a different branch.
+#
+# In comparasion with the 'git-apply' tool, `cg-patch` will also apply
+# fuzzy patches.
 #
 # OPTIONS
 # -------
