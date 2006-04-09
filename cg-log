@@ -102,11 +102,12 @@
 #
 # CG_COLORS::
 #	Colon-separated list of 'name=color' pairs, where name is
-#	one of logcommit, logheader, logauthor, logcommitter, logfiles,
-#	logsignoff, logsumauthor, logsumtrim, logsumcommit, logsumdate,
-#	default, and value is an ECMA-48 SGR sequence (see e.g.
-#	console_codes(4)). You can also customize the diff colors; see
-#	`cg-diff` documentation for the appropriate color names.
+#	one of logcommit, logheader, logauthor, logcommitter,
+#	logfilemod, logfileadd, logfiledel, logfileren, logsignoff,
+#	logsumauthor, logsumtrim, logsumcommit, logsumdate, default,
+#	and value is an ECMA-48 SGR sequence (see e.g. console_codes(4)).
+#	You can also customize the diff colors; see `cg-diff` documentation
+#	for the appropriate color names.
 #
 # CG_COLORS_AUTO::
 #	Even if -c was passed or specified in ~/.cgrc, if this option
@@ -161,8 +162,8 @@ trap exit SIGPIPE
 setup_colors()
 {
 	local C="logcommit=32:logheader=32"
-	C="$C:logauthor=36:logcommitter=35"
-	C="$C:logfiles=34:logsignoff=33"
+	C="$C:logauthor=36:logcommitter=35:logsignoff=33"
+	C="$C:logfilemod=34:logfileadd=36:logfiledel=31:logfileren=33"
 	C="$C:logsumauthor=36:logsumtrim=35"
 	C="$C:logsumcommit=34:logsumdate=32"
 	C="$C:default=0"
@@ -171,6 +172,11 @@ setup_colors()
 	# highlighting, making it less obvious where one commit ends and
 	# another appears.
 	colorify_setup "$C:${colorify_diffcolors//1;/}"
+	collogfile_M0="$collogfilemod"
+	collogfile_A0="$collogfileadd"
+	collogfile_D0="$collogfiledel"
+	collogfile_R0="$collogfileadd"
+	collogfile_R1="$collogfileren"
 }
 
 print_oneline()
@@ -201,17 +207,17 @@ list_commit_files()
 	tree1="$1"
 	tree2="$2"
 	line=
-	sep="    * $collogfiles"
-	for file in "${files[@]}"; do
+	sep="    * "
+	for (( i=0; i < ${#files[@]}; i++ )); do
 		echo -n "$sep"
-		sep=", "
-		line="$line$sep$file"
+		sep="$collogfilemod, "
+		line="$line$sep${files[$i]}"
 		if [ ${#line} -le 74 ]; then
-			echo -n "$file"
+			echo -n "${filecols[$i]}${files[$i]}"
 		else
-			line="      $file"
+			line="      ${files[$i]}"
 			echo "$coldefault"
-			echo -n "      $collogfiles$file"
+			echo -n "      ${filecols[$i]}${files[$i]}"
 		fi
 	done
 	echo "$coldefault:"
@@ -233,6 +239,7 @@ reset_commit_info()
 	committer=
 	msg=
 	files=()
+	filecols=()
 
 	# The $state variable mostly describes what should happen on the next
 	# empty line.
@@ -276,13 +283,19 @@ process_commit_line()
 		;;
 	:)
 		orest="$rest";
-		rest="${rest#*	}"
+		rest="${orest#*	}"
+		crest="${orest%%	*}"
+		crest="${crest%[0-9][0-9][0-9]}" # rename similarity
+		i=0
 		while [ x"$rest" != x"$orest" ]; do
+			local l="collogfile_${crest:(-1):1}$i"
+			filecols[${#files[@]}]="${!l}"
 			files[${#files[@]}]="${rest%%	*}"
 			# Multiple tab-separated filenames are present in case
 			# of rename entries.
 			orest="$rest"
 			rest="${rest#*	}"
+			i=$((i+1))
 		done
 		;;
 	"")
