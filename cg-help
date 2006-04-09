@@ -32,6 +32,11 @@
 #	helpcode, helpempth, default, and value is an ECMA-48 SGR
 #	sequence (see e.g. console_codes(4)).
 #
+# CG_COLORS_AUTO::
+#	Even if -c was passed or specified in ~/.cgrc, if this option
+#	is set, use colors only when the output is a terminal and it
+#	supports colors.
+#
 # CG_LESS::
 #	This is what the $LESS environment variable value will be set
 #	to before invoking $PAGER. It defaults to $LESS concatenated
@@ -87,7 +92,7 @@ colorize() {
 apply_colors=
 while optparse; do
 	if optparse -c; then
-		setup_colors
+		colorify_detect && setup_colors
 	else
 		optfail
 	fi

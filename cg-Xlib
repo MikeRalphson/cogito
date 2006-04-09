@@ -194,6 +194,14 @@ showdate()
 # Colorification routines                                          {{{1
 #
 
+colorify_detect()
+{
+	[ "$CG_COLORS_AUTO" ] || return 0
+	[ -t 1 ] || return 1
+	[ "$(tput setaf 1 2>/dev/null)" ] || return 1
+	return 0
+}
+
 colorify_setup()
 {
 	local C="$1"
