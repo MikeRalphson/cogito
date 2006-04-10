@@ -172,7 +172,8 @@ fetch_http()
 
 get_local()
 {
-	cp_flags_l="-v"
+	#cp_flags_l="-v"
+	cp_flags_l=
 	if [ "$1" = "-b" ]; then
 		# Dereference symlinks
 		cp_flags_l="$cp_flags_l -L"
