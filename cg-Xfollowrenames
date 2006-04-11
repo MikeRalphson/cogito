@@ -141,6 +141,7 @@ header_loaded:
 message_loaded:
 
 	# Load delta
+	# Note that we must interpret the patch we are seeing _reverse_.
 	while (my $line = <$pipe>) {
 		$head->{'str'} .= $line;
 		chomp $line;
@@ -167,8 +168,9 @@ message_loaded:
 				$rename = 1;
 				push(@newset, $newfile);
 			}
-		} elsif ($info =~ /D$/) {
-			# Not weeding out deleted files might cause bizarre
+		} elsif ($info =~ /A$/) {
+			# Not weeding out deleted files (the patch is reversed
+			# so they appear as added to us) might cause bizarre
 			# results when following multiple files since
 			# git-rev-list weeds them out too (probably?).
 			@oldset = grep { $newfile ne $_ } @oldset;
