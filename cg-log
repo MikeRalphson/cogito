@@ -175,8 +175,8 @@ setup_colors()
 	collogfile_M0="$collogfilemod"
 	collogfile_A0="$collogfileadd"
 	collogfile_D0="$collogfiledel"
-	collogfile_R0="$collogfileadd"
-	collogfile_R1="$collogfileren"
+	collogfile_R0="$collogfileren"
+	collogfile_R1="$collogfileadd"
 }
 
 print_oneline()
