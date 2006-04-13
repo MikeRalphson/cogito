@@ -16,6 +16,15 @@
 #
 # OPTIONS
 # -------
+# -b::	Create a bare repository - do not check out working copy
+#	Create only the bare repository, without a working copy attached;
+#	this is useful e.g. for public repository mirrors. `cg-clone`
+#	is to `cg-init` as `cg-clone -b` is to `cg-admin-setuprepo`.
+#	(Still, if you are setting up a public or a central repository
+#	other people will push into, it might be more practical to just
+#	`cg-admin-setuprepo` it and then populate it with `cg-push`
+#	from the other side.)
+#
 # -l::	Symlink the object database when cloning locally
 #	Symlink the object database when cloning locally, instead of
 #	hardlinking all the objects. This is suitable for very fast
@@ -26,15 +35,6 @@
 #	as well. The choice is yours.
 #	Note that you MUST NOT prune repository containing a symlink
 #	or being symlinked to.
-#
-# -R::	Clone only the repository, do not check out working copy
-#	Create only the repository, without a working copy attached;
-#	this is useful e.g. for public repository mirrors. `cg-clone`
-#	is to `cg-init` as `cg-clone -R` is to `cg-admin-setuprepo`.
-#	(Still, if you are setting up a public or a central repository
-#	other people will push into, it might be more practical to just
-#	`cg-admin-setuprepo` it and then populate it with `cg-push`
-#	from the other side.)
 #
 # -s::	Clone into the current directory
 #	Clone in the current directory instead of creating a new one.
@@ -60,7 +60,7 @@
 #
 #	$ cg-clone git://git.kernel.org/pub/scm/git/git.git#next
 
-USAGE="cg-clone [-l] [-R] [-s] LOCATION [DESTDIR]"
+USAGE="cg-clone [-l] [-b] [-s] LOCATION [DESTDIR]"
 _git_repo_unneeded=1
 
 . "${COGITO_LIB}"cg-Xlib || exit 1
@@ -71,7 +71,7 @@ symlink=
 while optparse; do
 	if optparse -l; then
 		symlink=1
-	elif optparse -R; then
+	elif optparse -b; then
 		repoonly=1
 	elif optparse -s; then
 		same_dir=1
