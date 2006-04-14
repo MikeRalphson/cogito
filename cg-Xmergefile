@@ -160,15 +160,18 @@ case "${id0:-.}${id1:-.}${id2:-.}" in
 	echo "... Auto-merging $file"
 	orig=$(git-unpack-file $id0)
 	src2=$(git-unpack-file $id2)
+	merged=$(mktemp .mergeresult-XXXXXX)
 
 	load_unescaped_sym_ways
 	# We reset the index to the first branch, making
 	# git-diff-file useful
 	git-update-index --add --cacheinfo "$mode1" "$id1" "$file"
 		git-checkout-index -u -f -- "$file" &&
-		merge -L "${ways[1]}" -L "${ways[0]}" -L "${ways[2]}" "$file" "$orig" "$src2"
+		{ diff3 -m -E -L "${ways[1]}" -L "${ways[0]}" -L "${ways[2]}" "$file" "$orig" "$src2" >"$merged"; }
 	ret=$?
 	rm -f -- "$orig" "$src2"
+	cat "$merged" >"$file"
+	rm "$merged"
 
 	if [ "$mode1" != "$mode2" ]; then
 		if [ "$mode0" = "$mode1" ]; then
