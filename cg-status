@@ -45,7 +45,9 @@
 #
 # -s STATUS:: Limit to files matching the STATUS flags
 #	Show only files with the given status flag, e.g. '-s D'. You can list
-#	multiple flags ('-s MmA') to filter for all of them.
+#	multiple flags ('-s MmA') to filter for all of them. You can prepend
+#	'^' to the STATUS argument to invert the filter - only items with flags
+#	NOT listed in the STATUS string will be printed out.
 #
 # -S:: Do not squash directories
 #	By default, cg-status will not list full contents of untracked
@@ -114,8 +116,11 @@ while optparse; do
 		noflags=1
 	elif optparse -s=; then
 		flagfilter="$OPTARG"
-		echo "$flagfilter" | grep -qx '[a-zA-Z?!]*' \
+		echo "$flagfilter" | grep -qx '[a-zA-Z?!^]*' \
 			|| die "invalid -s status flag"
+		if [ x"${flagfilter:0:1}" = x"^" ]; then
+			flagfilter="$(echo "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ?!" | tr -d "${flagfilter:1}")"
+		fi
 	elif optparse -S; then
 		squashdirs=nosquashdirs
 	elif optparse -w; then
