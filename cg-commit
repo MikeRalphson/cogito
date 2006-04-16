@@ -287,8 +287,8 @@ if [ "$ARGS" -o "$_git_relpath" ]; then
 		echo "${_git_relpath}$file" >>"$filter"
 	done
 
-	eval "commitfiles=($(cat "$filter" | path_xargs git-diff-index -r -m HEAD -- | \
-		sed -e 's/"\|\\/\\&/g' -e 's/^\([^	]*\)\(.\)	\(.*\)\(	.*\)*$/"\2 \3"/'))"
+	eval "commitfiles=($(cat "$filter" | path_xargs git-diff-index --name-status -z -r -m HEAD -- | \
+		perl -n0e 'chomp; if (defined $meta) { s/([\"\\])/\\\1/; print "\"$meta $_\"\n"; $meta=undef } else { $meta = $_ }'))"
 	customfiles=1
 
 	[ "$review" ] && cat "$filter" | path_xargs git-diff-index -r -m -p HEAD -- > "$PATCH"
@@ -305,8 +305,8 @@ else
 	if [ ! "$ignorecache" ]; then
 		# \t instead of the tab character itself works only with new
 		# sed versions.
-		eval "commitfiles=($(git-diff-index -r -m HEAD | \
-			sed -e 's/"\|\\/\\&/g' -e 's/^\([^	]*\)\(.\)	\(.*\)\(	.*\)*$/"\2 \3"/'))"
+		eval "commitfiles=($(git-diff-index --name-status -z -r -m HEAD | \
+			perl -n0e 'chomp; if (defined $meta) { s/([\"\\])/\\\1/; print "\"$meta $_\"\n"; $meta=undef } else { $meta = $_ }'))"
 
 		if [ -s "$_git/commit-ignore" ]; then
 			newcommitfiles=()
@@ -455,7 +455,7 @@ __END__
 		exit 1
 	fi
 	if [ ! "$ignorecache" ] && [ ! "$merging" ] && [ ! "$review" ]; then
-		eval "newcommitfiles=($(grep ^CG:F "$LOGMSG2" | sed 's/^CG:F *\(.*\)$/"\1"/'))"
+		eval "newcommitfiles=($(grep ^CG:F "$LOGMSG2" | sed -e 's/\"/\\&/g' -e 's/^CG:F *\(.*\)$/"\1"/'))"
 		if [ ! "$force" ] && [ ! "${newcommitfiles[*]}" ]; then
 			rm "$LOGMSG" "$LOGMSG2"
 			[ "$quiet" ] && exit 0 || die 'Nothing to commit'
