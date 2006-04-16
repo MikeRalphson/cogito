@@ -258,9 +258,14 @@ editor=
 [ "$forceeditor" ] && editor=1
 [ ! "$msgs" ] && [ ! "$msgfile" ] && [ ! "$copy_commit" ] && editor=1
 
+tmpdir="$(mktemp -d -t gitci.XXXXXX)"
+cleanup () { rm -rf "$tmpdir"; }
+cleanup_trap "cleanup"
+trap "cleanup" EXIT
+
 if [ "$review" ]; then
-	PATCH="$(mktemp -t gitci.XXXXXX)"
-	PATCH2="$(mktemp -t gitci.XXXXXX)"
+	PATCH="$tmpdir/patch.diff"
+	PATCH2="$tmpdir/patch2.diff"
 	editor=1
 fi
 
@@ -268,7 +273,7 @@ if [ "$ARGS" -o "$_git_relpath" ]; then
 	[ "$ignorecache" ] && die "-C and listing files to commit does not make sense"
 	[ -s "$_git/merging" ] && die "cannot commit individual files when merging"
 
-	filter="$(mktemp -t gitci.XXXXXX)"
+	filter="$tmpdir/filter"
 	[ "$_git_relpath" -a ! "$ARGS" ] && echo "$_git_relpath" >>"$filter"
 	for file in "${ARGS[@]}"; do
 		echo "${_git_relpath}$file" >>"$filter"
@@ -312,8 +317,13 @@ else
 fi
 
 
-LOGMSG="$(mktemp -t gitci.XXXXXX)"
-LOGMSG2="$(mktemp -t gitci.XXXXXX)"
+if [ "$review" ]; then
+	LOGMSG="$tmpdir/logmsg.diff"
+	LOGMSG2="$tmpdir/logmsg2.diff"
+else
+	LOGMSG="$tmpdir/logmsg"
+	LOGMSG2="$tmpdir/logmsg2"
+fi
 
 written=
 if [ "$merging" ] && [ ! "$editor" ]; then
@@ -417,10 +427,8 @@ if [ "$review" ]; then
 		echo "CG:"
 		cat "$PATCH"
 	} >>"$LOGMSG"
-
-	ftdiff=" filetype=diff"
 fi
-editor_msg_end "$ftdiff"
+editor_msg_end
 
 cp "$LOGMSG" "$LOGMSG2"
 if tty -s; then
@@ -504,7 +512,7 @@ precommit_update()
 if [ ! "$ignorecache" ]; then
 	if [ "$customfiles" ]; then
 		precommit_update "${commitfiles[@]}" || die "update-cache failed"
-		export GIT_INDEX_FILE="$(mktemp -t gitci.XXXXXX)"
+		export GIT_INDEX_FILE="$tmpdir/index"
 		git-read-tree HEAD
 	fi
 	precommit_update "${commitfiles[@]}" || die "update-cache failed"
