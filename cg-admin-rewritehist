@@ -133,6 +133,8 @@
 
 # Testsuite: TODO
 
+set -e
+
 USAGE="cg-admin-rewritehist [-d TEMPDIR] [-r STARTREV]... [FILTERS] DESTBRANCH"
 _git_wc_unneeded=1
 _git_requires_root=1
@@ -169,10 +171,10 @@ done
 
 dstbranch="${ARGS[0]}"
 [ -n "$dstbranch" ] || die "missing branch name"
-[ -s "$_git/refs/heads/$dstbranch" ] && die "branch $dstbranch already exists"
-[ -s "$_git/branches/$dstbranch" ] && die "branch $dstbranch is already a remote branch"
+[ ! -s "$_git/refs/heads/$dstbranch" ] || die "branch $dstbranch already exists"
+[ ! -s "$_git/branches/$dstbranch" ] || die "branch $dstbranch is already a remote branch"
 
-[ -e "$tempdir" ] && die "$tempdir already exists, please remove it"
+[ ! -e "$tempdir" ] || die "$tempdir already exists, please remove it"
 mkdir -p "$tempdir/t"
 cd "$tempdir/t"
 
