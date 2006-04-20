@@ -118,6 +118,7 @@ if [ "$symlink" ]; then
 fi
 cg-branch-add origin "$location"
 
+mkdir -p "$_git/info"
 echo $$ >"$_git/info/cg-fetch-initial"
 echo $$ >"$_git/info/cg-fetch-earlydie"
 cat >___ <<__EOT__
