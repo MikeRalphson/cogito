@@ -185,9 +185,7 @@ case "${id0:-.}${id1:-.}${id2:-.}" in
 	fi
 
 	if [ $ret -ne 0 ]; then
-		# The user already gets the warning from merge itself and
-		# from merge-cache too. This is too much.
-		#error "Auto-merge failed"
+		echo "    CONFLICTS during merge." >&2
 		exit 1
 	fi
 	exec git-update-index -- "$file"
