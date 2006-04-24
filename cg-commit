@@ -560,7 +560,7 @@ if [ "$newhead" ]; then
 	fi
 	[ -z "$branchname" ] && [ "$_git_head" != "master" ] && branchname="$_git_head"
 	if [ -x "$_git/hooks/commit-post" ]; then
-		if [ "$(git-repo-config cogito.hooks.commit.post.allmerged)" = "true" ]; then
+		if [ "$(git-repo-config --bool cogito.hooks.commit.post.allmerged)" = "true" ]; then
 			# We just hope that for the initial commit, the user didn't
 			# manage to install the hook yet.
 			for merged in $(git-rev-list $newhead ^$oldhead | tac); do
