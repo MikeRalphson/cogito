@@ -144,6 +144,7 @@ if [ "$symlink" ]; then
 fi
 cg-branch-add origin "$location"
 
+mkdir -p "$_git/info"
 [ "$repoonly" ] && echo $$ >"$_git/info/cg-fetch-initial-wcless"
 echo $$ >"$_git/info/cg-fetch-initial"
 cat >___ <<__EOT__
