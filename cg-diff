@@ -71,6 +71,14 @@
 #	to before invoking $PAGER. It defaults to $LESS concatenated
 #	with the `R` flag to allow displaying of colorized output.
 #
+# CONFIGURATION VARIABLES
+# -----------------------
+# The following GIT configuration file variables are recognized:
+#
+# diff.usecolor::
+#	If enabled, colorify the output like with -c if the output
+#	is a terminal.
+#
 # NOTES
 # -----
 # The ':' is equivalent to '..' in revisions range specification (to make
@@ -86,6 +94,8 @@ _git_wc_unneeded=1
 setup_colors()
 {
 	colorify_setup "$colorify_diffcolors"
+	# It could've been turned on by diff.usecolor
+	opt_color=1
 }
 
 colorize()
@@ -123,7 +133,6 @@ renames=-M
 while optparse; do
 	if optparse -c; then
 		opt_color=1
-		colorify_detect && setup_colors
 	elif optparse --diffcore=; then
 		diffcore="$OPTARG"
 	elif optparse -p; then
@@ -155,6 +164,8 @@ while optparse; do
 	fi
 done
 
+
+colorify_detect "$opt_color" diff && setup_colors
 
 [ "$id1" = " " ] && id1=HEAD
 

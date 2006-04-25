@@ -120,6 +120,14 @@
 #	with the `R` and `S` flags to allow displaying of colorized output
 #	and to avoid long lines from wrapping when using `-s`.
 #
+# CONFIGURATION VARIABLES
+# -----------------------
+# The following GIT configuration file variables are recognized:
+#
+# log.usecolor::
+#	If enabled, colorify the output like with -c if the output
+#	is a terminal.
+#
 # EXAMPLE USAGE
 # -------------
 # To show a log of changes between two releases tagged as 'releasetag-0.9'
@@ -497,7 +505,7 @@ done
 
 
 # [ "$pickaxe_less" -a "$show_diffs" ] && _local_CG_LESS="$pickaxe_less"
-[ "$colors" ] && colorify_detect && setup_colors
+colorify_detect "$colors" log && setup_colors
 if [ "$show_diffs" -a "${ARGS[*]}" ]; then
 	warn "-d is buggy and cannot follow renames yet; implying --no-renames"
 	neverfollowrenames=1

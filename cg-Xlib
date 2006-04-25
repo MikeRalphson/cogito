@@ -196,8 +196,16 @@ showdate()
 
 colorify_detect()
 {
-	[ "$CG_COLORS_AUTO" ] || return 0
-	[ -t 1 ] || return 1
+	if [ -z "$1" ]; then
+		# If -c was not passed but we _are_ on a terminal,
+		# check $2.usecolor yet.
+		[ -t 1 ] || return 1
+		[ "$(git-repo-config --bool $2.usecolor)" = "true" ] || return 1
+		[ "$CG_COLORS_AUTO" ] || return 0
+	else
+		[ "$CG_COLORS_AUTO" ] || return 0
+		[ -t 1 ] || return 1
+	fi
 	[ "$(tput setaf 1 2>/dev/null)" ] || return 1
 	return 0
 }

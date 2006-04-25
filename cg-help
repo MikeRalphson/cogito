@@ -41,6 +41,14 @@
 #	This is what the $LESS environment variable value will be set
 #	to before invoking $PAGER. It defaults to $LESS concatenated
 #	with the `R` flag to allow displaying of colorized output.
+#
+# CONFIGURATION VARIABLES
+# -----------------------
+# The following GIT configuration file variables are recognized:
+#
+# help.usecolor::
+#	If enabled, colorify the output like with -c if the output
+#	is a terminal.
 
 USAGE="cg-help [-c] [cg-COMMAND | COMMAND]"
 _git_repo_unneeded=1
@@ -90,15 +98,17 @@ colorize() {
 }
 
 
+colors=
 apply_colors=
 while optparse; do
 	if optparse -c; then
-		colorify_detect && setup_colors
+		colors=1
 	else
 		optfail
 	fi
 done
 
+colorify_detect "$colors" help && setup_colors
 bin_path="$(dirname "$0")"
 
 
