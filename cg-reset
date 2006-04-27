@@ -22,6 +22,8 @@
 #	the file physically as well, that will not be undone - run
 #	'cg-restore' to restore it physically afterwards).
 
+# Testsuite: TODO
+
 USAGE="cg-reset [--adds-removes]"
 _git_requires_root=1
 

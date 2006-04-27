@@ -49,6 +49,8 @@
 #	#!/bin/sh
 #	exec git-update-server-info
 
+# Testsuite: TODO
+
 USAGE="cg-admin-setuprepo [-g GROUP] DIRECTORY"
 _git_repo_unneeded=1
 

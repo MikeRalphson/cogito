@@ -20,6 +20,8 @@
 # -f:: Force overwriting of existing files
 #	Remove the target file if it already exists.
 
+# Testsuite: TODO
+
 USAGE="cg-mv [-f] FILE... DEST"
 
 . "${COGITO_LIB}"cg-Xlib || exit 1

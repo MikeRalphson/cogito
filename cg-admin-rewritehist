@@ -131,6 +131,8 @@
 # and all children of the merge will become merge commits with P1,P2
 # as their parents instead of the merge commit.
 
+# Testsuite: TODO
+
 USAGE="cg-admin-rewritehist [-d TEMPDIR] [-r STARTREV]... [FILTERS] DESTBRANCH"
 _git_wc_unneeded=1
 _git_requires_root=1

@@ -24,6 +24,8 @@
 # -x:: Clean files ignored by cg-status
 #	Also clean files ignored by cg-status, such as object files.
 
+# Testsuite: Complete (t9400-clean)
+
 USAGE="cg-clean [-d] [-D] [-n] [-q] [-x]"
 
 . "${COGITO_LIB}"cg-Xlib || exit 1

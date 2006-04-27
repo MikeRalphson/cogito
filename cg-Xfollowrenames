@@ -16,6 +16,8 @@
 #
 #	cg-Xfollowrenames revlistargs -- difftreeargs -- revs -- files
 
+# Testsuite: TODO
+
 # TODO: Does not work on multiple files properly yet - most probably
 # (I didn't test it!). We want git-rev-list to stop traversing the history
 # when _any_ file disappears while now it probably stops traversing when

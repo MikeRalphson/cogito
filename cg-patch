@@ -70,6 +70,8 @@
 #
 # Takes the diff on stdin (unless specified otherwise).
 
+# Testsuite: TODO
+
 USAGE="cg-patch [-c] [-C COMMIT] [-pN] [-R] [-u] [OTHER_OPTIONS] < PATCH"
 
 . "${COGITO_LIB}"cg-Xlib || exit 1

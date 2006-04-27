@@ -24,6 +24,8 @@
 #	Record removal of all files which have been deleted from
 #	the working copy.
 
+# Testsuite: Partial (used in many tests but a dedicated testsuite is missing)
+
 USAGE="cg-rm [-f] [-n] [-r] [-a] FILE..."
 
 . "${COGITO_LIB}"cg-Xlib || exit 1

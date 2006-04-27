@@ -28,6 +28,8 @@
 #	that even if you pass `cg-push` the '-t' arguments, your
 #	HEAD is still pushed as well in addition to the tags.
 
+# Testsuite: TODO
+
 USAGE="cg-push [-r LOCAL_BRANCH] [REMOTE_BRANCH] [-t TAG]..."
 _git_wc_unneeded=1
 

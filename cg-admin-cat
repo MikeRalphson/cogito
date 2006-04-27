@@ -12,6 +12,8 @@
 #	ID of the revision or tree where to look for the file, instead of
 #	HEAD.
 
+# Testsuite: TODO
+
 # The tale of birth:
 # Initiated from a request from:		    erg@research.att.com
 #   for an equivalent to "cvs co -p <filename>"

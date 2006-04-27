@@ -42,6 +42,8 @@
 #	This is most usually the ID of the commit to tag. Tagging
 #	other objects than commits is possible, but rather "unusual".
 
+# Testsuite: Marginal (part of t9206-merge-multi-base)
+
 USAGE="cg-tag [-m MESSAGE]... [-e] [-s] [OTHER_OPTIONS] TAG_NAME [OBJECT_ID]"
 _git_wc_unneeded=1
 

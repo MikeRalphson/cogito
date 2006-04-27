@@ -157,6 +157,8 @@
 # things more comfortable to SVN users). See cogito(7) for more details
 # about revision specification.
 
+# Testsuite: TODO
+
 USAGE="cg-log [-D DATE] [-r FROM_ID[..TO_ID]] [-d] [-s | --summary] [OTHER_OPTIONS] [FILE]..."
 _git_wc_unneeded=1
 

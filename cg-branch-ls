@@ -16,6 +16,8 @@
 # Terminology note: This command concerns remote branches, not the local
 # ones (those managed by `cg-switch` and listed by `cg-status -g`).
 
+# Testsuite: TODO
+
 USAGE="cg-branch-ls"
 _git_wc_unneeded=1
 

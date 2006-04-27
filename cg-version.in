@@ -8,6 +8,8 @@
 # is also shown if this information was available
 # at the build time.
 
+# Testsuite: TODO
+
 USAGE="cg-version"
 _git_repo_unneeded=1
 

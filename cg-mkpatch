@@ -62,6 +62,8 @@
 # things more comfortable to SVN users). See cogito(7) for more details
 # about revision specification.
 
+# Testsuite: TODO
+
 USAGE="cg-mkpatch [-m] [-s] [-r FROM_ID[..TO_ID] [-d DIRNAME]]"
 _git_requires_root=1
 _git_wc_unneeded=1

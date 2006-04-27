@@ -37,6 +37,8 @@
 #	This is for special purposes when you might not actually _have_ any
 #	object database. This option is normally not interesting.
 
+# Testsuite: Almost complete (t9000-init, missing -N test)
+
 USAGE="cg-init [-I] [-N] [-e EXCLUDEPATTERN]... [-m MESSAGE]..."
 _git_repo_unneeded=1
 

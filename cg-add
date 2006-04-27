@@ -28,6 +28,8 @@
 #	ignore rules - see `cg-status` for a more detailed description of
 #	those). See also above for more notes about cg-add vs. directories.
 
+# Testsuite: Partial (used in many tests but a dedicated testsuite is missing)
+
 USAGE="cg-add [-N] [-r] FILE..."
 
 . "${COGITO_LIB}"cg-Xlib || exit 1

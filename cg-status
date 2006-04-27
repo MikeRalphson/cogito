@@ -92,6 +92,8 @@
 # but from the merging point of view there will still be "local changes"
 # and `cg-diff` will show a diff.
 
+# Testsuite: Marginal (part of t9202-merge-on-dirty)
+
 USAGE="cg-status [-g] [[-n] -s STATUS] [-w] [-x] [DIRPATH]"
 _git_wc_unneeded=1
 

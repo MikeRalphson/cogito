@@ -15,6 +15,8 @@
 # -r TREE_ID:: Specify the tree version to export
 #	Base the export on the given tree.
 
+# Testsuite: TODO
+
 USAGE="cg-export [-r TREE_ID] DESTFILE"
 _git_requires_root=1
 _git_wc_unneeded=1

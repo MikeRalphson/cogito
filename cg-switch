@@ -78,6 +78,8 @@
 #
 # 	$ cg-switch -f -r testing v1.x
 
+# Testsuite: TODO
+
 USAGE="cg-switch [-f] [-l | -n | -p] [-r COMMIT_ID] BRANCH"
 _git_requires_root=1
 _git_wc_unneeded=1

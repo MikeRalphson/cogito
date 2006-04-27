@@ -39,6 +39,9 @@
 # CGFETCH_FLAGS::
 #	Additional flags to pass cg-fetch (useful e.g. for -v -v).
 
+# Testsuite: Larely covered (t9210-pdate, incomplete coverage; missing:
+# passing the -f, --squash options and CGFETCH_FLAGS)
+
 USAGE="cg-update [-f] [--squash] [-v] [BRANCH_NAME]"
 _git_requires_root=1
 

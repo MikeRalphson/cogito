@@ -164,6 +164,8 @@
 #	be called for all the merged commits in sequence (the earliest first).
 #	Otherwise, the hook will be called only for the merge commit.
 
+# Testsuite: Partial (used in many tests but a dedicated testsuite is missing)
+
 USAGE="cg-commit [-m MESSAGE]... [-e] [-c COMMIT_ID] [OTHER_OPTIONS] [FILE]... [< MESSAGE]"
 
 . "${COGITO_LIB}"cg-Xlib || exit 1

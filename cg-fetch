@@ -43,6 +43,8 @@
 #	Additional flags to be passed to the rsync tool when fetching over
 #	the rsync protocol.
 
+# Testsuite: Larely covered (t91xx testsuite family, incomplete coverage)
+
 
 USAGE="cg-fetch [-f] [-v] [BRANCH_NAME]"
 _git_wc_unneeded=1

@@ -66,6 +66,8 @@
 #
 #	$ cg-diff -r repo-testing
 
+# Testsuite: Partial (used in many tests but a dedicated testsuite is missing)
+
 USAGE="cg-branch-add BRANCH_NAME LOCATION"
 _git_wc_unneeded=1
 

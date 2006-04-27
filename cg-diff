@@ -85,6 +85,8 @@
 # things more comfortable to SVN users). See cogito(7) for more details
 # about revision specification.
 
+# Testsuite: TODO
+
 USAGE="cg-diff [-c] [-m] [-s] [-p] [-r FROM_ID[..TO_ID]] [FILE]..."
 _git_wc_unneeded=1
 

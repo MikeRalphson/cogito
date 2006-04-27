@@ -33,6 +33,8 @@
 #	Restore the file to the state appropriate to the given ID.
 #	The list of files to recover is mandatory in this case.
 
+# Testsuite: Marginal (part of t9202-merge-on-dirty)
+
 USAGE="cg-restore [-f] [-r ID] [FILE]..."
 
 . "${COGITO_LIB}"cg-Xlib || exit 1

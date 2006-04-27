@@ -38,6 +38,8 @@
 #		echo -e "\n==================\nme $i"; cat-file commit $i;
 #	done
 
+# Testsuite: TODO
+
 USAGE="cg-admin-lsobj [OBJECT_TYPE]"
 _git_wc_unneeded=1
 

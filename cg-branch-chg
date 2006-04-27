@@ -8,6 +8,8 @@
 # Terminology note: This command concerns remote branches, not the local
 # ones (those managed by `cg-switch`).
 
+# Testsuite: TODO
+
 USAGE="cg-branch-chg BRANCH_NAME NEW_LOCATION"
 _git_wc_unneeded=1
 

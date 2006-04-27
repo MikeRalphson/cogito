@@ -50,6 +50,8 @@
 #	If enabled, colorify the output like with -c if the output
 #	is a terminal.
 
+# Testsuite: TODO
+
 USAGE="cg-help [-c] [cg-COMMAND | COMMAND]"
 _git_repo_unneeded=1
 

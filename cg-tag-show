@@ -5,6 +5,8 @@
 #
 # This command shows detailed information about specified tag(s).
 
+# Testsuite: TODO
+
 USAGE="cg-tag-show TAGNAME..."
 _git_wc_unneeded=1
 

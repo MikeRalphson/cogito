@@ -34,6 +34,8 @@
 # push again after you uncommitted a pushed out commit, too. At the moment
 # you pushed the commit out it's etched to the history, live with that.
 
+# Testsuite: Marginal (part of t9210-update)
+
 USAGE="cg-admin-uncommit [-t] [COMMIT_ID]"
 _git_requires_root=1
 

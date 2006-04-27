@@ -19,6 +19,8 @@
 # object id and the fourth column the first line of tag description,
 # if applicable.
 
+# Testsuite: TODO
+
 USAGE="cg-tag-ls"
 _git_wc_unneeded=1
 
