@@ -235,7 +235,7 @@ if [ "$workstatus" ]; then
 		commitignore=
 		[ -s "$_git/commit-ignore" ] && commitignore=1
 
-		git-diff-index HEAD "$basepath" | cut -f5- -d' ' | 
+		git-diff-index HEAD -- "${basepath:-.}" | cut -f5- -d' ' | 
 		while IFS=$'\t' read -r mode file; do
 			if [ "$mode" = D ]; then
 				[ "$(git-diff-files "$file")" ] && mode=!
