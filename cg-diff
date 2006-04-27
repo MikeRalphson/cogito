@@ -214,11 +214,14 @@ else
 fi
 
 
-[ "$_git_relpath" -a ! "$ARGS" ] &&
-	diffargs[${#diffargs[@]}]="$_git_relpath"
-for file in "${ARGS[@]}"; do
-	diffargs[${#diffargs[@]}]="$_git_relpath$file"
-done
+diffargs[${#diffargs[@]}]="--"
+if [ ! "$ARGS" ]; then
+	diffargs[${#diffargs[@]}]="${_git_relpath:-.}"
+else
+	for file in "${ARGS[@]}"; do
+		diffargs[${#diffargs[@]}]="$_git_relpath$file"
+	done
+fi
 
 # FIXME: Update ret based on what did we match. And take "$@"
 # to account after all.
