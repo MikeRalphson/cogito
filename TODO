@@ -53,14 +53,14 @@ Pre-1.0 stuff:
 	Frontending git-request-fetch, interfacing with email directly...
 	* (I've assigned this as a school assignment to a student,
 	  so I'll be glad if you'll work on something else until
-	  start of July.)
+	  start of June.)
 
 * cg-patch improvements
 	* Again, an email interface - frontend to applymbox and stuff...
 	* Dealing with copies - will require a complete rewrite or something
 	* (I've assigned this as a school assignment to a student,
 	  so I'll be glad if you'll work on something else until
-	  start of July.)
+	  start of June.)
 
 * cg-commit enhancements
 	* Possibly verify the patch being committed against
