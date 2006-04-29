@@ -187,6 +187,7 @@ mkdir ../map # map old->new commit ids for rewriting parents
 
 # seed with identity mappings for the parents where we start off
 for commit in $startrevparents; do
+	commit=$(git-rev-parse "$commit")
 	echo $commit > ../map/$commit
 done
 
