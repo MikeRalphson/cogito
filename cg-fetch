@@ -220,7 +220,8 @@ fetch_tags()
 	git-ls-remote --tags "$uri" |
 		# SHA1 refs/tags/v0.99.8^{} --> SHA1 tags/v0.99.8
 		# where SHA1 is the object v0.99.8 tag points at.
-		sed -ne 's:\([^	]\)	refs/\(tags/.*\)^{}$:\1 \2:p' |
+		sed -n -e 's:\([^	]\)	refs/\(tags/.*\)^{}$:\1 \2:p' \
+		       -e 's:\([^	]\)	refs/\(tags/.*\)$:\1 \2:p' | \
 		while read sha1 tagname; do
 			# Do we have the tag itself?
 			[ -s "$_git/refs/$tagname" ] && continue
