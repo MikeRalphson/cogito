@@ -18,6 +18,10 @@
 
 # Testsuite: TODO
 
+# TODO: BROKEN - if a file is removed (that is, added) on one branch,
+# we will stop watching for the renames on all the other branches. We need
+# to separate the heads and pipes.
+
 # TODO: Does not work on multiple files properly yet - most probably
 # (I didn't test it!). We want git-rev-list to stop traversing the history
 # when _any_ file disappears while now it probably stops traversing when
@@ -175,8 +179,10 @@ message_loaded:
 			# so they appear as added to us) might cause bizarre
 			# results when following multiple files since
 			# git-rev-list weeds them out too (probably?).
+			#print STDERR "grepping - @oldset, @{$head->{files}} > MINUS $newfile <\n";
 			@oldset = grep { $newfile ne $_ } @oldset;
 			@{$head->{'files'}} = grep { $newfile ne $_ } @{$head->{'files'}};
+			#print STDERR "post-grepping - @oldset, @{$head->{files}} <\n";
 		}
 	}
 	$head->{'str'} .= "\n";
