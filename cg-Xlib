@@ -641,8 +641,10 @@ is_same_repo()
 choose_origin()
 {
 	local testdir="$1" errormsg="$2"
-	if [ -s "$_git/$testdir/origin" ]; then
-		echo origin;
+	if [ x"$_git_head" != x"master" -a -s "$_git/$testdir/$_git_head-origin" ]; then
+		echo "$_git_head-origin"
+	elif [ -s "$_git/$testdir/origin" ]; then
+		echo origin
 	else
 		die "$errormsg"
 	fi
