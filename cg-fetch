@@ -264,8 +264,7 @@ done
 
 name="${ARGS[0]}"
 
-[ "$name" ] || { [ -s "$_git/branches/origin" ] && name=origin; }
-[ "$name" ] || die "where to fetch from?"
+[ "$name" ] || name="$(choose_origin branches "where to fetch from?")" || exit 1
 uri=$(cat "$_git/branches/$name" 2>/dev/null) || die "unknown branch: $name"
 
 rembranch=

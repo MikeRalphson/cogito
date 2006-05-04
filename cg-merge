@@ -146,8 +146,7 @@ while optparse; do
 done
 
 branchname="${ARGS[0]}"
-[ "$branchname" ] || { [ -s "$_git/branches/origin" ] && branchname=origin; }
-[ "$branchname" ] || die "what to merge?"
+[ "$branchname" ] || branchname="$(choose_origin branches "what to merge?")" || exit 1
 branch=$(cg-object-id -c "$branchname") || exit 1
 
 [ "$base" ] || base="$(git-merge-base --all "$head" "$branch")"

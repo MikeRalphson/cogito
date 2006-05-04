@@ -143,7 +143,7 @@ done
 
 if [ "$mergebase" ]; then
 	[ "$log_start" ] || log_start="HEAD"
-	[ "$log_end" ] || log_end="origin"
+	[ "$log_end" ] || { log_end="$(choose_origin refs/heads "what to mkpatch against?")" || exit 1; }
 	id1="$(cg-object-id -c "$log_start")" || exit 1
 	id2="$(cg-object-id -c "$log_end")" || exit 1
 	conservative_merge_base "$id1" "$id2" || exit 1

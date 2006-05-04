@@ -181,7 +181,7 @@ if [ "$parent" ]; then
 	id1="$(echo "$ids" | head -n 1)" || exit 1
 
 elif [ "$mergebase" ]; then
-	[ "$id2" = " " ] && id2="origin"
+	[ "$id2" = " " ] && { id2="$(choose_origin refs/heads "what to diff against?")" || exit 1; }
 
 	id1="$(cg-object-id -c "$id1")" || exit 1
 	id2="$(cg-object-id -c "$id2")" || exit 1

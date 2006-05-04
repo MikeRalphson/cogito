@@ -634,6 +634,20 @@ is_same_repo()
 	return $diff
 }
 
+# Determine the appropriate origin for the current branch
+# Usage: choose_origin TESTDIR ERRORMSG
+# TESTDIR is either branches or refs/heads, depends on if you care
+# about the address or the ref to exist.
+choose_origin()
+{
+	local testdir="$1" errormsg="$2"
+	if [ -s "$_git/$testdir/origin" ]; then
+		echo origin;
+	else
+		die "$errormsg"
+	fi
+}
+
 
 
 #######################################################################

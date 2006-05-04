@@ -520,7 +520,7 @@ revls="$no_merges $date_from $date_to"
 
 if [ "$mergebase" ]; then
 	[ "$id1" ] || id1="HEAD"
-	[ "$id2" ] || id2="origin"
+	[ "$id2" ] || { id2="$(choose_origin refs/heads "what to log against?")" || exit 1; }
 
 	id1="$(cg-object-id -c "$id1")" || exit 1
 	id2="$(cg-object-id -c "$id2")" || exit 1

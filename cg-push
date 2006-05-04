@@ -60,8 +60,7 @@ done
 [ ${#ARGS[@]} -gt 1 ] && die "too many arguments, I can push only one branch at once"
 name="${ARGS[0]}"
 
-[ "$name" ] || { [ -s "$_git/branches/origin" ] && name=origin; }
-[ "$name" ] || die "where to push to?"
+[ "$name" ] || name="$(choose_origin branches "where to push to?")" || exit 1
 uri="$(cat "$_git/branches/$name" 2>/dev/null)" || die "unknown branch: $name"
 
 rembranch=master
