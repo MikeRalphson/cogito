@@ -142,7 +142,7 @@ test_done () {
 
 # Test the binaries we have just built.  The tests are kept in
 # t/ subdirectory and are run in trash subdirectory.
-PATH=$(pwd)/..:$PATH
+export PATH=$(pwd)/..:$PATH
 
 # Test repository
 test=trash

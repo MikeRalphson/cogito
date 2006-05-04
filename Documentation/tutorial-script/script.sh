@@ -30,6 +30,7 @@ trap 'echo >&2 "Unexpected error $? on line $LINENO"; exit 1' exit
 
 ### Set up playground
 sh 0000-playground.sh
+export PATH=$(pwd)/../..:$PATH # Use the local Cogito version
 TOP=$(pwd)
 ALICE=$TOP/Playground/Alice
 BOB=$TOP/Playground/Bob
