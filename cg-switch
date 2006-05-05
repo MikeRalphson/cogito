@@ -178,7 +178,7 @@ if [ "$seek" ]; then
 			fi
 			cp "$_git/refs/heads/$_git_head" "$_git/refs/heads/.cg-shelve-$_git_head"
 			git-symbolic-ref HEAD "refs/heads/.cg-shelve-$_git_head"
-			cg-commit -m"[@internal@] cg-switch local changes shelve" -m"This commit for internal Cogito use stores uncommitted local changes at the time of cg-switch -l away from $_git_head." >/dev/null
+			cg-commit --no-hooks -m"[@internal@] cg-switch local changes shelve" -m"This commit for internal Cogito use stores uncommitted local changes at the time of cg-switch -l away from $_git_head." >/dev/null
 			# Restoring HEAD now is useful in case anything bad happens later
 			git-symbolic-ref HEAD "refs/heads/$_git_head"
 			curcommit="$(cg-object-id -c "refs/heads/.cg-shelve-$_git_head")"
