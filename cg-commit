@@ -389,7 +389,7 @@ fi
 if [ ! "$ignorecache" ] && [ ! "$review" ]; then
 	if [ ! "$merging" ]; then
 		if [ ! "$force" ] && [ ! "${commitfiles[*]}" ]; then
-			rm "$LOGMSG" "$LOGMSG2"
+			rm "$LOGMSG"
 			[ "$quiet" ] && exit 0 || die 'Nothing to commit'
 		fi
 		echo "CG: By deleting lines beginning with CG:F, the associated file" >>"$LOGMSG"
