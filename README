@@ -9,7 +9,7 @@ many other version control systems.
 We shall first describe some quick ways to get started using Cogito, then go
 over each available command one by one.
 
-Please note that this document (meant to server as a kind of Cogito tutorial
+Please note that this document (meant to serve as a kind of Cogito tutorial
 in the future) is awfully incomplete so far, and the documentation is of a
 rather poor quality (since Petr Baudis wrote it). At least the reference
 documentation should be of good quality (see the 'Getting help' section
@@ -489,7 +489,7 @@ cg-fetch, for example, give this command:
 
 	$ cg-fetch --help
 
-or, for a full command's reference manual, you can use either of those:
+or, for a command's full reference manual, you can use either of these:
 
 	$ cg-fetch --long-help
 	$ cg-help cg-fetch
