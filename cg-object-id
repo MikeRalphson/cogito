@@ -135,7 +135,7 @@ fi
 
 
 if [ "$show_parent" ]; then
-	git-cat-file commit "$normid" | awk '/^parent/{print $2};/^$/{exit}'
+	git-rev-list --parents -n 1 "$normid"| tr ' ' '\n'|tail +2
 	exit 0
 fi
 
