@@ -224,9 +224,13 @@ while read commit; do
 
 	parentstr=
 	for parent in $(cg-object-id -p $commit); do
-		for reparent in $(cat ../map/$parent); do
-			parentstr="$parentstr -p $reparent"
-		done
+		if [ -r "../map/$parent" ]; then
+			for reparent in $(cat "../map/$parent"); do
+				parentstr="$parentstr -p $reparent"
+			done
+		else
+			die "assertion failed: parent $parent for commit $commit not found in rewritten ones"
+		fi
 	done
 	if [ "$filter_parent" ]; then
 		parentstr="$(echo "$parentstr" | eval "$filter_parent")"
