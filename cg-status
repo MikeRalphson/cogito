@@ -220,7 +220,7 @@ if [ "$workstatus" ]; then
 		git-diff-index HEAD -- "${basepath:-.}" | cut -f5- -d' ' | 
 		while IFS=$'\t' read -r mode file; do
 			if [ "$mode" = D ]; then
-				[ "$(git-diff-files "$file")" ] && mode=!
+				[ "$(git-diff-files -- "$file")" ] && mode=!
 			elif [ "$mode" = M ] && [ "$commitignore" ]; then
 				fgrep -qx "$file" "$_git/commit-ignore" && mode=m
 			fi
