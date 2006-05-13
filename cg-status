@@ -222,7 +222,7 @@ if [ "$workstatus" ]; then
 		if [ "$basepath" ]; then
 			while IFS=$'' read path; do
 				[ x"${path#$basepath}" != x"$path" ] &&
-					echo "${path#$basepath}"
+					echo "${path#$_git_relpath}"
 			done
 		else
 			cat
@@ -243,7 +243,6 @@ if [ "$workstatus" ]; then
 			elif [ "$mode" = M ] && [ "$commitignore" ]; then
 				fgrep -qx "$file" "$_git/commit-ignore" && mode=m
 			fi
-			[ "$basepath" ] && file="${file#$basepath}"
 			should_show_flag "$mode" && echo "$mode $file"
 		done
 	fi

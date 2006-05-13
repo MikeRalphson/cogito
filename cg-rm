@@ -57,7 +57,9 @@ for file in "${ARGS[@]}"; do
 	if [ -d "$absfile" ]; then
 		if [ "$recursive" ]; then
 			echo "$file" >>"$TMPDIRFILE"
-			git-ls-files "$absfile" | sed "s|^$_git_relpath||" >>"$TMPFILE"
+			git-ls-files "$absfile" | while IFS=$'' read path; do
+				echo "${path#$_git_relpath}"
+			done >>"$TMPFILE"
 		else
 			echo "$file is a directory (use cg-rm -r?)" >&2
 			error=1
