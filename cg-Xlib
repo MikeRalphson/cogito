@@ -614,7 +614,7 @@ _git="${GIT_DIR:-.git}"
 if [ ! "$_git_repo_unneeded" ] && [ ! "$GIT_DIR" ] && [ ! -d "$_git" ]; then
 	_git_abs_path="$(git-rev-parse --git-dir 2>/dev/null)"
 	if [ -d "$_git_abs_path" ]; then
-		export _git_relpath="$(git-rev-parse --show-prefix)"
+		_git_relpath="$(git-rev-parse --show-prefix)"
 		cd "$_git_abs_path/.."
 	fi
 fi
