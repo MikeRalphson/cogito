@@ -197,6 +197,7 @@ if [ "$workstatus" ]; then
 
 	basepath="$_git_relpath"
 	[ "${ARGS[0]}" ] && basepath="$(echo "$_git_relpath${ARGS[0]}" | normpath)"
+	[ "$basepath" ] && basepath="$basepath/"
 
 	should_show_flag '?' &&
 		list_untracked_files $exclude $squashdirs | tr '\0' '\n' |
