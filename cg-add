@@ -55,15 +55,8 @@ for file in "${ARGS[@]}"; do
 	absfile="$(echo "$_git_relpath$file" | normpath)"
 	if [ -d "$absfile" ] || [ -z "$absfile" ]; then
 		if [ "$recursive" ]; then
-			cg-status -wnSs D\? |
-				if [ -z "$absfile" ]; then # adding everything
-					cat >>"$TMPFILE"
-				else
-					while IFS=$'' read path; do
-						[ x"${path#$absfile/}" != x"$path" ] &&
-							echo "$file${path#$absfile}" >>"$TMPFILE"
-					done
-				fi
+			# XXX: This all relpath business is so ugly.
+			(cd "$_git_relpath" && cg-status -wnSs D\? "$file") >>"$TMPFILE"
 		else
 			echo "$file is a directory (use cg-add -r?)" >&2
 			error=1
