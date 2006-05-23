@@ -559,7 +559,7 @@ tree_timewarp()
 			warn "uncommitted local changes, trying to bring them $dirstr"
 		[ -s "$patchfile" ] && localmods=1
 
-		git-read-tree -m "$branch" || die "$branch: bad commit"
+		git-read-tree -i -m "$branch" || die "$branch: bad commit"
 		[ "$no_head_update" ] || git-update-ref HEAD "$branch" || :
 
 		# Kill gone files
