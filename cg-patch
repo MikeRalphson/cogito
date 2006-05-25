@@ -306,6 +306,7 @@ fi
 [ "$unidiff" ] && newsfile="$(mktemp -t gitapply.XXXXXX)"
 gonefile="$(mktemp -t gitapply.XXXXXX)"
 todo="$(mktemp -t gitapply.XXXXXX)"
+patchout="$(mktemp -t gitapply.XXXXXX)"
 patchfifo="$(mktemp -t gitapply.XXXXXX)"
 rm "$patchfifo" && mkfifo -m 600 "$patchfifo"
 
@@ -316,7 +317,7 @@ git-ls-files --deleted >"$gonefile"
 # just handle it all ourselves.
 patch_args="-p$strip -N"
 [ "$reverse" ] && patch_args="$patch_args -R"
-patch $patch_args <"$patchfifo" &
+patch $patch_args <"$patchfifo" >"$patchout" 2>&1 &
 
 tee "$patchfifo" | {
 	redzone_reset
@@ -362,6 +363,7 @@ tee "$patchfifo" | {
 } >$todo
 
 wait %1; ret=$?
+cat "$patchout"
 
 IFS=$'\n' emptyfiles=($(git-ls-files --deleted | join -v 2 "$gonefile" -))
 if [ "$unidiff" ]; then
@@ -396,7 +398,7 @@ while [ "$1" ]; do
 done
 ' padding
 
-rm "$patchfifo" "$todo" "$gonefile"
+rm "$patchfifo" "$todo" "$gonefile" "$patchout"
 [ "$unidiff" ] && rm "$newsfile"
 
 exit $ret
