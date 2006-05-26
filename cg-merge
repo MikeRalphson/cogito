@@ -201,8 +201,6 @@ if { [ "$head" = "$base" ] || [ "$head" = "$_cg_orig_head" ]; } && [ ! "$squash"
 fi
 
 
-[ "$(git-diff-files -s)" ] && git-update-index --refresh >/dev/null
-
 if [ ! "$squash" ]; then
 	[ -s "$_git/squashing" ] && die "cannot combine squashing and non-squashing merges"
 
