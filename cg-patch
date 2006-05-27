@@ -310,7 +310,7 @@ if [ "$commitid" ] || [ "$commit" ] || [ "$commitdir" ]; then
 			filter=cat
 		fi
 
-		find "$commitdir" -name '[0-9]*-*' | "$filter" | \
+		find "$commitdir" -name '[0-9]*-*' | sort | "$filter" | \
 		while read -r file; do
 			echo "* ${file#$commitdir/}"
 			lookover_patch "$file" " in $file"
