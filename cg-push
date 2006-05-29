@@ -4,16 +4,16 @@
 # Copyright (c) Petr Baudis, 2005.
 #
 # It will push your commits on the current branch (or as specified by
-# the -r option) to the remote repository, provided that your commits
-# follow the last commit in the remote repository.
+# the -r option) to one or more remote repositories, provided that your
+# commits follow the last commit in each of the remote repositories.
 #
-# Note that if the remote repository is associated with a working
+# Note that if a remote repository is associated with a working
 # tree copy, this command won't update that. Use cg-reset at the
 # remote side to bring it in sync (but throw away any local changes
 # in that tree). Consider setting up a standalone repository (see
 # `cg-admin-setuprepo`).
 #
-# Takes the branch name as an argument, defaulting to "origin".
+# Takes the branch names as arguments, defaulting to "origin".
 #
 # OPTIONS
 # -------
@@ -30,7 +30,7 @@
 
 # Testsuite: TODO
 
-USAGE="cg-push [-r LOCAL_BRANCH] [REMOTE_BRANCH] [-t TAG]..."
+USAGE="cg-push [-r LOCAL_BRANCH] [-t TAG]... [REMOTE_BRANCH]..."
 _git_wc_unneeded=1
 
 . "${COGITO_LIB}"cg-Xlib || exit 1
@@ -57,10 +57,9 @@ while optparse; do
 	fi
 done
 
-[ ${#ARGS[@]} -gt 1 ] && die "too many arguments, I can push only one branch at once"
-name="${ARGS[0]}"
-
-[ "$name" ] || name="$(choose_origin branches "where to push to?")" || exit 1
+push_branch()
+{
+name="$1"
 uri="$(cat "$_git/branches/$name" 2>/dev/null)" || die "unknown branch: $name"
 
 rembranch=master
@@ -106,4 +105,15 @@ else
 	else
 		send_pack_update "$name" "$uri" "$locbranch$sprembranch" "${tags[@]}"
 	fi
+fi
+}
+
+if [ "${#ARGS[@]}" == 0 ]; then
+	name="$(choose_origin branches "where to push to?")" || exit 1
+	push_branch "$name"
+
+else
+	for name in "${ARGS[@]}"; do
+		push_branch "$name"
+	done
 fi
