@@ -70,7 +70,7 @@ rm -rf $RPM_BUILD_ROOT
 - Update summary and description
 - Make architecture-independent
 
-* Wed Jul 6 2005 Chris Wright <chris@osdl.org> 0.12-1
+* Wed Jul 6 2005 Chris Wright <chrisw@osdl.org> 0.12-1
 - update spec file
 
 * Thu Jun 9 2005 Chris Wright <chrisw@osdl.org> 0.11.3-1
