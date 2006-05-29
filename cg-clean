@@ -65,13 +65,13 @@ while read -r file; do
 		if [ "$cleandirhard" ]; then
 			chmod -R 700 "$file"
 		fi
-		$rm -rf "$file"
+		$rm -rf -- "$file"
 		if [ -e "$file" -o -L "$file" ]; then
 			echo "Cannot remove $file"
 		fi
 	elif [ -e "$file" -o -L "$file" ]; then
 		[ "$quiet" ] || echo "Removing $file"
-		"$rm" -f "$file"
+		"$rm" -f -- "$file"
 		# rm would complain itself on failure
 	else
 		echo "File $file has disappeared!"
