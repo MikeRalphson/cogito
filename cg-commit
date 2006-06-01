@@ -442,7 +442,7 @@ cp "$LOGMSG" "$LOGMSG2"
 if tty -s; then
 	if [ "$editor" ] && ! editor $commitalways commit c; then
 		rm "$LOGMSG" "$LOGMSG2"
-		[ "$review" ] && rm "$PATCH" "$PATCH2"
+		[ "$review" ] && rm "$PATCH"
 		echo "Commit message not modified, commit aborted" >&2
 		if [ "$merging" ]; then
 			cat >&2 <<__END__
