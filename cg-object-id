@@ -147,7 +147,7 @@ fi
 
 
 if [ "$show_parent" ]; then
-	git-cat-file commit "$normid" | sed -ne 's/^parent //p;/^$/q'
+	git-rev-list --parents -n 1 "$normid" | tr ' ' '\n' | tail +2
 	exit 0
 fi
 

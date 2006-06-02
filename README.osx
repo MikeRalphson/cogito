@@ -2,8 +2,9 @@ This version of Cogito should work on OS X and other BSD variants.
 
 To install on OS X:
 
-1) Install darwinports (http://darwinports.opendarwin.org/) 2) type
-"make Portfile" 3) type "sudo port install"
+ 1. Install darwinports (http://darwinports.opendarwin.org/)
+ 2. type "make Portfile"
+ 3. type "sudo port install"
 
 You may have to deal with md5 mismatches.  Either adjust the md5sum in
 your new Portfile or place the new tarball in
@@ -11,7 +12,7 @@ your new Portfile or place the new tarball in
 
 Recommendations:
 
-The gnu versions of "stat" and "date" are preferred over their BSD
+The GNU versions of "stat" and "date" are preferred over their BSD
 variants.
 
 "patch", "diff", "merge", "curl" and "rsync" are required.  OS X.4

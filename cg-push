@@ -71,8 +71,7 @@ fi
 sprembranch=":refs/heads/$rembranch"
 
 if [ "${uri#http://}" != "$uri" -o "${uri#https://}" != "$uri" ]; then
-	# git-http-push doesn't like $sprembranch
-	git-http-push "$uri/" "$locbranch:$rembranch" "${tags[@]}"
+	git-http-push "$uri/" "$locbranch$sprembranch" "${tags[@]}"
 elif [ "${uri#git+ssh://}" != "$uri" ]; then
 	send_pack_update "$name" "$(echo "$uri" | sed 's#^git+ssh://\([^/]*\)\(/.*\)$#\1:\2#')" "$locbranch$sprembranch" "${tags[@]}"
 elif [ "${uri#rsync://}" != "$uri" ]; then

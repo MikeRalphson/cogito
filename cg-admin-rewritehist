@@ -143,6 +143,7 @@ _git_requires_root=1
 
 tempdir=.git-rewrite
 startrev=
+startrevparents=
 filter_env=
 filter_tree=
 filter_index=
@@ -154,6 +155,7 @@ while optparse; do
 		tempdir="$OPTARG"
 	elif optparse -r=; then
 		startrev="^$OPTARG^ $OPTARG $startrev"
+		startrevparents="$OPTARG $startrevparents"
 	elif optparse --env-filter=; then
 		filter_env="$OPTARG"
 	elif optparse --tree-filter=; then
@@ -188,6 +190,12 @@ ret=0
 
 mkdir ../map # map old->new commit ids for rewriting parents
 
+# seed with identity mappings for the parents where we start off
+for commit in $startrevparents; do
+	commit=$(git-rev-parse "$commit")
+	echo $commit > ../map/$commit
+done
+
 git-rev-list --topo-order HEAD $startrev | tac >../revs
 commits=$(cat ../revs | wc -l)
 
@@ -207,10 +215,13 @@ while read commit; do
 
 	if [ "$filter_tree" ]; then
 		git-checkout-index -f -u -a
+		# files that $commit removed are now still in the working tree;
+		# remove them, else they would be added again
+		git-ls-files -z --others | xargs -0 rm -f
 		eval "$filter_tree"
 		git-diff-index -r $commit | cut -f 2- | tr '\n' '\0' | \
 			xargs -0 git-update-index --add --replace --remove
-		git-ls-files --others | tr '\n' '\0' | \
+		git-ls-files -z --others | \
 			xargs -0 git-update-index --add --replace --remove
 	fi
 
@@ -218,9 +229,13 @@ while read commit; do
 
 	parentstr=
 	for parent in $(cg-object-id -p $commit); do
-		for reparent in $(cat ../map/$parent); do
-			parentstr="$parentstr -p $reparent"
-		done
+		if [ -r "../map/$parent" ]; then
+			for reparent in $(cat "../map/$parent"); do
+				parentstr="$parentstr -p $reparent"
+			done
+		else
+			die "assertion failed: parent $parent for commit $commit not found in rewritten ones"
+		fi
 	done
 	if [ "$filter_parent" ]; then
 		parentstr="$(echo "$parentstr" | eval "$filter_parent")"

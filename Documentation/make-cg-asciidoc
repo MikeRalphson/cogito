@@ -48,7 +48,7 @@ DESCRIPTION=
 OPTIONS=
 MISC=
 
-section=$(echo "$BODY" | sed -n '1,/^[-~][-~]*[-~]$/p')
+section=$(echo "$BODY" | sed -n '1,/^[-][-]*[-]$/p')
 section_lines=$(echo "$section" | wc -l)
 lines=$(echo "$BODY" | wc -l)
 

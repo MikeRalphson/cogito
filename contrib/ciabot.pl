@@ -14,15 +14,15 @@
 # The master location of this file is in the Cogito repository
 # (see http://www.kernel.org/git/).
 #
-# This program is designed to run as the .git/commit-post-hook script. It takes
-# the commit information, massaging it and mailing it to the address given below.
+# This program is designed to run as the .git/hooks/post-commit hook. It takes
+# the commit information, massages it and mails it to the address given below.
 #
-# The calling convention of the commit-post-hook script is:
+# The calling convention of the post-commit hook is:
 #
-#	commit-post-hook $commit_sha1 $branch_name
+#	.git/hooks/post-commit $commit_sha1 $branch_name
 #
 # If it does not work, try to disable $xml_rpc in the configuration section
-# below.
+# below. Also, remember to make the hook file executable.
 #
 #
 # Note that you can (and it might be actually more desirable) also use this
@@ -36,9 +36,9 @@
 #		/path/to/ciabot.pl $merged $refname
 #	done
 #
-# This is useful when you use a remote repository without working copy, where
-# you only push to - the update hook will be trigerred each time you push into
-# that repository, and the pushed commits will be reported through CIA.
+# This is useful when you use a remote repository that you only push to. The
+# update hook will be triggered each time you push into that repository, and
+# the pushed commits will be reported through CIA.
 
 use strict;
 use vars qw ($project $from_email $dest_email $noisy $rpc_uri $sendmail
@@ -78,19 +78,19 @@ $noisy = 0;
 # unfortunately not an uncommon condition.
 $xml_rpc = 0;
 
-# You can make this bot to totally ignore events concerning the objects
-# specified below. Each object is composed of <path>/<filename>,
+# This variable should contain a regexp, against which each file will be
+# checked, and if the regexp is matched, the file is ignored. This can be
+# useful if you do not want auto-updated files, such as e.g. ChangeLog, to
+# appear via CIA.
 #
-# This variable should contain regexp, against which will each object be
-# checked, and if the regexp is matched, the file is ignored. Therefore ie.  to
-# ignore all changes in the two files above and everything concerning module
-# 'admin', use:
+# The following example will make the script ignore all changes in two specific
+# files in two different modules, and everything concerning module 'admin':
 #
 # $ignore_regexp = "^(gentoo/Manifest|elinks/src/bfu/inphist.c|admin/)";
 $ignore_regexp = "";
 
 # It can be useful to also grab the generated XML message by some other
-# programs and ie. autogenerate some content based on it. Here you can specify
+# programs and e.g. autogenerate some content based on it. Here you can specify
 # a file to which it will be appended.
 $alt_local_message_target = "";
 

@@ -4,13 +4,13 @@ name              cogito
 version           @@VERSION@@
 categories        devel
 maintainers       bryan.larsen@gmail.com
-description       Git core + cogito tools to provide a full distributed SCM.
-long_description  The git core, developed by Linus Torvalds provides \
-		  an extremely fast and flexible filesystem-based \
-		  database designed to store directory trees with \
-		  regard to their history.  The cogito tools, \
-		  developed by Petr Baudis, provide full distributed \
-		  SCM (software change management) functionality.
+description       The Cogito Version Control System
+long_description  Cogito is a version control system layered on top \
+		  of the git tree history storage system. It aims at \
+		  seamless user interface and ease of use, providing \
+		  generally smoother user experience than the "raw" \
+		  Core GIT itself and indeed many other version \
+		  control systems.
 homepage          http://kernel.org/pub/software/scm/cogito/
 master_sites      http://kernel.org/pub/software/scm/cogito/
 configure	  {}
