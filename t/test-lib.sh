@@ -99,7 +99,7 @@ test_expect_failure () {
 	test "$#" == 2 ||
 	error "bug in the test script: not 2 parameters to test-expect-failure"
 	say >&3 "expecting failure: $2"
-	if eval >&3 2>&4 "$2"
+	if eval </dev/null >&3 2>&4 "$2"
 	then
 		test_failure_ "$@"
 	else
@@ -111,7 +111,7 @@ test_expect_success () {
 	test "$#" == 2 ||
 	error "bug in the test script: not 2 parameters to test-expect-success"
 	say >&3 "expecting success: $2"
-	if eval >&3 2>&4 "$2"
+	if eval </dev/null >&3 2>&4 "$2"
 	then
 		test_ok_ "$1"
 	else
