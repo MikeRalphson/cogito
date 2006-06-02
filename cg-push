@@ -59,53 +59,57 @@ done
 
 push_branch()
 {
-name="$1"
-uri="$(cat "$_git/branches/$name" 2>/dev/null)" || die "unknown branch: $name"
+	name="$1"
+	uri="$(cat "$_git/branches/$name" 2>/dev/null)" || die "unknown branch: $name"
 
-rembranch=master
-if echo "$uri" | grep -q '#'; then
-	rembranch="$(echo "$uri" | cut -d '#' -f 2)"
-	uri="$(echo "$uri" | cut -d '#' -f 1)"
-fi
-sprembranch=":refs/heads/$rembranch"
-
-if [ "${uri#http://}" != "$uri" -o "${uri#https://}" != "$uri" ]; then
-	git-http-push "$uri/" "$locbranch$sprembranch" "${tags[@]}"
-elif [ "${uri#git+ssh://}" != "$uri" ]; then
-	send_pack_update "$name" "$(echo "$uri" | sed 's#^git+ssh://\([^/]*\)\(/.*\)$#\1:\2#')" "$locbranch$sprembranch" "${tags[@]}"
-elif [ "${uri#rsync://}" != "$uri" ]; then
-        die "pushing over rsync not supported"
-elif [ "${uri#*:}" != "$uri" ]; then
-	echo "WARNING: I guessed the host:path syntax was used and fell back to the git+ssh protocol."
-	echo "WARNING: The host:path syntax is evil because it is implicit. Please just use a URI."
-	send_pack_update "$name" "$uri" "$locbranch$sprembranch" "${tags[@]}"
-else
-	remgit="$uri"; [ -d "$remgit/.git" ] && remgit="$remgit/.git"
-	if is_same_repo "$_git_objects" "$remgit/objects"; then
-		commit="$(cg-object-id -c "$locbranch")"
-		remid="$(cat "$remgit"/refs/heads/$rembranch)" || die "$remgit: no branch $master"
-		if [ "$remid" = "$commit" ] && [ ! "${tags[*]}" ]; then
-			echo "$remgit#$rembranch: Already up-to-date." >&2
-			exit 0
-		fi
-		if [ "$remid" != "$(git-merge-base "$remid" "$commit")" ]; then
-			echo "ERROR: Remote '$rembranch' has some changes you don't have in your '$locbranch'" >&2
-			echo "Try to cg-update from it first, then push." >&2
-			exit 1
-		fi
-
-		echo "Pushing $commit to $remgit#$rembranch" >&2
-		[ -x "$remgit/hooks/update" ] && "$remgit/hooks/update" "$rembranch" "$remid" "$commit"
-		GIT_DIR="$remgit" git-update-ref refs/heads/"$rembranch" "$commit" "$remid" || die "push failed"
-		git-update-ref refs/heads/"$name" "$commit"
-		for tag in "${tags[@]}"; do
-			GIT_DIR="$remgit" git-update-ref refs/tags/"$tag" "$(cat "$_git/refs/tags/$tag")"
-		done
-		[ -x "$remgit/hooks/post-update" ] && "$remgit/hooks/post-update" "$rembranch"
-	else
-		send_pack_update "$name" "$uri" "$locbranch$sprembranch" "${tags[@]}"
+	rembranch=master
+	if echo "$uri" | grep -q '#'; then
+		rembranch="$(echo "$uri" | cut -d '#' -f 2)"
+		uri="$(echo "$uri" | cut -d '#' -f 1)"
 	fi
-fi
+	sprembranch=":refs/heads/$rembranch"
+
+	if [ "${uri#http://}" != "$uri" -o "${uri#https://}" != "$uri" ]; then
+		git-http-push "$uri/" "$locbranch$sprembranch" "${tags[@]}"
+
+	elif [ "${uri#git+ssh://}" != "$uri" ]; then
+		send_pack_update "$name" "$(echo "$uri" | sed 's#^git+ssh://\([^/]*\)\(/.*\)$#\1:\2#')" "$locbranch$sprembranch" "${tags[@]}"
+
+	elif [ "${uri#rsync://}" != "$uri" ]; then
+		die "pushing over rsync not supported"
+
+	elif [ "${uri#*:}" != "$uri" ]; then
+		echo "WARNING: I guessed the host:path syntax was used and fell back to the git+ssh protocol."
+		echo "WARNING: The host:path syntax is evil because it is implicit. Please just use a URI."
+		send_pack_update "$name" "$uri" "$locbranch$sprembranch" "${tags[@]}"
+
+	else
+		remgit="$uri"; [ -d "$remgit/.git" ] && remgit="$remgit/.git"
+		if is_same_repo "$_git_objects" "$remgit/objects"; then
+			commit="$(cg-object-id -c "$locbranch")"
+			remid="$(cat "$remgit"/refs/heads/$rembranch)" || die "$remgit: no branch $master"
+			if [ "$remid" = "$commit" ] && [ ! "${tags[*]}" ]; then
+				echo "$remgit#$rembranch: Already up-to-date." >&2
+				exit 0
+			fi
+			if [ "$remid" != "$(git-merge-base "$remid" "$commit")" ]; then
+				echo "ERROR: Remote '$rembranch' has some changes you don't have in your '$locbranch'" >&2
+				echo "Try to cg-update from it first, then push." >&2
+				exit 1
+			fi
+
+			echo "Pushing $commit to $remgit#$rembranch" >&2
+			[ -x "$remgit/hooks/update" ] && "$remgit/hooks/update" "$rembranch" "$remid" "$commit"
+			GIT_DIR="$remgit" git-update-ref refs/heads/"$rembranch" "$commit" "$remid" || die "push failed"
+			git-update-ref refs/heads/"$name" "$commit"
+			for tag in "${tags[@]}"; do
+				GIT_DIR="$remgit" git-update-ref refs/tags/"$tag" "$(cat "$_git/refs/tags/$tag")"
+			done
+			[ -x "$remgit/hooks/post-update" ] && "$remgit/hooks/post-update" "$rembranch"
+		else
+			send_pack_update "$name" "$uri" "$locbranch$sprembranch" "${tags[@]}"
+		fi
+	fi
 }
 
 if [ "${#ARGS[@]}" == 0 ]; then
