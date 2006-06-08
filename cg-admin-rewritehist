@@ -83,6 +83,7 @@
 #	This is the filter for rewriting the commit messages.
 #	The COMMAND argument is evaluated in shell with the original
 #	commit message on standard input; its standard output is
+#	is used as the new commit message.
 #
 # --commit-filter COMMAND:: The filter for performing the commit
 #	If this filter is passed, it will be called instead of the
@@ -159,6 +160,8 @@ while optparse; do
 		filter_index="$OPTARG"
 	elif optparse --parent-filter=; then
 		filter_parent="$OPTARG"
+	elif optparse --msg-filter=; then
+		filter_msg="$OPTARG"
 	elif optparse --commit-filter=; then
 		filter_commit="$OPTARG"
 	else
