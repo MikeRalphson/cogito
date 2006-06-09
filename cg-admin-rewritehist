@@ -138,8 +138,7 @@ _git_requires_root=1
 . "${COGITO_LIB}"cg-Xlib || exit 1
 
 tempdir=.git-rewrite
-startrev=
-startrevparents=
+declare -a unchanged
 filter_env=
 filter_tree=
 filter_index=
@@ -150,8 +149,7 @@ while optparse; do
 	if optparse -d=; then
 		tempdir="$OPTARG"
 	elif optparse -r=; then
-		startrev="^$OPTARG^ $OPTARG $startrev"
-		startrevparents="$OPTARG^ $startrevparents"
+		unchanged=(${unchanged[@]} $(cg-object-id -p "$OPTARG"))
 	elif optparse --env-filter=; then
 		filter_env="$OPTARG"
 	elif optparse --tree-filter=; then
@@ -189,12 +187,11 @@ ret=0
 mkdir ../map # map old->new commit ids for rewriting parents
 
 # seed with identity mappings for the parents where we start off
-for commit in $startrevparents; do
-	commit=$(git-rev-parse "$commit")
+for commit in ${unchanged[@]}; do
 	echo $commit > ../map/$commit
 done
 
-git-rev-list --topo-order HEAD $startrev | tac >../revs
+git-rev-list --topo-order HEAD ${unchanged[@]/#/^} | tac >../revs
 commits=$(cat ../revs | wc -l)
 
 i=0
