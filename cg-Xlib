@@ -273,7 +273,7 @@ list_untracked_files()
 		fi
 	fi
 	local listdirs=
-	[ "$squashflag" = "squashdirs" ] && listdirs=--directory
+	[ "$squashflag" = "squashdirs" ] && listdirs="--directory --no-empty-directory"
 	git-ls-files -z --others $listdirs "${EXCLUDE[@]}"
 }
 
