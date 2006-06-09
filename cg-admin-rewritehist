@@ -42,6 +42,10 @@
 #	pass this argument, though, this will be the first commit it
 #	will rewrite and keep the previous commits intact.
 #
+# -k KEEPREV:: A commit id until which _not_ to rewrite history
+#	If you pass this argument, this commit and all of its
+#	predecessors are kept intact.
+#
 # Filters
 # ~~~~~~~
 # The filters are applied in the order as listed below. The COMMAND
@@ -131,8 +135,24 @@
 # committed a merge between P1 and P2, it will be propagated properly
 # and all children of the merge will become merge commits with P1,P2
 # as their parents instead of the merge commit.
+#
+# To restrict rewriting to only part of the history, use -r or -k or both.
+# Consider this history:
+#
+#	     D--E--F--G--H
+#	    /     /
+#	A--B-----C
+#
+# To rewrite only commits F,G,H, use:
+#
+#	cg-admin-rewritehist -r F ...
+#
+# To rewrite commits E,F,G,H, use one of these:
+#
+#	cg-admin-rewritehist -r E -k C ...
+#	cg-admin-rewritehist -k D -k C ...
 
-USAGE="cg-admin-rewritehist [-d TEMPDIR] [-r STARTREV]... [FILTERS] DESTBRANCH"
+USAGE="cg-admin-rewritehist [-d TEMPDIR] [-r STARTREV]... [-k KEEPREV]... [FILTERS] DESTBRANCH"
 _git_requires_root=1
 
 . "${COGITO_LIB}"cg-Xlib || exit 1
@@ -150,6 +170,8 @@ while optparse; do
 		tempdir="$OPTARG"
 	elif optparse -r=; then
 		unchanged=(${unchanged[@]} $(cg-object-id -p "$OPTARG"))
+	elif optparse -k=; then
+		unchanged=(${unchanged[@]} $(cg-object-id -c "$OPTARG"))
 	elif optparse --env-filter=; then
 		filter_env="$OPTARG"
 	elif optparse --tree-filter=; then
