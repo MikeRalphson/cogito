@@ -70,7 +70,7 @@ cd rpn
 echo "Alice's first version" | cg-init
 
 # Let it be known as version 0.1
-cg-tag -m "First ever version of RPN" rpn-0.1
+cg-tag -d "First ever version of RPN" rpn-0.1
 
 # Alice decides to add the license file to the code
 cp $TOP/0002-alice-license.txt osl-2.1.txt
@@ -83,7 +83,7 @@ patch -p1 -i $TOP/0003-alice-osl.patch
 
 # Alice commits the changes and tags the result as version 0.2
 cg-commit -m "Place under OSL-2.1"
-cg-tag -m "Place under OSL-2.1" rpn-0.2
+cg-tag -d "Place under OSL-2.1" rpn-0.2
 
 # Now Alice creates a public repository for the new toy
 cg-admin-setuprepo $ALICE/rpn.git
@@ -131,7 +131,7 @@ cg-commit -m "Add clear stack command" \
           -m "Add README file with fist stab at documentation"
 
 # The result works fine, so she prepares to release it
-cg-tag -m "First public release" rpn-0.3
+cg-tag -d "First public release" rpn-0.3
 cg-push public -t rpn-0.3
 cg-export ../rpn-0.3.tar.bz2
 
@@ -313,7 +313,7 @@ git repack
 git prune-packed
 
 # Now it's time for another public release
-cg-tag -m "Public release of version 0.4" rpn-0.4
+cg-tag -d "Public release of version 0.4" rpn-0.4
 cg-push public -t rpn-0.4
 cg-export ../rpn-0.4.tar.bz2
 
