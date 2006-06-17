@@ -169,9 +169,9 @@ while optparse; do
 	if optparse -d=; then
 		tempdir="$OPTARG"
 	elif optparse -r=; then
-		unchanged=(${unchanged[@]} $(cg-object-id -p "$OPTARG"))
+		unchanged=(${unchanged[@]} $(cg-object-id -p "$OPTARG")) || exit 1
 	elif optparse -k=; then
-		unchanged=(${unchanged[@]} $(cg-object-id -c "$OPTARG"))
+		unchanged=(${unchanged[@]} $(cg-object-id -c "$OPTARG")) || exit 1
 	elif optparse --env-filter=; then
 		filter_env="$OPTARG"
 	elif optparse --tree-filter=; then
