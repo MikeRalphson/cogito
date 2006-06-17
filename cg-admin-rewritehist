@@ -217,7 +217,7 @@ git-rev-list --topo-order HEAD ${unchanged[@]/#/^} | tac >../revs
 commits=$(cat ../revs | wc -l)
 
 if [ $commits -eq 0 ]; then
-    die "Found nothing to rewrite"
+	die "Found nothing to rewrite"
 fi
 
 i=0
