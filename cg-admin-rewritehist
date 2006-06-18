@@ -42,6 +42,10 @@
 #	pass this argument, though, this will be the first commit it
 #	will rewrite and keep the previous commits intact.
 #
+# -k KEEPREV:: A commit id until which _not_ to rewrite history
+#	If you pass this argument, this commit and all of its
+#	predecessors are kept intact.
+#
 # Filters
 # ~~~~~~~
 # The filters are applied in the order as listed below. The COMMAND
@@ -83,6 +87,7 @@
 #	This is the filter for rewriting the commit messages.
 #	The COMMAND argument is evaluated in shell with the original
 #	commit message on standard input; its standard output is
+#	is used as the new commit message.
 #
 # --commit-filter COMMAND:: The filter for performing the commit
 #	If this filter is passed, it will be called instead of the
@@ -130,20 +135,35 @@
 # committed a merge between P1 and P2, it will be propagated properly
 # and all children of the merge will become merge commits with P1,P2
 # as their parents instead of the merge commit.
+#
+# To restrict rewriting to only part of the history, use -r or -k or both.
+# Consider this history:
+#
+#	     D--E--F--G--H
+#	    /     /
+#	A--B-----C
+#
+# To rewrite only commits F,G,H, use:
+#
+#	cg-admin-rewritehist -r F ...
+#
+# To rewrite commits E,F,G,H, use one of these:
+#
+#	cg-admin-rewritehist -r E -k C ...
+#	cg-admin-rewritehist -k D -k C ...
 
 # Testsuite: TODO
 
 set -e
 
-USAGE="cg-admin-rewritehist [-d TEMPDIR] [-r STARTREV]... [FILTERS] DESTBRANCH"
+USAGE="cg-admin-rewritehist [-d TEMPDIR] [-r STARTREV]... [-k KEEPREV]... [FILTERS] DESTBRANCH"
 _git_wc_unneeded=1
 _git_requires_root=1
 
 . "${COGITO_LIB}"cg-Xlib || exit 1
 
 tempdir=.git-rewrite
-startrev=
-startrevparents=
+declare -a unchanged
 filter_env=
 filter_tree=
 filter_index=
@@ -154,8 +174,9 @@ while optparse; do
 	if optparse -d=; then
 		tempdir="$OPTARG"
 	elif optparse -r=; then
-		startrev="^$OPTARG^ $OPTARG $startrev"
-		startrevparents="$OPTARG $startrevparents"
+		unchanged=(${unchanged[@]} $(cg-object-id -p "$OPTARG")) || exit 1
+	elif optparse -k=; then
+		unchanged=(${unchanged[@]} $(cg-object-id -c "$OPTARG")) || exit 1
 	elif optparse --env-filter=; then
 		filter_env="$OPTARG"
 	elif optparse --tree-filter=; then
@@ -164,6 +185,8 @@ while optparse; do
 		filter_index="$OPTARG"
 	elif optparse --parent-filter=; then
 		filter_parent="$OPTARG"
+	elif optparse --msg-filter=; then
+		filter_msg="$OPTARG"
 	elif optparse --commit-filter=; then
 		filter_commit="$OPTARG"
 	else
@@ -191,13 +214,16 @@ ret=0
 mkdir ../map # map old->new commit ids for rewriting parents
 
 # seed with identity mappings for the parents where we start off
-for commit in $startrevparents; do
-	commit=$(git-rev-parse "$commit")
+for commit in ${unchanged[@]}; do
 	echo $commit > ../map/$commit
 done
 
-git-rev-list --topo-order HEAD $startrev | tac >../revs
+git-rev-list --topo-order HEAD ${unchanged[@]/#/^} | tac >../revs
 commits=$(cat ../revs | wc -l)
+
+if [ $commits -eq 0 ]; then
+	die "Found nothing to rewrite"
+fi
 
 i=0
 while read commit; do
