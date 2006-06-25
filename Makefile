@@ -28,6 +28,7 @@ VERSION= VERSION
 
 SHARE_FILES= default-exclude
 
+-include config.mak
 
 
 ### Build rules
