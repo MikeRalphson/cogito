@@ -8,7 +8,7 @@
 T = $(wildcard t[0-9][0-9][0-9][0-9]-*.sh)
 
 all:
-	@$(foreach t,$T,echo "*** $t ***"; sh $t $(GIT_TEST_OPTS) || exit; )
+	@$(foreach t,$T,echo "*** $t ***"; bash $t $(GIT_TEST_OPTS) || exit; )
 	@rm -fr trash
 
 clean:
