@@ -52,10 +52,10 @@ switch_user () {
 		*) echo "I don't know you, $1"; exit 1;;
 	esac
 	HOME=$(pwd)
-	GIT_AUTHOR_NAME="$1"
-	GIT_AUTHOR_EMAIL="$1@example.com"
-	GIT_COMMITTER_NAME="$1"
-	GIT_COMMITTER_EMAIL="$1@example.com"
+	export GIT_AUTHOR_NAME="$1"
+	export GIT_AUTHOR_EMAIL="$1@example.com"
+	export GIT_COMMITTER_NAME="$1"
+	export GIT_COMMITTER_EMAIL="$1@example.com"
 }
 
 
