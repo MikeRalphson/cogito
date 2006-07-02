@@ -45,10 +45,11 @@
 #	the gecos field), but a different email address).
 #
 # -c COMMIT_ID:: Copy author info and commit message from COMMIT_ID
-#	Copy the commit from a given commit ID (that is the author information
-#	and the commit message - NOT committer information). This option
-#	is typically used when replaying commits from one lineage or
-#	repository to another - see also `cg-patch -C`.
+#	Copy the commit metainformation from a given commit ID (that is, only
+#	the author information and the commit message - NOT committer
+#	information and NOT the commit diff). This option is typically used
+#	when replaying commits from one lineage or repository to another - see
+#	also `cg-patch -C` (if you want to apply the diffs as well).
 #
 # -C:: Ignore cache
 #	Make `cg-commit` ignore the cache and just commit the thing as-is.

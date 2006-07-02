@@ -26,7 +26,7 @@
 # -C COMMIT:: Cherry-pick the given commit
 #	Instead of applying a patch from stdin, apply and commit the patch
 #	introduced by the given commit. This is basically an extension of
-#	`cg-commit -c`.
+#	`cg-commit -c`, it also applies the commit diff.
 #
 #	In combination with '-R', this does the opposite - it will revert
 #	the given commit and then try to commit a revert commit - it will
