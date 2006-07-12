@@ -34,10 +34,9 @@
 #
 # NOTES
 # -----
-# The `cg-admin-uncommit` command is meant only for temporary excursions
-# to the commit history. If you want to permanently switch your branch
-# to a different commit id (forgetting its current contents), you can use
-# the `cg-switch` command:
+# The `cg-seek` command is meant only for temporary excursions to the commit
+# history. If you want to permanently switch your branch to a different commit
+# id (forgetting its current contents), you can use the `cg-switch` command:
 #
 #	$ cg-switch -f -r COMMIT_ID CURRENT_HEAD_NAME
 #
