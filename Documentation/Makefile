@@ -60,10 +60,10 @@ install-html: html
 	$(INSTALL) $(DOC_HTML) $(DESTDIR)/$(htmldir)
 
 test:
-	make -C tutorial-script test
+	$(MAKE) -C tutorial-script test
 
 clean:
-	make -C tutorial-script clean
+	$(MAKE) -C tutorial-script clean
 	rm -f *.xml *.html *.pdf *.1 *.7 cg*.[17].txt $(PACKAGE).7.txt
 
 .PRECIOUS: cg%.txt
