@@ -4,7 +4,11 @@
 # Copyright (c) Petr Baudis, 2005
 #
 # Takes a list of file names at the command line, and schedules them
-# for addition to the GIT repository at the next commit.
+# for addition to the GIT repository at the next commit. Those files
+# are denoted by 'A' in the `cg-status` list. You can add `cg-rm`oved
+# files to undo the removal (use `cg-restore` if the file is already
+# deleted from the working copy as well); you can undo additions in
+# an analogous way using `cg-rm`.
 #
 # The command will fail if one of the given files does not exist.
 #
