@@ -156,6 +156,12 @@
 #	a policy decision of a particular project to determine whether
 #	this should be a real e-mail or not.
 #
+# GIT_COMMITTER_DATE::
+#	This is the date of the commit itself. It should be never
+#	overriden, unless you know you absolutely need to override it
+#	(to ensure the commit gets the same ID as another or when
+#	migrating history around).
+#
 # EDITOR::
 #	The editor used for entering revision log information.
 #
