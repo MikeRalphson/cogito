@@ -14,7 +14,10 @@
 # -------
 # -a:: Remove all files which are gone from the working copy
 #	Record removal of all files which have been deleted from
-#	the working copy.
+#	the working copy. Useful when there were some random files
+#	added/removed (e.g. by some third-party application) and you
+#	want to get the repository in sync: just use
+#	`cg-rm -a && cg-add -a`.
 #
 # -f:: Force removal of the physical files
 #	Also delete the files from the tree physically.
@@ -30,7 +33,7 @@
 
 # Testsuite: Partial (used in many tests but a dedicated testsuite is missing)
 
-USAGE="cg-rm [-f] [-n] [-r] [-a] FILE..."
+USAGE="cg-rm [-a] [-f] [-n] [-r] FILE..."
 
 . "${COGITO_LIB}"cg-Xlib || exit 1
 
