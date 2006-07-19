@@ -77,7 +77,7 @@ for file in "${ARGS[@]}"; do
 done
 
 if [ "$rmgone" ]; then
-	cg-status -s \! -n -w >>"$TMPFILE"
+	(cd "$_git_relpath" && cg-status -s \! -n -w) >>"$TMPFILE"
 	if [ ! -s "$TMPFILE" ]; then
 		rm "$TMPFILE" "$TMPDIRFILE"
 		die "no files to remove"
