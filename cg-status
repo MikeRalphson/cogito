@@ -242,7 +242,7 @@ if [ "$workstatus" ]; then
 			elif [ "$mode" = M ] && [ "$commitignore" ]; then
 				fgrep -qx "$file" "$_git/commit-ignore" && mode=m
 			fi
-			should_show_flag "$mode" && echo "$mode $file"
+			should_show_flag "$mode" && echo "$mode ${file#$_git_relpath}"
 		done
 	fi
 fi | if [ "$noflags" ]; then
