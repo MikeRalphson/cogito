@@ -21,7 +21,7 @@
 #
 # OPTIONS
 # -------
-# -N::	Update the lowlevel cache file
+# -N::	Only update the lowlevel cache file
 #	Only update the cache: do not copy the data into the object database.
 #	This is for special purposes when you might not actually _have_ any
 #	object database. This option is normally not interesting.
