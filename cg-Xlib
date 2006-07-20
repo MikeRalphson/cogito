@@ -673,17 +673,6 @@ find_cogito_share()
 	COGITO_REAL_SHARE="./$_git_relpath/"
 }
 
-# Checks if we weren't called through a deprecated alias
-deprecated_alias()
-{
-	cmd="${0##*/}"
-	propername="$1"; shift
-	for a in "$@"; do
-		[ "$cmd" != "$a" ] || \
-			warn "'$a' is a deprecated alias, please use '$propername' instead"
-	done
-}
-
 
 
 #######################################################################
@@ -696,8 +685,7 @@ print_help()
 	_cg_cmd="$(type -P "cg-$2")"
 	[ -n "$_cg_cmd" ] || exit 1
 
-	sed -n '/^USAGE=/,0s/.*"\(.*\)"/Usage: \1/p;
-	        /^deprecated_alias/,0s/^deprecated_alias \([^ ]*\)/\1 is the new name for/p' < "$_cg_cmd"
+	sed -n '/^USAGE=/,0s/.*"\(.*\)"/Usage: \1/p' < "$_cg_cmd"
 	if [ x"$1" = xlong ]; then
 		echo
 		# TODO: Reduce this to just one sed if possible.

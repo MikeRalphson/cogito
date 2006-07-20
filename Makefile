@@ -75,16 +75,6 @@ install: install-cogito
 install-cogito: $(SCRIPT) $(LIB_SCRIPT) $(GEN_SCRIPT)
 	$(INSTALL) -m755 -d $(DESTDIR)$(bindir)
 	$(INSTALL) $(SCRIPT) $(GEN_SCRIPT) $(DESTDIR)$(bindir)
-	for i in 'cg-cancel:cg-reset' 'commit-id:cg-object-id' \
-		'tree-id:cg-object-id' 'parent-id:cg-object-id' \
-		'cg-commit-id:cg-object-id' \
-		'cg-tree-id:cg-object-id' 'cg-parent-id:cg-object-id' \
-		'cg-pull:cg-fetch'; do \
-		old=`echo $$i | cut -d : -f 1`; \
-		new=`echo $$i | cut -d : -f 2`; \
-		rm -f $(DESTDIR)$(bindir)/$$old; \
-		ln -s $$new $(DESTDIR)$(bindir)/$$old; \
-	done
 	$(INSTALL) -m755 -d $(DESTDIR)$(libdir)
 	$(INSTALL) $(LIB_SCRIPT) $(DESTDIR)$(libdir)
 	cd $(DESTDIR)$(bindir); \

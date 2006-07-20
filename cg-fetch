@@ -50,7 +50,6 @@ USAGE="cg-fetch [-f] [-v] [BRANCH_NAME]"
 _git_wc_unneeded=1
 
 . "${COGITO_LIB}"cg-Xlib || exit 1
-deprecated_alias cg-fetch cg-pull
 
 
 fetch_progress()
