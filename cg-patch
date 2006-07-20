@@ -44,6 +44,10 @@
 #	all patches in the specified directory. This can be used to import
 #	a range of patches made by cg-mkpatch -d. Implies -c.
 #
+# -m:: Apply patches in a mailbox
+#	Applies series of patches in a mailbox fed to the command's
+#	standard input. Implies -c.
+#
 # -pN:: Strip path to the level N
 #	Strip path of filenames in the diff to the level N. This works
 #	exactly the same as in the `patch` tool except that the default
@@ -54,12 +58,13 @@
 # -R:: Apply in reverse
 #	Apply the patch in reverse (therefore effectively unapply it).
 #
-# --resolved:: Resume -d after conflicts were resolved
-#	In case '-d' failed in some patch in the middle with conflicts and
-#	you resolved them, running cg-patch with with the '-d' argument
-#	as well as '--resolved' will cause it to pick up where it dropped off
-#	and go on applying. (This includes committing the failed patch;
-#	do not commit it on your own!)
+# --resolved:: Resume -d or -m after conflicts were resolved
+#	In case the patch series application failed in the middle and
+#	you resolved the situatoin, running cg-patch with with the '-d' or '-m'
+#	argument as well as '--resolved' will cause it to pick up where it
+#	dropped off and go on applying. (This includes committing the failed
+#	patch; do not commit it on your own!) (For '-m', you don't need to
+#	feed the mailbox on stdin anymore.)
 #
 # -u:: Assume unified diff instead of GIT diff
 #	Make `cg-patch` assume the patch on the input is a classic unified
@@ -72,7 +77,7 @@
 
 # Testsuite: TODO
 
-USAGE="cg-patch [-c] [-C COMMIT] [-pN] [-R] [-u] [OTHER_OPTIONS] < PATCH"
+USAGE="cg-patch [-c] [-C COMMIT] [-pN] [-R] [-m | -d DIR] [OTHER_OPTIONS] < PATCH"
 
 . "${COGITO_LIB}"cg-Xlib || exit 1
 
@@ -196,8 +201,34 @@ resume_filter()
 }
 
 
+parse_mail_info()
+{
+	local patch="$1"
+	while read line; do
+		case $line in
+		Author:*)
+			export GIT_AUTHOR_NAME="${line#* }";;
+		Email:*)
+			export GIT_AUTHOR_EMAIL="${line#* }";;
+		Date:*)
+			export GIT_AUTHOR_DATE="${line#* }";;
+		Subject:*)
+			mi_subj="${line#* }";;
+		esac
+	done <"$resume/i/$patch"
+}
+
+# Assuming that parse_mail_info() has been already ran on the patch.
+commit_mail_patch()
+{
+	local patch="$1"
+	cg-commit -m"$mi_subj" <"$resume/m/$patch"
+}
+
+
 commitid=
 commit=
+mbox=
 commitdir=
 strip=$((1+$(echo "$_git_relpath" | tr -cd / | wc -c)))
 reverse=
@@ -217,6 +248,9 @@ while optparse; do
 	elif optparse -d=; then
 		commitdir="$(echo "$OPTARG" | sed 's,/*$,,')"
 		[ -d "$commitdir" ] || die "$commitdir: not a directory"
+
+	elif optparse -m; then
+		mbox=1
 
 	elif optparse -p=; then
 		strip="$OPTARG"
@@ -238,10 +272,11 @@ while optparse; do
 done
 
 
-[ "$resolved" ] && [ -z "$commitdir" ] && die "--resolved can be passed only with -d"
+[ "$resolved" ] && [ -z "$commitdir" ] && [ -z "$mbox" ] &&
+	die "--resolved can be passed only with -d"
 
 
-if [ "$commitid" ] || [ "$commit" ] || [ "$commitdir" ]; then
+if [ "$commitid" ] || [ "$commit" ] || [ "$commitdir" ] || [ "$mbox" ]; then
 	[ "$_git_relpath" ] && die "must be ran from project root"
 
 	if [ "$commitid" ]; then
@@ -290,7 +325,7 @@ if [ "$commitid" ] || [ "$commit" ] || [ "$commitdir" ]; then
 			if [ ! "$resolved" ]; then
 				echo "cg-patch: previous import in progress" >&2
 				echo "Use --resolved to resume after conflicts." >&2
-				echo "Cancel the resume by deleting the file $resume" >&2
+				echo "Cancel the resume by deleting $resume" >&2
 				exit 1
 			fi
 
@@ -302,7 +337,7 @@ if [ "$commitid" ] || [ "$commit" ] || [ "$commitdir" ]; then
 			commit_patch "$commitdir/$lastpatch"
 			rm -f "$resume"
 
-		elif [ "$(git-diff-index -m -r HEAD)" ]; then
+		elif [ "$(git-update-index --refresh >/dev/null && git-diff-index -m -r HEAD)" ]; then
 			die "cannot auto-commit patches when the tree has local changes"
 
 		else
@@ -317,12 +352,68 @@ if [ "$commitid" ] || [ "$commit" ] || [ "$commitdir" ]; then
 			if ! cg-patch < "$file"; then
 				echo "${file#$commitdir/}" > "$resume"
 				echo "cg-patch: conflicts during import" >&2
-				echo "Rerun cg-patch with the --resolved argument to resume after resolving them." >&2
-				echo "Cancel the resume by deleting the file $resume" >&2
+				echo "Rerun cg-patch with the -d... --resolved arguments to resume after resolving them." >&2
+				echo "Cancel the resume by deleting $resume" >&2
 				exit 1
 			fi
 			commit_patch "$file"
 		done
+	fi
+
+	if [ "$mbox" ]; then
+		[ "$reverse" ] && die "cannot do -R here"
+
+		resume="$_git/info/cg-patch-mresume"
+		if [ -d "$resume" ]; then
+			if [ ! "$resolved" ]; then
+				echo "cg-patch: previous import in progress" >&2
+				echo "Use --resolved to resume after conflicts." >&2
+				echo "Cancel the resume by deleting $resume" >&2
+				exit 1
+			fi
+
+			echo "Resuming import of mailbox:"
+
+			lastpatch="$(cat "$resume/last")"
+			parse_mail_info "$lastpatch"
+			echo
+			echo "* $lastpatch $mi_subj"
+			commit_mail_patch "$lastpatch"
+			rm "$resume/a/$lastpatch"
+
+		elif [ "$(git-update-index --refresh >/dev/null && git-diff-index -m -r HEAD)" ]; then
+			die "cannot auto-commit patches when the tree has local changes"
+
+		else
+			echo "Importing mailbox:"
+			mkdir -p "$resume" || exit 1
+			mkdir -p "$resume/a"
+			mkdir -p "$resume/i"
+			mkdir -p "$resume/m"
+			mkdir -p "$resume/p"
+			git-mailsplit -o"$resume/a" >/dev/null
+		fi
+
+		for patch in "$resume"/a/*; do
+			patch="${patch#$resume/a/}"
+			[ "$patch" = "*" ] && break # Out of patches
+			echo "$patch" >"$resume/last"
+			git-mailinfo "$resume/m/$patch" "$resume/p/$patch" \
+				<"$resume/a/$patch" >"$resume/i/$patch"
+			parse_mail_info "$patch"
+			echo
+			echo "* $patch $mi_subj"
+			if ! cg-patch < "$resume/p/$patch"; then
+				echo "cg-patch: conflicts during import" >&2
+				echo "Rerun cg-patch with the -m --resolved arguments to resume after resolving them." >&2
+				echo "Cancel the resume by deleting $resume" >&2
+				exit 1
+			fi
+			commit_mail_patch "$patch"
+			rm "$resume/a/$patch"
+		done
+
+		rm -r "$resume"
 	fi
 
 	exit
