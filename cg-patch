@@ -66,6 +66,12 @@
 #	patch; do not commit it on your own!) (For '-m', you don't need to
 #	feed the mailbox on stdin anymore.)
 #
+# -s, --signoff[=STRING]:: Automatically append a sign off line
+#	Add Signed-off-by line at the end of the commit message when
+#	autocommitting (-c, -C, -d or -m). Optionally, specify the exact name
+#	and email to sign off with by passing:
+#	`--signoff="Author Name <user@example.com>"`.
+#
 # -u:: Assume unified diff instead of GIT diff
 #	Make `cg-patch` assume the patch on the input is a classic unified
 #	diff instead of a diff produced by GIT or Cogito. This means only
@@ -192,7 +198,9 @@ lookover_patch()
 commit_patch()
 {
 	local file="$1"
-	sed '/^\(---\|-- \|diff --git .*\)$/,$d' < "$file" | cg-commit
+	local ciargs=()
+	[ "$signoff" ] && ciargs=("$signoff")
+	sed '/^\(---\|-- \|diff --git .*\)$/,$d' < "$file" | cg-commit "${ciargs[@]}"
 }
 
 resume_filter()
@@ -222,7 +230,9 @@ parse_mail_info()
 commit_mail_patch()
 {
 	local patch="$1"
-	cg-commit -m"$mi_subj" <"$resume/m/$patch"
+	local ciargs=()
+	[ "$signoff" ] && ciargs=("$signoff")
+	(echo; cat "$resume/m/$patch") | cg-commit -m"$mi_subj" "${ciargs[@]}"
 }
 
 
@@ -233,6 +243,7 @@ commitdir=
 strip=$((1+$(echo "$_git_relpath" | tr -cd / | wc -c)))
 reverse=
 resolved=
+signoff=
 unidiff=
 while optparse; do
 	if optparse -C=; then
@@ -262,6 +273,12 @@ while optparse; do
 
 	elif optparse -R; then
 		reverse=1
+
+	elif optparse -s || optparse --signoff; then
+		[ "$signoff" ] || signoff="--signoff=$(git-var GIT_AUTHOR_IDENT | sed 's/> .*/>/')"
+
+	elif optparse --signoff=; then
+		signoff="--signoff=$OPTARG"
 
 	elif optparse -u; then
 		unidiff=1
@@ -298,6 +315,9 @@ if [ "$commitid" ] || [ "$commit" ] || [ "$commitdir" ] || [ "$mbox" ]; then
 		else
 			ciargs=(-m "Revert ${commitid:0:12}" -e)
 			reverse=-R
+		fi
+		if [ "$signoff" ]; then
+			ciargs[${#ciargs[@]}]="$signoff"
 		fi
 
 		cg-diff -p -r "$commitid" | cg-patch $reverse || exit 1
