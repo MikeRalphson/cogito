@@ -1,5 +1,6 @@
 #!/usr/bin/env bash
 #
+#
 # Commit changes in the working tree to the repository
 # Copyright (c) Petr Baudis, 2005
 #
@@ -34,6 +35,13 @@
 #
 # OPTIONS
 # -------
+# --amend:: Amend the last commit (dangerous: see `cg-admin-uncommit`)
+#	Amend the last commit with some additional stuff; this will use your
+#	current working copy as the new commit "contents" and otherwise
+#	have similar effects as -c HEAD; the new commit will _replace_ the
+#	current HEAD - which means that you should read `cg-admin-uncommit`
+#	caveats section. If you want to adjust
+#
 # --author AUTHOR_STRING:: Set the author information according to the argument
 #	Set the commit author information according to the argument instead
 #	of your environment, .git/author, or user information.
@@ -216,6 +224,7 @@ ignorecache=
 infoonly=
 commitalways=
 missingok=
+amend=
 review=
 signoff=
 copy_commit=
@@ -240,6 +249,9 @@ while optparse; do
 		force=1
 	elif optparse -q; then
 		quiet=1
+	elif optparse --amend; then
+		amend=1
+		copy_commit="$(cg-object-id -c HEAD)" || exit 1
 	elif optparse -p || optparse --review; then
 		review=1
 	elif optparse -s || optparse --signoff; then
@@ -271,7 +283,9 @@ fi
 
 editor=
 [ "$forceeditor" ] && editor=1
-[ ! "$msgs" ] && [ ! "$msgfile" ] && [ ! "$copy_commit" ] && editor=1
+no_custom_messages=
+[ ! "$msgs" ] && [ ! "$msgfile" ] && no_custom_messages=1
+[ "$no_custom_messages" ] && [ ! "$copy_commit" ] && editor=1
 
 tmpdir="$(mktemp -d -t gitci.XXXXXX)"
 cleanup () { rm -rf "$tmpdir"; }
@@ -282,6 +296,12 @@ if [ "$review" ]; then
 	PATCH="$tmpdir/patch.diff"
 	PATCH2="$tmpdir/patch2.diff"
 	editor=1
+fi
+
+if [ "$amend" ]; then
+	[ "$merging" ] && die "cannot amend previous commit in the middle of a merge"
+	# Recommit even with no changes to the content; meta might change
+	force=1
 fi
 
 if [ "$ARGS" -o "$_git_relpath" ]; then
@@ -369,8 +389,11 @@ done
 if [ "$copy_commit" ]; then
 	[ "$written" ] && echo >>"$LOGMSG"
 	eval "$(git-cat-file commit "$copy_commit" | pick_author)"
-	git-cat-file commit "$copy_commit" | sed -e '1,/^$/d' >>"$LOGMSG"
-        written=1
+	# --amend -m _replaces_ the original message
+	if [ ! "$amend" ] || [ "$editor" ] || [ "$no_custom_messages" ]; then
+		git-cat-file commit "$copy_commit" | sed -e '1,/^$/d' >>"$LOGMSG"
+		written=1
+	fi
 fi
 
 if [ "$msgfile" ]; then
@@ -539,6 +562,9 @@ oldheadname="$(git-symbolic-ref HEAD)"
 if [ -s "$_git/$oldheadname" ]; then
 	oldhead="$(cat "$_git/$oldheadname")"
 	oldheadstr="-p $oldhead"
+fi
+if [ "$amend" ]; then
+	oldheadstr="$(cg-object-id -p "$oldhead" | sed 's/^/-p /')"
 fi
 
 treeid="$(git-write-tree ${missingok})"
