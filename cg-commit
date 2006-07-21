@@ -1,6 +1,5 @@
 #!/usr/bin/env bash
 #
-#
 # Commit changes in the working tree to the repository
 # Copyright (c) Petr Baudis, 2005
 #
