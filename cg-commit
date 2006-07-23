@@ -26,8 +26,6 @@
 #
 # * 'GIT_AUTHOR_*' (see ENVIRONMENT)
 #
-# * '.git/author' (see FILES)
-#
 # * Configuration file: you can insert this to '.git/config':
 #
 #	[user]
@@ -121,13 +119,6 @@
 #
 # FILES
 # -----
-# $GIT_DIR/author::
-#	If exists, it should be in the format
-#		Person Name <email@addy>
-#	(both parts are optional) and the GIT_AUTHOR_* environment variables
-#	will be set accordingly - if they are not present in the environment
-#	yet!
-#
 # $GIT_DIR/commit-template::
 #	If the file exists it will be used as a template when creating
 #	the commit message. The template file makes it possible to
@@ -214,6 +205,7 @@ load_author()
 }
 
 if [ -s "$_git/author" ]; then
+	warn ".git/author is obsolete, use .git/config instead (see the cg-commit docs)"
 	load_author "$(cat "$_git/author")"
 fi
 if [ -z "$GIT_AUTHOR_NAME" -o -z "$GIT_AUTHOR_EMAIL" ]; then
