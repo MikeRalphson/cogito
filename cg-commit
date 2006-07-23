@@ -28,6 +28,12 @@
 #
 # * '.git/author' (see FILES)
 #
+# * Configuration file: you can insert this to '.git/config':
+#
+#	[user]
+#		name = "Your Name"
+#		email = "your@email.address.xz"
+#
 # * System information: The author name defaults to the GECOS field of your
 #   '/etc/passwd' entry, which is taken almost verbatim. The author email
 #   defaults to your 'username@hostname.domainname' (but you should change this
