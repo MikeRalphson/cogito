@@ -174,6 +174,9 @@
 # -----------------------
 # The following GIT configuration file variables are recognized:
 #
+# user.author, user.email::
+#	User credentials. See the "Commit author" section for details.
+#
 # cogito.hooks.commit.post.allmerged::
 #	If set to "true" and you are committing a merge, the post-hook will
 #	be called for all the merged commits in sequence (the earliest first).
