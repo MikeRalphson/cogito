@@ -50,7 +50,6 @@ USAGE="cg-object-id [-c | -d | -n | -p | -t] [OBJECT_ID]"
 _git_wc_unneeded=1
 
 . "${COGITO_LIB}"cg-Xlib
-deprecated_alias cg-object-id commit-id cg-commit-id parent-id cg-parent-id tree-id cg-tree-id
 
 
 # Normalize argument.  The normalized SHA1 ID is put to $normid,

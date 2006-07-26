@@ -28,7 +28,6 @@ USAGE="cg-reset [--adds-removes]"
 _git_requires_root=1
 
 . "${COGITO_LIB}"cg-Xlib || exit 1
-deprecated_alias cg-reset cg-cancel
 
 
 indexonly=
