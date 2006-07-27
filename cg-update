@@ -28,7 +28,7 @@
 # --squash:: Use "squash" merge to record pending commits as a single merge commit
 #	"Squash" merge - condense all the to-be-merged commits to a single
 #	merge commit. This is not to be used lightly; see the cg-merge
-#	documenation for further details.
+#	documentation for further details.
 #
 # -v:: Enable verbosity
 #	Display more verbose output - most notably list all the files
@@ -39,7 +39,7 @@
 # CGFETCH_FLAGS::
 #	Additional flags to pass cg-fetch (useful e.g. for -v -v).
 
-# Testsuite: Larely covered (t9210-pdate, incomplete coverage; missing:
+# Testsuite: Largely covered (t9210-update, incomplete coverage; missing:
 # passing the -f, --squash options and CGFETCH_FLAGS)
 
 USAGE="cg-update [-f] [--squash] [-v] [BRANCH_NAME]"

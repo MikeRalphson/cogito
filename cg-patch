@@ -13,7 +13,7 @@
 # patches from existing commits, therefore effectively enabling you to
 # 'cherrypick' certain changes from a different branch.
 #
-# In comparasion with the 'git-apply' tool, `cg-patch` will also apply
+# In comparison with the 'git-apply' tool, `cg-patch` will also apply
 # fuzzy patches.
 #
 # OPTIONS
@@ -21,7 +21,7 @@
 # -c:: Automatically commit the patch
 #	Automatically extract the commit message and authorship information
 #	(if provided) from the patch and commit it after applying it
-#	successfuly.
+#	successfully.
 #
 # -C COMMIT:: Cherry-pick the given commit
 #	Instead of applying a patch from stdin, apply and commit the patch
@@ -60,7 +60,7 @@
 #
 # --resolved:: Resume -d or -m after conflicts were resolved
 #	In case the patch series application failed in the middle and
-#	you resolved the situatoin, running cg-patch with with the '-d' or '-m'
+#	you resolved the situation, running cg-patch with with the '-d' or '-m'
 #	argument as well as '--resolved' will cause it to pick up where it
 #	dropped off and go on applying. (This includes committing the failed
 #	patch; do not commit it on your own!) (For '-m', you don't need to

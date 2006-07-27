@@ -93,7 +93,7 @@
 #	is called right after fetch. This is used to do better decision
 #	about whether to fast-forward or tree-merge.
 
-# Testsuite: Larely covered (t92xx testsuite family, incomplete coverage;
+# Testsuite: Largely covered (t92xx testsuite family, incomplete coverage;
 # missing: hooks, -n, -b, --squash)
 
 USAGE="cg-merge [-n] [-b BASE_COMMIT] [-j] [--squash] [-v] [BRANCH_NAME]"

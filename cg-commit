@@ -53,7 +53,7 @@
 #	author name and date is optional, only the email is required to be
 #	always present (e.g. '--author "<pasky@ucw.cz>"' will use the current
 #	date and the real name set for your system account (usually in
-#	the gecos field), but a different email address).
+#	the GECOS field), but a different email address).
 #
 # -c COMMIT_ID:: Copy author info and commit message from COMMIT_ID
 #	Copy the commit metainformation from a given commit ID (that is, only
@@ -102,7 +102,7 @@
 #	Do not call any commit hooks during the commit.
 #
 # -p, --review:: Show and enable editing of changes being committed
-#	Show changes being commited as a patch appended to the commit message
+#	Show changes being committed as a patch appended to the commit message
 #	buffer. Changes made to the patch will be reapplied before completing
 #	the commit. This only makes sense if you are going to edit the commit
 #	message interactively.
@@ -162,7 +162,7 @@
 #
 # GIT_COMMITTER_DATE::
 #	This is the date of the commit itself. It should be never
-#	overriden, unless you know you absolutely need to override it
+#	overridden, unless you know you absolutely need to override it
 #	(to ensure the commit gets the same ID as another or when
 #	migrating history around).
 #
