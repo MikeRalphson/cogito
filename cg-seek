@@ -8,7 +8,7 @@
 # the branch it is corresponding to. It will return to the 'HEAD' of
 # the appropriate branch if passed no arguments.
 #
-# Therefore, for a quick excurse to the past of the 'master' branch:
+# Therefore, for a quick excursion to the past of the 'master' branch:
 #
 #	$ cg-seek git-pasky-0.1
 #	$ cg-diff this master	# will do the correct thing

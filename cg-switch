@@ -11,7 +11,7 @@
 #
 # Note that `cg-switch` is meant for permanent switching of your current
 # local branch (permanent in the sense that you are going to work on it;
-# you can obviously `cg-switch` again later). If you want to just causually
+# you can obviously `cg-switch` again later). If you want to just casually
 # explore the current state of a particular branch of commit, use `cg-seek`.
 #
 # OPTIONS

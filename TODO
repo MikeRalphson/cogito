@@ -78,6 +78,9 @@ Pre-1.0 stuff:
 	whatever will restore the state of the tree before cg-shelf was
 	called.
 
+* Unify hooks usage with Git - Cogito's are older but Git's are more
+  widespread nowadays
+
 
 Post 1.0:
 
@@ -172,7 +175,7 @@ Long term:
 	renames everywhere and have tree renames detection.
 
 	In the long term, either some Linus-envisioned smart moves detection
-	needs to be done (I'm still sceptical) or persistent file ids. One
+	needs to be done (I'm still skeptical) or persistent file ids. One
 	trouble is keeping merge from traversing all the history.
 
 * Better than three-way merging

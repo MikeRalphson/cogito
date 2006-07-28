@@ -84,7 +84,14 @@ print_command_listing()
 {
 	width="$(IFS=$'\n'; echo "$*" | column_width "$bin_path/" 25)"
 	for command in "$@"; do
-		[ -f "$command" -a ! -L "$command" ] || continue
+		[ -f "$command" ] || continue
+		if [ -L "$command" ]; then
+			tg="$(readlink "$command")"
+			# Skip symlinks within the same directory, those are
+			# aliases; symlinks to elsewhere are permitted since
+			# they may be created by some weirder packaging sys.
+			[ z"${tg#*/}" != z"$tg" ] || continue
+		fi
 		cmdname="${command#$bin_path/}"
 
 		shortdesc="$(sed -n 'n;n;p;q' <"$command")"

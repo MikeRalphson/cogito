@@ -25,7 +25,11 @@
 #
 # * 'GIT_AUTHOR_*' (see ENVIRONMENT)
 #
-# * '.git/author' (see FILES)
+# * Configuration file: you can insert this to '.git/config':
+#
+#	[user]
+#		name = "Your Name"
+#		email = "your@email.address.xz"
 #
 # * System information: The author name defaults to the GECOS field of your
 #   '/etc/passwd' entry, which is taken almost verbatim. The author email
@@ -49,7 +53,7 @@
 #	author name and date is optional, only the email is required to be
 #	always present (e.g. '--author "<pasky@ucw.cz>"' will use the current
 #	date and the real name set for your system account (usually in
-#	the gecos field), but a different email address).
+#	the GECOS field), but a different email address).
 #
 # -c COMMIT_ID:: Copy author info and commit message from COMMIT_ID
 #	Copy the commit metainformation from a given commit ID (that is, only
@@ -98,7 +102,7 @@
 #	Do not call any commit hooks during the commit.
 #
 # -p, --review:: Show and enable editing of changes being committed
-#	Show changes being commited as a patch appended to the commit message
+#	Show changes being committed as a patch appended to the commit message
 #	buffer. Changes made to the patch will be reapplied before completing
 #	the commit. This only makes sense if you are going to edit the commit
 #	message interactively.
@@ -114,13 +118,6 @@
 #
 # FILES
 # -----
-# $GIT_DIR/author::
-#	If exists, it should be in the format
-#		Person Name <email@addy>
-#	(both parts are optional) and the GIT_AUTHOR_* environment variables
-#	will be set accordingly - if they are not present in the environment
-#	yet!
-#
 # $GIT_DIR/commit-template::
 #	If the file exists it will be used as a template when creating
 #	the commit message. The template file makes it possible to
@@ -165,7 +162,7 @@
 #
 # GIT_COMMITTER_DATE::
 #	This is the date of the commit itself. It should be never
-#	overriden, unless you know you absolutely need to override it
+#	overridden, unless you know you absolutely need to override it
 #	(to ensure the commit gets the same ID as another or when
 #	migrating history around).
 #
@@ -175,6 +172,9 @@
 # CONFIGURATION VARIABLES
 # -----------------------
 # The following GIT configuration file variables are recognized:
+#
+# user.author, user.email::
+#	User credentials. See the "Commit author" section for details.
 #
 # cogito.hooks.commit.post.allmerged::
 #	If set to "true" and you are committing a merge, the post-hook will
@@ -207,6 +207,7 @@ load_author()
 }
 
 if [ -s "$_git/author" ]; then
+	warn ".git/author is obsolete, use .git/config instead (see the cg-commit docs)"
 	load_author "$(cat "$_git/author")"
 fi
 if [ -z "$GIT_AUTHOR_NAME" -o -z "$GIT_AUTHOR_EMAIL" ]; then

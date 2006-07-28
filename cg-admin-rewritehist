@@ -102,7 +102,7 @@
 #
 # EXAMPLE USAGE
 # -------------
-# Suppose you want to remove a file (containing confidental information
+# Suppose you want to remove a file (containing confidential information
 # or copyright violation) from all commits:
 #
 #	cg-admin-rewritehist --tree-filter 'rm filename' newbranch
@@ -121,7 +121,7 @@
 #
 # (if the parent string is empty - therefore we are dealing with the
 # initial commit - add graftcommit as a parent). Note that this assumes
-# history with a single root (that is, no cg-merge -j happenned). If this
+# history with a single root (that is, no cg-merge -j happened). If this
 # is not the case, use:
 #
 #	cg-admin-rewritehist --parent-filter 'cat; [ "$GIT_COMMIT" = "COMMIT" ] && echo "-p GRAFTCOMMIT"' newbranch
