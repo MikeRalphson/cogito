@@ -1,0 +1,12 @@
+Hooks cogito cares about
+========================
+Nico Schottelius <nico-linux-git //@\\ schottelius.org>
+v0.1, initial version written on 2006-07-28
+
+
+This document describes which hooks cogito cares about and
+when it executes them.
+
+Hooks
+-----
+
