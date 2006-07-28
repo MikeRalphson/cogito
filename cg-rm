@@ -61,6 +61,10 @@ TMPDIRFILE="$(mktemp -t gitrm.XXXXXX)" || exit 1
 error=
 for file in "${ARGS[@]}"; do
 	absfile="$_git_relpath$file"
+	if [ ! -e "$absfile" ]; then
+		echo "Skipping non-existent file $absfile"
+		continue
+	fi
 	if [ -d "$absfile" ]; then
 		if [ "$recursive" ]; then
 			echo "$file" >>"$TMPDIRFILE"
