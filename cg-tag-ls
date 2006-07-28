@@ -26,9 +26,12 @@ _git_wc_unneeded=1
 
 . "${COGITO_LIB}"cg-Xlib || exit 1
 
-mkdir -p "$_git/refs/tags"
+msg_no_tags="list of tags is empty, please see cg-tag(1)"
+
+[ -d "$_git/refs/tags" ] || die "$msg_no_tags"
+
 [ "$(find "$_git/refs/tags" -follow -type f)" ] \
-       || die "list of tags is empty, please see cg-tag(1)"
+       || die "$msg_no_tags"
 
 maxlen="$(find "$_git/refs/tags" -name '*' -a ! -type d |
 	  column_width "$_git/refs/tags/")"
