@@ -145,6 +145,8 @@ redzone_border()
 			echo "$file1: rename destination $file2 already exists, NOT RENAMING" >&2
 			return
 		fi
+		# FIXME: Remove stale empty directories related to $mvfrom
+		case $mvto in */*) mkdir -p "${mvto%/*}";; esac
 		mv "$mvfrom" "$mvto"
 	fi
 	if [ "$op" = "delete" -o "$op" = "rename" ]; then
