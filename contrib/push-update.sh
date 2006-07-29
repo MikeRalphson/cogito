@@ -1,4 +1,4 @@
-#!/usr/bin/env bash
+#!/bin/sh
 #
 # Automatically update working copy of target repository when pushing
 # Copyright (c) Petr Baudis, 2006
