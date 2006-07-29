@@ -59,12 +59,15 @@ done
 TMPFILE="$(mktemp -t gitrm.XXXXXX)" || exit 1
 TMPDIRFILE="$(mktemp -t gitrm.XXXXXX)" || exit 1
 error=
+non_existent=""
+
 for file in "${ARGS[@]}"; do
 	absfile="$_git_relpath$file"
+
 	if [ ! -e "$absfile" ]; then
-		echo "Skipping non-existent file $absfile"
-		continue
+		non_existent="(non-existent) "
 	fi
+
 	if [ -d "$absfile" ]; then
 		if [ "$recursive" ]; then
 			echo "$file" >>"$TMPDIRFILE"
@@ -88,7 +91,7 @@ if [ "$rmgone" ]; then
 	fi
 fi
 
-cat "$TMPFILE" | sed 's/^/Removing file /'
+cat "$TMPFILE" | sed "s/^/Removing ${non_existent}file /"
 if [ "$delete" ]; then (
 	cd "${_git_relpath:-.}"
 	cat "$TMPFILE" | tr '\n' '\0' | xargs -0 rm -f
