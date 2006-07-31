@@ -65,7 +65,7 @@ for file in "${ARGS[@]}"; do
 	absfile="$_git_relpath$file"
 
 	if [ ! -e "$absfile" ]; then
-		non_existent="(non-existent) "
+		non_existent=" - not found, only recording removal"
 	fi
 
 	if [ -d "$absfile" ]; then
@@ -91,7 +91,7 @@ if [ "$rmgone" ]; then
 	fi
 fi
 
-cat "$TMPFILE" | sed "s/^/Removing ${non_existent}file /"
+cat "$TMPFILE" | sed -e 's/^/Removing file /' -e "s/\$/${non_existent}/"
 if [ "$delete" ]; then (
 	cd "${_git_relpath:-.}"
 	cat "$TMPFILE" | tr '\n' '\0' | xargs -0 rm -f
