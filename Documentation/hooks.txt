@@ -7,6 +7,19 @@ v0.1, initial version written on 2006-07-28
 This document describes which hooks cogito cares about and
 when it executes them.
 
+Introduction
+------------
+This file is currently not listing all hooks. I am currently
+finding them by grep'ing them out of cogito-scripts:
+`grep -i hooks *`. As soon as the listing is complete, this intro
+will vanish.
+
 Hooks
 -----
+All hooks can be found below ".git/hooks". Always remember: A hook
+will only be called it it has the x-bit set (chmod 0755 .git/hook/'name').
 
+update
+~~~~~~
+This hook will be called by `cg-push` on the *remote* side. You could
+use it for mailing out information about the latest update.
