@@ -446,10 +446,35 @@ deprecated_alias()
 	done
 }
 
+# Usage: path_lookup COMMAND VARNAME [CMDTEST]
+# Lookup COMMAND in $PATH and save the full path to VARNAME (optionally,
+# only if CMDTEST on the command succeeds).
+path_lookup()
+{
+	local exename="$1" varname="$2" cmdtest="$3"
+
+	# We do our own $PATH iteration as it's faster than the fork()
+	# of $(which), and this happens many times every time we
+	# execute some cg tool.
+	# Cut'n'pasted to the 'cg' source.
+	local save_IFS dir cmd
+	save_IFS="$IFS"; IFS=:
+	for dir in $PATH; do
+		IFS="$save_IFS"
+		cmd="$dir/$exename"
+		if [ -x "$cmd" ] && { [ -z "$cmdtest" ] || eval "$cmdtest"; }; then
+			echo export $varname="$cmd"
+			export $varname="$cmd"
+			break
+		fi
+	done
+	IFS="$save_IFS"
+}
+
 
 print_help()
 {
-	_cg_cmd="$(type -P "cg-$2")"
+ 	path_lookup "cg-$2" "_cg_cmd"
 	[ -n "$_cg_cmd" ] || exit 1
 
 	sed -n '/^USAGE=/,0s/.*"\(.*\)"/Usage: \1/p;
@@ -580,20 +605,7 @@ check_tool()
 
 	export $hasname=
 	for exename in "$@"; do
-		# We do our own $PATH iteration as it's faster than the fork()
-		# of $(which), and this happens many times every time we
-		# execute some cg tool.
-		# Cut'n'pasted to the 'cg' source.
-		save_IFS="$IFS"; IFS=:
-		for dir in $PATH; do
-			IFS="$save_IFS"
-			cmd="$dir/$exename"
-			if [ -x "$cmd" ] && eval "$cmdtest"; then
-				export $hasname="$cmd"
-				break
-			fi
-		done
-		IFS="$save_IFS"
+		path_lookup "$exename" "$hasname" "$cmdtest"
 		[ "$hasname" ] && break
 	done 2>/dev/null
 }
