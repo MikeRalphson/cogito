@@ -164,7 +164,6 @@ path_lookup()
 		IFS="$save_IFS"
 		cmd="$dir/$exename"
 		if [ -x "$cmd" ] && { [ -z "$cmdtest" ] || eval "$cmdtest"; }; then
-			echo export $varname="$cmd"
 			export $varname="$cmd"
 			break
 		fi
