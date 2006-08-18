@@ -175,27 +175,20 @@ pager()
 # Save the date to $_showdate
 showdate()
 {
-   #set -x
    local secs=$1 
    local format="$3"
 
-   # subtract the timezone of the commit
+   # subtract the timezone of the commit (variant 2, variant 1 was slower)
    local tzsign=${2%????}
    local tmp=${2#?}
-   #local tzhours=${tmp%??}
-   #local tzminutes=${tmp#??}
+   local tzhours=${tmp%??}
+   local tzminutes=${tmp#??}
 
-   local tz600=${tmp%???}
-   tmp="${tmp#?}"
-   local tz60="${tmp%??}"
-   tmp="${tmp#?}"
-   local tz10="${tmp%?}"
-   local tz1=${2#????}
-	secs=$(($secs $tzsign ($tz600 * 36000 + $tz60 * 3600 + $tz10 * 600 + $tz1 *60)))
+   # strip leading zeros
+   [ "${tzhours%?}"   = 0 ]   && tzhours=${tzhours#?}
+   [ "${tzminutes%?}" = 0 ]   && tzminutes=${tzminutes#?}
 
-   #local tmp=${2#?}
-   #local tzhours=${tmp%??}
-   #local tzminutes=${tmp#??}
+   secs=$(($secs $tzsign ($tzhours * 3600 + $tzminutes * 60)))
 
 	[ "$format" ] || format="+%a, %d %b %Y %H:%M:%S $2"
 	if [ "$has_gnudate" ]; then
