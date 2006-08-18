@@ -175,29 +175,28 @@ pager()
 # Save the date to $_showdate
 showdate()
 {
-   
-	#local secs=$1 tzhours=${2:0:3} tzmins=${2:0:1}${2:3} format="$3"
+   #set -x
    local secs=$1 
    local format="$3"
-   #local tzdiffsecs=$(echo $2 | sed 's/\(.\)\(.\)\(.\)\(.\)\(.\)/\1 (\2*600 + \3*60 + \4*10 + \5)/')
-   #set -x
+
+   # subtract the timezone of the commit
    local tzsign=${2%????}
    local tmp=${2#?}
+   #local tzhours=${tmp%??}
+   #local tzminutes=${tmp#??}
+
    local tz600=${tmp%???}
    tmp="${tmp#?}"
    local tz60="${tmp%??}"
    tmp="${tmp#?}"
    local tz10="${tmp%?}"
    local tz1=${2#????}
-   #set +x
-   #local tzhours=$(echo -n $2 | cut -c1-3) 
-   #local tzmins=$(echo  -n $2 | cut -c1,4,5)
-	# bash doesn't like leading zeros
-	#[ "${tzhours:1:1}" != 0 ] || tzhours=${2:0:1}${2:2:1}
-	#secs=$(($secs + $tzhours * 3600 + $tzmins * 60))
-	#secs=$(($secs $tzdiffsecs))
-	#secs=$(echo "$secs $tzdiffsecs" | bc)
-	secs=$(($secs $tzsign ($tz600 * 600 + $tz60 * 60 + $tz10 * 10 + $tz1)))
+	secs=$(($secs $tzsign ($tz600 * 36000 + $tz60 * 3600 + $tz10 * 600 + $tz1 *60)))
+
+   #local tmp=${2#?}
+   #local tzhours=${tmp%??}
+   #local tzminutes=${tmp#??}
+
 	[ "$format" ] || format="+%a, %d %b %Y %H:%M:%S $2"
 	if [ "$has_gnudate" ]; then
 		_showdate="$(LANG=C "$has_gnudate" -ud "1970-01-01 UTC + $secs sec" "$format")"
