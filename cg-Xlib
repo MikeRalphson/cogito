@@ -175,7 +175,12 @@ pager()
 # Save the date to $_showdate
 showdate()
 {
-	local secs=$1 tzhours=${2:0:3} tzmins=${2:0:1}${2:3} format="$3"
+   
+	#local secs=$1 tzhours=${2:0:3} tzmins=${2:0:1}${2:3} format="$3"
+   local secs=$1 
+   local tzhours=$(echo -n $2 | cut -c1-3) 
+   local tzmins=$(echo  -n $2 | cut -c1,4,5)
+   local format="$3"
 	# bash doesn't like leading zeros
 	[ "${tzhours:1:1}" != 0 ] || tzhours=${2:0:1}${2:2:1}
 	secs=$(($secs + $tzhours * 3600 + $tzmins * 60))
