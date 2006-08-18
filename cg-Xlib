@@ -179,14 +179,25 @@ showdate()
 	#local secs=$1 tzhours=${2:0:3} tzmins=${2:0:1}${2:3} format="$3"
    local secs=$1 
    local format="$3"
-   local tzdiffsecs=$(echo $2 | sed 's/\(.\)\(.\)\(.\)\(.\)\(.\)/\1 (\2*600 + \3*60 + \4*10 + \5)/')
+   #local tzdiffsecs=$(echo $2 | sed 's/\(.\)\(.\)\(.\)\(.\)\(.\)/\1 (\2*600 + \3*60 + \4*10 + \5)/')
+   #set -x
+   local tzsign=${2%????}
+   local tmp=${2#?}
+   local tz600=${tmp%???}
+   tmp="${tmp#?}"
+   local tz60="${tmp%??}"
+   tmp="${tmp#?}"
+   local tz10="${tmp%?}"
+   local tz1=${2#????}
+   #set +x
    #local tzhours=$(echo -n $2 | cut -c1-3) 
    #local tzmins=$(echo  -n $2 | cut -c1,4,5)
 	# bash doesn't like leading zeros
 	#[ "${tzhours:1:1}" != 0 ] || tzhours=${2:0:1}${2:2:1}
 	#secs=$(($secs + $tzhours * 3600 + $tzmins * 60))
 	#secs=$(($secs $tzdiffsecs))
-	secs=$(echo "$secs $tzdiffsecs" | bc)
+	#secs=$(echo "$secs $tzdiffsecs" | bc)
+	secs=$(($secs $tzsign ($tz600 * 600 + $tz60 * 60 + $tz10 * 10 + $tz1)))
 	[ "$format" ] || format="+%a, %d %b %Y %H:%M:%S $2"
 	if [ "$has_gnudate" ]; then
 		_showdate="$(LANG=C "$has_gnudate" -ud "1970-01-01 UTC + $secs sec" "$format")"
