@@ -349,7 +349,7 @@ fi
 
 if [ "$msgfile" ]; then
 	[ "$written" ] && echo >>"$LOGMSG"
-	cat "$msgfile" >>"$LOGMSG" || exit 1
+	cat "$_git_relpath$msgfile" >>"$LOGMSG" || exit 1
 	written=1
 fi
 
