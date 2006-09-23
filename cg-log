@@ -54,7 +54,7 @@
 #	End the log listing at the merge base of the -r arguments
 #	(defaulting to HEAD and origin).
 #
-# -M, --merges:: Shojw merge commits
+# -M, --merges:: Show merge commits
 #	Display merge commits in the log.
 #
 # -R, --no-renames:: Do not follow renames
