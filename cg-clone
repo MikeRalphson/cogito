@@ -25,16 +25,16 @@
 #	`cg-admin-setuprepo` it and then populate it with `cg-push`
 #	from the other side.)
 #
-# -l::	Symlink the object database when cloning locally
-#	Symlink the object database when cloning locally, instead of
-#	hardlinking all the objects. This is suitable for very fast
-#	cloning of arbitrarily big repositories, but might be a trouble
-#	in multi-user environments, and less solid arrangement in case
-#	you do dangerous things with the database. Also, disappeared
-#	or moved origin repository will obviously render this one unusable
-#	as well. The choice is yours.
-#	Note that you MUST NOT prune repository containing a symlink
-#	or being symlinked to.
+# -l::	"Borrow" the object database when cloning locally
+#	Instead of hardlinking all the objects, set up an "alternate"
+#	record pointing at the source object database; this will cause
+#	any objects not found locally to be looked up remotely, which
+#	effectively eliminates the need to copy/hardlink the objects
+#	around. This is suitable for very fast cloning of arbitrarily
+#	big repositories, but your repository will become largely useless
+#	if the source repository disappears or gets damaged (note that
+#	it is generally BAD IDEA to prune the original repository if any
+#	repository is borrowing objects from it).  The choice is yours.
 #
 # -s::	Clone into the current directory
 #	Clone in the current directory instead of creating a new one.
@@ -69,10 +69,10 @@ _git_repo_unneeded=1
 
 same_dir=
 repoonly=
-symlink=
+alternate=
 while optparse; do
 	if optparse -l; then
-		symlink=1
+		alternate=1
 	elif optparse -b; then
 		repoonly=1
 	elif optparse -s; then
@@ -99,7 +99,7 @@ fi
 if ! echo "$location" | grep -q ":" ; then
 	location=$(echo "$location" | sed -e "s#^[^/]#$(pwd)\/&#")
 else
-	[ ! "$symlink" ] || die "specifying -l for non-local clone makes no sense"
+	[ ! "$alternate" ] || die "specifying -l for non-local clone makes no sense"
 	location="$location"
 fi
 
@@ -137,12 +137,9 @@ if [ ! "$repoonly" ]; then
 	cg-init -I || die "init failed"
 fi
 echo $$ >"$_git/info/cg-fetch-earlydie"
-if [ "$symlink" ]; then
-	rmdir "$_git/objects/"*
-	rmdir "$_git/objects"
-	src="${location%#*}"
-	[ -d "$src/.git" ] && src="$src/.git"
-	ln -s "$src/objects" "$_git/objects"
+if [ "$alternate" ]; then
+	mkdir -p "$_git/objects/info"
+	echo "$location/objects" >> "$_git/objects/info/alternates"
 fi
 cg-branch-add origin "$location"
 
