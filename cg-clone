@@ -36,6 +36,20 @@
 #	it is generally BAD IDEA to prune the original repository if any
 #	repository is borrowing objects from it).  The choice is yours.
 #
+# --reference PATH:: "Borrow" the object database from a third-party source
+#	This does the same thing as '-l' but instead of borrowing the
+#	objects from the source repository, it borrows them from yet
+#	another local repository. E.g. if you have Linus' kernel repository
+#	cloned locally and now want to clone akpm's repository, you can
+#	do something like
+#
+#		cg-clone --reference /path/to/linus/repo git://kernel.org/akpm/repo
+#
+#	and it will download and keep only the objects that are really
+#	missing. Same considerations and warnings on the third-party source
+#	as in the case of '-l' apply. Also, you can reference only local
+#	repositories.
+#
 # -s::	Clone into the current directory
 #	Clone in the current directory instead of creating a new one.
 #	Specifying both -s and a destination directory makes no sense.
@@ -70,11 +84,14 @@ _git_repo_unneeded=1
 same_dir=
 repoonly=
 alternate=
+reference=()
 while optparse; do
 	if optparse -l; then
 		alternate=1
 	elif optparse -b; then
 		repoonly=1
+	elif optparse --reference=; then
+		reference[${#reference[@]}]="$OPTARG"
 	elif optparse -s; then
 		same_dir=1
 	else
@@ -137,10 +154,15 @@ if [ ! "$repoonly" ]; then
 	cg-init -I || die "init failed"
 fi
 echo $$ >"$_git/info/cg-fetch-earlydie"
-if [ "$alternate" ]; then
-	mkdir -p "$_git/objects/info"
-	echo "$location/objects" >> "$_git/objects/info/alternates"
-fi
+
+[ "$alternate" ] && echo "$location/objects" >> "$_git/objects/info/alternates"
+for ref in "$reference"; do
+	[ -d "$reference" ] || die "referenced repository $reference not found"
+	[ ! -d "$reference/.git/objects" ] || reference="$reference/.git"
+	[ -d "$reference/objects" ] || die "reference $reference not a git repository"
+	echo "$reference/objects" >>"$_git/objects/info/alternates"
+done
+
 cg-branch-add origin "$location"
 
 mkdir -p "$_git/info"
