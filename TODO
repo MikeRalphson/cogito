@@ -62,7 +62,6 @@ Pre-1.0 stuff:
 	  whitespace errors and stuff; hooks are good for this too,
 	  but I think it's good to have internal support for the
 	  basic stuff. (Get inspired in git-commit.)
-	* git-commit --amend - cg-admin-uncommit + cg-commit -c -e
 	* call git-fmt-merge-msg when committing a merge
 
 * cg-shelf - shelve changes temporarily
