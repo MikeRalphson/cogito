@@ -523,6 +523,8 @@ if [ "$review" ]; then
 		fi
 		echo "Applying the edited patch..."
 		if ! cg-patch < "$PATCH2"; then
+			# FIXME: Do something better to alleviate this situation.
+			# At least restore the tree to the original state.
 			die "unable to apply the edited patch; the original patch is available in $PATCH, your edited patch is available in $PATCH2, your log message is in $LOGMSG, your working copy is in undefined state now and the world is about to end in five minutes, have a nice day"
 		fi
 	fi
