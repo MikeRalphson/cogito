@@ -156,11 +156,11 @@ fi
 echo $$ >"$_git/info/cg-fetch-earlydie"
 
 [ "$alternate" ] && echo "$location/objects" >> "$_git/objects/info/alternates"
-for ref in "$reference"; do
-	[ -d "$reference" ] || die "referenced repository $reference not found"
-	[ ! -d "$reference/.git/objects" ] || reference="$reference/.git"
-	[ -d "$reference/objects" ] || die "reference $reference not a git repository"
-	echo "$reference/objects" >>"$_git/objects/info/alternates"
+for ref in "${reference[@]}"; do
+	[ -d "$ref" ] || die "referenced repository $ref not found"
+	[ ! -d "$ref/.git/objects" ] || reference="$ref/.git"
+	[ -d "$ref/objects" ] || die "reference $ref not a git repository"
+	echo "$ref/objects" >>"$_git/objects/info/alternates"
 done
 
 cg-branch-add origin "$location"
