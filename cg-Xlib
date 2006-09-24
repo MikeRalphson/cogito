@@ -135,7 +135,6 @@ readlink()
 }
 
 # tac is not POSIX :-(
-# tac() { sed -n '1!G;$p;h'; } - too cryptic
 tac()
 {
 	if [ "$has_tac" ]; then
@@ -143,7 +142,7 @@ tac()
 		return
 	fi
 
-	perl -e 'print reverse <>'
+	sed -n '1!G;$p;h';
 }
 
 # Usage: path_lookup COMMAND VARNAME [CMDTEST]
