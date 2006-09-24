@@ -23,7 +23,7 @@ Pre-1.0 stuff:
 
 * Support for mass-cloning all remote refs at once
 	* Requires first multi-origin support (if origin is a dir, fall
-	back to origin/master).
+	  back to origin/master).
 	* Interface: cg-clone -a
 	* Implement this using refs/remote/ so that the branches won't
 	  get mixed together and we can trace new/disappearing branches
@@ -34,6 +34,10 @@ Pre-1.0 stuff:
 	LIKELY NOT - parsing those would be just annoying, we will probably
 	just dump directly to supporting [remote] in .git/config. There will
 	need to be a conversion script though.
+
+* Push new tags automagically
+	(With the same logic as when fetching - push tags which reference
+	objects that are already pushed.)
 
 * Better merging
 	* Handle all possible conflicts
