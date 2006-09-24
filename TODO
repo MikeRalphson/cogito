@@ -54,8 +54,7 @@ Pre-1.0 stuff:
 	Frontending git-request-fetch, interfacing with email directly...
 
 * cg-patch improvements
-	* Again, an email interface - frontend to applymbox and stuff...
-	* Dealing with copies - will require a complete rewrite or something
+	* Just frontend git-apply
 
 * cg-commit enhancements
 	* Possibly verify the patch being committed against
