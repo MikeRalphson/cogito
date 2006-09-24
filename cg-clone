@@ -74,7 +74,8 @@
 #
 #	$ cg-clone git://git.kernel.org/pub/scm/git/git.git#next
 
-# Testsuite: Partial (used in many tests but a dedicated testsuite is missing)
+# Testsuite: Checked as part of t-9105-fetch-local but tests for some features
+# are missing.
 
 USAGE="cg-clone [-l] [-b] [-s] LOCATION [DESTDIR]"
 _git_repo_unneeded=1
