@@ -34,6 +34,9 @@ Pre-1.0 stuff:
 
 * Support for remotes/
 	More powerful 'n stuff than branches/, ya know.
+	LIKELY NOT - parsing those would be just annoying, we will probably
+	just dump directly to supporting [remote] in .git/config. There will
+	need to be a conversion script though.
 
 * Better merging
 	* Handle all possible conflicts
