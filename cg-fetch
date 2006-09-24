@@ -124,24 +124,7 @@ get_rsync()
 	return ${PIPESTATUS[0]}
 }
 
-fetch_rsync_save()
-{
-	ret=${PIPESTATUS[0]}
-	if [ "$1" ] && [ "$ret" -eq "0" ]; then
-		if [ "$orig_head" ]; then
-			git-rev-list --objects $new_head ^$orig_head |
-				while read obj type; do
-					git-cat-file -t $obj >/dev/null || exit $?
-				done ||
-			die "rsync fetch incomplete, some objects missing"
-		fi
-		cat "$_git/refs/${3%/*}/.${3##*/}-fetching" > "$_git/refs/$1"
-	fi
-	return $ret
-}
-
-
-fetch_rsync()
+fetch_rsync_verify()
 {
 	if [ $verbose -ge 2 ]; then
 		# We must not pipe to prevent buffered I/O
@@ -149,12 +132,30 @@ fetch_rsync()
 	else
 		get_rsync -s -d "$2/objects" "$_git_objects" | fetch_progress
 	fi
+
+	ret=${PIPESTATUS[0]}
+	if [ "$3" ] && [ "$ret" -eq "0" ]; then
+		if [ "$orig_head" ]; then
+			git-rev-list --objects $new_head ^$orig_head |
+				while read obj type; do
+					git-cat-file -t $obj >/dev/null || exit $?
+				done ||
+			die "rsync fetch incomplete, some objects missing"
+		fi
+		cat "$_git/refs/${3%/*}/.${3##*/}-fetching" > "$_git/refs/$3"
+	fi
+	return $ret
+}
+
+
+fetch_rsync()
+{
 	if [ x"$1" = x"--stdin" ]; then
 		while read c w; do
 			echo "$c" >"$_git/refs/$w"
 		done
 	else
-		fetch_rsync_save "$3"
+		fetch_rsync_verify "$1" "$2" "$3"
 	fi
 }
 
