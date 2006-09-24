@@ -490,13 +490,11 @@ if [ "$review" ]; then
 	if ! cmp -s "$PATCH" "$PATCH2"; then
 		echo "Reverting the original patch..."
 		if ! cg-patch -R < "$PATCH"; then
-			rm "$PATCH" "$LOGMSG"
-			die "unable to revert the original patch; your edited patch is available in $PATCH2"
+			die "unable to revert the original patch; the original patch is available in $PATH, your edited patch is available in $PATCH2, your log message is in $LOGMSG, your working copy is in undefined state now and the world is about to end in ten minutes, have a nice day"
 		fi
 		echo "Applying the edited patch..."
 		if ! cg-patch < "$PATCH2"; then
-			rm "$PATCH" "$PATCH2" "$LOGMSG"
-			die "unable to apply the edited patch"
+			die "unable to apply the edited patch; the original patch is available in $PATCH, your edited patch is available in $PATCH2, your log message is in $LOGMSG, your working copy is in undefined state now and the world is about to end in five minutes, have a nice day"
 		fi
 	fi
 fi
