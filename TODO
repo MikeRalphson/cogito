@@ -16,9 +16,6 @@ Pre-1.0 stuff:
 * Show only first 12 (or so) nibbles of the hashes everywhere
 	Even this might be too much, but more than this is really useless
 	for anyone remotely human. And it's less scary, too.
-	* Note that this requires that cg-object-id will be a frontend
-	  to git-rev-parse so that we can properly autocomplete packed
-	  objects' names.
 
 * "Volatile" branches
 	* Make one-time merges easier by enabling cg-update to take
