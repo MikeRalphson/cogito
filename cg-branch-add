@@ -34,7 +34,7 @@
 # 6. SSH - `git+ssh://host/path` or `host:path` (the latter can change);
 #    note that the path must be absolute in the first case.
 #
-# 7. GIT-Daemon - `git://host/path` - this won't clone tags.
+# 7. git daemon - `git://host/path`
 #
 #
 # The URL can have a fragment part, which identifies a branch inside of
