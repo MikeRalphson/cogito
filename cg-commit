@@ -104,8 +104,7 @@
 # -p, --review:: Show and enable editing of changes being committed
 #	Show changes being committed as a patch appended to the commit message
 #	buffer. Changes made to the patch will be reapplied before completing
-#	the commit. This only makes sense if you are going to edit the commit
-#	message interactively.
+#	the commit. This implies '-e'.
 #
 # -q:: Be very very quiet
 #	Be quiet in case there's "nothing to commit", and silently exit
@@ -254,6 +253,7 @@ while optparse; do
 		copy_commit="$(cg-object-id -c HEAD)" || exit 1
 	elif optparse -p || optparse --review; then
 		review=1
+		forceeditor=1
 	elif optparse -s || optparse --signoff; then
 		[ "$signoff" ] || signoff="$(git-var GIT_AUTHOR_IDENT | sed 's/> .*/>/')"
 	elif optparse --signoff=; then
@@ -398,7 +398,7 @@ fi
 
 if [ "$msgfile" ]; then
 	[ "$written" ] && echo >>"$LOGMSG"
-	cat "$msgfile" >>"$LOGMSG" || exit 1
+	cat "$_git_relpath$msgfile" >>"$LOGMSG" || exit 1
 	written=1
 fi
 
