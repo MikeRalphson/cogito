@@ -359,7 +359,7 @@ if [ "$commitid" ] || [ "$commit" ] || [ "$commitdir" ] || [ "$mbox" ]; then
 			commit_patch "$commitdir/$lastpatch"
 			rm -f "$resume"
 
-		elif [ "$(git-update-index --refresh >/dev/null && git-diff-index -m -r HEAD)" ]; then
+		elif ! git-update-index --refresh >/dev/null || [ "$(git-diff-index -m -r HEAD)" ]; then
 			die "cannot auto-commit patches when the tree has local changes"
 
 		else
@@ -403,10 +403,10 @@ if [ "$commitid" ] || [ "$commit" ] || [ "$commitdir" ] || [ "$mbox" ]; then
 			commit_mail_patch "$lastpatch"
 			rm "$resume/a/$lastpatch"
 
-		elif [ "$(git-update-index --refresh >/dev/null && git-diff-index -m -r HEAD)" ]; then
+		elif ! git-update-index --refresh >/dev/null || [ "$(git-diff-index -m -r HEAD)" ]; then
 			die "cannot auto-commit patches when the tree has local changes"
 
-		else
+		else 
 			echo "Importing mailbox:"
 			mkdir -p "$resume" || exit 1
 			mkdir -p "$resume/a"
