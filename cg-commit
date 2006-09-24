@@ -89,8 +89,7 @@
 # -p, --review:: Show and enable editing of changes being committed
 #	Show changes being commited as a patch appended to the commit message
 #	buffer. Changes made to the patch will be reapplied before completing
-#	the commit. This only makes sense if you are going to edit the commit
-#	message interactively.
+#	the commit. This implies '-e'.
 #
 # -q:: Be very very quiet
 #	Be quiet in case there's "nothing to commit", and silently exit
@@ -229,6 +228,7 @@ while optparse; do
 		quiet=1
 	elif optparse -p || optparse --review; then
 		review=1
+		forceeditor=1
 	elif optparse -s || optparse --signoff; then
 		[ "$signoff" ] || signoff="$(git-var GIT_AUTHOR_IDENT | sed 's/> .*/>/')"
 	elif optparse --signoff=; then
