@@ -42,6 +42,8 @@ Pre-1.0 stuff:
 	* Support for various GIT's "merge strategies"
 	* Somehow show the list of commits getting merged
 	* Vim-merging
+	* cg-resolve: resolving swiss-army knife, see msgid:
+		<20060924171246.GY13132@pasky.or.cz>
 
 * Always do three-way merge
 	Always perform three-way merge instead of applying patches - when
