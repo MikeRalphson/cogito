@@ -1,0 +1,35 @@
+Removing bash from shellscripts
+================================
+Nico Schottelius <nico-linux-git //@\\ schottelius.org>
+v0.1, initial version written on 2006-07-28
+
+
+Why I want to remove bash from cogito scripts and what
+the current status is. This document shall vanish from
+this repository as soon as bash is removed from the headers ;-)
+
+
+Reason
+------
+- bash is not available on any system.
+- Mostly the scripts use standard shell expressions / commands.
+- bash is slower than other shells
+- standard posix conform shell is /bin/sh
+- let the user choose, whether to use bash, ksh, dash, whatever for cogito
+
+Main reason for me: I replaced the link from /bin/sh to /bin/bash some years
+ago with /bin/(d)ash, because it is much faster and uses less memory.
+
+I do not want to loose performance just because using bash.
+
+And there are some systems I use which do not have bash installed.
+
+But I WANT to use bash
+~~~~~~~~~~~~~~~~~~~~~~~
+No problem, simply link /bin/sh to /bin/bash.
+
+
+Status
+------
+cg-Xlib is the biggest problem as far as I can see it. As soon as it
+is includedable in non-bash shells the rest will be no big work.
