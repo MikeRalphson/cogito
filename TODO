@@ -28,8 +28,9 @@ Pre-1.0 stuff:
 	* Requires first multi-origin support (if origin is a dir, fall
 	back to origin/master).
 	* Interface: cg-clone -a
-	* Depends on Git-1.3 which will have refs/remote/ support
-	  Might become tightly coupled with the remotes/ support.
+	* Implement this using refs/remote/ so that the branches won't
+	  get mixed together and we can trace new/disappearing branches
+	  in the parent repository sanely
 
 * Support for remotes/
 	More powerful 'n stuff than branches/, ya know.
