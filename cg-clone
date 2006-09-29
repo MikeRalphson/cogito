@@ -25,16 +25,30 @@
 #	`cg-admin-setuprepo` it and then populate it with `cg-push`
 #	from the other side.)
 #
-# -l::	Symlink the object database when cloning locally
-#	Symlink the object database when cloning locally, instead of
-#	hardlinking all the objects. This is suitable for very fast
-#	cloning of arbitrarily big repositories, but might be a trouble
-#	in multi-user environments, and less solid arrangement in case
-#	you do dangerous things with the database. Also, disappeared
-#	or moved origin repository will obviously render this one unusable
-#	as well. The choice is yours.
-#	Note that you MUST NOT prune repository containing a symlink
-#	or being symlinked to.
+# -l::	"Borrow" the object database when cloning locally
+#	Instead of hardlinking all the objects, set up an "alternate"
+#	record pointing at the source object database; this will cause
+#	any objects not found locally to be looked up remotely, which
+#	effectively eliminates the need to copy/hardlink the objects
+#	around. This is suitable for very fast cloning of arbitrarily
+#	big repositories, but your repository will become largely useless
+#	if the source repository disappears or gets damaged (note that
+#	it is generally BAD IDEA to prune the original repository if any
+#	repository is borrowing objects from it).  The choice is yours.
+#
+# --reference PATH:: "Borrow" the object database from a third-party source
+#	This does the same thing as '-l' but instead of borrowing the
+#	objects from the source repository, it borrows them from yet
+#	another local repository. E.g. if you have Linus' kernel repository
+#	cloned locally and now want to clone akpm's repository, you can
+#	do something like
+#
+#		cg-clone --reference /path/to/linus/repo git://kernel.org/akpm/repo
+#
+#	and it will download and keep only the objects that are really
+#	missing. Same considerations and warnings on the third-party source
+#	as in the case of '-l' apply. Also, you can reference only local
+#	repositories.
 #
 # -s::	Clone into the current directory
 #	Clone in the current directory instead of creating a new one.
@@ -60,7 +74,8 @@
 #
 #	$ cg-clone git://git.kernel.org/pub/scm/git/git.git#next
 
-# Testsuite: Partial (used in many tests but a dedicated testsuite is missing)
+# Testsuite: Checked as part of t-9105-fetch-local but tests for some features
+# are missing.
 
 USAGE="cg-clone [-l] [-b] [-s] LOCATION [DESTDIR]"
 _git_repo_unneeded=1
@@ -69,12 +84,15 @@ _git_repo_unneeded=1
 
 same_dir=
 repoonly=
-symlink=
+alternate=
+reference=()
 while optparse; do
 	if optparse -l; then
-		symlink=1
+		alternate=1
 	elif optparse -b; then
 		repoonly=1
+	elif optparse --reference=; then
+		reference[${#reference[@]}]="$OPTARG"
 	elif optparse -s; then
 		same_dir=1
 	else
@@ -99,7 +117,7 @@ fi
 if ! echo "$location" | grep -q ":" ; then
 	location=$(echo "$location" | sed -e "s#^[^/]#$(pwd)\/&#")
 else
-	[ ! "$symlink" ] || die "specifying -l for non-local clone makes no sense"
+	[ ! "$alternate" ] || die "specifying -l for non-local clone makes no sense"
 	location="$location"
 fi
 
@@ -137,13 +155,15 @@ if [ ! "$repoonly" ]; then
 	cg-init -I || die "init failed"
 fi
 echo $$ >"$_git/info/cg-fetch-earlydie"
-if [ "$symlink" ]; then
-	rmdir "$_git/objects/"*
-	rmdir "$_git/objects"
-	src="${location%#*}"
-	[ -d "$src/.git" ] && src="$src/.git"
-	ln -s "$src/objects" "$_git/objects"
-fi
+
+[ "$alternate" ] && echo "$location/objects" >> "$_git/objects/info/alternates"
+for ref in "${reference[@]}"; do
+	[ -d "$ref" ] || die "referenced repository $ref not found"
+	[ ! -d "$ref/.git/objects" ] || reference="$ref/.git"
+	[ -d "$ref/objects" ] || die "reference $ref not a git repository"
+	echo "$ref/objects" >>"$_git/objects/info/alternates"
+done
+
 cg-branch-add origin "$location"
 
 mkdir -p "$_git/info"

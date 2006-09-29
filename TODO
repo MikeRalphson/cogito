@@ -7,6 +7,7 @@ Cogito-only stuff:
 Pre-1.0 stuff:
 
 * Tutorial
+	(See homepage. It should be included in the source as well, though.)
 
 * Cogito homepage
 	Reference documentation + Jonas' asciidoc'd README + tutorial
@@ -15,9 +16,6 @@ Pre-1.0 stuff:
 * Show only first 12 (or so) nibbles of the hashes everywhere
 	Even this might be too much, but more than this is really useless
 	for anyone remotely human. And it's less scary, too.
-	* Note that this requires that cg-object-id will be a frontend
-	  to git-rev-parse so that we can properly autocomplete packed
-	  objects' names.
 
 * "Volatile" branches
 	* Make one-time merges easier by enabling cg-update to take
@@ -25,13 +23,21 @@ Pre-1.0 stuff:
 
 * Support for mass-cloning all remote refs at once
 	* Requires first multi-origin support (if origin is a dir, fall
-	back to origin/master).
+	  back to origin/master).
 	* Interface: cg-clone -a
-	* Depends on Git-1.3 which will have refs/remote/ support
-	  Might become tightly coupled with the remotes/ support.
+	* Implement this using refs/remote/ so that the branches won't
+	  get mixed together and we can trace new/disappearing branches
+	  in the parent repository sanely
 
 * Support for remotes/
 	More powerful 'n stuff than branches/, ya know.
+	LIKELY NOT - parsing those would be just annoying, we will probably
+	just dump directly to supporting [remote] in .git/config. There will
+	need to be a conversion script though.
+
+* Push new tags automagically
+	(With the same logic as when fetching - push tags which reference
+	objects that are already pushed.)
 
 * Better merging
 	* Handle all possible conflicts
@@ -41,6 +47,8 @@ Pre-1.0 stuff:
 	* Support for various GIT's "merge strategies"
 	* Somehow show the list of commits getting merged
 	* Vim-merging
+	* cg-resolve: resolving swiss-army knife, see msgid:
+		<20060924171246.GY13132@pasky.or.cz>
 
 * Always do three-way merge
 	Always perform three-way merge instead of applying patches - when
@@ -53,15 +61,13 @@ Pre-1.0 stuff:
 	Frontending git-request-fetch, interfacing with email directly...
 
 * cg-patch improvements
-	* Again, an email interface - frontend to applymbox and stuff...
-	* Dealing with copies - will require a complete rewrite or something
+	* Just frontend git-apply
 
 * cg-commit enhancements
 	* Possibly verify the patch being committed against
 	  whitespace errors and stuff; hooks are good for this too,
 	  but I think it's good to have internal support for the
 	  basic stuff. (Get inspired in git-commit.)
-	* git-commit --amend - cg-admin-uncommit + cg-commit -c -e
 	* call git-fmt-merge-msg when committing a merge
 
 * cg-shelf - shelve changes temporarily

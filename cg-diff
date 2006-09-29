@@ -102,9 +102,7 @@ setup_colors()
 
 colorize()
 {
-	if [ "$opt_summary" ]; then
-		git-apply --summary --stat
-	elif [ "$opt_color" ]; then
+	if [ "$opt_color" ]; then
 		sed -e '
 			s/^diff --git.*/'$coldiffhdr'&'$coldefault'/
 			s/^+++.*/'$coldiffhdradd'&'$coldefault'/
@@ -129,7 +127,7 @@ diffcore=
 parent=
 opt_color=
 mergebase=
-opt_summary=
+style=-p
 renames=-M
 
 while optparse; do
@@ -143,7 +141,7 @@ while optparse; do
 	elif optparse -R || optparse --no-renames; then
 		renames=
 	elif optparse -s; then
-		opt_summary=1
+		style="--stat"
 	elif optparse -r=; then
 		if echo "$OPTARG" | fgrep -q '..'; then
 			id2="${OPTARG#*..}"
@@ -226,7 +224,7 @@ fi
 # FIXME: Update ret based on what did we match. And take "$@"
 # to account after all.
 #ret=
-$diffprog -r -p $renames $diffcore "${diffargs[@]}" | colorize | pager
+$diffprog -r $renames $diffcore $style "${diffargs[@]}" | colorize | pager
 #[ "$ret" ] && die "no files matched"
 #exit $ret
 exit 0

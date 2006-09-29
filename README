@@ -477,7 +477,9 @@ Cogito vs. other GIT tools
 You can *MOSTLY* use Cogito in parallel with other GIT frontends (e.g. StGIT),
 as well as the GIT plumbing and core GIT tools - the tools only need to keep
 HEAD in place and follow the standardized `refs/` hierarchy. The only notable
-exception is that you should stick with a single toolkit during a merge.
+exception is that you should stick with a single toolkit during a merge. Also,
+you can't use `cg-update` and `cg-fetch` out of the box on repositories produced
+by `git clone` since it uses incompatible branches representation.
 
 
 

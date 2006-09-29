@@ -25,7 +25,7 @@ Issues of note:
    tools.
 
  - Cogito needs a pre-existing Git installation. It is recommended to
-   use at least version 1.4.1 or newer (provided that Git stays
+   use at least version 1.4.2 or newer (provided that Git stays
    backwards compatible). Watch this spot if you update Cogito to see
    the possible new minimal version requirement. You can get Git at
 

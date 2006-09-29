@@ -104,8 +104,7 @@
 # -p, --review:: Show and enable editing of changes being committed
 #	Show changes being committed as a patch appended to the commit message
 #	buffer. Changes made to the patch will be reapplied before completing
-#	the commit. This only makes sense if you are going to edit the commit
-#	message interactively.
+#	the commit. This implies '-e'.
 #
 # -q:: Be very very quiet
 #	Be quiet in case there's "nothing to commit", and silently exit
@@ -254,6 +253,7 @@ while optparse; do
 		copy_commit="$(cg-object-id -c HEAD)" || exit 1
 	elif optparse -p || optparse --review; then
 		review=1
+		forceeditor=1
 	elif optparse -s || optparse --signoff; then
 		[ "$signoff" ] || signoff="$(git-var GIT_AUTHOR_IDENT | sed 's/> .*/>/')"
 	elif optparse --signoff=; then
@@ -398,20 +398,27 @@ fi
 
 if [ "$msgfile" ]; then
 	[ "$written" ] && echo >>"$LOGMSG"
-	cat "$msgfile" >>"$LOGMSG" || exit 1
+	cat "$_git_relpath$msgfile" >>"$LOGMSG" || exit 1
 	written=1
 fi
 
-# Always have at least one blank line, to ease the editing for
-# the poor people whose text editor has no 'O' command.
-[ "$written" ] || { tty -s && echo >>"$LOGMSG"; }
-
 add_signoff() {
-	if [ "$signoff" ] && ! grep -q -i "signed-off-by: $signoff" $LOGMSG; then
-		grep -q -i sign-off-by $LOGMSG || echo
+	local logmsg="$1"
+	if [ "$signoff" ] && ! grep -q -i "signed-off-by: $signoff" $logmsg; then
+		grep -q -i signed-off-by $logmsg || echo
 		echo "Signed-off-by: $signoff"
-	fi >> $LOGMSG
+	fi >>"$logmsg"
 }
+
+if tty -s; then
+	# Always have at least one blank line, to ease the editing for
+	# the poor people whose text editor has no 'O' command.
+	[ "$written" ] || echo >>"$LOGMSG"
+	# Also, add the signoff line _now_ before spewing out CG: lines.
+	# (In case of non-tty input we do it later after taking the actual
+	# log message from stdin.)
+	add_signoff "$LOGMSG"
+fi
 
 # CG: -----------------------------------------------------------------------
 editor_comment_start commit
@@ -472,7 +479,6 @@ editor_msg_end
 
 cp "$LOGMSG" "$LOGMSG2"
 if tty -s; then
-	add_signoff
 	if [ "$editor" ] && ! editor $commitalways commit c; then
 		rm "$LOGMSG" "$LOGMSG2"
 		[ "$review" ] && rm "$PATCH"
@@ -503,7 +509,7 @@ __END__
 	editor_parse_setif GIT_AUTHOR_DATE Date
 else
 	cat >>"$LOGMSG2"
-	add_signoff
+	add_signoff "$LOGMSG2"
 fi
 
 if [ ! "$review" ]; then
@@ -519,13 +525,13 @@ if [ "$review" ]; then
 	if ! cmp -s "$PATCH" "$PATCH2"; then
 		echo "Reverting the original patch..."
 		if ! cg-patch -R < "$PATCH"; then
-			rm "$PATCH" "$LOGMSG"
-			die "unable to revert the original patch; your edited patch is available in $PATCH2"
+			die "unable to revert the original patch; the original patch is available in $PATCH, your edited patch is available in $PATCH2, your log message is in $LOGMSG, your working copy is in undefined state now and the world is about to end in ten minutes, have a nice day"
 		fi
 		echo "Applying the edited patch..."
 		if ! cg-patch < "$PATCH2"; then
-			rm "$PATCH" "$PATCH2" "$LOGMSG"
-			die "unable to apply the edited patch"
+			# FIXME: Do something better to alleviate this situation.
+			# At least restore the tree to the original state.
+			die "unable to apply the edited patch; the original patch is available in $PATCH, your edited patch is available in $PATCH2, your log message is in $LOGMSG, your working copy is in undefined state now and the world is about to end in five minutes, have a nice day"
 		fi
 	fi
 fi
