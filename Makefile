@@ -1,5 +1,5 @@
 # Should be changed to /usr/local
-prefix=$(HOME)
+prefix="$(HOME)"
 
 bindir=$(prefix)/bin
 libdir=$(prefix)/lib/cogito
