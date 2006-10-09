@@ -110,12 +110,13 @@ if [ "$unixgroup" ]; then
 	chgrp "$unixgroup" "$_git" && chmod 2775 "$_git" || exit 1
 fi
 
-git-init-db $shared
+git-init-db $shared || die "git-init-db failed"
 
 # Enable git-update-server-info after each push.
 if ! chmod a+x "$_git/hooks/post-update"; then
 	echo "Due to a missing post-update hook, HTTP pull will not work properly on this repository." >&2
 	echo "See the NOTES section of cg-admin-setuprepo(1)'s documentation for more details." >&2
 fi
+true
 
 _SCRIPT_EOF_
