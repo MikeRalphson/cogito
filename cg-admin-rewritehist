@@ -54,6 +54,12 @@
 # the id of the commit being rewritten. The author/committer environment
 # variables are set before the first filter is run.
 #
+# A 'map' function is available that takes an "original sha1 id" argument
+# and outputs a "rewritten sha1 id" if the commit has been already
+# rewritten, fails otherwise; the 'map' function can return several
+# ids on separate lines if your commit filter emitted multiple commits
+# (see below).
+#
 # --env-filter COMMAND:: The filter for modifying environment
 #	This is the filter for modifying the environment in which
 #	the commit will be performed. Specifically, you might want
@@ -162,6 +168,14 @@ _git_requires_root=1
 
 . "${COGITO_LIB}"cg-Xlib || exit 1
 
+
+map()
+{
+	[ -r "$workdir/../map/$1" ] || return 1
+	cat "$workdir/../map/$1"
+}
+
+
 tempdir=.git-rewrite
 declare -a unchanged
 filter_env=
@@ -202,6 +216,7 @@ dstbranch="${ARGS[0]}"
 [ ! -e "$tempdir" ] || die "$tempdir already exists, please remove it"
 mkdir -p "$tempdir/t"
 cd "$tempdir/t"
+workdir="$(pwd)"
 
 [ -n "$GIT_DIR" ] || export GIT_DIR=.git
 [[ "$GIT_DIR" == /* ]] || export GIT_DIR="$(pwd)/../../$GIT_DIR"
