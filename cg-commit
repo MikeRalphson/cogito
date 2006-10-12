@@ -139,7 +139,8 @@
 #	called at exactly the same time as the 'commit-post' hook; it
 #	exists for compatibility with `git-commit`(1). The default
 #	'post-commit' hook, when enabled, demonstrates how to send out
-#	a commit notification e-mail.
+#	a commit notification e-mail. (Note that `git-commit`(1) calls
+#	the hook with no arguments.)
 #
 # ENVIRONMENT VARIABLES
 # ---------------------
