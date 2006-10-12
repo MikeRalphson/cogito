@@ -133,6 +133,14 @@
 #	branch=$2
 #	echo "Committed $id in $branch" | mail user@host
 #
+# $GIT_DIR/hooks/post-commit::
+#	If the file exists and is executable it will be executed upon
+#	completion of the commit. It is passed the same arguments and
+#	called at exactly the same time as the 'commit-post' hook; it
+#	exists for compatibility with `git-commit`(1). The default
+#	'post-commit' hook, when enabled, demonstrates how to send out
+#	a commit notification e-mail.
+#
 # ENVIRONMENT VARIABLES
 # ---------------------
 # See the 'Commit author' section above for details about the name/email/date
@@ -610,15 +618,17 @@ if [ "$newhead" ]; then
 		branchname="$(cat "$_git/branch-name")"
 	fi
 	[ -z "$branchname" ] && [ "$_git_head" != "master" ] && branchname="$_git_head"
-	if [ -x "$_git/hooks/commit-post" -a ! "$no_hooks" ]; then
+	if [ -x "$_git/hooks/commit-post" -o -x "$_git/hooks/post-commit" ] && [ ! "$no_hooks" ]; then
 		if [ "$(git-repo-config --bool cogito.hooks.commit.post.allmerged)" = "true" ]; then
 			# We just hope that for the initial commit, the user didn't
 			# manage to install the hook yet.
 			for merged in $(git-rev-list $newhead ^$oldhead | tac); do
-				"$_git/hooks/commit-post" "$merged" "$branchname"
+				[ -x "$_git/hooks/commit-post" ] && "$_git/hooks/commit-post" "$merged" "$branchname"
+				[ -x "$_git/hooks/post-commit" ] && "$_git/hooks/post-commit" "$merged" "$branchname"
 			done
 		else
-			"$_git/hooks/commit-post" "$newhead" "$branchname"
+			[ -x "$_git/hooks/commit-post" ] && "$_git/hooks/commit-post" "$newhead" "$branchname"
+			[ -x "$_git/hooks/post-commit" ] && "$_git/hooks/post-commit" "$newhead" "$branchname"
 		fi
 	fi
 
