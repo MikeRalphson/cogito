@@ -78,8 +78,7 @@ Pre-1.0 stuff:
 	whatever will restore the state of the tree before cg-shelf was
 	called.
 
-* Unify hooks usage with Git - Cogito's are older but Git's are more
-  widespread nowadays
+* Support all the Git hooks
 
 
 Post 1.0:
