@@ -13,6 +13,11 @@
 # in that tree). Consider setting up a standalone repository (see
 # `cg-admin-setuprepo`).
 #
+# You can set up update hooks in the remote repository to bind
+# any action to the push (e.g. sending an email or CIA notification
+# or even verifying if the commits are well-formed before letting
+# them in). See `git-receive-pack`(1) documentation for details.
+#
 # Takes the branch names as arguments, defaulting to "origin".
 #
 # OPTIONS
