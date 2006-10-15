@@ -509,7 +509,7 @@ editor_comment_end()
 		force=1; shift
 	fi
 	actionname="$1"; shift
-	[ "$force" ] || echo "CG: Do not save this file and just quit if you want to abort the $actionname." >>"$LOGMSG"
+	[ "$force" ] || echo "CG: If you want to abort the $actionname, just quit without saving this file." >>"$LOGMSG"
 	echo "CG: -----------------------------------------------------------------------" >>"$LOGMSG"
 }
 
