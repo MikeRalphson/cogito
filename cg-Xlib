@@ -532,12 +532,19 @@ editor_parse_clean()
 	grep -v ^CG: "$LOGMSG2" | git-stripspace >"$LOGMSG"
 }
 
+# editor_shalluse FORCEEDITOR
+# This makes sure the editor is run even if input is not a tty.
+editor_shalluse()
+{
+	[ -n "$1" ] || tty -s
+}
+
 # editor [-f] ACTIONNAME ACTIONKEY
 # W/o -f asks what-to-do if user didn't modify the log message.
 # Returns $?:
 # 0	all went fine, new log message saved in $LOGMSG2
 # 1	aborted by user
-editor()
+_editor()
 {
 	local force= actionname= actionkey=
 	if [ "$1" = "-f" ]; then
@@ -559,6 +566,14 @@ editor()
 			return 0
 		fi
 	done
+}
+editor()
+{
+	if tty -s; then
+		_editor "$@"
+	else
+		_editor "$@" </dev/tty
+	fi
 }
 
 

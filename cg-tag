@@ -117,7 +117,7 @@ fi
 
 # Always have at least one blank line, to ease the editing for
 # the poor people whose text editor has no 'O' command.
-[ "$written" ] || { tty -s && echo >>"$LOGMSG"; }
+[ "$written" ] || { editor_shalluse "$editor" && echo >>"$LOGMSG"; }
 
 editor_comment_start tag
 echo "CG: You can edit the following fields to adjust cg-tag's behaviour." >>"$LOGMSG"
@@ -131,7 +131,7 @@ editor_comment_end tag
 editor_msg_end
 
 cp "$LOGMSG" "$LOGMSG2"
-if tty -s; then
+if editor_shalluse "$editor"; then
 	if [ "$editor" ] && ! editor $commitalways tag t; then
 		rm -rf "$tagdir"
 		echo "Tag message not modified, tagging aborted" >&2
