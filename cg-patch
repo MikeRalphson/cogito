@@ -244,6 +244,7 @@ commit_mail_patch()
 }
 
 
+patchargs=()
 commitid=
 commit=
 mbox=
@@ -276,12 +277,14 @@ while optparse; do
 		strip="$OPTARG"
 		[ -n "$(echo "$strip" | tr -d 0-9)" ] &&
 			die "the -p argument must be numeric"
+		patchargs[${#patchargs[@]}]="-p$strip"
 
 	elif optparse --resolved; then
 		resolved=1
 
 	elif optparse -R; then
 		reverse=1
+		patchargs[${#patchargs[@]}]="-R"
 
 	elif optparse -s || optparse --signoff; then
 		[ "$signoff" ] || signoff="--signoff=$(git-var GIT_AUTHOR_IDENT | sed 's/> .*/>/')"
@@ -294,6 +297,7 @@ while optparse; do
 
 	elif optparse -u; then
 		unidiff=1
+		patchargs[${#patchargs[@]}]="-u"
 
 	else
 		optfail
@@ -331,7 +335,7 @@ if [ "$commitid" ] || [ "$commit" ] || [ "$commitdir" ] || [ "$mbox" ]; then
 		[ -z "$signoff" ] || ciargs[${#ciargs[@]}]="$signoff"
 		[ -z "$edit" ] || ciargs[${#ciargs[@]}]="$edit"
 
-		cg-diff -p -r "$commitid" | cg-patch $reverse || exit 1
+		cg-diff -p -r "$commitid" | cg-patch "${patchargs[@]}" || exit 1
 		cg-commit "${ciargs[@]}" "${afiles[@]}"
 	fi
 
@@ -343,7 +347,7 @@ if [ "$commitid" ] || [ "$commit" ] || [ "$commitdir" ] || [ "$mbox" ]; then
 		file="$(mktemp -t gitpatch.XXXXXX)"
 		cat >"$file"
 		lookover_patch "$file"
-		cg-patch <"$file" || exit 1
+		cg-patch "${patchargs[@]}" <"$file" || exit 1
 		commit_patch "$file"
 		rm "$file"
 	fi
@@ -380,7 +384,7 @@ if [ "$commitid" ] || [ "$commit" ] || [ "$commitdir" ] || [ "$mbox" ]; then
 		while read -r file; do
 			echo "* ${file#$commitdir/}"
 			lookover_patch "$file" " in $file"
-			if ! cg-patch < "$file"; then
+			if ! cg-patch "${patchargs[@]}" < "$file"; then
 				echo "${file#$commitdir/}" > "$resume"
 				echo "cg-patch: conflicts during import" >&2
 				echo "Rerun cg-patch with the -d... --resolved arguments to resume after resolving them." >&2
@@ -434,7 +438,7 @@ if [ "$commitid" ] || [ "$commit" ] || [ "$commitdir" ] || [ "$mbox" ]; then
 			parse_mail_info "$patch"
 			echo
 			echo "* $patch $mi_subj"
-			if ! cg-patch < "$resume/p/$patch"; then
+			if ! cg-patch "${patchargs[@]}" < "$resume/p/$patch"; then
 				echo "cg-patch: conflicts during import" >&2
 				echo "Rerun cg-patch with the -m --resolved arguments to resume after resolving them." >&2
 				echo "Cancel the resume by deleting $resume" >&2
