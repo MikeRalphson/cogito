@@ -115,6 +115,10 @@
 #	Optionally, specify the exact name and email to sign off with by
 #	passing: `--signoff="Author Name <user@example.com>"`.
 #
+# -w FILE:: Do not update ref but save commit id to FILE
+#	Do not update the HEAD ref with the new commit id, but just
+#	save the newly created commit id to FILE. Implies '--no-hooks'.
+#
 # FILES
 # -----
 # $GIT_DIR/commit-template::
@@ -240,6 +244,7 @@ msgs=()
 msgfile=
 quiet=
 no_hooks=
+writeref=
 while optparse; do
 	if optparse --author=; then
 		load_author "$OPTARG" force
@@ -275,6 +280,8 @@ while optparse; do
 		copy_commit="$(cg-object-id -c "$OPTARG")" || exit 1
 	elif optparse --no-hooks; then
 		no_hooks=1
+	elif optparse -w=; then
+		writeref="$OPTARG"
 	else
 		optfail
 	fi
@@ -605,11 +612,20 @@ if [ "$customfiles" ]; then
 	export GIT_INDEX_FILE=
 fi
 
-if [ "$newhead" ]; then
-	git-update-ref HEAD $newhead $oldhead || die "unable to move to the new commit $newhead"
+commit_over()
+{
 	echo "Committed as $newhead"
 	[ "$merging" ] && rm -f "$_git/merging" "$_git/merging-sym" "$_git/merge-base" "$_git/squashing"
 	rm -f "$_git/commit-ignore"
+}
+
+if [ "$newhead" ] && [ "$writeref" ]; then
+	echo "$newhead" >"$writeref" || die "unable to move to the new commit $newhead inside $writeref"
+	commit_over
+
+elif [ "$newhead" ]; then
+	git-update-ref HEAD $newhead $oldhead || die "unable to move to the new commit $newhead"
+	commit_over
 
 	# Trigger the postcommit hook
 	branchname=
