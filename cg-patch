@@ -42,11 +42,15 @@
 # -d DIRNAME:: Apply all patches in directory
 #	Instead of applying a patch from stdin, apply and separately commit
 #	all patches in the specified directory. This can be used to import
-#	a range of patches made by cg-mkpatch -d. Implies -c.
+#	a range of patches made by `cg-mkpatch -d`. Implies '-c'.
+#
+# -e:: Edit commit message before committing
+#	Edit the commit message before performing a commit. Makes sense
+#	only with '-c' or other options implying '-c' (e.g. '-m').
 #
 # -m:: Apply patches in a mailbox
 #	Applies series of patches in a mailbox fed to the command's
-#	standard input. Implies -c.
+#	standard input. Implies '-c'.
 #
 # -pN:: Strip path to the level N
 #	Strip path of filenames in the diff to the level N. This works
@@ -201,7 +205,8 @@ commit_patch()
 {
 	local file="$1"
 	local ciargs=()
-	[ "$signoff" ] && ciargs=("$signoff")
+	[ -z "$signoff" ] || ciargs[${#ciargs[@]}]="$signoff"
+	[ -z "$edit" ] || ciargs[${#ciargs[@]}]="$edit"
 	sed '/^\(---\|-- \|diff --git .*\)$/,$d' < "$file" | cg-commit "${ciargs[@]}"
 }
 
@@ -233,7 +238,8 @@ commit_mail_patch()
 {
 	local patch="$1"
 	local ciargs=()
-	[ "$signoff" ] && ciargs=("$signoff")
+	[ -z "$signoff" ] || ciargs[${#ciargs[@]}]="$signoff"
+	[ -z "$edit" ] || ciargs[${#ciargs[@]}]="$edit"
 	(echo; cat "$resume/m/$patch") | cg-commit -m"$mi_subj" "${ciargs[@]}"
 }
 
@@ -246,6 +252,7 @@ strip=$((1+$(echo "$_git_relpath" | tr -cd / | wc -c)))
 reverse=
 resolved=
 signoff=
+edit=
 unidiff=
 while optparse; do
 	if optparse -C=; then
@@ -281,6 +288,9 @@ while optparse; do
 
 	elif optparse --signoff=; then
 		signoff="--signoff=$OPTARG"
+
+	elif optparse -e; then
+		edit="-e"
 
 	elif optparse -u; then
 		unidiff=1
@@ -318,9 +328,8 @@ if [ "$commitid" ] || [ "$commit" ] || [ "$commitdir" ] || [ "$mbox" ]; then
 			ciargs=(-m "Revert ${commitid:0:12}" -e)
 			reverse=-R
 		fi
-		if [ "$signoff" ]; then
-			ciargs[${#ciargs[@]}]="$signoff"
-		fi
+		[ -z "$signoff" ] || ciargs[${#ciargs[@]}]="$signoff"
+		[ -z "$edit" ] || ciargs[${#ciargs[@]}]="$edit"
 
 		cg-diff -p -r "$commitid" | cg-patch $reverse || exit 1
 		cg-commit "${ciargs[@]}" "${afiles[@]}"
