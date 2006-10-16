@@ -571,6 +571,7 @@ editor()
 # TODO: Later, move this to cg-shelve or something and make it available for general use.
 shelve_changes()
 {
+	# XXX: This should better live in refs/shelves/ or something.
 	if [ -s "$_git/refs/heads/.cg-shelve-$_git_head" ]; then
 		echo "Warning: Your current branch already has some local changes saved. Refusing to overwrite them." >&2
 		echo "This could happen if you switched away using 'cg-switch -l' but did not switch back using cg-switch." >&2
