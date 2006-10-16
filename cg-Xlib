@@ -568,6 +568,7 @@ editor()
 #
 
 # Shelve local uncommitted changes to a temporary commit
+# Sets $curcommit to the shelved commit ID.
 # TODO: Later, move this to cg-shelve or something and make it available for general use.
 shelve_changes()
 {

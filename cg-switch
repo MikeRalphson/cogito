@@ -164,7 +164,7 @@ if [ "$seek" ]; then
 		# Shelve local changes
 		if [ "$savelocal" ]; then
 			echo "Saving local changes..."
-			shelve_changes
+			shelve_changes # Sets $curcommit
 		fi
 
 		echo "Switching to branch $dsthead..."
