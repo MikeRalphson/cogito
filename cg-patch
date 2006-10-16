@@ -61,6 +61,7 @@
 #
 # -R:: Apply in reverse
 #	Apply the patch in reverse (therefore effectively unapply it).
+#	Implies '-e' except when the input is not a tty.
 #
 # --resolved:: Resume -d or -m after conflicts were resolved
 #	In case the patch series application failed in the middle and
@@ -329,7 +330,10 @@ if [ "$commitid" ] || [ "$commit" ] || [ "$commitdir" ] || [ "$mbox" ]; then
 		if ! [ "$reverse" ]; then
 			ciargs=(-c "$commitid")
 		else
-			ciargs=(-m "Revert ${commitid:0:12}" -e)
+			ciargs=(-m "Revert ${commitid:0:12}")
+			if tty -s; then
+				ciargs[${#ciargs[@]}]="-e"
+			fi
 			reverse=-R
 		fi
 		[ -z "$signoff" ] || ciargs[${#ciargs[@]}]="$signoff"
