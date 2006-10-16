@@ -691,6 +691,22 @@ conservative_merge_base()
 	_cg_baselist=("${baselist[@]}")
 }
 
+# Check whether there are any local (uncommitted) changes in the tree
+local_changes()
+{
+	! git-update-index --refresh >/dev/null ||
+		[ -n "$(git-diff-index -m -r HEAD)" ]
+}
+
+# Usage: local_changes_in FILELIST
+# Check whether there are any local (uncommitted) changes in the files
+# listed in file FILELIST
+local_changes_in()
+{
+	local files="$1"
+	[ -n "$(git-diff-index -m -r HEAD | cut -f 2- | join "$files" -)" ]
+}
+
 # update_index will refresh the index and list the local modifications
 # Note that this isn't usually safe, since some of the modifications may
 # be recorded in the index file - modulo adds and removes also cg-restore
