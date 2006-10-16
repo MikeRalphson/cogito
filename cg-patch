@@ -42,11 +42,15 @@
 # -d DIRNAME:: Apply all patches in directory
 #	Instead of applying a patch from stdin, apply and separately commit
 #	all patches in the specified directory. This can be used to import
-#	a range of patches made by cg-mkpatch -d. Implies -c.
+#	a range of patches made by `cg-mkpatch -d`. Implies '-c'.
+#
+# -e:: Edit commit message before committing
+#	Edit the commit message before performing a commit. Makes sense
+#	only with '-c' or other options implying '-c' (e.g. '-m').
 #
 # -m:: Apply patches in a mailbox
 #	Applies series of patches in a mailbox fed to the command's
-#	standard input. Implies -c.
+#	standard input. Implies '-c'.
 #
 # -pN:: Strip path to the level N
 #	Strip path of filenames in the diff to the level N. This works
@@ -57,6 +61,7 @@
 #
 # -R:: Apply in reverse
 #	Apply the patch in reverse (therefore effectively unapply it).
+#	Implies '-e' except when the input is not a tty.
 #
 # --resolved:: Resume -d or -m after conflicts were resolved
 #	In case the patch series application failed in the middle and
@@ -201,7 +206,9 @@ commit_patch()
 {
 	local file="$1"
 	local ciargs=()
-	[ "$signoff" ] && ciargs=("$signoff")
+	[ -z "$signoff" ] || ciargs[${#ciargs[@]}]="$signoff"
+	[ -z "$edit" ] || ciargs[${#ciargs[@]}]="$edit"
+	# FIXME: -e is broken, it won't pre-fill the message
 	sed '/^\(---\|-- \|diff --git .*\)$/,$d' < "$file" | cg-commit "${ciargs[@]}"
 }
 
@@ -233,11 +240,13 @@ commit_mail_patch()
 {
 	local patch="$1"
 	local ciargs=()
-	[ "$signoff" ] && ciargs=("$signoff")
-	(echo; cat "$resume/m/$patch") | cg-commit -m"$mi_subj" "${ciargs[@]}"
+	[ -z "$signoff" ] || ciargs[${#ciargs[@]}]="$signoff"
+	[ -z "$edit" ] || ciargs[${#ciargs[@]}]="$edit"
+	cg-commit -m"$mi_subj" -M"$resume/m/$patch" "${ciargs[@]}"
 }
 
 
+patchargs=()
 commitid=
 commit=
 mbox=
@@ -246,6 +255,7 @@ strip=$((1+$(echo "$_git_relpath" | tr -cd / | wc -c)))
 reverse=
 resolved=
 signoff=
+edit=
 unidiff=
 while optparse; do
 	if optparse -C=; then
@@ -269,12 +279,14 @@ while optparse; do
 		strip="$OPTARG"
 		[ -n "$(echo "$strip" | tr -d 0-9)" ] &&
 			die "the -p argument must be numeric"
+		patchargs[${#patchargs[@]}]="-p$strip"
 
 	elif optparse --resolved; then
 		resolved=1
 
 	elif optparse -R; then
 		reverse=1
+		patchargs[${#patchargs[@]}]="-R"
 
 	elif optparse -s || optparse --signoff; then
 		[ "$signoff" ] || signoff="--signoff=$(git-var GIT_AUTHOR_IDENT | sed 's/> .*/>/')"
@@ -282,8 +294,12 @@ while optparse; do
 	elif optparse --signoff=; then
 		signoff="--signoff=$OPTARG"
 
+	elif optparse -e; then
+		edit="-e"
+
 	elif optparse -u; then
 		unidiff=1
+		patchargs[${#patchargs[@]}]="-u"
 
 	else
 		optfail
@@ -315,14 +331,16 @@ if [ "$commitid" ] || [ "$commit" ] || [ "$commitdir" ] || [ "$mbox" ]; then
 		if ! [ "$reverse" ]; then
 			ciargs=(-c "$commitid")
 		else
-			ciargs=(-m "Revert ${commitid:0:12}" -e)
+			ciargs=(-m "Revert ${commitid:0:12}")
+			if tty -s; then
+				ciargs[${#ciargs[@]}]="-e"
+			fi
 			reverse=-R
 		fi
-		if [ "$signoff" ]; then
-			ciargs[${#ciargs[@]}]="$signoff"
-		fi
+		[ -z "$signoff" ] || ciargs[${#ciargs[@]}]="$signoff"
+		[ -z "$edit" ] || ciargs[${#ciargs[@]}]="$edit"
 
-		cg-diff -p -r "$commitid" | cg-patch $reverse || exit 1
+		cg-diff -p -r "$commitid" | cg-patch "${patchargs[@]}" || exit 1
 		cg-commit "${ciargs[@]}" "${afiles[@]}"
 	fi
 
@@ -334,7 +352,7 @@ if [ "$commitid" ] || [ "$commit" ] || [ "$commitdir" ] || [ "$mbox" ]; then
 		file="$(mktemp -t gitpatch.XXXXXX)"
 		cat >"$file"
 		lookover_patch "$file"
-		cg-patch <"$file" || exit 1
+		cg-patch "${patchargs[@]}" <"$file" || exit 1
 		commit_patch "$file"
 		rm "$file"
 	fi
@@ -371,7 +389,7 @@ if [ "$commitid" ] || [ "$commit" ] || [ "$commitdir" ] || [ "$mbox" ]; then
 		while read -r file; do
 			echo "* ${file#$commitdir/}"
 			lookover_patch "$file" " in $file"
-			if ! cg-patch < "$file"; then
+			if ! cg-patch "${patchargs[@]}" < "$file"; then
 				echo "${file#$commitdir/}" > "$resume"
 				echo "cg-patch: conflicts during import" >&2
 				echo "Rerun cg-patch with the -d... --resolved arguments to resume after resolving them." >&2
@@ -425,7 +443,7 @@ if [ "$commitid" ] || [ "$commit" ] || [ "$commitdir" ] || [ "$mbox" ]; then
 			parse_mail_info "$patch"
 			echo
 			echo "* $patch $mi_subj"
-			if ! cg-patch < "$resume/p/$patch"; then
+			if ! cg-patch "${patchargs[@]}" < "$resume/p/$patch"; then
 				echo "cg-patch: conflicts during import" >&2
 				echo "Rerun cg-patch with the -m --resolved arguments to resume after resolving them." >&2
 				echo "Cancel the resume by deleting $resume" >&2
