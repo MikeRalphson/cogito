@@ -176,7 +176,7 @@ if [ "$seek" ]; then
 			# TODO: Later, move this to cg-unshelve or something and make it available for general use.
 			# XXX: We will not properly restore merges, but that
 			# doesn't matter now since we won't let you cg-switch
-			# away from them in the first place. There are two
+			# away from them in the first place. There are three
 			# tricky issues:
 			# * preserving the parents - not too tricky if you
 			#   error out when the base branch changed in the
