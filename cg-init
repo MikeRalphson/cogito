@@ -73,7 +73,7 @@ git-init-db
 git-read-tree # Seed the dircache
 if ! [ "$no_initial_commit" ]; then
 	[ "$(ls)" ] && list_untracked_files exclude nosquashdirs "${excludes[@]}" | xargs -0 cg-add ${infoonly}
-	cg-commit -C "${commitargs[@]}" ${infoonly}
+	cg-commit -C "${commitargs[@]}" ${infoonly} || die "Initial commit aborted"
 fi
 
 if [ "$(cg-status -nwx)" ]; then
