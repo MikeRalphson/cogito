@@ -567,6 +567,16 @@ editor()
 # Misc. common Git operations wrappers                             {{{1
 #
 
+# Usage: internal_commit IDFILE CTITLE CDESC
+# Perform a commit for internal purposes. The commit id will be saved
+# only to IDFILE (HEAD will not get updated), the commit title will
+# be CTITLE (prefixed by [@internal@]) and CDESC should contain some
+# description of what's the commit about - what created it, etc.
+internal_commit()
+{
+	cg-commit -w "$1" -m"[@internal@] $2" -m"$3" >/dev/null
+}
+
 # Shelve local uncommitted changes to a temporary commit
 # Sets $curcommit to the shelved commit ID.
 # TODO: Later, move this to cg-shelve or something and make it available for general use.
@@ -584,7 +594,7 @@ shelve_changes()
 		mv "$_git/refs/heads/.cg-shelve-$_git_head" "$_git/refs/heads/$dirty"
 		echo "I have created branch $dirty and made the old local changes available as its last commit." >&2
 	fi
-	cg-commit -w "$_git/refs/heads/.cg-shelve-$_git_head" -m"[@internal@] cg-switch local changes shelve" -m"This commit for internal Cogito use stores uncommitted local changes at the time of cg-switch -l away from $_git_head." >/dev/null
+	internal_commit "$_git/refs/heads/.cg-shelve-$_git_head" "cg-switch local changes shelve" "This commit for internal Cogito use stores uncommitted local changes at the time of cg-switch -l away from $_git_head."
 	curcommit="$(cg-object-id -c "refs/heads/.cg-shelve-$_git_head")"
 }
 
