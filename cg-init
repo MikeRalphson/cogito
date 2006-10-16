@@ -62,7 +62,7 @@ while optparse; do
 		optfail
 	fi
 done
-[ "${commitargs[*]}" ] || commitargs=(-m "Initial commit" -E)
+[ "${commitargs[*]}" ] || commitargs=(-m "Initial commit")
 
 [ -e "$_git" ] && die "$_git already exists"
 
