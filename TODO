@@ -50,10 +50,6 @@ Pre-1.0 stuff:
 	* cg-resolve: resolving swiss-army knife, see msgid:
 		<20060924171246.GY13132@pasky.or.cz>
 
-* Always do three-way merge
-	Always perform three-way merge instead of applying patches - when
-	fast-forwarding trees, uncommitting, etc.
-
 * cg-mkpatch overhaul
 	cg-mkpatch was overlooked for too long, while it could do a huge
 	number of cool things (after some cleanups, and probably factoring
