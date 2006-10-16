@@ -419,7 +419,7 @@ add_signoff() {
 	fi >>"$logmsg"
 }
 
-if tty -s; then
+if editor_shalluse "$forceeditor"; then
 	# Always have at least one blank line, to ease the editing for
 	# the poor people whose text editor has no 'O' command.
 	[ "$written" ] || echo >>"$LOGMSG"
@@ -487,7 +487,7 @@ fi
 editor_msg_end
 
 cp "$LOGMSG" "$LOGMSG2"
-if tty -s; then
+if editor_shalluse "$forceeditor"; then
 	if [ "$editor" ] && ! editor $commitalways commit c; then
 		rm "$LOGMSG" "$LOGMSG2"
 		[ "$review" ] && rm "$PATCH"
