@@ -208,6 +208,7 @@ commit_patch()
 	local ciargs=()
 	[ -z "$signoff" ] || ciargs[${#ciargs[@]}]="$signoff"
 	[ -z "$edit" ] || ciargs[${#ciargs[@]}]="$edit"
+	# FIXME: -e is broken, it won't pre-fill the message
 	sed '/^\(---\|-- \|diff --git .*\)$/,$d' < "$file" | cg-commit "${ciargs[@]}"
 }
 
@@ -241,7 +242,7 @@ commit_mail_patch()
 	local ciargs=()
 	[ -z "$signoff" ] || ciargs[${#ciargs[@]}]="$signoff"
 	[ -z "$edit" ] || ciargs[${#ciargs[@]}]="$edit"
-	(echo; cat "$resume/m/$patch") | cg-commit -m"$mi_subj" "${ciargs[@]}"
+	cg-commit -m"$mi_subj" -M"$resume/m/$patch" "${ciargs[@]}"
 }
 
 
