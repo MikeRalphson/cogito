@@ -171,28 +171,8 @@ if [ "$seek" ]; then
 		# tree_timewarp returns false on local modifications
 		tree_timewarp --no-head-update "along" "please rollback" "$curcommit" "$dstcommit" || :
 
-		# Unshelve local changes
-		if [ -s "$_git/refs/heads/.cg-shelve-$dsthead" ]; then
-			# TODO: Later, move this to cg-unshelve or something and make it available for general use.
-			# XXX: We will not properly restore merges, but that
-			# doesn't matter now since we won't let you cg-switch
-			# away from them in the first place. There are three
-			# tricky issues:
-			# * preserving the parents - not too tricky if you
-			#   error out when the base branch changed in the
-			#   meantime
-			# * preserving the set of files with local changes
-			#   ignored by the merge. We will need to do some
-			#   extra bookkeeping here, possibly in the cmomit
-			#   message
-			# * when we get proper conflicts handling, we need
-			#   to remember to override it when shelving and
-			#   restore the list of commits after unshelving.
-			echo "Restoring local changes..."
-			shelvecommit="$(cg-object-id -c "refs/heads/.cg-shelve-$dsthead")"
-			tree_timewarp --no-head-update "along" "please roll" "$dstcommit" "$shelvecommit" || :
-			rm "$_git/refs/heads/.cg-shelve-$dsthead"
-		fi
+		export _git_head="$dsthead"
+		unshelve_changes # Eats $dstcommit
 	else
 		echo "Switching to branch $dsthead..."
 	fi

@@ -598,6 +598,36 @@ shelve_changes()
 	curcommit="$(cg-object-id -c "refs/heads/.cg-shelve-$_git_head")"
 }
 
+# Unshelve local changes for $_git_head
+# (You must cache the current $_git_head commit to $dstcommit.)
+unshelve_changes()
+{
+	if ! [ -s "$_git/refs/heads/.cg-shelve-$_git_head" ]; then
+		return
+	fi
+
+	# TODO: Later, move this to cg-unshelve or something and make it available for general use.
+	# XXX: We will not properly restore merges, but that
+	# doesn't matter now since we won't let you cg-switch
+	# away from them in the first place. There are three
+	# tricky issues:
+	# * preserving the parents - not too tricky if you
+	#   error out when the base branch changed in the
+	#   meantime
+	# * preserving the set of files with local changes
+	#   ignored by the merge. We will need to do some
+	#   extra bookkeeping here, possibly in the cmomit
+	#   message
+	# * when we get proper conflicts handling, we need
+	#   to remember to override it when shelving and
+	#   restore the list of commits after unshelving.
+
+	echo "Restoring local changes..."
+	local shelvecommit="$(cg-object-id -c "refs/heads/.cg-shelve-$_git_head")"
+	tree_timewarp --no-head-update "along" "please roll" "$dstcommit" "$shelvecommit" || :
+	rm "$_git/refs/heads/.cg-shelve-$_git_head"
+}
+
 # Usage: tree_timewarp [--no-head-update] DIRECTION_STR ROLLBACK_BOOL BASE BRANCH
 # Reset the current tree from version BASE to version BRANCH, properly updating
 # the working copy (if ROLLBACK_BOOL) and trying to keep local changes.
