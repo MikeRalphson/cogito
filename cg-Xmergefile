@@ -2,6 +2,7 @@
 #
 # Merge two revisions of a file
 # Copyright (c) Linus Torvalds, 2005
+# Copyright (c) Petr Baudis, 2005, 2006
 #
 # This is the git per-file merge script, called with
 #
@@ -21,6 +22,11 @@
 #
 # FIXME: What if a symlink replaces a regular file? What if symlinks conflict?
 # What about directory-regularfile conflicts?
+#
+# ENVIRONMENT
+# -----------
+# _CG_MERGING_LOCAL::
+#	If set, we are merging local changes, not "real" three trees.
 
 . "${COGITO_LIB}"cg-Xlib || exit 1
 
@@ -57,12 +63,16 @@ pmxmc()
 # Set ways[] to the symbolic names of the particular ways
 load_unescaped_sym_ways()
 {
-	ways=("merge base" "$_git_head" "$(cat "$_git/merging-sym")")
+	if [ "$_CG_MERGING_LOCAL" ]; then
+		ways=("original" "local" "target")
+	else
+		ways=("merge base" "$_git_head" "$(cat "$_git/merging-sym")")
+	fi
 }
 load_sym_ways()
 {
 	load_unescaped_sym_ways
-	ways[0]="merge/base"
+	ways[0]="${ways[0]// /\/}"
 	ways=("${ways[@]//\//~}")
 }
 
