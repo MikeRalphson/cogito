@@ -7,11 +7,8 @@ Cogito-only stuff:
 Pre-1.0 stuff:
 
 * Tutorial
-	(See homepage. It should be included in the source as well, though.)
-
-* Cogito homepage
-	Reference documentation + Jonas' asciidoc'd README + tutorial
-		= http://git.or.cz/cogito/
+	(We have crash courses, one for version control newbies is missing -
+	it should be included in the source as well, though.)
 
 * Show only first 12 (or so) nibbles of the hashes everywhere
 	Even this might be too much, but more than this is really useless
