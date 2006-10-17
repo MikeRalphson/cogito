@@ -674,7 +674,11 @@ tree_timewarp()
 			localmods=1
 		fi
 
-		git-read-tree -u -m "$base" "$branch" $localcommit ||
+		# We automatically do two-way or three-way merge as needed.
+		# If we do two-way merge, the index is always in sync with
+		# the working copy and HEAD; the git-read-tree logic to deal
+		# with dirty index is too crippled for us.
+		git-read-tree -u -m "$base" $localcommit "$branch" ||
 			die "$branch: bad commit (or something; base is $base, localcommit <$localcommit>)"
 		git-merge-index -o -q "${COGITO_LIB}"cg-Xmergefile -a || :
 		[ "$no_head_update" ] || git-update-ref HEAD "$branch" || :
