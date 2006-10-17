@@ -72,7 +72,7 @@ load_unescaped_sym_ways()
 load_sym_ways()
 {
 	load_unescaped_sym_ways
-	ways[0]="${ways[0]// /\/}"
+	ways[0]="${ways[0]// //}"
 	ways=("${ways[@]//\//~}")
 }
 
