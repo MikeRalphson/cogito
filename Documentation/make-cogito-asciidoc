@@ -168,5 +168,5 @@ Copyright (C) Petr Baudis, 2005.
 SEE ALSO
 --------
 Cogito is based on gitlink:git[7]. A quick Cogito reference sheet is in
-gitlink:cg-ref[7].
+gitlink:cg-ref[7]. Cogito homepage is at http://git.or.cz/cogito[].
 __END__

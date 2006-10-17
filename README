@@ -10,10 +10,12 @@ We shall first describe some quick ways to get started using Cogito, then go
 over each available command one by one.
 
 Please note that this document (meant to serve as a kind of Cogito tutorial
-in the future) is awfully incomplete so far, and the documentation is of a
-rather poor quality (since Petr Baudis wrote it). At least the reference
-documentation should be of good quality (see the 'Getting help' section
-at the bottom of this file).
+in the future) is quite sketchy so far; a much better starting tutorial might
+be one of the Git Crash Courses featured at the Git homepage
+(http://git.or.cz/). The reference documentation should be of pretty good
+quality (see the 'Getting help' section at the bottom of this file).
+
+You can find the Cogito homepage at http://git.or.cz/cogito/[].
 
 
 Cogito is quite easy and intuitive to use. If you want to dive right in,
