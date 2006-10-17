@@ -22,6 +22,21 @@
 #
 # OPTIONS
 # -------
+# -f:: Force push even if the fast-forward check fails (DANGEROUS)
+#	Force the push even if the fast-forward check fails, that is,
+#	the commit you are pushing is not a descendant of the current
+#	commit in the remote branch. DO NOT USE THIS FLAG - that error
+#	usually means that someone else pushed out some commits in
+#	the meantime and you should do `cg-update` in order to get
+#	them merged locally, then try to push again.
+#
+#	You might want to use this flag only if you had to rewrite your
+#	history (e.g. using `cg-admin-uncommit` or 'cg-commit --amend')
+#	and now you want to push the new history out. However if you
+#	published your original commits in the meantime, you are now
+#	setting up quite some trouble for others who track your repository
+#	since Git will get confused. Use with care.
+#
 # -r BRANCH:: Push the given branch
 #	Pushes the given branch instead of the current one. Note that
 #	we lie a little here and you can actually specify a particular
@@ -35,7 +50,7 @@
 
 # Testsuite: TODO
 
-USAGE="cg-push [-r LOCAL_BRANCH] [-t TAG]... [REMOTE_BRANCH]..."
+USAGE="cg-push [-f] [-r LOCAL_BRANCH] [-t TAG]... [REMOTE_BRANCH]..."
 _git_wc_unneeded=1
 
 . "${COGITO_LIB}"cg-Xlib || exit 1
@@ -45,18 +60,21 @@ send_pack_update()
 {
 	name="$1"; shift
 	commit="$(cg-object-id -c "$locbranch")"; old="$(cat "$_git/refs/heads/$name" 2>/dev/null)"
-	git-send-pack "$@" && git-update-ref refs/heads/"$name" "$commit" $old
+	git-send-pack $force "$@" && git-update-ref refs/heads/"$name" "$commit" $old
 }
 
 
 locbranch="$_git_head"
 tags=()
+force=
 while optparse; do
 	if optparse -r=; then
 		locbranch="$OPTARG"
 		[ "$(cg-object-id -c "$locbranch")" ] || exit 1
 	elif optparse -t=; then
 		tags[${#tags[@]}]="refs/tags/$OPTARG"
+	elif optparse -f; then
+		force="--force"
 	else
 		optfail
 	fi
@@ -75,7 +93,7 @@ push_branch()
 	sprembranch=":refs/heads/$rembranch"
 
 	if [ "${uri#http://}" != "$uri" -o "${uri#https://}" != "$uri" ]; then
-		git-http-push "$uri/" "$locbranch$sprembranch" "${tags[@]}"
+		git-http-push $force "$uri/" "$locbranch$sprembranch" "${tags[@]}"
 
 	elif [ "${uri#git+ssh://}" != "$uri" ]; then
 		send_pack_update "$name" "$(echo "$uri" | sed 's#^git+ssh://\([^/]*\)\(/.*\)$#\1:\2#')" "$locbranch$sprembranch" "${tags[@]}"
@@ -98,9 +116,13 @@ push_branch()
 				exit 0
 			fi
 			if [ "$remid" != "$(git-merge-base "$remid" "$commit")" ]; then
-				echo "ERROR: Remote '$rembranch' has some changes you don't have in your '$locbranch'" >&2
-				echo "Try to cg-update from it first, then push." >&2
-				exit 1
+				if [ -z "$force" ]; then
+					echo "ERROR: Remote '$rembranch' has some changes you don't have in your '$locbranch'" >&2
+					echo "Try to cg-update from it first, then push." >&2
+					exit 1
+				else
+					echo "Warning: Forcing $rembranch update even though remote $remid is not ancestor of local $commit." >&2
+				fi
 			fi
 
 			echo "Pushing $commit to $remgit#$rembranch" >&2
