@@ -177,4 +177,3 @@ fi
 echo "Tagged $id as $name"
 
 rm -rf "$tagdir"
-Thu Sep 14 14:10:51 CEST 2006
