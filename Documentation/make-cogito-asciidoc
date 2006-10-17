@@ -29,7 +29,7 @@ print_command_info()
 		;;
 	cg-*)
 		usage=$(sed -n '/^USAGE=/,0s/.*"cg-[^ ]*\(.*\)"/\1/p' < $command)
-		echo "gitlink:$cmdname[] $usage::"
+		echo "$(man 1 "$cmdname") $usage::"
 		;;
 	esac
 	echo "	$caption"
