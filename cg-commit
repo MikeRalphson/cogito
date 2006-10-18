@@ -106,6 +106,28 @@
 #	buffer. Changes made to the patch will be reapplied before completing
 #	the commit. This implies '-e'.
 #
+# --push[=BRANCH]:: Immediately push the commit to a remote branch
+#	Push the new commit to a remote branch (defaults to 'origin') right
+#	after commiting it. Furthermore, the push is done in a transactional
+#	way so that in case it fails, nothing gets committed locally either.
+#	Note that you need to update your branch against the remote branch
+#	before committing so that the remote branch contains no commits
+#	not contained in your branch.
+#
+#	The preferred workflow is that you first commit your changes, then
+#	do an update from the remote branch, then push to the remote branch.
+#	This has the advantage that the act of merging is explicitly recorded,
+#	reducing the danger of inadverent loss or damage of some changes during
+#	the merge and making the history reflect the reality more accurately.
+#	Also, it makes for nicer gitk diagrams. ;-) In this workflow, this
+#	'--push' switch does not come into play. Use it only if you know
+#	exactly why you do not want to do the above.
+#
+#	This flag is not supported when committing merges since the recovery
+#	in case of push failure would be too complicated. Please resort to
+#	the commit-before-update workflow in that case - you are already doing
+#	a merge anyway.
+#
 # -q:: Be very very quiet
 #	Be quiet in case there's "nothing to commit", and silently exit
 #	returning success. In a sense, this is the opposite to '-f'.
@@ -245,6 +267,8 @@ msgfile=
 quiet=
 no_hooks=
 writeref=
+push=
+push_branch=
 while optparse; do
 	if optparse --author=; then
 		load_author "$OPTARG" force
@@ -282,6 +306,11 @@ while optparse; do
 		no_hooks=1
 	elif optparse -w=; then
 		writeref="$OPTARG"
+	elif optparse --push=; then
+		push=1
+		push_branch="$OPTARG"
+	elif optparse --push; then
+		push=1
 	else
 		optfail
 	fi
@@ -319,6 +348,8 @@ if [ "$amend" ]; then
 	# Recommit even with no changes to the content; meta might change
 	force=1
 fi
+
+[ "$push" ] && [ "$merging" ] && die "no support for auto-pushing merge commits"
 
 if [ "$ARGS" -o "$_git_relpath" ]; then
 	[ "$ignorecache" ] && die "-C and listing files to commit does not make sense"
@@ -615,9 +646,23 @@ fi
 commit_over()
 {
 	echo "Committed as $newhead"
+	commit_cleanup
+}
+
+commit_cleanup()
+{
 	[ "$merging" ] && rm -f "$_git/merging" "$_git/merging-sym" "$_git/merge-base" "$_git/squashing"
 	rm -f "$_git/commit-ignore"
 }
+
+if [ "$push" ]; then
+	pushargs=()
+	[ "$push_branch" ] && pushargs[${#pushargs[@]}]="$push_branch"
+	if ! cg-push -r "$newhead" "${pushargs[@]}"; then
+		commit_cleanup
+		die "push failed, you probably need to cg-update and try again (use cg-commit -c $newhead ... to reuse the log message)"
+	fi
+fi
 
 if [ "$newhead" ] && [ "$writeref" ]; then
 	echo "$newhead" >"$writeref" || die "unable to move to the new commit $newhead inside $writeref"
