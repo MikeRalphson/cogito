@@ -417,7 +417,7 @@ But what if you still do not want multiple repositories? The key here is to
 change your "current head" from 'master' to some new head, and then to be
 able to switch back and forth:
 
-	$ cg-switch aspyk
+	$ cg-switch -c aspyk
 
 to create a new 'aspyk' head (based on your current commit) and switch
 to it, and

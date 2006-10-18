@@ -16,6 +16,12 @@
 #
 # OPTIONS
 # -------
+# -c:: Create new branch based on HEAD
+#	Create a new branch of given name, based on your current commit
+#	(HEAD). This option is equivalent to specifying '-r HEAD'. If
+#	'-f' is passed and the branch already exists, it is forcibly
+#	repointed to point to the current commit.
+#
 # -f:: Enable overwriting of existing branches
 #	Force the branch's head pointer to be updated to whatever you
 #	passed as the '-r' argument even if the branch already exists.
@@ -50,10 +56,8 @@
 #
 # -r COMMIT_ID:: Branch off the given COMMIT_ID, create branch if non-existing
 #	Point the branch at the given commit. Required when creating
-#	a new branch (use "HEAD" if you want to just base the new
-#	head on the current commit). When switching to an existing
-#	branch, the branch pointer is modified if '-r' is passed
-#	and confirmed by '-f'.
+#	a new branch. When switching to an existing branch, the branch
+#	pointer is modified if '-r' is passed and confirmed by '-f'.
 #
 # EXAMPLE USAGE
 # -------------
@@ -66,7 +70,7 @@
 # commit) but don't switch your working copy to it (so that your
 # current branch stays the same as before), do:
 #
-# 	$ cg-switch -n -r HEAD v1.x
+# 	$ cg-switch -n -c v1.x
 #
 # If you want to go back to the 'master' branch, just do:
 #
@@ -80,7 +84,7 @@
 
 # Testsuite: TODO
 
-USAGE="cg-switch [-f] [-l | -n | -p] [-r COMMIT_ID] BRANCH"
+USAGE="cg-switch [-f] [-l | -n | -p] [-c | -r COMMIT_ID] BRANCH"
 _git_requires_root=1
 _git_wc_unneeded=1
 
@@ -112,6 +116,8 @@ while optparse; do
 		roll=
 	elif optparse -r=; then
 		dstcommit="$(cg-object-id -c "$OPTARG")" || exit 1
+	elif optparse -c; then
+		dstcommit="$(cg-object-id -c)" || exit 1
 	else
 		optfail
 	fi
