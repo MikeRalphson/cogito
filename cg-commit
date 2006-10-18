@@ -306,11 +306,11 @@ while optparse; do
 		no_hooks=1
 	elif optparse -w=; then
 		writeref="$OPTARG"
+	elif optparse --push; then
+		push=1
 	elif optparse --push=; then
 		push=1
 		push_branch="$OPTARG"
-	elif optparse --push; then
-		push=1
 	else
 		optfail
 	fi
