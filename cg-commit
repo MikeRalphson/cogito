@@ -9,7 +9,7 @@
 #
 # Note that you can undo a commit by the `cg-admin-uncommit` command,
 # but that is possible only under special circumstances. See the CAVEATS
-# section of its documentation.
+# section in its documentation.
 #
 # Commit author
 # ~~~~~~~~~~~~~
@@ -696,5 +696,6 @@ elif [ "$newhead" ]; then
 
 	exit 0
 else
+	commit_cleanup
 	die "error during commit (oldhead $oldhead, treeid $treeid)"
 fi
