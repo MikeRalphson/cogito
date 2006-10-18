@@ -838,6 +838,7 @@ print_help()
 	done
 	columns_print "  " - "-h, --help" "$maxlen" "  Print usage summary" -
 	columns_print "  " - "--long-help" "$maxlen" "  Print user manual" -
+	columns_print "  " - "--version" "$maxlen" "  Print version" -
 	exit
 }
 
@@ -847,6 +848,8 @@ for option in "$@"; do
 		print_help short "${_cg_cmd##cg-}"
 	elif [ x"$option" = x"--long-help" ]; then
 		print_help long "${_cg_cmd##cg-}"
+	elif [ x"$option" = x"--version" ]; then
+		exec "$(dirname "$0")"/cg-version
 	fi
 done
 

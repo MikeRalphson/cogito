@@ -136,6 +136,9 @@ done
 cat <<__END__
 
 $HELP_OPTIONS
+
+--version::
+	Print Cogito version.
 --
 
 $MISC
