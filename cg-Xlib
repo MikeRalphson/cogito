@@ -185,7 +185,7 @@ pager()
 	if [ "${CG_LESS+set}" = "set" ]; then
 		cgless="$CG_LESS"
 	else
-		cgless="R $LESS $_local_CG_LESS"
+		cgless="FR $LESS $_local_CG_LESS"
 	fi
 	local line
 	# Invoke pager only if there's any actual output

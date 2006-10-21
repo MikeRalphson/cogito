@@ -69,7 +69,7 @@
 # CG_LESS::
 #	This is what the $LESS environment variable value will be set
 #	to before invoking $PAGER. It defaults to $LESS concatenated
-#	with the `R` flag to allow displaying of colorized output.
+#	with the `FR` flags to allow displaying of colorized output.
 #
 # CONFIGURATION VARIABLES
 # -----------------------
