@@ -507,7 +507,7 @@ done
 # [ "$pickaxe_less" -a "$show_diffs" ] && _local_CG_LESS="$pickaxe_less"
 colorify_detect "$colors" log && setup_colors
 if [ "$show_diffs" -a "${ARGS[*]}" ]; then
-	warn "-d is buggy and cannot follow renames yet; implying --no-renames"
+	#warn "-d is buggy and cannot follow renames yet; implying --no-renames"
 	neverfollowrenames=1
 fi
 
