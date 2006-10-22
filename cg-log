@@ -58,10 +58,8 @@
 #	Display merge commits in the log.
 #
 # -R, --no-renames:: Do not follow renames
-#	By default, `cg-log FILE` will automatically follow file history
-#	across renames. That can add slight extra performance penalty and
-#	sometimes you just do not want `cg-log` to adjust its list of
-#	watched filenames. In that case, use this switch.
+#	This flag is currently no-op. `cg-log` will not follow file history
+#	across renames.
 #
 # -s::	Short output format of the log entries
 #	Show the log entries one per line. The entry summary contains
@@ -567,15 +565,18 @@ fi
 # A curious pipeline:
 rev_extract()
 {
-	if [ "$followrenames" ]; then
-		[ "${ARGS[*]}" ] || die "internal error: no files to follow renames on"
-		# We ignore $fmt but that's no biggie, shortlog
-		# will actually work anyway.
-		"${COGITO_LIB}"cg-Xfollowrenames $revls -- \
-			--root --pickaxe-all $diffmerges $diffpatches \
-				$always $diffcore "${pickaxe[@]}" -- \
-			$revlsstart -- "${ARGS[@]}"
-	elif [ "$difffilter" ]; then
+	# XXX: Following renames is broken and turns out to be massive
+	# performance hog.
+#	if [ "$followrenames" ]; then
+#		[ "${ARGS[*]}" ] || die "internal error: no files to follow renames on"
+#		# We ignore $fmt but that's no biggie, shortlog
+#		# will actually work anyway.
+#		"${COGITO_LIB}"cg-Xfollowrenames $revls -- \
+#			--root --pickaxe-all $diffmerges $diffpatches \
+#				$always $diffcore "${pickaxe[@]}" -- \
+#			$revlsstart -- "${ARGS[@]}"
+#	el
+	if [ "$difffilter" ]; then
 		git-rev-list $revls $revlsstart $sep "${ARGS[@]}" | \
 		git-diff-tree -r --stdin --root --pickaxe-all \
 			$diffmerges $diffpatches $always $diffcore $fmt \
