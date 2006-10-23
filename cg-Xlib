@@ -709,8 +709,8 @@ conservative_merge_base()
 # Check whether there are any local (uncommitted) changes in the tree
 local_changes()
 {
-	! git-update-index --refresh >/dev/null ||
-		[ -n "$(git-diff-index -m -r HEAD)" ]
+	git-update-index --refresh >/dev/null
+	[ -n "$(git-diff-index -m -r HEAD)" ]
 }
 
 # Usage: local_changes_in FILELIST
