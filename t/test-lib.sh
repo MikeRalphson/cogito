@@ -64,9 +64,9 @@ done
 
 if test "$verbose" = "t"
 then
-	exec 4>&2 3>&1
+	exec 4>&2 3>&1 </dev/null
 else
-	exec 4>/dev/null 3>/dev/null
+	exec 4>/dev/null 3>/dev/null </dev/null
 	# At least in SLES10, cmp is broken and will always return true
 	# if stdout is redirected to /dev/null and -s is not passed.
 	cmp () { `which cmp` -s "$@"; }
