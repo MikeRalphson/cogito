@@ -318,7 +318,7 @@ while optparse; do
 	fi
 done
 
-if [ -s "$_git/blocked" ]; then
+if [ -s "$_git/blocked" ] && [ ! "$writeref" ]; then
 	if [ "$force" ]; then
 		warn "committing to a blocked repository. Assuming you know what are you doing."
 	else
