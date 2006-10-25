@@ -114,6 +114,7 @@ case "${id0:-.}${id1:-.}${id2:-.}" in
 		git-checkout-index -u -f -- "$file" &&
 		mv "$file" "$filev~${ways[$num]}" ||
 		error "Cannot create '$filev~${ways[$num]}'"
+	git-update-index --force-remove "$file"
 	;;
 #
 # Added in one.
