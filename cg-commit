@@ -326,7 +326,9 @@ if [ -s "$_git/blocked" ]; then
 	fi
 fi
 
-[ "$ignorecache" ] || cg-object-id HEAD >/dev/null 2>&1 || die "no previous commit; use -C for the initial commit"
+if [ ! "$ignorecache" ]; then
+	cg-object-id HEAD >/dev/null 2>&1 || ignorecache=1
+fi
 
 editor=
 [ "$forceeditor" ] && editor=1
@@ -354,7 +356,7 @@ fi
 [ "$push" ] && [ "$merging" ] && die "no support for auto-pushing merge commits"
 
 if [ "$ARGS" -o "$_git_relpath" ]; then
-	[ "$ignorecache" ] && die "-C and listing files to commit does not make sense"
+	[ "$ignorecache" ] && die "you cannot list files for the initial commit"
 	[ -s "$_git/merging" ] && die "cannot commit individual files when merging"
 
 	filter="$tmpdir/filter"

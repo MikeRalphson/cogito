@@ -26,7 +26,7 @@
 #
 # -I:: No initial commit
 #	Do not perform the initial commit. You can perform the initial commit
-#	manually later, but you will need to pass cg-commit the -C parameter.
+#	manually later, just call `cg-commit`.
 #
 # -m MESSAGE:: Specify initial commit message
 #	Specify the commit message for the initial commit. See `cg-commit`
