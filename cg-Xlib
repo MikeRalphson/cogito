@@ -665,7 +665,7 @@ tree_timewarp()
 
 	if [ -n "$rollback" ]; then
 		local localcommit=""
-		if local_changes; then
+		if local_changes "$base"; then
 			local cidfile="$(mktemp -t gituncommit.XXXXXX)"
 			internal_commit "$cidfile" "timewarp local changes shelve" -m"This commit for internal Cogito use stores uncommitted local changes at the time of tree timewarp (any operation replaying/forwarding your tree, e.g. admin-uncommit or update), for an immediate use of three-way merging them back."
 			localcommit="$(cat "$cidfile")"
@@ -709,8 +709,10 @@ conservative_merge_base()
 # Check whether there are any local (uncommitted) changes in the tree
 local_changes()
 {
-	git-update-index --refresh >/dev/null
-	[ -n "$(git-diff-index -m -r HEAD)" ]
+	local base="$1"
+	[ "$base" ] || base=HEAD
+	git-update-index --refresh >/dev/null || :
+	[ -n "$(git-diff-index -m -r "$base")" ]
 }
 
 # Usage: local_changes_in FILELIST
