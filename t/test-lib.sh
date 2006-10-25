@@ -64,9 +64,9 @@ done
 
 if test "$verbose" = "t"
 then
-	exec 4>&2 3>&1
+	exec 4>&2 3>&1 </dev/null
 else
-	exec 4>/dev/null 3>/dev/null
+	exec 4>/dev/null 3>/dev/null </dev/null
 fi
 
 test_failure=0
