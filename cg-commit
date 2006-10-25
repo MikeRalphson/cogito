@@ -62,12 +62,6 @@
 #	when replaying commits from one lineage or repository to another - see
 #	also `cg-patch -C` (if you want to apply the diffs as well).
 #
-# -C:: Ignore cache
-#	Make `cg-commit` ignore the cache and just commit the thing as-is.
-#	Note, this is used internally by 'Cogito' when merging, and it is
-#	also useful when you are performing the initial commit manually. This
-#	option does not make sense when files are given on the command line.
-#
 # -m MESSAGE:: Specify commit message
 #	Specify the commit message, which is used instead of starting
 #	up an editor (if the input is not `stdin`, the input is appended
@@ -136,10 +130,6 @@
 #	Add Signed-off-by line at the end of the commit message.
 #	Optionally, specify the exact name and email to sign off with by
 #	passing: `--signoff="Author Name <user@example.com>"`.
-#
-# -w FILE:: Do not update ref but save commit id to FILE
-#	Do not update the HEAD ref with the new commit id, but just
-#	save the newly created commit id to FILE. Implies '--no-hooks'.
 #
 # FILES
 # -----
@@ -214,6 +204,18 @@
 #	If set to "true" and you are committing a merge, the post-hook will
 #	be called for all the merged commits in sequence (the earliest first).
 #	Otherwise, the hook will be called only for the merge commit.
+
+# Developer's documentation:
+#
+# -C:: Ignore cache
+#	Make `cg-commit` ignore the cache and just commit the thing as-is.
+#	Note, this is used internally by 'Cogito' when merging, and it is
+#	also useful when you are performing the initial commit. This
+#	option does not make sense when files are given on the command line.
+#
+# -w FILE:: Do not update ref but save commit id to FILE
+#	Do not update the HEAD ref with the new commit id, but just
+#	save the newly created commit id to FILE. Implies '--no-hooks'.
 
 # Testsuite: Partial (used in many tests but a dedicated testsuite is missing)
 
