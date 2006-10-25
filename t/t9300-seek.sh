@@ -36,9 +36,8 @@ test_expect_success 'current commit should be commit1' \
 
 test_expect_success 'newfile should be gone' \
 	"[ ! -e newdir/newfile ]"
-# Post-GIT-0.99.8
-#test_expect_success 'newdir should be gone' \
-#	"[ ! -e newdir ]"
+test_expect_success 'newdir should be gone' \
+	"[ ! -e newdir ]"
 test_expect_success 'different should be v1' \
 	"[ $(cat different) = v1 ]"
 test_expect_success 'identical should be identical' \
@@ -77,11 +76,10 @@ test_expect_success 'seeking to the first commit' \
 test_expect_success 'current commit should be commit1' \
 	"[ $(cg-object-id -c) = $commit1 ]"
 
-# This doesn't work properly now since newdir _is_ gone and patch won't recreate it.
-#test_expect_success 'newdir should not be gone' \
-#	"[ -d newdir ]"
-#test_expect_success 'newfile should have rejects' \
-#	"[ -e newdir/newfile ] && [ -e newdir/newfile.rej ]"
+test_expect_success 'newdir should not be gone' \
+	"[ -d newdir ]"
+test_expect_success 'newfile should be almost-gone' \
+	"[ ! -e newdir/newfile ] && [ -e newdir/newfile~original ] && [ -e newdir/newfile~local ]"
 test_expect_success 'different should be v1' \
 	"[ $(cat different) = v1 ]"
 test_expect_success 'identical should be nonconflicting' \
