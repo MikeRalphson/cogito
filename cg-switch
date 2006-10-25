@@ -180,7 +180,19 @@ if [ "$seek" ]; then
 		export _git_head="$dsthead"
 		unshelve_changes # Eats $dstcommit
 	else
+		# Shelve local changes
+		if [ "$savelocal" ]; then
+			echo "Saving local changes..."
+			shelve_changes # Sets $curcommit
+		fi
+
 		echo "Switching to branch $dsthead..."
+		if [ "x$curcommit" != "x$dstcommit" ]; then
+			tree_timewarp --no-head-update "along" "please rollback" "$curcommit" "$dstcommit" || :
+		fi
+
+		export _git_head="$dsthead"
+		unshelve_changes # Eats $dstcommit
 	fi
 	git-symbolic-ref HEAD "refs/heads/$dsthead"
 fi
