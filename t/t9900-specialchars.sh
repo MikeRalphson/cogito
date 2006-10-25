@@ -9,7 +9,7 @@ Filenames with embedded spaces, quotes, non-ascii letter, you name it."
 . ./test-lib.sh
 
 rm -rf .git
-cg-init -m .
+test_expect_success 'initialize repository' 'cg-init -m .'
 
 touch "a space"
 test_expect_success 'add file with space' 'cg-add "a space"'
@@ -34,7 +34,7 @@ test_expect_success 'commit file with quote' "cg-commit -m . accént"
 ## same without a file arg to cg-commit
 
 rm -rf * .git
-cg-init -m .
+test_expect_success 'initialize repository' 'cg-init -m .'
 
 touch "a space"
 test_expect_success 'add file with space' 'cg-add "a space"'
