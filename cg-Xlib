@@ -666,11 +666,11 @@ tree_timewarp()
 	if [ -n "$rollback" ]; then
 		local localcommit=""
 		if local_changes "$base"; then
+			warn "uncommitted local changes, trying to bring them $dirstr"
 			local cidfile="$(mktemp -t gituncommit.XXXXXX)"
 			internal_commit "$cidfile" "timewarp local changes shelve" -m"This commit for internal Cogito use stores uncommitted local changes at the time of tree timewarp (any operation replaying/forwarding your tree, e.g. admin-uncommit or update), for an immediate use of three-way merging them back."
 			localcommit="$(cat "$cidfile")"
 			rm "$cidfile"
-			warn "uncommitted local changes, trying to bring them $dirstr"
 			localmods=1
 		fi
 
