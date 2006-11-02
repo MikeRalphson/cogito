@@ -679,7 +679,7 @@ tree_timewarp()
 		# the working copy and HEAD; the git-read-tree logic to deal
 		# with dirty index is too crippled for us.
 		git-read-tree -u -m "$base" $localcommit "$branch" ||
-			die "$branch: bad commit (or something; base is $base, localcommit <$localcommit>)"
+			die "cannot bring working tree to $branch, aborting"
 		_CG_MERGING_LOCAL=1 git-merge-index -o -q "${COGITO_LIB}"cg-Xmergefile -a || :
 	fi
 	[ "$no_head_update" ] || git-update-ref HEAD "$branch" || :
