@@ -681,10 +681,8 @@ tree_timewarp()
 		git-read-tree -u -m "$base" $localcommit "$branch" ||
 			die "$branch: bad commit (or something; base is $base, localcommit <$localcommit>)"
 		_CG_MERGING_LOCAL=1 git-merge-index -o -q "${COGITO_LIB}"cg-Xmergefile -a || :
-		[ "$no_head_update" ] || git-update-ref HEAD "$branch" || :
-	else
-		[ "$no_head_update" ] || git-update-ref HEAD "$branch" || :
 	fi
+	[ "$no_head_update" ] || git-update-ref HEAD "$branch" || :
 	return $localmods
 }
 
