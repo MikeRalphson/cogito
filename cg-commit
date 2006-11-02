@@ -43,7 +43,8 @@
 #	current working copy as the new commit "contents" and otherwise
 #	have similar effects as -c HEAD; the new commit will _replace_ the
 #	current HEAD - which means that you should read `cg-admin-uncommit`
-#	caveats section. If you want to adjust
+#	caveats section. If you want to adjust the log message or authorship
+#	information, use it with combination with the '-e' option.
 #
 # --author AUTHOR_STRING:: Set the author information according to the argument
 #	Set the commit author information according to the argument instead
