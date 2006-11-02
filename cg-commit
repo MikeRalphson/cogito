@@ -25,7 +25,7 @@
 #
 # * 'GIT_AUTHOR_*' (see ENVIRONMENT)
 #
-# * Configuration file: you can insert this to '.git/config':
+# * Configuration file: you can insert this to '.git/config' or '~/.gitconfig':
 #
 #	[user]
 #		name = "Your Name"
