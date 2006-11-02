@@ -387,6 +387,7 @@ print_commit_log()
 	' -e "$colorify_diffsed" | { while IFS=$'\n' read -r line; do
 		trap exit SIGPIPE
 		if [ "$state" = "showcommit" -a "$show_diffs" -a -n "$line" ]; then
+			[ x"${line#% @}" = x"$line" ] || line="    ${line#% @}" # undo sed damage
 			[ "$state" = silent ] || msg="$msg$line
 "
 			continue
