@@ -148,12 +148,11 @@
 #	Date, useful when applying patches submitted over e-mail.
 #
 # GIT_COMMITTER_NAME::
-#	Committer's name. It defaults to the same as GIT_AUTHOR_NAME.
+#	Committer's name.
 #
 # GIT_COMMITTER_EMAIL::
-#	Committer's e-mail address. It defaults to the same as
-#	GIT_AUTHOR_EMAIL. The recommended policy is not to change this,
-#	though - it may not be necessarily a valid e-mail address, but
+#	Committer's e-mail address. The recommended policy is not to change
+#	this, though - it may not be necessarily a valid e-mail address, but
 #	its purpose is more to identify the actual user and machine
 #	where the commit was done. However, it is obviously ultimately
 #	a policy decision of a particular project to determine whether
