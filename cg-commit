@@ -25,7 +25,7 @@
 #
 # * 'GIT_AUTHOR_*' (see ENVIRONMENT)
 #
-# * Configuration file: you can insert this to '.git/config':
+# * Configuration file: you can insert this to '.git/config' or '~/.gitconfig':
 #
 #	[user]
 #		name = "Your Name"
@@ -43,7 +43,8 @@
 #	current working copy as the new commit "contents" and otherwise
 #	have similar effects as -c HEAD; the new commit will _replace_ the
 #	current HEAD - which means that you should read `cg-admin-uncommit`
-#	caveats section. If you want to adjust
+#	caveats section. If you want to adjust the log message or authorship
+#	information, use it with combination with the '-e' option.
 #
 # --author AUTHOR_STRING:: Set the author information according to the argument
 #	Set the commit author information according to the argument instead
@@ -173,12 +174,11 @@
 #	Date, useful when applying patches submitted over e-mail.
 #
 # GIT_COMMITTER_NAME::
-#	Committer's name. It defaults to the same as GIT_AUTHOR_NAME.
+#	Committer's name.
 #
 # GIT_COMMITTER_EMAIL::
-#	Committer's e-mail address. It defaults to the same as
-#	GIT_AUTHOR_EMAIL. The recommended policy is not to change this,
-#	though - it may not be necessarily a valid e-mail address, but
+#	Committer's e-mail address. The recommended policy is not to change
+#	this, though - it may not be necessarily a valid e-mail address, but
 #	its purpose is more to identify the actual user and machine
 #	where the commit was done. However, it is obviously ultimately
 #	a policy decision of a particular project to determine whether
