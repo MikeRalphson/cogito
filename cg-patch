@@ -205,7 +205,7 @@ lookover_patch()
 commit_patch()
 {
 	local file="$1"
-	local ciargs=()
+	local -a ciargs=()
 	[ -z "$signoff" ] || ciargs[${#ciargs[@]}]="$signoff"
 	[ -z "$edit" ] || ciargs[${#ciargs[@]}]="$edit"
 	# FIXME: -e is broken, it won't pre-fill the message
@@ -239,7 +239,7 @@ parse_mail_info()
 commit_mail_patch()
 {
 	local patch="$1"
-	local ciargs=()
+	local -a ciargs=()
 	[ -z "$signoff" ] || ciargs[${#ciargs[@]}]="$signoff"
 	[ -z "$edit" ] || ciargs[${#ciargs[@]}]="$edit"
 	cg-commit -m"$mi_subj" -M"$resume/m/$patch" "${ciargs[@]}"
