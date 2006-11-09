@@ -340,7 +340,12 @@ if [ "$commitid" ] || [ "$commit" ] || [ "$commitdir" ] || [ "$mbox" ]; then
 		[ -z "$signoff" ] || ciargs[${#ciargs[@]}]="$signoff"
 		[ -z "$edit" ] || ciargs[${#ciargs[@]}]="$edit"
 
-		cg-diff -p -r "$commitid" | cg-patch "${patchargs[@]}" || exit 1
+		if ! cg-diff -p -r "$commitid" | cg-patch "${patchargs[@]}"; then
+			echo "Cherry-picking $commitid failed, please fix up the rejects." >&2
+			echo "You can use cg-commit -c $commitid to commit afterwards (that will" >&2
+			echo "reuse the commit message and authorship); throw in -e to add own comments." >&2
+			exit 1
+		fi
 		cg-commit "${ciargs[@]}" "${afiles[@]}"
 	fi
 
