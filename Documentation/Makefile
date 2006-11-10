@@ -13,15 +13,15 @@ DOC_MAN7=$(patsubst %.txt,%,$(MAN7_TXT))
 
 DOC_PDF=$(patsubst %.txt,%.pdf,$(MAN1_TXT) $(MAN7_TXT)) cg-ref.pdf introduction.pdf
 
-prefix="$(HOME)"
-mandir=$(prefix)/man
+prefix?="$(HOME)"
+mandir?=$(prefix)/man
 man1=$(mandir)/man1
 man7=$(mandir)/man7
 docdir=$(prefix)/share/doc/$(PACKAGE)
 txtdir=$(docdir)/txt
 htmldir=$(docdir)/html
 
-INSTALL=install
+INSTALL?=install
 
 #
 # Please note that there is a minor bug in asciidoc.

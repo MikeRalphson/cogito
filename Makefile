@@ -7,6 +7,7 @@ sharedir=$(prefix)/share/cogito
 
 INSTALL?=install
 
+export prefix bindir libdir sharedir INSTALL
 
 
 ### --- END CONFIGURATION SECTION ---
