@@ -17,6 +17,9 @@
 #
 # OPTIONS
 # -------
+# -b:: Get branch name
+#	Get name of the current branch.
+#
 # -c:: Get commit ID
 #	Get ID of commit matching the object ID (error out if it is not
 #	a commit). This is the default if you do not pass any parameter
@@ -46,7 +49,7 @@
 
 # Testsuite: Partial (used in many tests but a dedicated testsuite is missing)
 
-USAGE="cg-object-id [-c | -d | -n | -p | -t] [OBJECT_ID]"
+USAGE="cg-object-id [-b | -c | -d | -n | -p | -t] [OBJECT_ID]"
 _git_wc_unneeded=1
 
 . "${COGITO_LIB}"cg-Xlib
@@ -107,7 +110,11 @@ show_parent=
 show_tree=
 normalize_only=
 while optparse; do
-	if optparse -c; then
+	if optparse -b; then
+		# one-shot
+		echo "$_git_head"
+		exit
+	elif optparse -c; then
 		show_commit=1
 	elif optparse -d; then
 		describe=1
