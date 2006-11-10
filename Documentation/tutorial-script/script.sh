@@ -1,4 +1,4 @@
-#!/bin/bash
+#!/usr/bin/env bash
 #
 # This script serves both as a tutorial explaining how to use Cogito and
 # as a test for Cogito.  It's uses as part of the testsuite.
