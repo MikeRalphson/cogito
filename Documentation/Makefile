@@ -13,8 +13,7 @@ DOC_MAN7=$(patsubst %.txt,%,$(MAN7_TXT))
 
 DOC_PDF=$(patsubst %.txt,%.pdf,$(MAN1_TXT) $(MAN7_TXT)) cg-ref.pdf introduction.pdf
 
-prefix=$(HOME)
-bin=$(prefix)/bin
+prefix="$(HOME)"
 mandir=$(prefix)/man
 man1=$(mandir)/man1
 man7=$(mandir)/man7
