@@ -81,7 +81,7 @@
 #	to exclude.
 #
 # $TREE_DIR/.gitignore::
-#	.gitignore in the working tree will be used as an exclude file.
+#	'.gitignore' in the working tree will be used as an exclude file.
 #	The excludes are applied from the project root approaching the
 #	current subdirectory.
 #
