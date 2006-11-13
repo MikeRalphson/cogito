@@ -307,17 +307,26 @@ columns_print()
 	local fmt= cols=
 	cols=()
 	while [ $# -gt 0 ]; do
-		cols[${#cols[@]}]="$1"; shift
+		local col="$1"; shift
 		local width="$1"; shift
 		local tab=
+		local trim=
 		if [ x"${width:0:1}" = x"t" ]; then
 			tab=1; width="${width:1}"
+		fi
+		if [ x"${width:0:1}" = x"m" ]; then
+			trim=1; width="${width:1}"
 		fi
 		if [ x"$width" = x"-" ]; then
 			fmt="$fmt%s"
 		else
 			fmt="$fmt%-${width}s"
+			if [ -n "$trim" ] && [ ${#col} -gt "$width" ]; then
+				width=$((width - 3))
+				col="${col:0:$width}..."
+			fi
 		fi
+		cols[${#cols[@]}]="$col"
 		[ -z "$tab" ] || fmt="$fmt\t";
 	done
 	printf "$fmt\n" "${cols[@]}"
