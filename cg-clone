@@ -156,7 +156,9 @@ if [ ! "$repoonly" ]; then
 fi
 echo $$ >"$_git/info/cg-fetch-earlydie"
 
-[ "$alternate" ] && echo "$location/objects" >> "$_git/objects/info/alternates"
+repoloc="$location"
+[ ! -d "$repoloc/.git/objects" ] || repoloc="$repoloc/.git"
+[ "$alternate" ] && echo "$repoloc/objects" >> "$_git/objects/info/alternates"
 for ref in "${reference[@]}"; do
 	[ -d "$ref" ] || die "referenced repository $ref not found"
 	[ ! -d "$ref/.git/objects" ] || reference="$ref/.git"
