@@ -4,7 +4,7 @@
 # Copyright (c) Pavel Roskin, 2005
 #
 # Cleans file and directories that are not under version control.
-# When run without arguments, files ignored by cg-status and directories
+# When run without arguments, files ignored by `cg-status` and directories
 # are not removed.
 #
 # OPTIONS
@@ -22,7 +22,7 @@
 #	Quiet - don't report what's being cleaned.
 #
 # -x:: Clean files ignored by cg-status
-#	Also clean files ignored by cg-status, such as object files.
+#	Also clean files ignored by `cg-status`, such as object files.
 
 # Testsuite: Complete (t9400-clean)
 
