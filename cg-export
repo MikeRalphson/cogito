@@ -51,7 +51,7 @@ case "$dest" in
 		base="${base%.tgz}"
 		base="${base%.zip}"
 		ext="${dest#$base}"
-		base="${base##*/}"
+		base="${base##*/}/"
 		case "$ext" in
 		.tar.gz|.tgz)
 			git-archive --format=tar --prefix="$base" "$id" | gzip -c9 >"$dest"
