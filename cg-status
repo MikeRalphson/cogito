@@ -92,9 +92,11 @@
 #
 # For example, consider the following:
 #
+# -------------------------------------------------------------------
 #	.*
 #	!.gitignore
 #	!/.list
+# -------------------------------------------------------------------
 #
 # This will ignore all hidden files except '.gitignore' in all
 # directories and the '.list' file in project root.
@@ -112,7 +114,7 @@
 #	The list of ignore patterns; the list itself is not version-tracked
 #	and is local to this particular clone.
 #
-# .gitignore::
+# '.gitignore'::
 #	'.gitignore' in the working tree will be also scanned for ignore
 #	patterns. Contrary to the exclude file, it is usually version-tracked.
 #
