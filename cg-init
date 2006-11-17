@@ -5,8 +5,8 @@
 #
 # `cg-init` called in a non-empty directory will automatically add its contents
 # in the initial commit. (Please note that certain default ignore rules are
-# applied during this operation. If any files were not added due to this,
-# cg-init will advise you what to do.)
+# applied during this operation - see `cg-status` for detailed description.
+# If any files were not added due to this, cg-init will advise you what to do.)
 #
 # This command is intended for creating repositories for work on new projects.
 # If you want to clone an existing project, see `cg-clone`. If you want to
@@ -20,7 +20,8 @@
 # -e EXCLUDEPATTERN:: Ignore files matching EXCLUDEPATTERN
 #	Ignore files matching this pattern when importing files for the
 #	initial commit. Note that if you are importing any .gitignore
-#	files, they will be considered as well. If you want to make
+#	files, they will be considered as well (see `cg-status` for
+#	details on the files ignoring concept). If you want to make
 #	an even more custom choice of files to be imported, use the -I
 #	parameter and add and perform the initial commit manually.
 #
