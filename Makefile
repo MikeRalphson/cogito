@@ -14,7 +14,7 @@ export prefix bindir libdir sharedir INSTALL
 
 
 
-SCRIPT=	cg-object-id cg-add cg-admin-lsobj cg-admin-uncommit \
+SCRIPT=	cg-object-id cg-add cg-admin-uncommit \
 	cg-branch-add cg-branch-ls cg-reset cg-clone cg-commit cg-diff \
 	cg-export cg-help cg-init cg-log cg-merge cg-mkpatch cg-patch \
 	cg-fetch cg-restore cg-rm cg-seek cg-status cg-tag cg-tag-ls cg-update \
