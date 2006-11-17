@@ -7,8 +7,9 @@
 # defaulting to 'HEAD'.
 #
 # The destination can be either a `.tar`, `.tar.gz`, `.tar.bz2` or `.tgz`
-# for generating a tarball. Other destination specifiers are assumed
-# to be directory names, and the tree is exported to the given directory.
+# for generating a tarball, or `.zip` for generating a zip file. Destination
+# specifiers not ending by any of these extensions are assumed to be
+# directory names, and the tree is exported to the given directory.
 #
 # OPTIONS
 # -------
@@ -45,9 +46,10 @@ dest="${ARGS[0]}"
 [ -e "$dest" ] && die "$dest already exists."
 
 case "$dest" in
-	*.tar|*.tar.gz|*.tar.bz2|*.tgz)
+	*.tar|*.tar.gz|*.tar.bz2|*.tgz|*.zip)
 		base="${dest%.tar*}"
 		base="${base%.tgz}"
+		base="${base%.zip}"
 		ext="${dest#$base}"
 		base="${base##*/}"
 		case "$ext" in
@@ -59,6 +61,9 @@ case "$dest" in
 			;;
 		.tar)
 			git-archive --format=tar --prefix="$base" "$id" >"$dest"
+			;;
+		.zip)
+			git-archive --format=zip --prefix="$base" "$id" >"$dest"
 			;;
 		esac
 		;;
