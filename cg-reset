@@ -65,7 +65,10 @@ if [ -s "$_git/head-name" ]; then
 	fi
 fi
 
-rm -f "$_git/blocked" "$_git/merging" "$_git/merging-sym" "$_git/merge-base" "$_git/commit-ignore" "$_git/squashing"
+rm -f "$_git/blocked"
+rm -rf "$_git/cg-merge-state"
+# Moved to cg-merge-state as of 2006-11-17
+rm -f "$_git/merging" "$_git/merging-sym" "$_git/merge-base" "$_git/commit-ignore" "$_git/squashing"
 git-read-tree --reset HEAD
 
 git-checkout-index -u -f -a

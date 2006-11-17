@@ -173,8 +173,12 @@ fi
 
 
 [ -s "$_git/blocked" ] && die "merge blocked: $(cat "$_git/blocked")"
+# Deprecated as of 2006-11-17
+[ -s "$_git/merging" ] && die "old-style merge state detected, panicking; you upgraded cogito in the middle of a merge! redo the merge, cg-reset will bring you back to the starting line"
 
-if [ -s "$_git/merging" ] && grep -q "$branch" "$_git/merging"; then
+statedir="$_git/cg-merge-state"
+
+if [ -s "$statedir/merging" ] && grep -q "$branch" "$statedir/merging"; then
 	echo "Branch already merged in the working tree." >&2
 	exit 0
 fi
@@ -184,7 +188,7 @@ if [ "$base" = "$branch" ]; then
 	exit 0
 fi
 
-if { [ "$head" = "$base" ] || [ "$head" = "$_cg_orig_head" ]; } && [ ! "$squash" ] && [ ! -s "$_git/merging" ]; then
+if { [ "$head" = "$base" ] || [ "$head" = "$_cg_orig_head" ]; } && [ ! "$squash" ] && [ ! -s "$statedir/merging" ]; then
 	# No need to do explicit merge with a merge commit; just bring
 	# the HEAD forward.
 
@@ -204,7 +208,7 @@ fi
 git-update-index --refresh >/dev/null
 
 if [ ! "$squash" ]; then
-	[ -s "$_git/squashing" ] && die "cannot combine squashing and non-squashing merges"
+	[ -s "$statedir/squashing" ] && die "cannot combine squashing and non-squashing merges"
 
 	echo "Merging $base -> $branch" >&2
 	echo -e "\tto $head ..." >&2
@@ -221,21 +225,24 @@ fi
 
 prehook "$mergetype"
 
-git-diff-index --name-only "$(cg-object-id -t $head)" >>"$_git/commit-ignore"
+mkdir -p "$statedir"
+
+git-diff-index --name-only "$(cg-object-id -t $head)" >>"$statedir/commit-ignore"
 # Don't keep around useless empty files
-[ -s "$_git/commit-ignore" ] || rm "$_git/commit-ignore"
+[ -s "$statedir/commit-ignore" ] || rm "$statedir/commit-ignore"
 
 if ! git-read-tree -u -m "$(cg-object-id -t "$base")" "$(cg-object-id -t "$head")" "$(cg-object-id -t "$branch")"; then
 	echo "cg-merge: git-read-tree failed (merge likely blocked by local changes)" >&2
 	posthook "$mergetype" localchanges
-	rm -f "$_git/commit-ignore"
+	rm -f "$statedir/commit-ignore"
+	rmdir "$statedir"
 	exit 1
 fi
 
-echo "$base" >>"$_git/merge-base"
-echo "$branch" >>"$_git/merging"
-echo "$branchname" >>"$_git/merging-sym"
-[ "$squash" ] && echo "$branch" >>"$_git/squashing"
+echo "$base" >>"$statedir/merge-base"
+echo "$branch" >>"$statedir/merging"
+echo "$branchname" >>"$statedir/merging-sym"
+[ "$squash" ] && echo "$branch" >>"$statedir/squashing"
 
 if ! git-merge-index -o -q "${COGITO_LIB}"cg-Xmergefile -a || [ "$careful" ]; then
 	echo >&2
@@ -244,11 +251,11 @@ if ! git-merge-index -o -q "${COGITO_LIB}"cg-Xmergefile -a || [ "$careful" ]; th
 	else
 		echo "	Do cg-commit after reviewing the merge." >&2
 	fi
-	if [ -s "$_git/commit-ignore" ]; then
+	if [ -s "$statedir/commit-ignore" ]; then
 		echo "	cg-reset will cancel the merge (but also your pending local changes!)." >&2
 		echo >&2
 		echo "	These files contained local modifications and won't be automatically chosen for committing:" >&2
-		cat "$_git/commit-ignore" >&2
+		cat "$statedir/commit-ignore" >&2
 	else
 		echo "	cg-reset will cancel the merge." >&2
 		echo >&2
@@ -262,7 +269,7 @@ readtree=
 if ! cg-commit -C; then
 	readtree=1
 	echo "cg-merge: COMMIT FAILED, retry manually" >&2
-	if [ -s "$_git/commit-ignore" ]; then
+	if [ -s "$statedir/commit-ignore" ]; then
 		echo "	cg-reset will cancel the merge (but also your pending local changes!)." >&2
 	else
 		echo "	cg-reset will cancel the merge." >&2

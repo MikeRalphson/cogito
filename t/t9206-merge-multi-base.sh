@@ -23,11 +23,13 @@ test_expect_success 'branch B commit 1' \
 	  cg-commit -f -m"branch B commit 1" && cp .git/refs/heads/master .git/refs/heads/branchB)'
 test_expect_success 'branch A commit 2' \
 	'(cg-object-id -c branchA >.git/refs/heads/master &&
-	  cg-object-id -c branchB >.git/merging &&
+	  mkdir -p .git/cg-merge-state &&
+	  cg-object-id -c branchB >.git/cg-merge-state/merging &&
 	  cg-commit -f -m"branch A commit 2" && cp .git/refs/heads/master .git/refs/heads/branchA)'
 test_expect_success 'branch B commit 2' \
 	'(cg-object-id -c branchB >.git/refs/heads/master &&
-	  cg-object-id -p branchA >.git/merging &&
+	  mkdir -p .git/cg-merge-state &&
+	  cg-object-id -p branchA >.git/cg-merge-state/merging &&
 	  cg-commit -f -m"branch B commit 2" && cp .git/refs/heads/master .git/refs/heads/branchB)'
 
 # We end up in branch B

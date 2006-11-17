@@ -173,6 +173,8 @@ if [ "$_git_no_wc" ]; then
 fi
 
 
+mstatedir="$_git/cg-merge-state"
+
 
 if [ "$gitstatus" ]; then
 	mkdir -p "$_git/refs/heads"
@@ -224,16 +226,16 @@ if [ "$gitstatus" ]; then
 		columns_print "  $sf$rf$cf" - "$headname" $maxlen "$headsha1$trimmark" $((maxsha1len + 1)) "$headlog" m$maxloglen
 	done
 
-	if [ -s "$_git/merging" ]; then
-		tmp="$(cat "$_git/merging")"
+	if [ -s "$mstatedir/merging" ]; then
+		tmp="$(cat "$mstatedir/merging")"
 		echo
-		echo "Merging: $(cat "$_git/merging") ($(cat "$_git/merging-sym"))"
-		echo "Merge base: $(cat "$_git/merge-base")"
-		[ -s "$_git/squashing" ] && echo "Squash-merge."
+		echo "Merging: $(cat "$mstatedir/merging") ($(cat "$mstatedir/merging-sym"))"
+		echo "Merge base: $(cat "$mstatedir/merge-base")"
+		[ -s "$mstatedir/squashing" ] && echo "Squash-merge."
 	fi
-	if [ -s "$_git/commit-ignore" ]; then
+	if [ -s "$mstatedir/commit-ignore" ]; then
 		echo "Files not to be committed now (contained local changes before the merge):"
-		sed 's/^/    /' "$_git/commit-ignore"
+		sed 's/^/    /' "$mstatedir/commit-ignore"
 	fi
 
 	if [ -s "$_git/blocked" ]; then
@@ -284,14 +286,14 @@ if [ "$workstatus" ]; then
 		should_show_flag 'A' && git-ls-files | sed 's,^,A ,'
 	else
 		commitignore=
-		[ -s "$_git/commit-ignore" ] && commitignore=1
+		[ -s "$mstatedir/commit-ignore" ] && commitignore=1
 
 		git-diff-index HEAD -- "${basepath:-.}" | cut -f5- -d' ' | 
 		while IFS=$'\t' read -r mode file; do
 			if [ "$mode" = D ]; then
 				[ "$(git-diff-files -- "$file")" ] && continue # "!"
 			elif [ "$mode" = M ] && [ "$commitignore" ]; then
-				fgrep -qx "$file" "$_git/commit-ignore" && mode=m
+				fgrep -qx "$file" "$mstatedir/commit-ignore" && mode=m
 			fi
 			should_show_flag "$mode" && echo "$mode ${file#$_git_relpath}"
 		done

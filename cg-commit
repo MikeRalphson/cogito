@@ -325,6 +325,9 @@ if [ -s "$_git/blocked" ] && [ ! "$writeref" ]; then
 		die "committing blocked: $(cat "$_git/blocked")"
 	fi
 fi
+# Deprecated as of 2006-11-17
+[ -s "$_git/merging" ] && die "old-style merge state detected, panicking; you upgraded cogito in the middle of a merge! redo the merge, cg-reset will bring you back to the starting line"
+mstatedir="$_git/cg-merge-state"
 
 if [ ! "$ignorecache" ]; then
 	cg-object-id HEAD >/dev/null 2>&1 || ignorecache=1
@@ -357,7 +360,7 @@ fi
 
 if [ "$ARGS" -o "$_git_relpath" ]; then
 	[ "$ignorecache" ] && die "you cannot list files for the initial commit"
-	[ -s "$_git/merging" ] && die "cannot commit individual files when merging"
+	[ -s "$mstatedir/merging" ] && die "cannot commit individual files when merging"
 
 	filter="$tmpdir/filter"
 	[ "$_git_relpath" -a ! "$ARGS" ] && echo "$_git_relpath" >>"$filter"
@@ -386,10 +389,10 @@ else
 		eval "commitfiles=($(git-diff-index --name-status -z -r -m HEAD | \
 			perl -n0e 'chomp; if (defined $meta) { s/([\"\\])/\\\1/; print "\"$meta $_\"\n"; $meta=undef } else { $meta = $_ }'))"
 
-		if [ -s "$_git/commit-ignore" ]; then
+		if [ -s "$mstatedir/commit-ignore" ]; then
 			newcommitfiles=()
 			for file in "${commitfiles[@]}"; do
-				fgrep -qx "${file:2}" "$_git/commit-ignore" && continue
+				fgrep -qx "${file:2}" "$mstatedir/commit-ignore" && continue
 				newcommitfiles[${#newcommitfiles[@]}]="$file"
 			done
 			commitfiles=("${newcommitfiles[@]}")
@@ -399,7 +402,7 @@ else
 	[ "$review" ] && git-diff-index -r -m -p HEAD > "$PATCH"
 
 	merging=
-	[ -s "$_git/merging" ] && merging="$(cat "$_git/merging" | sed 's/^/-p /')"
+	[ -s "$mstatedir/merging" ] && merging="$(cat "$mstatedir/merging" | sed 's/^/-p /')"
 fi
 
 
@@ -416,18 +419,18 @@ if [ "$merging" ] && [ ! "$editor" ]; then
 	warn "suppressing default merge log messages in favour of the custom -m passed to me."
 elif [ "$merging" ]; then
 	echo -n 'Merge with ' >>"$LOGMSG"
-	[ -s "$_git/merging-sym" ] || cp "$_git/merging" "$_git/merging-sym"
-	for sym in $(cat "$_git/merging-sym"); do
+	[ -s "$mstatedir/merging-sym" ] || cp "$mstatedir/merging" "$mstatedir/merging-sym"
+	for sym in $(cat "$mstatedir/merging-sym"); do
 		uri="$(cat "$_git/branches/$sym" 2>/dev/null)"
 		[ "$uri" ] || uri="$sym"
 		echo "$uri" >>"$LOGMSG"
 	done
 	echo >>"$LOGMSG"
-	if [ -s "$_git/squashing" ]; then
+	if [ -s "$mstatedir/squashing" ]; then
 		# We are squashing all the merged commits to a single one.
 		# Therefore, helpfully pre-fill the commit message with
 		# the messages of all the merged commits.
-		git-rev-list --pretty "$(cat "$_git/merging")" ^HEAD >>"$LOGMSG"
+		git-rev-list --pretty "$(cat "$mstatedir/merging")" ^HEAD >>"$LOGMSG"
 	fi
 	written=1
 fi
@@ -499,9 +502,9 @@ if [ ! "$ignorecache" ] && [ ! "$review" ]; then
 		echo "CG:F   $file" >>"$LOGMSG"
 		[ ! "$editor" ] && echo "$file"
 	done
-	if [ -s "$_git/commit-ignore" ]; then
+	if [ -s "$mstatedir/commit-ignore" ]; then
 		echo "CG:" >>"$LOGMSG"
-		echo "CG: I have kept back the $(wc -l "$_git/commit-ignore" | cut -d ' ' -f 1) file(s) containing your local changes." >>"$LOGMSG"
+		echo "CG: I have kept back the $(wc -l "$mstatedir/commit-ignore" | cut -d ' ' -f 1) file(s) containing your local changes." >>"$LOGMSG"
 		echo "CG: You need not worry, the local changes will not interfere with the merge." >>"$LOGMSG"
 	fi
 fi
@@ -538,7 +541,7 @@ if editor_shalluse "$forceeditor"; then
 			cat >&2 <<__END__
 Note that the merge is NOT aborted - you can cg-commit again, cg-reset will abort it.
 __END__
-			[ -s "$_git/commit-ignore" ] && cat >&2 <<__END__
+			[ -s "$mstatedir/commit-ignore" ] && cat >&2 <<__END__
 (But note that cg-reset will remove your pending local changes as well!)
 __END__
 		fi
@@ -638,7 +641,7 @@ if [ ! "$force" ] && [ ! "$merging" ] && [ "$oldhead" ] &&
 	exit 2;
 fi
 
-[ -s "$_git/squashing" ] && merging=" " # viciously prevent recording a proper merge
+[ -s "$mstatedir/squashing" ] && merging=" " # viciously prevent recording a proper merge
 newhead=$(git-commit-tree $treeid $oldheadstr $merging <"$LOGMSG")
 rm "$LOGMSG"
 
@@ -655,8 +658,7 @@ commit_over()
 
 commit_cleanup()
 {
-	[ "$merging" ] && rm -f "$_git/merging" "$_git/merging-sym" "$_git/merge-base" "$_git/squashing"
-	rm -f "$_git/commit-ignore"
+	rm -rf "$mstatedir"
 }
 
 if [ "$push" ]; then

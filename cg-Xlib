@@ -670,7 +670,7 @@ tree_timewarp()
 	local branch="$1"; shift
 	local localmods=0
 
-	[ ! -s "$_git/merging" ] || die "merge in progress - cancel it by cg-reset first"
+	[ ! -s "$_git/cg-merge-state/merging" ] || die "merge in progress - cancel it by cg-reset first"
 
 	if [ -n "$rollback" ]; then
 		local localcommit=""
