@@ -40,9 +40,9 @@ Pre-1.0 stuff:
 	* Handle all possible conflicts
 	* Make sure the user resolved the conflicts
 	  (if possible without requiring him to manually indicate that)
-	-- post 1.0 --
 	* Support for various GIT's "merge strategies"
 	* Somehow show the list of commits getting merged
+	-- post 1.0 --
 	* Vim-merging
 	* cg-resolve: resolving swiss-army knife, see msgid:
 		<20060924171246.GY13132@pasky.or.cz>
