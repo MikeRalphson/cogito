@@ -57,11 +57,12 @@ Pre-1.0 stuff:
 	* Just frontend git-apply
 
 * cg-commit enhancements
+	* Force the user to confirm his credentials for the first time
 	* Possibly verify the patch being committed against
 	  whitespace errors and stuff; hooks are good for this too,
 	  but I think it's good to have internal support for the
 	  basic stuff. (Get inspired in git-commit.)
-	* call git-fmt-merge-msg when committing a merge
+	* Call git-fmt-merge-msg when committing a merge
 
 * cg-shelf - shelve changes temporarily
 	This saves your current uncommitted changes, removes them from the
