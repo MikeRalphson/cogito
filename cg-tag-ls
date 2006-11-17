@@ -50,5 +50,5 @@ find "$_git/refs/tags" -name '*' -a ! -type d | sort | while read tag; do
 		flag="%"
 	fi
 
-	columns_print "$flag " - "$name" $maxlen "  ${sha1:0:12} " - " $title" -
+	columns_print "$flag " - "$name" $maxlen "  ${sha1:0:12}~" - " $title" -
 done
