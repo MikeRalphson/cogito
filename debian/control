@@ -7,7 +7,7 @@ Standards-Version: 3.6.1
 
 Package: cogito
 Architecture: all
-Depends: git-core (>= 1.4.2), patch, diff, perl
+Depends: git-core (>= 1.4.4), patch, diff, perl
 Recommends: rsync, curl, rsh-client
 Conflicts: cgvg
 Description: A version control system layered on top of git
