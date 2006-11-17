@@ -193,15 +193,35 @@ if [ "$gitstatus" ]; then
 	# -name * will prevent listing hidden heads
 	maxlen="$(find "$_git/refs/heads" -name '*' -a ! -type d |
 	          column_width "$_git/refs/heads/")"
+	maxlen=$((maxlen + 1))
+	maxloglen=$(tput cols)
+	# 5 status flags + 2 times separating spaces = 7
+	maxloglen=$((maxloglen - maxlen - 7))
+
+	#maxsha1len=$((maxloglen - 40))
+	#[ $maxsha1len -lt 12 ] && maxsha1len=12
+	#[ $maxsha1len -gt 40 ] && maxsha1len=40
+	maxsha1len=12
+
+	sha1digits="$maxsha1len"
+	if [ $maxsha1len -lt 40 ]; then
+		trimmark="~"
+		maxsha1len=$((maxsha1len+1))
+	else
+		trimmark=
+	fi
+	maxloglen=$((maxloglen - maxsha1len))
+
 	find "$_git/refs/heads" -name '*' -a ! -type d | sort | while read head; do 
-		headsha1="$(cat "$head")"
 		headname="${head#$_git/refs/heads/}"
+		headsha1="$(git-rev-parse --short=$sha1digits "$headname")"
+		headlog="$(git-log --max-count=1 --pretty=oneline "$headsha1" | sed 's/^[^ ]* //')"
 		[ "$headname" = "cg-seek-point" ] && continue
 		cf=" "; rf=" "; sf=" ";
 		[ "$headname" = "$_git_head" ] && cf=">"
 		[ -s "$_git/branches/$headname" ] && rf="R"
 		[ -s "$_git/refs/heads/.cg-shelve-$headname" ] && sf="s"
-		columns_print "  $sf$rf$cf" - "$headname" t$maxlen "$headsha1" -
+		columns_print "  $sf$rf$cf" - "$headname" $maxlen "$headsha1$trimmark" $((maxsha1len + 1)) "$headlog" m$maxloglen
 	done
 
 	if [ -s "$_git/merging" ]; then
