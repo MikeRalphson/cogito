@@ -8,8 +8,9 @@
 #
 # OPTIONS
 # -------
-# -t TREE_ID:: List content of the given TREE_ID
-#	List the content of the given TREE_ID.
+# -r TREE_ID:: List contents of the given tree (you can use revisions here)
+#	List the contents of the given TREE_ID (which can be any tree
+#	id, but most usually you will just use a revision id here).
 #
 # OUTPUT FORMAT
 # -------------
@@ -38,7 +39,7 @@
 
 # Testsuite: TODO
 
-USAGE="cg-admin-ls [-t TREE_ID] [PATH]"
+USAGE="cg-admin-ls [-r TREE_ID] [PATH]"
 _git_wc_unneeded=1
 
 . "${COGITO_LIB}"cg-Xlib || exit 1
@@ -46,6 +47,10 @@ _git_wc_unneeded=1
 tree_id=
 while optparse; do
 	if optparse -t=; then
+		# Deprecated as of 2006-11-17
+		warn "cg-admin-ls -t is deprecated, please use -r instead"
+		tree_id="$OPTARG"
+	elif optparse -r=; then
 		tree_id="$OPTARG"
 	else
 		optfail
