@@ -28,6 +28,10 @@
 # Always verify that the rewritten version is correct before disposing
 # the original branch.
 #
+# Note that since this operation is extensively I/O expensive, it might
+# be a good idea to do it off-disk, e.g. on tmpfs. Reportedly the speedup
+# is very noticeable.
+#
 # OPTIONS
 # -------
 # -d TEMPDIR:: The path to the temporary tree used for rewriting
