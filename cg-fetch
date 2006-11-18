@@ -17,11 +17,12 @@
 # one exception to this is the 'origin' branch, which was set to the location
 # of the source repository if you created yours using the `cg-clone` command.
 #
-# Note that the operation now being performed by `cg-fetch` ('fetching')
-# was called 'pulling' in the past. However, GIT recently changed this
-# terminology, and after sufficient transition period, the 'pulling'
-# expression will be instead used for the operation now performed by the
-# `cg-update` command. Please do not let this confuse you.
+# Note that in the GIT newspeak, the operation being performed by cg-update
+# is now called 'pull', even though in the past and in many other version
+# control systems systems, 'pull' is the name for the operation performed by
+# `cg-fetch`. Please do not let this confuse you. (Cogito won't call this
+# 'update' operation 'pull', since about everyone but GIT and BK users uses
+# it in the 'fetch' meaning.)
 #
 # OPTIONS
 # -------

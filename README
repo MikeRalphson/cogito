@@ -392,7 +392,7 @@ will make your repository look like:
 
 Note that 'upmirror' has no head associated, it has just the "remote branch"
 info. That is because it needs no head since it's solely for pushing. It is
-however normal to have a head (frequently it's the 'origin') both for pulling
+however normal to have a head (frequently it's the 'origin') both for fetching
 and pushing.
 
 	$ cg-push upmirror
