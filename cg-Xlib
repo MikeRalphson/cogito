@@ -804,11 +804,15 @@ choose_origin()
 get_ref()
 {
 	# This could be cg-object-id -c instead, but this is faster.
+	# This _should_ be git-show-ref instead, but as of git-1.4.4 it won't
+	# show hidden refs.
+	#git-show-ref --hash --verify "$1" 2>/dev/null
 	git-rev-parse --verify "$1" 2>/dev/null
 }
 
 exists_ref()
 {
+	#git-show-ref --quiet --verify "$1"
 	get_ref "$@" >/dev/null
 }
 
