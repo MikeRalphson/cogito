@@ -45,7 +45,8 @@
 #
 # -m:: Base the diff at the merge base
 #	Base the diff at the merge base of the -r arguments (defaulting
-#	to HEAD and origin).
+#	to HEAD and 'origin' or the current branch's default remote
+#	branch, see `cg-fetch` for details).
 #
 # ENVIRONMENT VARIABLES
 # ---------------------

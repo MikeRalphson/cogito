@@ -48,6 +48,18 @@
 #	will make cg-switch to only create or update the branch, but
 #	leave your working copy alone.
 #
+# -o REMBRANCH:: Set the default remote branch for the branch
+#	Along switching the branches, this will also set the default
+#	remote branch to be associated with the target branch (used as
+#	default by e.g. `cg-update` and `cg-push`, falls back to 'origin').
+#	You may want to combine this with '-n' to change this for a branch
+#	other than the current one without actual switching. As a special
+#	present just for you, in case of '-o' the BRANCH `cg-switch` argument
+#	defaults to the current branch.
+#
+#	This setting is saved in Git configuration file under the key
+#	'branch.<name>.merge' and is understood by core Git as well.
+#
 # -p:: Do not touch the working copy
 #	Do not touch the working copy when switching. This _will_ switch
 #	your current branch, but the checked out working copy will have
@@ -84,7 +96,7 @@
 
 # Testsuite: TODO
 
-USAGE="cg-switch [-f] [-l | -n | -p] [-c | -r COMMIT_ID] BRANCH"
+USAGE="cg-switch [-f] [-l | -n | -p] [-o REMBRANCH] [-c | -r COMMIT_ID] BRANCH"
 _git_requires_root=1
 _git_wc_unneeded=1
 
@@ -105,6 +117,7 @@ savelocal=
 seek=1
 dstcommit=
 roll=1
+origin=
 while optparse; do
 	if optparse -f; then
 		force=1
@@ -112,6 +125,8 @@ while optparse; do
 		savelocal=1
 	elif optparse -n; then
 		seek=
+	elif optparse -o=; then
+		origin="$OPTARG"
 	elif optparse -p; then
 		roll=
 	elif optparse -r=; then
@@ -123,22 +138,40 @@ while optparse; do
 	fi
 done
 
-[ "${#ARGS[@]}" -eq "1" ] || usage
+[ "$origin" -o "${#ARGS[@]}" -eq "1" ] || usage
 [ "$seek$roll" = "" ] && usage
 [ "$savelocal" = "1" -a "$seek$roll" != "11" ] && usage
 
 [ "$_git_no_wc" ] && [ "$seek" ] &&
 	die "only cg-switch -n allowed outside a working copy"
 
-dsthead="${ARGS[0]}"
+if [ "${#ARGS[@]}" -gt 0 ]; then
+	dsthead="${ARGS[0]}"
+else
+	dsthead="$_git_head"
+fi
 [ -s "$_git/branches/$dsthead" ] &&
 	die "refusing to switch to a remote branch - see README for lengthy explanation; use cg-seek to just quickly inspect it"
 
-[ "$(git-symbolic-ref HEAD)" != "refs/heads/$dsthead" ] || [ -n "$dstcommit" ] ||
-	die "already on branch $dsthead"
-
-if [ "$seek" ]; then
+if [ "$seek" -a "$dsthead" != "$_git_head" ]; then
 	[ -s "$_git/blocked" ] && die "switch blocked: $(cat "$_git/blocked")"
+fi
+
+
+if [ "$origin" ]; then
+	[ -s "$_git/branches/$origin" ] ||
+		die "$origin is not a valid remote branch"
+	echo "Setting $dsthead's origin: $origin"
+	git-repo-config "branch.$dsthead.merge" "refs/heads/$origin" || exit 1
+fi
+
+
+if ! [ "$(git-symbolic-ref HEAD)" != "refs/heads/$dsthead" ] || [ -n "$dstcommit" ]; then
+	if [ "$origin" ]; then
+		exit 0
+	else
+		die "already on branch $dsthead"
+	fi
 fi
 
 

@@ -3,7 +3,10 @@
 # Fetch changes from a remote branch to the local repository
 # Copyright (c) Petr Baudis, 2005.
 #
-# Takes the branch name as an argument, defaulting to 'origin'.
+# Takes the branch name as an argument. If no branch name was specified,
+# the default remote branch for the current branch (as selected by
+# `cg-switch -o`, that is the 'branch."currenthead".merge' option) is used.
+# If no such option exists, 'origin' is used.
 #
 # This will fetch the latest changes from a remote repository to the
 # corresponding branch in your local repository. Note that this operation

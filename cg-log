@@ -52,7 +52,8 @@
 #
 # -m::	End the log at the merge base of the revision set
 #	End the log listing at the merge base of the -r arguments
-#	(defaulting to HEAD and origin).
+#	to HEAD and 'origin' or the current branch's default remote
+#	branch, see `cg-fetch` for details).
 #
 # -M, --merges:: Show merge commits
 #	Display merge commits in the log.

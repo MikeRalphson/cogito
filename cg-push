@@ -18,7 +18,8 @@
 # or even verifying if the commits are well-formed before letting
 # them in). See `git-receive-pack`(1) documentation for details.
 #
-# Takes the branch names as arguments, defaulting to "origin".
+# Takes the branch names as arguments, defaulting to 'origin' or the
+# current branch's default remote branch, see `cg-fetch` for details.
 #
 # OPTIONS
 # -------

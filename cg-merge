@@ -4,7 +4,8 @@
 # Copyright (c) Petr Baudis, 2005
 #
 # Takes a parameter identifying the branch to be merged, defaulting
-# to 'origin'.
+# to 'origin' or the current branch's default remote branch, see `cg-fetch`
+# for details).
 #
 # This command merges all changes currently in the given branch to your
 # current branch. This can produce a merging commit on your branch sticking

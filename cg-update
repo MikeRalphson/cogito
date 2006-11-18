@@ -3,7 +3,8 @@
 # Fetch and merge changes from a remote repository
 # Copyright (c) Petr Baudis, 2005
 #
-# Takes the branch name as an argument, defaulting to 'origin'.
+# Takes the branch name as an argument, defaulting to 'origin' or the
+# current branch's default remote branch, see `cg-fetch` for details.
 #
 # This is similar to running cg-fetch and cg-merge commands successively.
 # Please refer to the documentation of those commands for more details

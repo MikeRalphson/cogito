@@ -30,7 +30,8 @@
 #
 # -m::	Base the diff at the merge base
 #	Base the patches at the merge base of the -r arguments
-#	(defaulting to HEAD and origin).
+#	(defaulting to HEAD and 'origin' or the current branch's default
+#	remote branch, see `cg-fetch` for details).
 #
 # -r FROM_ID[..TO_ID]::	Limit to revision range
 #	Specify a set of commits to make patches from using either
