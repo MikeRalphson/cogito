@@ -15,9 +15,9 @@
 # `cg-update` will fast-forward instead of doing a tree merge and diverging).
 #
 # Note that in the GIT newspeak, the operation being performed by cg-update
-# is now called 'pull', even though in the past, 'pull' was the name for
-# the operation being now done by cg-fetch, which is even still aliased
-# to cg-pull. Please do not let this confuse you. (Cogito won't call this
+# is now called 'pull', even though in the past and in many other version
+# control systems systems, 'pull' is the name for the operation performed by
+# `cg-fetch`. Please do not let this confuse you. (Cogito won't call this
 # 'update' operation 'pull', since about everyone but GIT and BK users uses
 # it in the 'fetch' meaning.)
 #

@@ -10,7 +10,7 @@
 #
 # This command is intended for creating repositories for work on new projects.
 # If you want to clone an existing project, see `cg-clone`. If you want to
-# set up a public repository not for direct work but only for pushing/pulling,
+# set up a public repository not for direct work but only for pushing/fetching,
 # see `cg-admin-setuprepo`. It is also possible to import repositories from
 # other SCMs to GIT, see `git-cvsimport(1)`, `git-svnimport(1)` and
 # `git-archimport(1)`.
