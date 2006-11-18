@@ -166,7 +166,7 @@ if [ "$origin" ]; then
 fi
 
 
-if ! [ "$(git-symbolic-ref HEAD)" != "refs/heads/$dsthead" ] || [ -n "$dstcommit" ]; then
+if ! [ "$(git-symbolic-ref HEAD)" != "refs/heads/$dsthead" -o -n "$dstcommit" ]; then
 	if [ "$origin" ]; then
 		exit 0
 	else
