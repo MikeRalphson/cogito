@@ -5,8 +5,9 @@
 #
 # Reverts the working tree to a consistent state before any changes to it
 # (including merges etc.) were done. This command will rebuild the state
-# of the tree according to the commit of .git/refs/heads/master, so if your
-# working tree got into basically any inconsistent state, this will cure it.
+# of the tree according to the latest commit on your current branch, so if
+# your working tree got into basically any inconsistent state, this will
+# cure it.
 #
 # Basically, this is the opposite of `cg-commit` in some sense.
 #
