@@ -26,25 +26,24 @@ _git_wc_unneeded=1
 
 . "${COGITO_LIB}"cg-Xlib || exit 1
 
-msg_no_tags="list of tags is empty, please see cg-tag(1)"
+msg_no_tags="no tags present, please see cg-tag(1)"
 
 [ -d "$_git/refs/tags" ] || die "$msg_no_tags"
 
 [ "$(find "$_git/refs/tags" -follow -type f)" ] \
        || die "$msg_no_tags"
 
-maxlen="$(find "$_git/refs/tags" -name '*' -a ! -type d |
-	  column_width "$_git/refs/tags/")"
+maxlen="$(git-for-each-ref --format="%(refname)" refs/tags | column_width "refs/tags/")"
 
-find "$_git/refs/tags" -name '*' -a ! -type d | sort | while read tag; do 
+# %(content) and %(body) is broken for tags in git-1.4.4
+
+git-for-each-ref --format="%(refname) %(objectname) %(subject)" refs/tags |
+while read tag sha1 title; do 
 	flag=" "
-	name="${tag#$_git/refs/tags/}"
-	sha1="$(cat "$tag")"
-	title=
+	name="${tag#refs/tags/}"
 
 	type="$(git-cat-file -t "$sha1" 2>/dev/null)" || flag="!"
 	if [ "$type" = "tag" ]; then
-		title="$(git-cat-file tag "$sha1" | sed -ne '/^$/{n;s/^-----BEGIN PGP SIGNATURE-----//;p;q;}')"
 		git-cat-file tag "$sha1" | grep -q '^-----BEGIN PGP SIGNATURE-----' && flag="S"
 	elif [ "$type" ]; then
 		flag="%"

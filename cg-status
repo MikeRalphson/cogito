@@ -195,8 +195,7 @@ if [ "$gitstatus" ]; then
 
 	echo "Heads:"
 	# -name * will prevent listing hidden heads
-	maxlen="$(find "$_git/refs/heads" -name '*' -a ! -type d |
-	          column_width "$_git/refs/heads/")"
+	maxlen="$(git-for-each-ref --format="%(refname)" refs/heads | column_width "refs/heads/")"
 	maxlen=$((maxlen + 1))
 	maxloglen=$(tput cols)
 	# 5 status flags + 2 times separating spaces = 7
@@ -216,10 +215,10 @@ if [ "$gitstatus" ]; then
 	fi
 	maxloglen=$((maxloglen - maxsha1len))
 
-	find "$_git/refs/heads" -name '*' -a ! -type d | sort | while read head; do 
-		headname="${head#$_git/refs/heads/}"
-		headsha1="$(git-rev-parse --short=$sha1digits "$headname")"
-		headlog="$(git-log --max-count=1 --pretty=oneline "$headsha1" | sed 's/^[^ ]* //')"
+	git-for-each-ref --format="%(refname) %(objectname) %(subject)" refs/heads |
+	while read head sha1 headlog; do
+		headname="${head#refs/heads/}"
+		headsha1="${sha1:0:$sha1digits}"
 		[ "$headname" = "cg-seek-point" ] && continue
 		cf=" "; rf=" "; sf=" ";
 		[ "$headname" = "$_git_head" ] && cf=">"
