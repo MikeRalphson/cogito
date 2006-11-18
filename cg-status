@@ -179,11 +179,6 @@ mstatedir="$_git/cg-merge-state"
 
 
 if [ "$gitstatus" ]; then
-	mkdir -p "$_git/refs/heads"
-	[ "$(find "$_git/refs/heads" -follow -type f)" ] \
-	       || die "List of heads is empty."
-
-
 	[ -s "$_git/branch-name" ] && echo "Branch (informal): $(cat "$_git/branch-name")"
 
 	if [ -s "$_git/head-name" ]; then
@@ -193,7 +188,6 @@ if [ "$gitstatus" ]; then
 		echo
 	fi
 
-	echo "Heads:"
 	# -name * will prevent listing hidden heads
 	maxlen="$(git-for-each-ref --format="%(refname)" refs/heads | column_width "refs/heads/")"
 	maxlen=$((maxlen + 1))
@@ -214,6 +208,8 @@ if [ "$gitstatus" ]; then
 		trimmark=
 	fi
 	maxloglen=$((maxloglen - maxsha1len))
+
+	[ $maxlen -gt 1 ] && echo "Heads:"
 
 	git-for-each-ref --format="%(refname) %(objectname) %(subject)" refs/heads |
 	while read head sha1 headlog; do
