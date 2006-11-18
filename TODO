@@ -35,6 +35,8 @@ Pre-1.0 stuff:
 * Push new tags automagically
 	(With the same logic as when fetching - push tags which reference
 	objects that are already pushed.)
+	(First there really needs to be a way to have private tags. I think
+	just tag names starting by a dot would do.)
 
 * Better merging
 	* Handle all possible conflicts
