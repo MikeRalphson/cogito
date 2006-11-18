@@ -86,8 +86,8 @@ cat_tag()
 show_tag()
 {
 	local tag="$1"
-	local sha1="$(cat "$_git/refs/tags/$tag" 2>/dev/null)"
-	if [ ! "$sha1" ]; then
+	local sha1
+	if ! sha1="$(get_ref "refs/tags/$tag")"; then
 		echo "No such tag: $tag" >&2
 		echo >&2
 		return 1

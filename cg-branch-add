@@ -87,7 +87,7 @@ fi
 
 mkdir -p "$_git/branches/$(dirname "$name")"
 [ -s "$_git/branches/$name" ] && die "branch already exists"
-[ -s "$_git/refs/heads/$name" ] && warn "branch head already exists"
+exists_ref "refs/heads/$name" && warn "branch head already exists"
 
 if ! echo "$location" | grep -q ":" ; then
 	location=$(echo "$location" | sed -e "s#^[^/]#$(pwd)\/&#" | normpath)

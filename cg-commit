@@ -624,7 +624,7 @@ fi
 oldhead=
 oldheadname="$(git-symbolic-ref HEAD)"
 if [ -s "$_git/$oldheadname" ]; then
-	oldhead="$(cat "$_git/$oldheadname")"
+	oldhead="$(get_ref "$oldheadname")"
 	oldheadstr="-p $oldhead"
 fi
 if [ "$amend" ]; then

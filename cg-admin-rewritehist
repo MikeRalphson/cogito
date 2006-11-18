@@ -214,7 +214,7 @@ done
 
 dstbranch="${ARGS[0]}"
 [ -n "$dstbranch" ] || die "missing branch name"
-[ ! -s "$_git/refs/heads/$dstbranch" ] || die "branch $dstbranch already exists"
+! exists_ref "refs/heads/$dstbranch" || die "branch $dstbranch already exists"
 [ ! -s "$_git/branches/$dstbranch" ] || die "branch $dstbranch is already a remote branch"
 
 [ ! -e "$tempdir" ] || die "$tempdir already exists, please remove it"

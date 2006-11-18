@@ -80,7 +80,7 @@ show_changes_summary()
 initial_done()
 {
 	rm -f ___
-	cp "$_git/refs/heads/origin" "$_git/refs/heads/master" ||
+	git-update-ref "refs/heads/master" "$(get_ref "refs/heads/origin")" ||
 		die "initial checkout failed"
 	if [ -s "$_git/info/cg-fetch-initial-wcless" ]; then
 		rm "$_git/info/cg-fetch-initial-wcless"
@@ -142,7 +142,7 @@ fetch_rsync_verify()
 				done ||
 			die "rsync fetch incomplete, some objects missing"
 		fi
-		cat "$_git/refs/${3%/*}/.${3##*/}-fetching" > "$_git/refs/$3"
+		git-update-ref "refs/$3" "$(get_ref "refs/${3%/*}/.${3##*/}-fetching")"
 	fi
 	return $ret
 }
@@ -152,7 +152,7 @@ fetch_rsync()
 {
 	if [ x"$1" = x"--stdin" ]; then
 		while read c w; do
-			echo "$c" >"$_git/refs/$w"
+			git-update-ref "refs/$w" "$c"
 		done
 	else
 		fetch_rsync_verify "$1" "$2" "$3"
@@ -219,9 +219,11 @@ fetch_tags()
 	echo "Fetching tags..."
 
 	# FIXME: Warn about conflicting tag names?
-	[ -d "$_git/refs/tags" ] || mkdir -p "$_git/refs/tags"
 
 	if [ "$get" = "get_rsync" ]; then
+		warn "WHAT I'M DOING NOW IS RACY AND BROKEN IF YOU USE PACKED REFS!"
+		warn "Please switch from rsync to something else."
+		[ -d "$_git/refs/tags" ] || mkdir -p "$_git/refs/tags"
 		if ! $get -i -s -d "$uri/refs/tags" "$_git/refs/tags"; then
 			echo "unable to get tags list (non-fatal)" >&2
 			return $?
@@ -235,7 +237,7 @@ fetch_tags()
 		       -e 's:\([^	]\)	refs/\(tags/.*\)$:\1 \2:p' | \
 		while read sha1 tagname; do
 			# Do we have the tag itself?
-			[ -s "$_git/refs/$tagname" ] && continue
+			exists_ref "refs/$tagname" && continue
 			# Do we have the object pointed at by the tag?
 			git-cat-file -t "$sha1" >/dev/null 2>&1 || continue
 
@@ -300,8 +302,7 @@ mkdir -p "$_git/info"
 echo $$ > "$dirtyfile"
 
 
-orig_head=
-[ -s "$_git/refs/heads/$name" ] && orig_head="$(cat "$_git/refs/heads/$name")"
+orig_head="$(get_ref "refs/heads/$name")" || : may stay empty
 
 
 packed_transport=
@@ -358,8 +359,7 @@ if [ "$packed_transport" ]; then
 		while read sha1 remote_name; do
 			[ "$sha1" = "failed" ] && die "$2"
 			ref="$1"; [ "$ref" ] || ref="$remote_name"
-			mkdir -p "$_git/$(dirname "$ref")"
-			echo "$sha1" >"$_git/$ref"
+			git-update-ref "$ref" "$sha1"
 		done
 	}
 	echo "Fetching pack (head and objects)..."
@@ -386,6 +386,12 @@ fi
 
 
 ### Behold, the fetch itself
+
+# Here we play it a bit (a lot) dirty and do not use the ref accessors for
+# the temporary fetching ref - it is not required (it's never gonna be
+# packed and we don't need the atomicity) and it makes the code a lot simpler.
+# We would only have a problem if someone did git-pack-refs --all in the middle
+# of a fetch, and that ought to never happen. Right? Right.
 
 ## Grab the head
 echo "Fetching head..."
@@ -417,7 +423,7 @@ if ! [ "$symlinked" ]; then
 		$fetch "$(cat "$_git/refs/heads/$tmpname")" "$uri" "heads/$name" || die "objects fetch failed"
 	fi
 else
-	cat "$_git/refs/heads/$tmpname" > "$_git/refs/heads/$name"
+	git-update-ref "refs/heads/$name" "$(cat "$_git/refs/heads/$tmpname")"
 fi
 rm "$_git/refs/heads/$tmpname"
 

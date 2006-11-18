@@ -66,7 +66,7 @@ name="${ARGS[0]}"
 [ "$name" ] || name="$(choose_origin branches "where to update from?")" || exit 1
 
 # cg-merge can do better decision about fast-forwarding if it sees this.
-[ -s "$_git/refs/heads/$name" ] && export _cg_orig_head="$(cat "$_git/refs/heads/$name")"
+headid=$(get_ref "refs/heads/$name") && export _cg_orig_head="$headid"
 
 if [ -s "$_git/branches/$name" ]; then
 	cg-fetch $CGFETCH_FLAGS $force "$name" || exit 1

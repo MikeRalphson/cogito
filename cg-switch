@@ -144,10 +144,8 @@ fi
 
 curcommit="$(cg-object-id -c)"
 
-if [ -s "$_git/refs/heads/$dsthead" ]; then
+if exists_ref "refs/heads/$dsthead"; then
 	# Existing branch
-	[ -r "$_git/refs/heads/$dsthead" ] ||
-		die "reference '$_git/refs/heads/$dsthead' is unreadable"
 	if [ -n "$dstcommit" ]; then
 		[ "$force" ] ||
 			die "branch $dsthead already exists - use -f to force the switch"

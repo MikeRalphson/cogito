@@ -607,26 +607,30 @@ internal_commit()
 shelve_changes()
 {
 	# XXX: This should better live in refs/shelves/ or something.
-	if [ -s "$_git/refs/heads/.cg-shelve-$_git_head" ]; then
+	if already_dirty=$(get_ref "refs/heads/.cg-shelve-$_git_head"); then
 		echo "Warning: Your current branch already has some local changes saved. Refusing to overwrite them." >&2
 		echo "This could happen if you switched away using 'cg-switch -l' but did not switch back using cg-switch." >&2
 		dirty="$_git_head-dirty"
-		if [ -s "$_git/refs/heads/$dirty" ]; then
-			i=1; while [ -s "$_git/refs/heads/$dirty$i" ]; do i=$((i+1)); done
+		if get_head "$dirty" >/dev/null; then
+			i=1; while exists_ref "refs/heads/$dirty$i"; do i=$((i+1)); done
 			dirty="$dirty$i"
 		fi
-		mv "$_git/refs/heads/.cg-shelve-$_git_head" "$_git/refs/heads/$dirty"
+		git-update-ref "refs/heads/$dirty" "$already_dirty"
+		git-update-ref -d "refs/heads/.cg-shelve-$_git_head" "$already_dirty"
 		echo "I have created branch $dirty and made the old local changes available as its last commit." >&2
 	fi
+	# .cg-shelve-$_git_head head does not exist and we aren't race-safe
+	# anyway, so writing directly to the file does not do any further
+	# harm here.
 	internal_commit "$_git/refs/heads/.cg-shelve-$_git_head" "cg-switch local changes shelve" "This commit for internal Cogito use stores uncommitted local changes at the time of cg-switch -l away from $_git_head."
-	curcommit="$(cg-object-id -c "refs/heads/.cg-shelve-$_git_head")"
+	curcommit="$(get_ref "refs/heads/.cg-shelve-$_git_head")"
 }
 
 # Unshelve local changes for $_git_head
 # (You must cache the current $_git_head commit to $dstcommit.)
 unshelve_changes()
 {
-	if ! [ -s "$_git/refs/heads/.cg-shelve-$_git_head" ]; then
+	if ! exists_ref "refs/heads/.cg-shelve-$_git_head"; then
 		return
 	fi
 
@@ -647,9 +651,9 @@ unshelve_changes()
 	#   restore the list of commits after unshelving.
 
 	echo "Restoring local changes..."
-	local shelvecommit="$(cg-object-id -c "refs/heads/.cg-shelve-$_git_head")"
+	local shelvecommit="$(get_ref "refs/heads/.cg-shelve-$_git_head")"
 	tree_timewarp --no-head-update "along" "please roll" "$dstcommit" "$shelvecommit" || :
-	rm "$_git/refs/heads/.cg-shelve-$_git_head"
+	git-update-ref -d "refs/heads/.cg-shelve-$_git_head"
 }
 
 # Usage: tree_timewarp [--no-head-update] DIRECTION_STR ROLLBACK_BOOL BASE BRANCH
@@ -776,13 +780,36 @@ is_same_repo()
 choose_origin()
 {
 	local testdir="$1" errormsg="$2"
-	if [ x"$_git_head" != x"master" -a -s "$_git/$testdir/$_git_head-origin" ]; then
-		echo "$_git_head-origin"
-	elif [ -s "$_git/$testdir/origin" ]; then
-		echo origin
+
+	if [ "$testdir" = "refs/heads" ]; then
+		if [ x"$_git_head" != x"master" ] && exists_ref "$testdir/$_git_head-origin"; then
+			echo "$_git_head-origin"
+		elif exists_ref "$testdir/origin"; then
+			echo origin
+		else
+			die "$errormsg"
+		fi
 	else
-		die "$errormsg"
+		if [ x"$_git_head" != x"master" -a -s "$_git/$testdir/$_git_head-origin" ]; then
+			echo "$_git_head-origin"
+		elif [ -s "$_git/$testdir/origin" ]; then
+			echo origin
+		else
+			die "$errormsg"
+		fi
 	fi
+}
+
+# Does a given ref (FQRN) exist? Get its value on stdout or return error.
+get_ref()
+{
+	# This could be cg-object-id -c instead, but this is faster.
+	git-rev-parse --verify "$1" 2>/dev/null
+}
+
+exists_ref()
+{
+	get_ref "$@" >/dev/null
 }
 
 

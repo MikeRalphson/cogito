@@ -89,11 +89,10 @@ id="${id% *}"
 git-check-ref-format "refs/tags/$name" || \
 	die "name contains invalid characters"
 
-mkdir -p "$_git/refs/tags"
-[ "$force" ] || [ ! -s "$_git/refs/tags/$name" ] || \
+[ "$force" ] || ! exists_ref "refs/tags/$name" || \
 	die "tag already exists ($name)"
 
-[ "$id" ] || id="$(cat "$_git/$(git-symbolic-ref HEAD)")"
+[ "$id" ] || id="$(get_ref "$(git-symbolic-ref HEAD)")"
 
 
 tagdir="$(mktemp -d -t gittag.XXXXXX)"
@@ -170,7 +169,7 @@ if [ "$sign" ]; then
 	fi
 	cat "$tagdir/tag.asc" >>"$tagdir/tag"
 fi
-if ! git-mktag <"$tagdir/tag" >"$_git/refs/tags/$name"; then
+if ! git-update-ref "refs/tags/$name" "$(git-mktag <"$tagdir/tag")"; then
 	rm -rf "$tagdir"
 	die "error creating tag"
 fi

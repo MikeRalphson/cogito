@@ -59,7 +59,8 @@ _git_wc_unneeded=1
 send_pack_update()
 {
 	name="$1"; shift
-	commit="$(cg-object-id -c "$locbranch")"; old="$(cat "$_git/refs/heads/$name" 2>/dev/null)"
+	commit="$(cg-object-id -c "$locbranch")"
+	old="$(get_ref "refs/heads/$name")" || : may stay empty
 	git-send-pack $force "$@" && git-update-ref refs/heads/"$name" "$commit" $old
 }
 
@@ -110,7 +111,7 @@ push_branch()
 		remgit="$uri"; [ -d "$remgit/.git" ] && remgit="$remgit/.git"
 		if is_same_repo "$_git_objects" "$remgit/objects"; then
 			commit="$(cg-object-id -c "$locbranch")"
-			remid="$(cat "$remgit"/refs/heads/$rembranch)" || die "$remgit: no branch $master"
+			remid="$(GIT_DIR="$remgit" get_ref refs/heads/$rembranch)" || die "$remgit: no branch $master"
 			if [ "$remid" = "$commit" ] && [ ! "${tags[*]}" ]; then
 				echo "$remgit#$rembranch: Already up-to-date." >&2
 				exit 0
@@ -130,7 +131,8 @@ push_branch()
 			GIT_DIR="$remgit" git-update-ref refs/heads/"$rembranch" "$commit" "$remid" || die "push failed"
 			git-update-ref refs/heads/"$name" "$commit"
 			for tag in "${tags[@]}"; do
-				GIT_DIR="$remgit" git-update-ref refs/tags/"$tag" "$(cat "$_git/refs/tags/$tag")"
+				tagval="$(get_ref "refs/tags/$tag")"
+				GIT_DIR="$remgit" git-update-ref refs/tags/"$tag" "$tagval"
 			done
 			[ -x "$remgit/hooks/post-update" ] && "$remgit/hooks/post-update" "$rembranch"
 		else

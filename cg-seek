@@ -61,7 +61,7 @@ if [ "$dstcommit" ] && [ "$dstcommit" != "$_git_head" ]; then
 	seek_mode=away
 	[ -s "$_git/head-name" ] && [ "$(git-symbolic-ref HEAD)" != "refs/heads/cg-seek-point" ] &&
 		die "seeked away by some other tool, refusing to meddle (you can still use cg-seek without any arguments to unseek)"
-	[ -s "$_git/refs/heads/$dstcommit" ] &&
+	exists_ref "refs/heads/$dstcommit" ] &&
 		warn "seeking to a branch head; this is not for permanent switching, please see cg-switch"
 else
 	seek_mode=back
@@ -78,11 +78,12 @@ if [ "$seek_mode" = "away" ]; then
 	[ -s "$_git/blocked" ] || echo "seeked from $_git_head (some commands can be still forced)" >"$_git/blocked"
 	# We hold this in a temporary branch so that some of the core
 	# GIT tools (git checkout and git-fsck-objects) don't get confused.
-	echo "$dstcommit" >"$_git/refs/heads/cg-seek-point"
+	git-update-ref "refs/heads/cg-seek-point" "$dstcommit"
 	git-symbolic-ref HEAD "refs/heads/cg-seek-point"
 else
 	git-symbolic-ref HEAD "refs/heads/$_git_head"
-	rm -f "$_git/refs/heads/cg-seek-point" "$_git/head-name"
+	git-update-ref -d "refs/heads/cg-seek-point"
+	rm -f "$_git/head-name"
 	rm -f "$_git/blocked"
 fi
 
