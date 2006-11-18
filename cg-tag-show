@@ -43,7 +43,7 @@ header_end()
 cat_tag()
 {
 	local tag="$1" sha1="$2" verify="$3" object= state=1 date=
-	while read -r line; do
+	while IFS=$'\n' read -r line; do
 		if [ ! "$line" -a "$state" = 1 ]; then
 			header_end "$tag" "$sha1" "$verify"
 			echo
