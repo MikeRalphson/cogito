@@ -172,7 +172,7 @@ for ref in "${reference[@]}"; do
 	fi
 
 	[ -d "$ref" ] || die "referenced repository $ref not found"
-	[ ! -d "$ref/.git/objects" ] || reference="$ref/.git"
+	[ ! -d "$ref/.git/objects" ] || ref="$ref/.git"
 	[ -d "$ref/objects" ] || die "reference $ref not a git repository"
 	[ ! "$relpath" ] || ref="../../$ref"
 	echo "$ref/objects" >>"$_git/objects/info/alternates"
