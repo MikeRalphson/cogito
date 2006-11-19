@@ -218,9 +218,6 @@ if [ "$seek" ]; then
 		fi
 
 		echo "Switching to branch $dsthead..."
-		if [ "x$curcommit" != "x$dstcommit" ]; then
-			tree_timewarp --no-head-update "along" "please rollback" "$curcommit" "$dstcommit" || :
-		fi
 
 		export _git_head="$dsthead"
 		unshelve_changes # Eats $dstcommit
