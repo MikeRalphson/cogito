@@ -143,7 +143,7 @@ fetch_rsync_verify()
 				done ||
 			die "rsync fetch incomplete, some objects missing"
 		fi
-		cat "$_git/refs/${3%/*}/.${3##*/}-fetching" > "$_git/refs/$3"
+		echo "$1" > "$_git/refs/$3"
 	fi
 	return $ret
 }
@@ -390,22 +390,27 @@ fi
 
 ## Grab the head
 echo "Fetching head..."
-mkdir -p "$_git/refs/heads/$(dirname "$name")"
-tmpname="$(dirname "$name")/.$(basename "$name")-fetching"
+
+tmpname="$(mktemp -t githead.XXXXXX)"
+cleanup () {
+	rm "$tmpname"
+}
+cleanup_trap "cleanup"
+
 if [ "$rembranch" ]; then
-	$get -i "$uri/refs/heads/$rembranch" "$_git/refs/heads/$tmpname" ||
+	$get -i "$uri/refs/heads/$rembranch" "$tmpname" ||
 		die "unable to get the head pointer of branch $rembranch"
 else
-	$get -b "$uri/HEAD" "$_git/refs/heads/$tmpname" ||
+	$get -b "$uri/HEAD" "$tmpname" ||
 		die "unable to get the HEAD branch"
 fi
 
-new_head="$(cat "$_git/refs/heads/$tmpname")"
+new_head="$(cat "$tmpname")"
 if [ "${new_head#ref:}" != "$new_head" ]; then
 	new_head="$(echo "$new_head" | sed 's/^ref: *//')"
-	$get -i "$uri/$new_head" "$_git/refs/heads/$tmpname" ||
+	$get -i "$uri/$new_head" "$tmpname" ||
 		die "unable to get the head pointer of branch $new_head (referenced by HEAD)"
-	new_head="$(cat "$_git/refs/heads/$tmpname")"
+	new_head="$(cat "$tmpname")"
 fi
 
 rm -f "$_git/info/cg-fetch-earlydie"
@@ -415,12 +420,14 @@ echo "Fetching objects..."
 if ! [ "$symlinked" ]; then
 	if [ "$recovery" -o "$orig_head" != "$new_head" ]; then
 		[ -d "$_git_objects" ] || mkdir -p "$_git_objects"
-		$fetch "$(cat "$_git/refs/heads/$tmpname")" "$uri" "heads/$name" || die "objects fetch failed"
+		$fetch "$(cat "$tmpname")" "$uri" "heads/$name" || die "objects fetch failed"
 	fi
 else
-	cat "$_git/refs/heads/$tmpname" > "$_git/refs/heads/$name"
+	cat "$tmpname" > "$_git/refs/heads/$name"
 fi
-rm "$_git/refs/heads/$tmpname"
+
+rm "$tmpname"
+cleanup_trap ""
 
 ## Fetch the tags
 ret=0
