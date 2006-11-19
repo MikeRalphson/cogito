@@ -160,9 +160,21 @@ repoloc="$location"
 [ ! -d "$repoloc/.git/objects" ] || repoloc="$repoloc/.git"
 [ "$alternate" ] && echo "$repoloc/objects" >> "$_git/objects/info/alternates"
 for ref in "${reference[@]}"; do
+	relpath=
+	[ "${ref#/}" != "$ref" ] || relpath=1
+	# Relative path; reference is relative to the object repository; we
+	# need to add one .. for objects, another .. for .git/, another .. for
+	# projdir unless ! same_Dir
+
+	if [ ! "$same_dir" ] && [ "$relpath" ]; then
+		# Relative path, account for project subdir
+		ref="../$ref"
+	fi
+
 	[ -d "$ref" ] || die "referenced repository $ref not found"
 	[ ! -d "$ref/.git/objects" ] || reference="$ref/.git"
 	[ -d "$ref/objects" ] || die "reference $ref not a git repository"
+	[ ! "$relpath" ] || ref="../../$ref"
 	echo "$ref/objects" >>"$_git/objects/info/alternates"
 done
 
