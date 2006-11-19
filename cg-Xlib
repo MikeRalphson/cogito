@@ -615,8 +615,7 @@ shelve_changes()
 			i=1; while exists_ref "refs/heads/$dirty$i"; do i=$((i+1)); done
 			dirty="$dirty$i"
 		fi
-		git-update-ref "refs/heads/$dirty" "$already_dirty"
-		git-update-ref -d "refs/heads/.cg-shelve-$_git_head" "$already_dirty"
+		rename_ref "refs/heads/.cg-shelve-$_git_head" "refs/heads/$dirty" "$already_dirty"
 		echo "I have created branch $dirty and made the old local changes available as its last commit." >&2
 	fi
 	# .cg-shelve-$_git_head head does not exist and we aren't race-safe
@@ -828,6 +827,14 @@ exists_ref()
 {
 	#git-show-ref --quiet --verify "$1"
 	get_ref "$@" >/dev/null
+}
+
+# Renames ref of a given value (will not overwrite existing ref)
+rename_ref()
+{
+	local from="$1" to="$2" val="$3"
+	git-update-ref "$to" "$val" "0000000000000000000000000000000000000000"
+	git-update-ref -d "$from" "$val"
 }
 
 
