@@ -68,4 +68,3 @@ parent="$(cg-object-id -p "$commit")" || exit 1
 echo "Rewinding $base (HEAD) -> $parent" >&2
 
 tree_timewarp "backwards" "$rollback_tree" "$base" "$parent"
-exit 0

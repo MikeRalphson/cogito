@@ -629,6 +629,12 @@ shelve_changes()
 	curcommit="$(get_ref "refs/shelves/$_git_head")"
 }
 
+abort_shelve()
+{
+	local shelvecommit="$1"
+	git-update-ref -d "refs/shelves/$_git_head" "$shelvecommit"
+}
+
 # Unshelve local changes for $_git_head
 # (You must cache the current $_git_head commit to $dstcommit.)
 unshelve_changes()
@@ -663,14 +669,14 @@ unshelve_changes()
 
 	echo "Restoring local changes..."
 	local shelvecommit="$(get_ref "refs/shelves/$_git_head")"
-	tree_timewarp --no-head-update "along" "please roll" "$dstcommit" "$shelvecommit" || :
-	git-update-ref -d "refs/shelves/$_git_head" "$shelvecommit"
+	tree_timewarp --no-head-update "along" "please roll" "$dstcommit" "$shelvecommit" || exit 1
+	abort_shelve "$shelvecommit"
 }
 
 # Usage: tree_timewarp [--no-head-update] DIRECTION_STR ROLLBACK_BOOL BASE BRANCH
 # Reset the current tree from version BASE to version BRANCH, properly updating
 # the working copy (if ROLLBACK_BOOL) and trying to keep local changes.
-# Returns false in case of local modifications (but only if ROLLBACK_ROLL).
+# Returns false in case of conflicts when merging local modifications (but only if ROLLBACK_ROLL).
 tree_timewarp()
 {
 	[ -z "$_git_no_wc" ] || die "INTERNAL ERROR: tree_timewarp() outside a working copy"
@@ -683,7 +689,6 @@ tree_timewarp()
 	local rollback="$1"; shift
 	local base="$1"; shift
 	local branch="$1"; shift
-	local localmods=0
 
 	[ ! -s "$_git/cg-merge-state/merging" ] || die "merge in progress - cancel it by cg-reset first"
 
@@ -695,19 +700,20 @@ tree_timewarp()
 			internal_commit "$cidfile" "timewarp local changes shelve" -m"This commit for internal Cogito use stores uncommitted local changes at the time of tree timewarp (any operation replaying/forwarding your tree, e.g. admin-uncommit or update), for an immediate use of three-way merging them back."
 			localcommit="$(cat "$cidfile")"
 			rm "$cidfile"
-			localmods=1
 		fi
 
 		# We automatically do two-way or three-way merge as needed.
 		# If we do two-way merge, the index is always in sync with
 		# the working copy and HEAD; the git-read-tree logic to deal
 		# with dirty index is too crippled for us.
-		git-read-tree -u -m "$base" $localcommit "$branch" ||
-			die "cannot bring working tree to $branch, aborting"
+		if ! git-read-tree -u -m "$base" $localcommit "$branch"; then
+			echo "cannot bring working tree to $branch, aborting" >&2
+			return 1
+		fi
 		_CG_MERGING_LOCAL=1 git-merge-index -o -q "${COGITO_LIB}"cg-Xmergefile -a || :
 	fi
 	[ "$no_head_update" ] || git-update-ref HEAD "$branch" || :
-	return $localmods
+	return 0
 }
 
 # Determine the most conservative merge base of two commits - keep

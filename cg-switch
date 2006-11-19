@@ -205,8 +205,10 @@ if [ "$seek" ]; then
 		fi
 
 		echo "Switching to branch $dsthead..."
-		# tree_timewarp returns false on local modifications
-		tree_timewarp --no-head-update "along" "please rollback" "$curcommit" "$dstcommit" || :
+		if ! tree_timewarp --no-head-update "along" "please rollback" "$curcommit" "$dstcommit"; then
+			abort_shelve "$curcommit"
+			exit 1
+		fi
 
 		export _git_head="$dsthead"
 		unshelve_changes # Eats $dstcommit

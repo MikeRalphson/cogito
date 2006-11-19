@@ -81,8 +81,8 @@
 #	If the file exists and is executable it will be executed after
 #	the merge is done.
 #	 - MERGETYPE is either "forward", "squash", or "tree".
-#	 - For 'forward', the STATUS is always "ok", while for "squash"
-#	   and "tree" the STATUS can be "localchanges", "conflicts",
+#	 - For 'forward', the STATUS is "ok" or "localchanges", while for
+#	  "squash" and "tree" the STATUS can be "localchanges", "conflicts",
 #	   "nocommit", or "ok".
 
 # Developer's documentation:
@@ -199,7 +199,10 @@ if { [ "$head" = "$base" ] || [ "$head" = "$_cg_orig_head" ]; } && [ ! "$squash"
 	[ "$verbose" ] && git-diff-tree --abbrev -r "$(cg-object-id -t "$head")" "$(cg-object-id -t "$branch")"
 
 	prehook forward
-	tree_timewarp "forward" "yes, rollback (or rather rollforth) the tree!" "$head" "$branch"
+	if ! tree_timewarp "forward" "yes, rollback (or rather rollforth) the tree!" "$head" "$branch"; then
+		posthook forward localchanges
+		exit 1
+	fi
 	posthook forward ok
 
 	exit 0

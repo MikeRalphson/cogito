@@ -70,7 +70,7 @@ fi
 
 dstcommit="$(cg-object-id -c "$dstcommit")" || exit 1
 if [ "$curcommit" != "$dstcommit" ]; then
-	tree_timewarp --no-head-update "along" "please rollback" "$curcommit" "$dstcommit"
+	tree_timewarp --no-head-update "along" "please rollback" "$curcommit" "$dstcommit" || exit 1
 fi
 
 if [ "$seek_mode" = "away" ]; then
