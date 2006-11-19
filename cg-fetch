@@ -234,6 +234,7 @@ fetch_tags()
 		fi
 	fi
 
+	last_tag=""
 	git-ls-remote --tags "$uri" |
 		# SHA1 refs/tags/v0.99.8^{} --> SHA1 tags/v0.99.8
 		# where SHA1 is the object v0.99.8 tag points at.
@@ -244,6 +245,11 @@ fetch_tags()
 			exists_ref "refs/$tagname" && continue
 			# Do we have the object pointed at by the tag?
 			git-cat-file -t "$sha1" >/dev/null 2>&1 || continue
+
+			# In common case we will get both "normal" and ^{} entries.
+			# Filter out the dupes.
+			[ "$last_tag" = "$tagname" ] && continue
+			last_tag="$tagname"
 
 			# if so, fetch the tag -- which should be
 			# a cheap operation -- to complete the chain.
