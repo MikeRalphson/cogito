@@ -57,10 +57,11 @@ fi
 
 # Undo seek?
 if [ -s "$_git/head-name" ]; then
+	seekpt="$(get_ref "refs/heads/cg-seek-point")"
 	echo "Unseeking: $(get_ref "$(git-symbolic-ref HEAD)") -> $(get_ref "refs/heads/$_git_head") ($_git_head)"
 	if exists_ref "refs/heads/$_git_head"; then
 		git-symbolic-ref HEAD "refs/heads/$_git_head"
-		git-update-ref -d "refs/heads/cg-seek-point"
+		git-update-ref -d "refs/heads/cg-seek-point" "$seekpt"
 		rm "$_git/head-name"
 	else
 		echo "ERROR: Unknown branch $_git_head! Cancelling unseek." >&2

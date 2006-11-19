@@ -664,7 +664,7 @@ unshelve_changes()
 	echo "Restoring local changes..."
 	local shelvecommit="$(get_ref "refs/shelves/$_git_head")"
 	tree_timewarp --no-head-update "along" "please roll" "$dstcommit" "$shelvecommit" || :
-	git-update-ref -d "refs/shelves/$_git_head"
+	git-update-ref -d "refs/shelves/$_git_head" "$shelvecommit"
 }
 
 # Usage: tree_timewarp [--no-head-update] DIRECTION_STR ROLLBACK_BOOL BASE BRANCH
