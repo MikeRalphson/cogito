@@ -110,6 +110,21 @@
 #	multiple commit ids; in that case, all of them will be used
 #	as parents instead of the original commit in further commits.
 #
+# --tag-name-filter COMMAND:: The filter for rewriting tag names.
+#       If this filter is passed, it will be called for every tag ref
+#       that points to a rewritten objects (or to a tag which points to
+#       a rewritten object). The original tag name is passed via standard
+#       input, and the new tag name is expected on standard output.
+#       The original tags are not deleted, but can be overriden;
+#       use "--tag-name-filter=cat" to simply update the tags - in that
+#	case, be very careful and make sure you have the old tags
+#	backed up in case the conversion has run afoul.
+#
+#	Note that there is currently no support for proper rewriting of
+#	tag objects; in layman terms, if the tag has a message or signature
+#	attached, the rewritten tag won't have it. Sorry. (It is by
+#	definition impossible to preserve signatures at any rate, though.)
+#
 # EXAMPLE USAGE
 # -------------
 # Suppose you want to remove a file (containing confidential information
@@ -188,6 +203,7 @@ filter_index=
 filter_parent=
 filter_msg=cat
 filter_commit='git-commit-tree "$@"'
+filter_tag_name=
 while optparse; do
 	if optparse -d=; then
 		tempdir="$OPTARG"
@@ -207,6 +223,8 @@ while optparse; do
 		filter_msg="$OPTARG"
 	elif optparse --commit-filter=; then
 		filter_commit="$OPTARG"
+	elif optparse --tag-name-filter=; then
+		filter_tag_name="$OPTARG"
 	else
 		optfail
 	fi
@@ -297,6 +315,37 @@ if [ "$(cat ../map/$(tail -n 1 ../revs) | wc -l)" -gt 1 ]; then
 	echo "WARNING: Your commit filter caused the head commit to expand to several rewritten commits. Only the first such commit was recorded as the current $dstbranch head but you will need to resolve the situation now (probably by manually merging the other commits). These are all the commits:" >&2
 	sed 's/^/	/' ../map/$(tail -n 1 ../revs) >&2
 	ret=1
+fi
+
+if [ "$filter_tag_name" ]; then
+	git-for-each-ref --format='%(objectname) %(objecttype) %(refname)' refs/tags |
+	while read sha1 type ref; do
+		ref="${ref#refs/tags/}"
+		# XXX: Rewrite tagged trees as well?
+		if [ "$type" != "commit" && "$type" != "tag" ]; then
+			continue;
+		fi
+
+		if [ "$type" = "tag" ]; then
+			# Dereference to a commit
+			sha1t="$sha1"
+			sha1="$(cg-object-id -c "$sha1" 2>/dev/null)" || continue
+		fi
+
+		[ -f "../map/$sha1" ] || continue
+		new_sha1="$(cat "../map/$sha1")"
+		export GIT_COMMIT="$sha1"
+		new_ref="$(echo "$ref" | eval "$filter_tag_name")"
+
+		echo "$ref -> $new_ref ($sha1 -> $new_sha1)"
+
+		if [ "$type" = "tag" ]; then
+			# Warn that we are not rewriting the tag object itself.
+			warn "unreferencing tag object $sha1t"
+		fi
+
+		git-update-ref "refs/tags/$new_ref" "$new_sha1"
+	done
 fi
 
 cd ../..
