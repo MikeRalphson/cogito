@@ -219,7 +219,9 @@ if [ "$gitstatus" ]; then
 		cf=" "; rf=" "; sf=" ";
 		[ "$headname" = "$_git_head" ] && cf=">"
 		[ -s "$_git/branches/$headname" ] && rf="R"
+		# ..cg-shelve deprecated as of 2006-11-19
 		exists_ref "refs/heads/.cg-shelve-$headname" && sf="s"
+		exists_ref "refs/shelves/$headname" && sf="s"
 		columns_print "  $sf$rf$cf" - "$headname" $maxlen "$headsha1$trimmark" $((maxsha1len + 1)) "$headlog" m$maxloglen
 	done
 

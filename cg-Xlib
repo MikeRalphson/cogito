@@ -606,8 +606,11 @@ internal_commit()
 # TODO: Later, move this to cg-shelve or something and make it available for general use.
 shelve_changes()
 {
-	# XXX: This should better live in refs/shelves/ or something.
-	if already_dirty=$(get_ref "refs/heads/.cg-shelve-$_git_head"); then
+	if exists_ref "refs/heads/.cg-shelve-$_git_head"; then
+		# The .cg-shelve name was deprecated as of 2006-11-19
+		rename_ref "refs/heads/.cg-shelve-$_git_head" "refs/shelves/$_git_head"
+	fi
+	if already_dirty=$(get_ref "refs/shelves/$_git_head"); then
 		echo "Warning: Your current branch already has some local changes saved. Refusing to overwrite them." >&2
 		echo "This could happen if you switched away using 'cg-switch -l' but did not switch back using cg-switch." >&2
 		dirty="$_git_head-dirty"
@@ -615,21 +618,30 @@ shelve_changes()
 			i=1; while exists_ref "refs/heads/$dirty$i"; do i=$((i+1)); done
 			dirty="$dirty$i"
 		fi
-		rename_ref "refs/heads/.cg-shelve-$_git_head" "refs/heads/$dirty" "$already_dirty"
+		rename_ref "refs/shelves/$_git_head" "refs/heads/$dirty" "$already_dirty"
 		echo "I have created branch $dirty and made the old local changes available as its last commit." >&2
 	fi
-	# .cg-shelve-$_git_head head does not exist and we aren't race-safe
+	# refs/shelves/$_git_head head does not exist and we aren't race-safe
 	# anyway, so writing directly to the file does not do any further
 	# harm here.
-	internal_commit "$_git/refs/heads/.cg-shelve-$_git_head" "cg-switch local changes shelve" "This commit for internal Cogito use stores uncommitted local changes at the time of cg-switch -l away from $_git_head."
-	curcommit="$(get_ref "refs/heads/.cg-shelve-$_git_head")"
+	mkdir -p "$_git/refs/shelves"
+	internal_commit "$_git/refs/shelves/$_git_head" "cg-switch local changes shelve" "This commit for internal Cogito use stores uncommitted local changes at the time of cg-switch -l away from $_git_head."
+	curcommit="$(get_ref "refs/shelves/$_git_head")"
 }
 
 # Unshelve local changes for $_git_head
 # (You must cache the current $_git_head commit to $dstcommit.)
 unshelve_changes()
 {
-	if ! exists_ref "refs/heads/.cg-shelve-$_git_head"; then
+	if exists_ref "refs/heads/.cg-shelve-$_git_head"; then
+		# The .cg-shelve name was deprecated as of 2006-11-19
+		if exists_ref "refs/shelves/$_git_head"; then
+			warn "shelves both under the old and new name detected, you are doing something strange; ignoring the old-style .cg-shelf-$_git_head shelve branch"
+		else
+			rename_ref "refs/heads/.cg-shelve-$_git_head" "refs/shelves/$_git_head"
+		fi
+	fi
+	if ! exists_ref "refs/shelves/$_git_head"; then
 		return
 	fi
 
@@ -650,9 +662,9 @@ unshelve_changes()
 	#   restore the list of commits after unshelving.
 
 	echo "Restoring local changes..."
-	local shelvecommit="$(get_ref "refs/heads/.cg-shelve-$_git_head")"
+	local shelvecommit="$(get_ref "refs/shelves/$_git_head")"
 	tree_timewarp --no-head-update "along" "please roll" "$dstcommit" "$shelvecommit" || :
-	git-update-ref -d "refs/heads/.cg-shelve-$_git_head"
+	git-update-ref -d "refs/shelves/$_git_head"
 }
 
 # Usage: tree_timewarp [--no-head-update] DIRECTION_STR ROLLBACK_BOOL BASE BRANCH
