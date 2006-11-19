@@ -611,7 +611,7 @@ shelve_changes()
 		echo "Warning: Your current branch already has some local changes saved. Refusing to overwrite them." >&2
 		echo "This could happen if you switched away using 'cg-switch -l' but did not switch back using cg-switch." >&2
 		dirty="$_git_head-dirty"
-		if get_head "$dirty" >/dev/null; then
+		if exists_ref "refs/heads/$dirty"; then
 			i=1; while exists_ref "refs/heads/$dirty$i"; do i=$((i+1)); done
 			dirty="$dirty$i"
 		fi
