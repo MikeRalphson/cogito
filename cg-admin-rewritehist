@@ -324,7 +324,7 @@ if [ "$filter_tag_name" ]; then
 	while read sha1 type ref; do
 		ref="${ref#refs/tags/}"
 		# XXX: Rewrite tagged trees as well?
-		if [ "$type" != "commit" && "$type" != "tag" ]; then
+		if [ "$type" != "commit" -a "$type" != "tag" ]; then
 			continue;
 		fi
 
