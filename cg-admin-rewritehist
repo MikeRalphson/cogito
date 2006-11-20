@@ -111,12 +111,14 @@
 #	as parents instead of the original commit in further commits.
 #
 # --tag-name-filter COMMAND:: The filter for rewriting tag names.
-#       If this filter is passed, it will be called for every tag ref
-#       that points to a rewritten objects (or to a tag which points to
-#       a rewritten object). The original tag name is passed via standard
-#       input, and the new tag name is expected on standard output.
-#       The original tags are not deleted, but can be overriden;
-#       use "--tag-name-filter=cat" to simply update the tags - in that
+#	If this filter is passed, it will be called for every tag ref
+#	that points to a rewritten object (or to a tag object which
+#	points to a rewritten object). The original tag name is passed
+#	via standard input, and the new tag name is expected on standard
+#	output.
+#	
+#	The original tags are not deleted, but can be overwritten;
+#	use "--tag-name-filter=cat" to simply update the tags. In this
 #	case, be very careful and make sure you have the old tags
 #	backed up in case the conversion has run afoul.
 #
