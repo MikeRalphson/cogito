@@ -29,16 +29,22 @@ warn()
 	[ -z "$beep" ] || echo -ne "\a" >&2
 }
 
-die()
+silent_die()
 {
-	echo "$_cg_cmd: $@" >&2
 	eval "$_cleanup_code"
 	exit 1
 }
 
+die()
+{
+	echo "$_cg_cmd: $@" >&2
+	silent_die
+}
+
 usage()
 {
-	die "usage: $USAGE"
+	echo "usage: $USAGE" >&2
+	silent_die
 }
 
 # Do this in case we get interrupted or prematurely die
