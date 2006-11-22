@@ -80,10 +80,33 @@ if [ "$seek_mode" = "away" ]; then
 	# GIT tools (git checkout and git-fsck-objects) don't get confused.
 	git-update-ref "refs/heads/cg-seek-point" "$dstcommit"
 	git-symbolic-ref HEAD "refs/heads/cg-seek-point"
-else
-	seekpt="$(get_ref "refs/heads/cg-seek-point")"
-	git-symbolic-ref HEAD "refs/heads/$_git_head"
-	git-update-ref -d "refs/heads/cg-seek-point" "$seekpt"
+
+else # back
+	curref="$(git-symbolic-ref HEAD)"
+	# It may be that:
+	# (i) we are now on cg-seek-point, were cg-seek'd away in the past
+	# (ii) we are now on other seeky branch, were seeked by something
+	# else which kindly enough has set head-name
+	# (iii) we are now not seeked at all and the user has just did
+	# two cg-seeks without arguments in line or something
+
+	if [ "$curref" = "refs/heads/$_git_head" ]; then
+		# (iii)
+		if [ -s "$_git/head-name" ]; then
+			warn "you had stale head-name pointing at $_git_head (current branch) in your tree, removing"
+		fi
+
+	else
+		seekpt="$(get_ref "$curref")"
+		git-symbolic-ref HEAD "refs/heads/$_git_head"
+
+		if [ "$curref" != "refs/heads/cg-seek-point" ]; then
+			# (ii)
+			warn "dropping temporary head $curref pointing at $seekpt"
+		fi # else (i)
+		git-update-ref -d "$curref" "$seekpt"
+	fi
+
 	rm -f "$_git/head-name"
 	rm -f "$_git/blocked"
 fi
