@@ -357,4 +357,4 @@ fi
 [ -n "$_git_relpath" ] && cd "$_git_relpath"
 
 
-exec git-apply --reject "${applyargs[@]}"
+exec git-apply --index --reject "${applyargs[@]}"
