@@ -33,6 +33,13 @@
 #	(defaulting to HEAD and 'origin' or the current branch's default
 #	remote branch, see `cg-fetch` for details).
 #
+# --no-renames:: Do not detect renames
+#	By default, `cg-mkpatch` will automatically detect file renames.
+#	Diff produced by the rename-aware `cg-mkpatch` will be unappliable
+#	using patch(1) (you need to use `cg-patch`) and the renames
+#	detection can add slight extra performance penalty. This switch
+#	will turn the rename detection off.
+#
 # -r FROM_ID[..TO_ID]::	Limit to revision range
 #	Specify a set of commits to make patches from using either
 #	'-r FROM_ID[..TO_ID]' or '-r FROM_ID -r TO_ID'. In both cases the
@@ -76,7 +83,7 @@ showpatch()
 	header="$(mktemp -t gitpatch.XXXXXX)"
 	patch="$(mktemp -t gitpatch.XXXXXX)"
 	id="$1"
-	cg-diff -p -r "$id" >"$patch"
+	cg-diff $no_renames -p -r "$id" >"$patch"
 	git-cat-file commit "$id" | while read -r key rest; do
 		case "$key" in
 		"author"|"committer")
@@ -114,6 +121,7 @@ log_end=
 mergebase=
 outdir=
 fileformat="%s/%02d-%s.patch"
+no_renames=
 while optparse; do
 	if optparse -s; then
 		omit_header=1
@@ -137,6 +145,8 @@ while optparse; do
 		outdir="$OPTARG"
 	elif optparse -f=; then
 		fileformat="$OPTARG"
+	elif optparse --no-renames; then
+		no_renames=--no-renames
 	else
 		optfail
 	fi
