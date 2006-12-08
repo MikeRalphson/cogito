@@ -227,7 +227,7 @@ the last time you fetched. You can also
 which will show changes between the cloned branch and your current branch
 (shall you do any modifications).
 
-Note that you can also access other branches than the one you clones from,
+Note that you can also access other branches than the one you cloned from,
 by adding it with the command
 
 	$ cg-branch-add name repourl
