@@ -66,6 +66,6 @@ test_expect_success 'incremental update in repo2' \
 	'(cd repo2 && cg-update)'
 test_expect_success 'verifying incremental update' \
 	"(cmp repo1/.git/refs/heads/master repo2/.git/refs/heads/master &&
-	  cd repo2 && git-fsck-objects)"
+	  cd repo2 && git-fsck-objects --full)"
 
 test_done
