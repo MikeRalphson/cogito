@@ -53,11 +53,12 @@ warning()
 # PlusMinus+XModeChar ;-)
 pmxmc()
 {
-	if [ "$1" = "755" ]; then
-		_pmxmc=+
-	else
-		_pmxmc=-
-	fi
+	case "$1" in
+	*755)
+		_pmxmc=+;;
+	*)
+		_pmxmc=-;;
+	esac
 }
 
 # Set ways[] to the symbolic names of the particular ways
